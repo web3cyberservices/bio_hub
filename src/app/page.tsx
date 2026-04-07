@@ -9,11 +9,11 @@ export default function Home() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-healthy-food');
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <NavBar />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-white py-20 lg:py-32">
+        <section className="relative overflow-hidden py-20 lg:py-32">
           <div className="container mx-auto px-4">
             <div className="flex flex-col items-center gap-12 lg:flex-row">
               <div className="flex-1 space-y-8 text-center lg:text-left">
@@ -30,7 +30,7 @@ export default function Home() {
                     </Button>
                   </Link>
                   <Link href="/about">
-                    <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-semibold border-secondary text-secondary hover:bg-secondary/5">
+                    <Button size="lg" variant="outline" className="h-14 px-8 text-lg font-semibold border-primary text-primary hover:bg-primary/5">
                       Узнать больше
                     </Button>
                   </Link>
@@ -106,7 +106,7 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="border-t py-12">
+      <footer className="border-t py-12 bg-white/50">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2024 NutriPath AI. Все права защищены.</p>
         </div>

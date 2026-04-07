@@ -12,7 +12,7 @@ export default function DashboardPage() {
   const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);
 
   return (
-    <div className="flex min-h-screen flex-col bg-muted/20">
+    <div className="flex min-h-screen flex-col bg-background">
       <NavBar />
       <main className="container mx-auto flex-1 px-4 py-12">
         <div className="mb-12 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
@@ -23,14 +23,14 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 border-primary text-primary hover:bg-primary/5">
               <History className="h-4 w-4" /> История
             </Button>
             {result && (
               <Button 
                 variant="default" 
                 onClick={() => setResult(null)}
-                className="flex items-center gap-2 bg-secondary hover:bg-secondary/90"
+                className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/90"
               >
                 <RefreshCw className="h-4 w-4" /> Новый анализ
               </Button>
@@ -76,7 +76,7 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
-      <footer className="border-t py-12 bg-white">
+      <footer className="border-t py-12 bg-white/50">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>© 2024 NutriPath AI. Ваши данные защищены шифрованием.</p>
         </div>
