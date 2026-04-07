@@ -12,10 +12,6 @@ export default function Home() {
         <section className="relative overflow-hidden py-24 lg:py-40">
           <div className="container mx-auto px-4">
             <div className="flex flex-col items-center text-center space-y-10">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span>ИИ Нутрициолог будущего</span>
-              </div>
               <div className="space-y-6 max-w-4xl">
                 <h1 className="text-5xl font-bold tracking-tight sm:text-7xl lg:text-8xl font-headline leading-[1.1]">
                   Ваш путь к <span className="text-primary">совершенному</span> здоровью с <span className="italic">PRO Себя</span>
