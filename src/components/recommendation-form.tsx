@@ -28,12 +28,13 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, FlaskConical, Apple } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, FlaskConical, Apple, User } from 'lucide-react';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес должен быть положительным'),
   height: z.coerce.number().positive('Рост должен быть положительным'),
   age: z.coerce.number().int().min(1, 'Возраст должен быть больше 0'),
+  gender: z.enum(['мужской', 'женский']),
   activityLevel: z.enum([
     'малоактивный',
     'среднеактивный',
@@ -60,6 +61,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      gender: 'мужской',
       activityLevel: 'средний',
       healthGoal: 'поддержать текущее состояние',
       dietaryInput: '',
@@ -90,7 +92,28 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       <CardContent className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1.5">Пол</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Пол" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="мужской">Муж</SelectItem>
+                        <SelectItem value="женский">Жен</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="weight"

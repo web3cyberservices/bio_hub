@@ -14,6 +14,7 @@ const GenerateRecommendationsInputSchema = z.object({
   weight: z.number().positive().describe('Current weight in kilograms.'),
   height: z.number().positive().describe('Current height in centimeters.'),
   age: z.number().int().min(1).describe('Current age in years.'),
+  gender: z.enum(['мужской', 'женский']).describe('User\'s gender.'),
   activityLevel:
     z.enum([
       'малоактивный',
@@ -70,6 +71,7 @@ const recommendationPrompt = ai.definePrompt({
   prompt: `You are an AI nutritionist, an expert in health and wellness. Your task is to provide personalized, context-aware, and actionable recommendations for lifestyle adjustments, diet plans, and suitable vitamin/supplement intake to improve health.
 
 User's Health Profile:
+- Gender: {{{gender}}}
 - Weight: {{{weight}}} kg
 - Height: {{{height}}} cm
 - Age: {{{age}}} years
