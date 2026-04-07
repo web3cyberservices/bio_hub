@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2, FlaskConical, Utensils, HeartPulse, Sparkles 
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <NavBar />
       <main className="flex-1">
         {/* Hero Section */}
@@ -39,13 +39,13 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Decorative elements instead of images */}
-          <div className="absolute -z-10 top-1/2 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute -z-10 bottom-0 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
+          {/* Decorative elements */}
+          <div className="absolute -z-10 top-1/2 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -z-10 bottom-0 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-[120px] pointer-events-none" />
         </section>
 
         {/* Features Section */}
-        <section className="bg-white/50 backdrop-blur-sm py-32 border-y">
+        <section className="bg-white/50 backdrop-blur-sm py-32 border-y border-primary/10">
           <div className="container mx-auto px-4">
             <div className="mb-20 text-center space-y-4">
               <h2 className="text-4xl font-bold sm:text-5xl lg:text-6xl font-headline">Как это работает?</h2>
