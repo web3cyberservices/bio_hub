@@ -6,7 +6,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, FileText, History } from 'lucide-react';
+import { RefreshCw, FileText, History, Sparkles } from 'lucide-react';
 
 export default function DashboardPage() {
   const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);

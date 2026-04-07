@@ -89,7 +89,7 @@ User's Provided Lab Analysis Results:
 Based on all the provided information, generate comprehensive and personalized recommendations. Clearly explain the reasoning behind your suggestions. If optional dietary or lab results are provided, make sure to integrate them into your analysis and recommendations.
 
 Provide your recommendations in the following structured JSON format:
-```json
+\`\`\`json
 {
   "recommendations": {
     "lifestyle": "A detailed paragraph outlining lifestyle adjustments such as sleep, stress management, and exercise routines, tailored to the user's activity level and goals.",
@@ -97,7 +97,7 @@ Provide your recommendations in the following structured JSON format:
     "supplements": "A detailed paragraph suggesting specific vitamins and supplements, explaining their benefits for the user's goals and health data, taking into account lab results if provided."
   }
 }
-```
+\`\`\`
 `,
 });
 
