@@ -1,20 +1,20 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating personalized nutrition and lifestyle recommendations.
+ * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
  *
- * - generatePersonalizedRecommendations - A function that handles the generation of recommendations.
- * - GenerateRecommendationsInput - The input type for the generatePersonalizedRecommendations function.
- * - GenerateRecommendationsOutput - The return type for the generatePersonalizedRecommendations function.
+ * - generatePersonalizedRecommendations - Функция, которая обрабатывает генерацию рекомендаций.
+ * - GenerateRecommendationsInput - Тип входных данных для функции.
+ * - GenerateRecommendationsOutput - Тип возвращаемых данных функции.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateRecommendationsInputSchema = z.object({
-  weight: z.number().positive().describe('Current weight in kilograms.'),
-  height: z.number().positive().describe('Current height in centimeters.'),
-  age: z.number().int().min(1).describe('Current age in years.'),
-  gender: z.enum(['мужской', 'женский']).describe('User\'s gender.'),
+  weight: z.number().positive().describe('Текущий вес в килограммах.'),
+  height: z.number().positive().describe('Текущий рост в сантиметрах.'),
+  age: z.number().int().min(1).describe('Текущий возраст в годах.'),
+  gender: z.enum(['мужской', 'женский']).describe('Пол пользователя.'),
   activityLevel:
     z.enum([
       'малоактивный',
@@ -23,22 +23,22 @@ const GenerateRecommendationsInputSchema = z.object({
       'активный',
       'перенагрузка',
     ])
-    .describe('User\u0027s activity level.'),
+    .describe('Уровень активности пользователя.'),
   healthGoal:
     z.enum([
       'снизить массу тела',
       'поддержать текущее состояние',
       'набор массы',
     ])
-    .describe('User\u0027s primary health goal.'),
+    .describe('Основная цель пользователя в области здоровья.'),
   dietaryInput: z
     .string()
     .optional()
-    .describe('Optional free-form text describing daily food intake.'),
+    .describe('Дополнительный текст с описанием ежедневного рациона питания.'),
   labResultsInput: z
     .string()
     .optional()
-    .describe('Optional free-form text describing recent lab analysis results.'),
+    .describe('Дополнительный текст с результатами недавних лабораторных анализов.'),
 });
 export type GenerateRecommendationsInput = z.infer<
   typeof GenerateRecommendationsInputSchema
@@ -47,11 +47,11 @@ export type GenerateRecommendationsInput = z.infer<
 const GenerateRecommendationsOutputSchema = z.object({
   recommendations: z.object({
     lifestyle:
-      z.string().describe('Personalized lifestyle recommendations.'),
+      z.string().describe('Персонализированные рекомендации по образу жизни (сон, стресс, активность).'),
     diet:
-      z.string().describe('Personalized dietary recommendations including food choices.'),
+      z.string().describe('Персонализированные диетические рекомендации, включая выбор продуктов.'),
     supplements:
-      z.string().describe('Personalized vitamin and supplement recommendations.'),
+      z.string().describe('Персонализированные рекомендации по витаминам и БАДам.'),
   }),
 });
 export type GenerateRecommendationsOutput = z.infer<
@@ -68,27 +68,29 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `You are an AI nutritionist, an expert in health and wellness. Your task is to provide personalized, context-aware, and actionable recommendations for lifestyle adjustments, diet plans, and suitable vitamin/supplement intake to improve health.
+  prompt: `Вы — ИИ-нутрициолог, эксперт в области здоровья и велнеса. Ваша задача — предоставить персонализированные, контекстные и практические рекомендации по изменению образа жизни, планам питания и подходящему приему витаминов/добавок для улучшения здоровья.
 
-User's Health Profile:
-- Gender: {{{gender}}}
-- Weight: {{{weight}}} kg
-- Height: {{{height}}} cm
-- Age: {{{age}}} years
-- Activity Level: {{{activityLevel}}}
-- Health Goal: {{{healthGoal}}}
+ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
+
+Профиль здоровья пользователя:
+- Пол: {{{gender}}}
+- Вес: {{{weight}}} кг
+- Рост: {{{height}}} см
+- Возраст: {{{age}}} лет
+- Уровень активности: {{{activityLevel}}}
+- Цель: {{{healthGoal}}}
 
 {{#if dietaryInput}}
-User's Provided Food Intake:
+Данные о рационе пользователя:
 {{{dietaryInput}}}
 {{/if}}
 
 {{#if labResultsInput}}
-User's Provided Lab Analysis Results:
+Данные лабораторных анализов:
 {{{labResultsInput}}}
 {{/if}}
 
-Based on all the provided information, generate comprehensive and personalized recommendations. Clearly explain the reasoning behind your suggestions. If optional dietary or lab results are provided, make sure to integrate them into your analysis and recommendations.`,
+На основе всей предоставленной информации подготовьте подробные и персонализированные рекомендации. Четко объясните логику ваших предложений. Если предоставлены данные о рационе или анализах, обязательно интегрируйте их в свой анализ и рекомендации.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
