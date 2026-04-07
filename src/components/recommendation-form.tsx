@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -17,7 +16,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,26 +26,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, FlaskConical, Apple, User, Scale, Ruler, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Apple, FlaskConical } from 'lucide-react';
 
 const formSchema = z.object({
-  weight: z.coerce.number().positive('Вес должен быть положительным'),
-  height: z.coerce.number().positive('Рост должен быть положительным'),
-  age: z.coerce.number().int().min(1, 'Возраст должен быть больше 0'),
+  weight: z.coerce.number().positive('Вес обязателен'),
+  height: z.coerce.number().positive('Рост обязателен'),
+  age: z.coerce.number().int().min(1, 'Возраст обязателен'),
   gender: z.enum(['мужской', 'женский']),
-  activityLevel: z.enum([
-    'малоактивный',
-    'среднеактивный',
-    'средний',
-    'активный',
-    'перенагрузка',
-  ]),
-  healthGoal: z.enum([
-    'снизить массу тела',
-    'поддержать текущее состояние',
-    'набор массы',
-  ]),
+  activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
+  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
 });
@@ -86,50 +74,28 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
   }
 
   return (
-    <Card className="border-none shadow-xl bg-white overflow-hidden">
-      <CardHeader className="bg-primary/5 border-b">
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Activity className="h-6 w-6 text-primary" />
-          Ваши показатели
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
+    <Card className="border-none shadow-2xl rounded-[2.5rem] bg-white overflow-hidden p-2">
+      <CardContent className="p-8 space-y-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="p-3 bg-primary/10 rounded-2xl">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="text-2xl font-black">Профиль здоровья</h3>
+        </div>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6 sm:grid-cols-4">
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <User className="h-4 w-4 text-muted-foreground" /> Пол
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Пол" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="мужской">Муж</SelectItem>
-                        <SelectItem value="женский">Жен</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid gap-4 grid-cols-2">
               <FormField
                 control={form.control}
                 name="weight"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Scale className="h-4 w-4 text-muted-foreground" /> Вес (кг)
+                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <Scale className="h-3 w-3" /> Вес (кг)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="70" {...field} className="h-11" />
+                      <Input type="number" {...field} className="h-12 rounded-xl bg-muted/50 border-none focus-visible:ring-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,144 +106,122 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="height"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Ruler className="h-4 w-4 text-muted-foreground" /> Рост (см)
+                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <Ruler className="h-3 w-3" /> Рост (см)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="175" {...field} className="h-11" />
+                      <Input type="number" {...field} className="h-12 rounded-xl bg-muted/50 border-none focus-visible:ring-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="grid gap-4 grid-cols-2">
               <FormField
                 control={form.control}
                 name="age"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Calendar className="h-4 w-4 text-muted-foreground" /> Возраст
+                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <Calendar className="h-3 w-3" /> Возраст
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="30" {...field} className="h-11" />
+                      <Input type="number" {...field} className="h-12 rounded-xl bg-muted/50 border-none focus-visible:ring-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2">
               <FormField
                 control={form.control}
-                name="activityLevel"
+                name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Activity className="h-4 w-4 text-secondary" /> Образ жизни
+                    <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <User className="h-3 w-3" /> Пол
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Выберите активность" />
+                        <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-none">
+                          <SelectValue placeholder="Пол" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="малоактивный">Малоактивный</SelectItem>
-                        <SelectItem value="среднеактивный">Среднеактивный</SelectItem>
-                        <SelectItem value="средний">Средний</SelectItem>
-                        <SelectItem value="активный">Активный</SelectItem>
-                        <SelectItem value="перенагрузка">Перенагрузка</SelectItem>
+                        <SelectItem value="мужской">Мужчина</SelectItem>
+                        <SelectItem value="женский">Женщина</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="healthGoal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Target className="h-4 w-4 text-primary" /> Желаемый результат
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Выберите цель" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="снизить массу тела">Снизить массу тела</SelectItem>
-                        <SelectItem value="поддержать текущее состояние">Поддержать состояние</SelectItem>
-                        <SelectItem value="набор массы">Набор массы</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="dietaryInput"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <Apple className="h-4 w-4 text-accent-foreground" /> Рацион питания (необязательно)
-                    </FormLabel>
+            <FormField
+              control={form.control}
+              name="activityLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <Activity className="h-3 w-3" /> Активность
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Опишите ваши привычные продукты питания, завтраки, обеды и ужины..." 
-                        className="min-h-[100px] bg-accent/5 focus:bg-white transition-colors"
-                        {...field} 
-                      />
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-none">
+                        <SelectValue placeholder="Уровень активности" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormDescription>Список продуктов, которые вы употребляете регулярно.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <SelectContent>
+                      <SelectItem value="малоактивный">Сидячий образ жизни</SelectItem>
+                      <SelectItem value="среднеактивный">Легкие нагрузки</SelectItem>
+                      <SelectItem value="средний">Средние нагрузки</SelectItem>
+                      <SelectItem value="активный">Высокая активность</SelectItem>
+                      <SelectItem value="перенагрузка">Экстремальные нагрузки</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="labResultsInput"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
-                      <FlaskConical className="h-4 w-4 text-destructive" /> Результаты анализов (необязательно)
-                    </FormLabel>
+            <FormField
+              control={form.control}
+              name="healthGoal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <Target className="h-3 w-3" /> Ваша цель
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Введите показатели ваших недавних анализов (ферритин, витамин D, ТТГ и т.д.)..." 
-                        className="min-h-[100px] bg-accent/5 focus:bg-white transition-colors"
-                        {...field} 
-                      />
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-none">
+                        <SelectValue placeholder="Выберите цель" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormDescription>Укажите отклонения или важные для вас показатели.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value="снизить массу тела">Похудение</SelectItem>
+                      <SelectItem value="поддержать текущее состояние">Поддержание веса</SelectItem>
+                      <SelectItem value="набор массы">Набор мышечной массы</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
 
             <Button 
               type="submit" 
-              className="w-full h-14 text-xl font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/10 transition-all hover:scale-[1.01]" 
+              className="w-full h-16 rounded-[1.5rem] text-xl font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all hover:scale-[1.02]" 
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                  Анализируем ваши данные...
+                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                  Думаю...
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-6 w-6" />
-                  Сгенерировать рекомендации
+                  <Sparkles className="mr-3 h-6 w-6" />
+                  Анализ данных
                 </>
               )}
             </Button>
