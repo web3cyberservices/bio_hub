@@ -178,7 +178,7 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
         </div>
         <div className="space-y-2">
           <h4 className="font-bold text-xl text-foreground">Персональный план готов к исполнению</h4>
-          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          <p className="text-muted-foreground max-xl mx-auto leading-relaxed">
             Помните, что данные рекомендации носят информационный характер. Перед внесением радикальных изменений в свой образ жизни обязательно проконсультируйтесь со специалистом.
           </p>
         </div>
