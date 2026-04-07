@@ -42,153 +42,146 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   } satisfies ChartConfig;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col items-center text-center space-y-4 mb-8">
-        <div className="bg-accent/20 rounded-full p-4">
-          <Sparkles className="h-10 w-10 text-secondary" />
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      {/* Header Info */}
+      <div className="flex flex-col items-center text-center space-y-4">
+        <div className="bg-primary/10 rounded-full p-4 shadow-inner">
+          <Sparkles className="h-10 w-10 text-primary" />
         </div>
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ваши рекомендации готовы</h2>
-        <p className="text-muted-foreground max-w-lg">
-          На основе ваших параметров, образа жизни и анализов ИИ подготовил индивидуальный план и расчет макронутриентов.
-        </p>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">Анализ завершен</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            Мы рассчитали ваши показатели и подготовили пошаговый план для достижения вашей цели.
+          </p>
+        </div>
       </div>
 
-      {/* Macros Dashboard */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-white border-none shadow-sm">
-          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="bg-orange-100 p-3 rounded-full">
-              <Flame className="h-6 w-6 text-orange-600" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Калории</p>
-            <p className="text-3xl font-bold">{macros.calories}</p>
-            <p className="text-xs text-muted-foreground">ккал/день</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-none shadow-sm">
-          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Beef className="h-6 w-6 text-primary" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Белки</p>
-            <p className="text-3xl font-bold">{macros.protein}г</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-none shadow-sm">
-          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="bg-secondary/10 p-3 rounded-full">
-              <Droplets className="h-6 w-6 text-secondary" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Жиры</p>
-            <p className="text-3xl font-bold">{macros.fat}г</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-none shadow-sm">
-          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="bg-accent/10 p-3 rounded-full">
-              <Wheat className="h-6 w-6 text-accent-foreground" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Углеводы</p>
-            <p className="text-3xl font-bold">{macros.carbs}г</p>
-          </CardContent>
-        </Card>
+      {/* Macros Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {[
+          { icon: Flame, label: 'Калории', value: macros.calories, unit: 'ккал', color: 'text-orange-600', bg: 'bg-orange-50' },
+          { icon: Beef, label: 'Белки', value: macros.protein, unit: 'г', color: 'text-primary', bg: 'bg-primary/5' },
+          { icon: Droplets, label: 'Жиры', value: macros.fat, unit: 'г', color: 'text-secondary', bg: 'bg-secondary/5' },
+          { icon: Wheat, label: 'Углеводы', value: macros.carbs, unit: 'г', color: 'text-accent-foreground', bg: 'bg-accent/10' },
+        ].map((item, i) => (
+          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
+              <div className={`${item.bg} p-3 rounded-2xl`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{item.label}</p>
+                <p className="text-2xl font-black">{item.value}{item.unit !== 'ккал' && <span className="text-sm ml-0.5">{item.unit}</span>}</p>
+                {item.unit === 'ккал' && <p className="text-[10px] text-muted-foreground font-medium">в сутки</p>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Chart Section */}
-      <Card className="border-none shadow-lg bg-white overflow-hidden">
-        <CardHeader className="bg-primary/5 py-6">
-          <CardTitle className="text-xl font-bold">Баланс макронутриентов</CardTitle>
-          <CardDescription>Распределение белков, жиров и углеводов в вашем рационе</CardDescription>
-        </CardHeader>
-        <CardContent className="p-8">
-          <div className="h-[300px] w-full">
-            <ChartContainer config={chartConfig}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 40, right: 20 }}>
-                  <XAxis type="number" hide />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    tick={{ fontSize: 14, fontWeight: 500 }}
-                    width={80}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={40}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+      {/* Main Content Sections */}
+      <div className="grid gap-6">
+        {/* Chart Card */}
+        <Card className="border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-bold">Баланс нутриентов</CardTitle>
+                <CardDescription>Оптимальное соотношение для вашего организма</CardDescription>
+              </div>
+              <Badge variant="outline" className="h-8 px-4 border-primary/20 text-primary font-bold">График БЖУ</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="h-[280px] w-full">
+              <ChartContainer config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30, top: 0, bottom: 0 }}>
+                    <XAxis type="number" hide />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      tick={{ fontSize: 13, fontWeight: 600, fill: 'hsl(var(--foreground))' }}
+                      width={100}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <ChartTooltip cursor={{ fill: 'transparent' }} content={<ChartTooltipContent hideLabel />} />
+                    <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={45}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} className="opacity-90 hover:opacity-100 transition-opacity" />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Text Recommendations */}
+        <div className="space-y-6">
+          {[
+            { 
+              title: 'Образ жизни', 
+              content: recommendations.lifestyle, 
+              icon: HeartPulse, 
+              color: 'text-primary', 
+              bg: 'bg-primary/10',
+              badge: 'Сон и активность'
+            },
+            { 
+              title: 'Питание', 
+              content: recommendations.diet, 
+              icon: Utensils, 
+              color: 'text-secondary', 
+              bg: 'bg-secondary/10',
+              badge: 'Рацион'
+            },
+            { 
+              title: 'Витамины и БАДы', 
+              content: recommendations.supplements, 
+              icon: Pill, 
+              color: 'text-destructive', 
+              bg: 'bg-destructive/10',
+              badge: 'Поддержка'
+            }
+          ].map((section, idx) => (
+            <Card key={idx} className="border-none shadow-xl overflow-hidden">
+              <CardHeader className="bg-white border-b px-8 py-6 flex flex-row items-center gap-5">
+                <div className={`${section.bg} p-3.5 rounded-2xl shadow-sm`}>
+                  <section.icon className={`h-8 w-8 ${section.color}`} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <CardTitle className="text-2xl font-bold tracking-tight">{section.title}</CardTitle>
+                  <Badge variant="secondary" className="w-fit font-medium text-[10px] uppercase tracking-wider">{section.badge}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8 bg-white/50">
+                <div className="prose prose-slate max-w-none">
+                  <p className="text-[17px] leading-[1.7] text-foreground/80 whitespace-pre-wrap font-medium">
+                    {section.content}
+                  </p>
+                </div>
+              </CardContent>
+            </Card> section.content
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Note */}
+      <div className="bg-primary/5 rounded-3xl p-10 text-center border-2 border-dashed border-primary/20 space-y-4">
+        <div className="flex justify-center">
+          <div className="bg-white rounded-full p-3 shadow-sm border border-primary/10">
+            <CheckCircle2 className="h-10 w-10 text-primary" />
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-8">
-        {/* Lifestyle */}
-        <Card className="border-none shadow-lg overflow-hidden group">
-          <CardHeader className="bg-primary/5 flex flex-row items-center gap-4 py-6 border-b transition-colors group-hover:bg-primary/10">
-            <div className="bg-primary/20 p-3 rounded-xl">
-              <HeartPulse className="h-8 w-8 text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <CardTitle className="text-2xl font-bold">Образ жизни</CardTitle>
-              <Badge variant="secondary" className="w-fit mt-1">Активность и сон</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap">
-              {recommendations.lifestyle}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Diet */}
-        <Card className="border-none shadow-lg overflow-hidden group">
-          <CardHeader className="bg-secondary/5 flex flex-row items-center gap-4 py-6 border-b transition-colors group-hover:bg-secondary/10">
-            <div className="bg-secondary/20 p-3 rounded-xl">
-              <Utensils className="h-8 w-8 text-secondary" />
-            </div>
-            <div className="flex flex-col">
-              <CardTitle className="text-2xl font-bold">Питание</CardTitle>
-              <Badge variant="secondary" className="w-fit mt-1 bg-secondary/20 text-secondary hover:bg-secondary/30">Рацион и продукты</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap">
-              {recommendations.diet}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Supplements */}
-        <Card className="border-none shadow-lg overflow-hidden group">
-          <CardHeader className="bg-destructive/5 flex flex-row items-center gap-4 py-6 border-b transition-colors group-hover:bg-destructive/10">
-            <div className="bg-destructive/20 p-3 rounded-xl">
-              <Pill className="h-8 w-8 text-destructive" />
-            </div>
-            <div className="flex flex-col">
-              <CardTitle className="text-2xl font-bold">Витамины и БАДы</CardTitle>
-              <Badge variant="destructive" className="w-fit mt-1">Добавки и здоровье</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap">
-              {recommendations.supplements}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="bg-primary/5 rounded-2xl p-8 text-center border-2 border-dashed border-primary/20">
-        <div className="flex justify-center mb-4">
-          <CheckCircle2 className="h-8 w-8 text-primary" />
         </div>
-        <h4 className="font-bold text-xl mb-2">Важное примечание</h4>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Данные рекомендации сформированы искусственным интеллектом. Пожалуйста, проконсультируйтесь с лечащим врачом перед началом приема любых добавок или радикальным изменением образа жизни.
-        </p>
+        <div className="space-y-2">
+          <h4 className="font-bold text-xl text-foreground">Персональный план готов к исполнению</h4>
+          <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Помните, что данные рекомендации носят информационный характер. Перед внесением радикальных изменений в свой образ жизни обязательно проконсультируйтесь со специалистом.
+          </p>
+        </div>
       </div>
     </div>
   );
