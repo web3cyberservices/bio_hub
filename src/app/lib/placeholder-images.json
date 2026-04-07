@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-healthy-food",
+      "description": "Healthy balanced meal on a table",
+      "imageUrl": "https://picsum.photos/seed/nutri1/1200/800",
+      "imageHint": "healthy meal"
+    },
+    {
+      "id": "dashboard-stats",
+      "description": "Abstract health and data visualization",
+      "imageUrl": "https://picsum.photos/seed/nutri2/600/400",
+      "imageHint": "health analysis"
+    }
+  ]
+}
