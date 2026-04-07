@@ -16,8 +16,8 @@ export function NavBar() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg">
             <Leaf className="h-6 w-6 text-primary" />
           </div>
-          <span className="font-headline text-xl font-bold tracking-tight text-white">
-            PRO <span className="text-secondary-foreground text-2xl">Себя</span>
+          <span className="font-headline text-2xl font-bold tracking-tight text-white">
+            PRO Себя
           </span>
         </Link>
         <div className="flex items-center gap-4">
