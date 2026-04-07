@@ -21,7 +21,7 @@ export default function Home() {
                   Ваш путь к <span className="text-primary italic">совершенному</span> здоровью с ИИ
                 </h1>
                 <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl">
-                  NutriPath AI анализирует ваши показатели, образ жизни и анализы, чтобы составить персональный план питания и добавок.
+                  PRO Себя анализирует ваши показатели, образ жизни и анализы, чтобы составить персональный план питания и добавок.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
                   <Link href="/register">
@@ -108,7 +108,7 @@ export default function Home() {
       </main>
       <footer className="border-t py-12 bg-white/50">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2024 NutriPath AI. Все права защищены.</p>
+          <p>© 2024 PRO Себя. Все права защищены.</p>
         </div>
       </footer>
     </div>

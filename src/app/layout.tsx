@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'NutriPath AI | Ваш персональный ИИ нутрициолог',
+  title: 'PRO Себя | Ваш персональный ИИ нутрициолог',
   description: 'Индивидуальные рекомендации по питанию, образу жизни и добавкам на основе ваших данных и анализов.',
 };
 

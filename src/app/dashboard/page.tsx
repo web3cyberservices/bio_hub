@@ -78,7 +78,7 @@ export default function DashboardPage() {
       </main>
       <footer className="border-t py-12 bg-white/50">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2024 NutriPath AI. Ваши данные защищены шифрованием.</p>
+          <p>© 2024 PRO Себя. Ваши данные защищены шифрованием.</p>
         </div>
       </footer>
     </div>

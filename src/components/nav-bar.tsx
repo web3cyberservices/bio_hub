@@ -17,7 +17,7 @@ export function NavBar() {
             <Leaf className="h-6 w-6 text-primary" />
           </div>
           <span className="font-headline text-xl font-bold tracking-tight text-white">
-            NutriPath <span className="text-secondary-foreground text-2xl">AI</span>
+            PRO <span className="text-secondary-foreground text-2xl">Себя</span>
           </span>
         </Link>
         <div className="flex items-center gap-4">
