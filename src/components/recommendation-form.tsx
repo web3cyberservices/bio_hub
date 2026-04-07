@@ -63,6 +63,9 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       gender: 'мужской',
+      weight: 70,
+      height: 175,
+      age: 30,
       activityLevel: 'средний',
       healthGoal: 'поддержать текущее состояние',
       dietaryInput: '',
@@ -102,7 +105,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                     <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
                       <User className="h-4 w-4 text-muted-foreground" /> Пол
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-11">
                           <SelectValue placeholder="Пол" />
@@ -170,10 +173,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="activityLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
                       <Activity className="h-4 w-4 text-secondary" /> Образ жизни
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-11">
                           <SelectValue placeholder="Выберите активность" />
@@ -196,10 +199,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="healthGoal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
                       <Target className="h-4 w-4 text-primary" /> Желаемый результат
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-11">
                           <SelectValue placeholder="Выберите цель" />
@@ -223,7 +226,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="dietaryInput"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
                       <Apple className="h-4 w-4 text-accent-foreground" /> Рацион питания (необязательно)
                     </FormLabel>
                     <FormControl>
@@ -244,7 +247,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="labResultsInput"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
                       <FlaskConical className="h-4 w-4 text-destructive" /> Результаты анализов (необязательно)
                     </FormLabel>
                     <FormControl>
