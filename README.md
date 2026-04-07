@@ -1,5 +1,29 @@
-# Firebase Studio
+# PRO Себя — Ваш персональный ИИ нутрициолог
 
-This is a NextJS starter in Firebase Studio.
+Это приложение на базе Next.js и Genkit, которое помогает пользователям получать персонализированные рекомендации по питанию и образу жизни.
 
-To get started, take a look at src/app/page.tsx.
+## Как запустить локально
+
+1. Установите зависимости:
+   ```bash
+   npm install
+   ```
+2. Настройте переменные окружения:
+   Создайте файл `.env` и добавьте туда свой `GEMINI_API_KEY`.
+3. Запустите сервер разработки:
+   ```bash
+   npm run dev
+   ```
+4. Откройте [http://localhost:9002](http://localhost:9002) в браузере.
+
+## Как опубликовать на GitHub
+
+1. Инициализируйте git: `git init`
+2. Добавьте файлы: `git add .`
+3. Сделайте коммит: `git commit -m "initial commit"`
+4. Создайте репозиторий на GitHub.
+5. Свяжите локальный проект с GitHub: `git remote add origin <URL_ВАШЕГО_РЕПОЗИТОРИЯ>`
+6. Отправьте код: `git push -u origin main`
+
+---
+Разработано с использованием Firebase Studio.
