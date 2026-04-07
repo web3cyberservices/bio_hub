@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    --background: 120 25% 88%;
+    --background: 120 20% 78%;
     --foreground: 120 50% 10%;
     --card: 0 0% 100%;
     --card-foreground: 120 50% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 120 50% 10%;
-    --primary: 142 55% 35%;
+    --primary: 142 40% 60%;
     --primary-foreground: 0 0% 100%;
     --secondary: 36 100% 50%;
     --secondary-foreground: 0 0% 100%;

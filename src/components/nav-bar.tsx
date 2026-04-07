@@ -1,8 +1,14 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function NavBar() {
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
+
   return (
     <nav className="sticky top-0 z-50 w-full bg-primary text-primary-foreground shadow-md border-b border-primary/20">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -15,14 +21,16 @@ export function NavBar() {
           </span>
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="font-medium text-white hover:bg-white/10 hover:text-white">Дашборд</Button>
-          </Link>
+          {!isHomePage && (
+            <Link href="/dashboard">
+              <Button variant="ghost" className="font-medium text-white hover:bg-white/10 hover:text-white">Дашборд</Button>
+            </Link>
+          )}
           <Link href="/login">
-            <Button variant="outline" className="border-white text-white hover:bg-white/10">Войти</Button>
+            <Button variant="outline" className="border-white/30 text-white bg-white/10 hover:bg-white/20 transition-colors">Войти</Button>
           </Link>
           <Link href="/register">
-            <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/20">Регистрация</Button>
+            <Button variant="outline" className="border-white/30 text-white bg-white/10 hover:bg-white/20 transition-colors">Регистрация</Button>
           </Link>
         </div>
       </div>
