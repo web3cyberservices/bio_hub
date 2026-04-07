@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 142 30% 98%;
+    --background: 142 40% 99%;
     --foreground: 142 50% 5%;
     --card: 0 0% 100%;
     --card-foreground: 142 50% 10%;
@@ -14,16 +14,16 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 142 60% 45%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 142 20% 94%;
-    --muted-foreground: 142 15% 40%;
+    --muted: 142 20% 95%;
+    --muted-foreground: 142 15% 35%;
     --accent: 142 80% 92%;
     --accent-foreground: 142 50% 15%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 142 20% 90%;
-    --input: 142 20% 90%;
+    --border: 142 20% 92%;
+    --input: 142 20% 92%;
     --ring: 142 76% 36%;
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -33,6 +33,9 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(142, 76%, 36%, 0.03) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(142, 60%, 45%, 0.03) 0, transparent 50%);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline tracking-tight;
@@ -40,10 +43,24 @@
 }
 
 .glass-card {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl shadow-primary/5;
+  @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(20,60,40,0.06)];
 }
 
 .hero-gradient {
-  background: radial-gradient(circle at top left, hsla(142, 76%, 36%, 0.08), transparent 40%),
-              radial-gradient(circle at bottom right, hsla(142, 60%, 45%, 0.08), transparent 40%);
+  background: radial-gradient(circle at top left, hsla(142, 76%, 36%, 0.05), transparent 40%),
+              radial-gradient(circle at bottom right, hsla(142, 60%, 45%, 0.05), transparent 40%);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
