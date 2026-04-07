@@ -34,8 +34,8 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     background-image: 
-      radial-gradient(at 0% 0%, hsla(142, 76%, 36%, 0.03) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(142, 60%, 45%, 0.03) 0, transparent 50%);
+      radial-gradient(at 0% 0%, hsla(142, 76%, 36%, 0.02) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(142, 60%, 45%, 0.02) 0, transparent 50%);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline tracking-tight;
