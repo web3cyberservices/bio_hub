@@ -31,7 +31,7 @@ export function NavBar() {
             <Button variant="ghost" className="h-9 px-4 rounded-lg font-bold text-white hover:bg-white/10 transition-all text-xs">Войти</Button>
           </Link>
           <Link href="/register">
-            <Button className="h-9 px-5 rounded-lg font-bold bg-white text-primary shadow-lg hover:bg-white/90 transition-all text-xs">Начать</Button>
+            <Button className="h-9 px-5 rounded-lg font-bold bg-white text-primary shadow-lg hover:bg-white/90 transition-all text-xs">Регистрация</Button>
           </Link>
           <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 rounded-lg text-white hover:bg-white/10">
             <Menu className="h-5 w-5" />
