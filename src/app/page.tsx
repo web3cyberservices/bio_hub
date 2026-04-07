@@ -8,22 +8,17 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-background hero-gradient">
       <NavBar />
       <main className="flex-1 flex flex-col items-center justify-center">
-        <section className="container mx-auto px-4 py-16 md:py-24 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-bold mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-            <Sparkles className="h-4 w-4" />
-            <span>Искусственный интеллект для вашего здоровья</span>
-          </div>
-          
+        <section className="container mx-auto px-4 py-12 md:py-20 text-center">
           <h1 className="text-5xl md:text-7xl font-bold font-headline mb-8 leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700">
             Ваше тело заслуживает <br />
             <span className="text-primary italic">персонального</span> подхода
           </h1>
           
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-12 animate-in fade-in duration-1000">
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 animate-in fade-in duration-1000">
             PRO Себя — это не просто калькулятор калорий. Это ваш личный ИИ-нутрициолог, который понимает ваш организм на основе данных и анализов.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
             <Link href="/register">
               <Button size="lg" className="h-16 px-10 text-xl font-bold rounded-full bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all hover:scale-105">
                 Начать сейчас <ArrowRight className="ml-2 h-6 w-6" />
