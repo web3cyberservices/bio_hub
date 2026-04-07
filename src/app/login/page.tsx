@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Leaf } from 'lucide-react';
 
-export default function RegisterPage() {
+export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-muted/20">
       <NavBar />
@@ -20,9 +19,9 @@ export default function RegisterPage() {
                 <Leaf className="h-8 w-8 text-primary-foreground" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tracking-tight">Создать аккаунт</CardTitle>
+            <CardTitle className="text-3xl font-bold tracking-tight">Вход в PRO Себя</CardTitle>
             <CardDescription className="text-base">
-              Начните свой путь к здоровью сегодня
+              Введите свои данные или используйте Google
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -30,9 +29,9 @@ export default function RegisterPage() {
               <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
-              Регистрация через Google
+              Войти через Google
             </Button>
-
+            
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -42,45 +41,29 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <form className="space-y-6">
-              <div className="space-y-3">
-                <Label className="text-base">Тип профиля</Label>
-                <RadioGroup defaultValue="user" className="flex gap-4">
-                  <div className="flex items-center space-x-2 rounded-lg border p-3 w-full cursor-pointer hover:bg-muted/50 transition-colors">
-                    <RadioGroupItem value="user" id="user" />
-                    <Label htmlFor="user" className="cursor-pointer font-medium">Пользователь</Label>
-                  </div>
-                  <div className="flex items-center space-x-2 rounded-lg border p-3 w-full cursor-pointer hover:bg-muted/50 transition-colors">
-                    <RadioGroupItem value="specialist" id="specialist" />
-                    <Label htmlFor="specialist" className="cursor-pointer font-medium">Специалист</Label>
-                  </div>
-                </RadioGroup>
+            <form className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="name@example.com" />
               </div>
-              
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Имя</Label>
-                  <Input id="name" placeholder="Иван Иванов" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" />
-                </div>
-                <div className="grid gap-2">
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password">Пароль</Label>
-                  <Input id="password" type="password" />
+                  <Link href="#" className="text-sm text-primary hover:underline">Забыли?</Link>
                 </div>
+                <Input id="password" type="password" />
               </div>
               <Button className="w-full h-12 text-lg bg-primary hover:bg-primary/90 font-bold" type="submit">
-                Зарегистрироваться
+                Войти
               </Button>
-              <div className="text-center text-sm">
-                Уже есть аккаунт?{' '}
-                <Link href="/login" className="text-primary hover:underline font-semibold">
-                  Войти
-                </Link>
-              </div>
             </form>
+            
+            <div className="text-center text-sm">
+              Нет аккаунта?{' '}
+              <Link href="/register" className="text-primary hover:underline font-semibold">
+                Зарегистрироваться
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </main>
