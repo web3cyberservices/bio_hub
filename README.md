@@ -25,5 +25,14 @@
 5. Свяжите локальный проект с GitHub: `git remote add origin <URL_ВАШЕГО_РЕПОЗИТОРИЯ>`
 6. Отправьте код: `git push -u origin main`
 
+### Решение ошибки "Can't push refs to remote..." (как на скриншоте)
+
+Если вы видите ошибку **"Try running 'Pull' first"**, это значит, что в GitHub репозитории уже есть файлы. Чтобы объединить их, выполните в терминале:
+
+```bash
+git pull origin main --rebase
+git push origin main
+```
+
 ---
 Разработано с использованием Firebase Studio.
