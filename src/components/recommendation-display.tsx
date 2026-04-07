@@ -1,14 +1,45 @@
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Sparkles, CheckCircle2 } from 'lucide-react';
+import { HeartPulse, Utensils, Pill, Sparkles, CheckCircle2, Flame, Beef, Droplets, Wheat } from 'lucide-react';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from '@/components/ui/chart';
+import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
 }
 
 export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
-  const { recommendations } = data;
+  const { recommendations, macros } = data;
+
+  const chartData = [
+    { name: 'Белки', value: macros.protein, fill: 'hsl(var(--primary))' },
+    { name: 'Жиры', value: macros.fat, fill: 'hsl(var(--secondary))' },
+    { name: 'Углеводы', value: macros.carbs, fill: 'hsl(var(--accent-foreground))' },
+  ];
+
+  const chartConfig = {
+    value: {
+      label: 'Граммы',
+    },
+    protein: {
+      label: 'Белки',
+      color: 'hsl(var(--primary))',
+    },
+    fat: {
+      label: 'Жиры',
+      color: 'hsl(var(--secondary))',
+    },
+    carbs: {
+      label: 'Углеводы',
+      color: 'hsl(var(--accent-foreground))',
+    },
+  } satisfies ChartConfig;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -18,9 +49,81 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
         </div>
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ваши рекомендации готовы</h2>
         <p className="text-muted-foreground max-w-lg">
-          На основе ваших параметров, образа жизни и анализов ИИ подготовил индивидуальный план.
+          На основе ваших параметров, образа жизни и анализов ИИ подготовил индивидуальный план и расчет макронутриентов.
         </p>
       </div>
+
+      {/* Macros Dashboard */}
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="bg-white border-none shadow-sm">
+          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="bg-orange-100 p-3 rounded-full">
+              <Flame className="h-6 w-6 text-orange-600" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Калории</p>
+            <p className="text-3xl font-bold">{macros.calories}</p>
+            <p className="text-xs text-muted-foreground">ккал/день</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-none shadow-sm">
+          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="bg-primary/10 p-3 rounded-full">
+              <Beef className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Белки</p>
+            <p className="text-3xl font-bold">{macros.protein}г</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-none shadow-sm">
+          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="bg-secondary/10 p-3 rounded-full">
+              <Droplets className="h-6 w-6 text-secondary" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Жиры</p>
+            <p className="text-3xl font-bold">{macros.fat}г</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-none shadow-sm">
+          <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="bg-accent/10 p-3 rounded-full">
+              <Wheat className="h-6 w-6 text-accent-foreground" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Углеводы</p>
+            <p className="text-3xl font-bold">{macros.carbs}г</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Chart Section */}
+      <Card className="border-none shadow-lg bg-white overflow-hidden">
+        <CardHeader className="bg-primary/5 py-6">
+          <CardTitle className="text-xl font-bold">Баланс макронутриентов</CardTitle>
+          <CardDescription>Распределение белков, жиров и углеводов в вашем рационе</CardDescription>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="h-[300px] w-full">
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ left: 40, right: 20 }}>
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    tick={{ fontSize: 14, fontWeight: 500 }}
+                    width={80}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={40}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-8">
         {/* Lifestyle */}
