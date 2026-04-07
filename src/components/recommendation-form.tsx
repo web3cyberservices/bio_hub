@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -28,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, FlaskConical, Apple, User } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, FlaskConical, Apple, User, Scale, Ruler, Calendar } from 'lucide-react';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес должен быть положительным'),
@@ -98,7 +99,9 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1.5">Пол</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
+                      <User className="h-4 w-4 text-muted-foreground" /> Пол
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-11">
@@ -119,7 +122,9 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="weight"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Вес (кг)</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
+                      <Scale className="h-4 w-4 text-muted-foreground" /> Вес (кг)
+                    </FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="70" {...field} className="h-11" />
                     </FormControl>
@@ -132,7 +137,9 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="height"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Рост (см)</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
+                      <Ruler className="h-4 w-4 text-muted-foreground" /> Рост (см)
+                    </FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="175" {...field} className="h-11" />
                     </FormControl>
@@ -145,7 +152,9 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="age"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Возраст</FormLabel>
+                    <FormLabel className="flex items-center gap-1.5 min-h-[1.5rem]">
+                      <Calendar className="h-4 w-4 text-muted-foreground" /> Возраст
+                    </FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="30" {...field} className="h-11" />
                     </FormControl>
