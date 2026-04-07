@@ -164,7 +164,7 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
                   </p>
                 </div>
               </CardContent>
-            </Card> section.content
+            </Card>
           ))}
         </div>
       </div>
