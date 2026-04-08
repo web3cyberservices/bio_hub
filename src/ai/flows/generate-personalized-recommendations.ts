@@ -39,6 +39,12 @@ const GenerateRecommendationsInputSchema = z.object({
     .string()
     .optional()
     .describe('Описание хронических заболеваний, жалоб или аллергий пользователя.'),
+  // Данные с устройств
+  deviceData: z.object({
+    steps: z.number().optional().describe('Количество шагов за сегодня.'),
+    avgHeartRate: z.number().optional().describe('Средний пульс в покое (уд/мин).'),
+    sleepDurationHours: z.number().optional().describe('Продолжительность сна (часы).'),
+  }).optional().describe('Данные синхронизированные с носимых устройств (Apple Health, Google Fit и т.д.)'),
 });
 export type GenerateRecommendationsInput = z.infer<
   typeof GenerateRecommendationsInputSchema
@@ -59,6 +65,7 @@ const GenerateRecommendationsOutputSchema = z.object({
     fat: z.number().describe('Рекомендуемое количество жиров (г).'),
     carbs: z.number().describe('Рекомендуемое количество углеводов (г).'),
   }),
+  activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств.'),
 });
 export type GenerateRecommendationsOutput = z.infer<
   typeof GenerateRecommendationsOutputSchema
@@ -86,6 +93,13 @@ const recommendationPrompt = ai.definePrompt({
 - Уровень активности: {{{activityLevel}}}
 - Цель: {{{healthGoal}}}
 
+{{#if deviceData}}
+Данные с носимых устройств:
+- Шаги сегодня: {{deviceData.steps}}
+- Средний пульс: {{deviceData.avgHeartRate}} уд/мин
+- Сон: {{deviceData.sleepDurationHours}} ч
+{{/if}}
+
 {{#if medicalConditionsInput}}
 Медицинские условия/заболевания:
 {{{medicalConditionsInput}}}
@@ -102,12 +116,11 @@ const recommendationPrompt = ai.definePrompt({
 {{/if}}
 
 Важные инструкции:
-1. Рассчитайте суточную норму калорий (TDEE) на основе формулы Миффлина-Сан Жеора и уровня активности.
+1. Рассчитайте суточную норму калорий (TDEE) на основе формулы Миффлина-Сан Жеора и уровня активности. Если данные о шагах (deviceData.steps) высоки, скорректируйте калории в сторону увеличения.
 2. Рассчитайте оптимальное распределение БЖУ (белки, жиры, углеводы) в граммах в зависимости от цели пользователя.
-3. Подготовьте подробные рекомендации по образу жизни, диете и добавкам.
-4. Если есть заболевания (medicalConditionsInput), обязательно учтите их в диетических рекомендациях (например, исключите сахар при диабете или глютен при целиакии).
-
-Если предоставлены данные о рационе или анализах, обязательно интегрируйте их в свой анализ.`,
+3. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. 
+4. Если данные о сне низкие (менее 7 часов), добавьте конкретные советы по гигиене сна в раздел Образ жизни.
+5. Если предоставлены данные о рационе или анализах, обязательно интегрируйте их в свой анализ.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(

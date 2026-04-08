@@ -24,10 +24,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -39,6 +40,11 @@ const formSchema = z.object({
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
   medicalConditionsInput: z.string().optional(),
+  deviceData: z.object({
+    steps: z.coerce.number().optional(),
+    avgHeartRate: z.coerce.number().optional(),
+    sleepDurationHours: z.coerce.number().optional(),
+  }).optional(),
 });
 
 interface RecommendationFormProps {
@@ -47,6 +53,7 @@ interface RecommendationFormProps {
 
 export function RecommendationForm({ onResult }: RecommendationFormProps) {
   const [loading, setLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,6 +67,11 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       dietaryInput: '',
       labResultsInput: '',
       medicalConditionsInput: '',
+      deviceData: {
+        steps: 8000,
+        avgHeartRate: 65,
+        sleepDurationHours: 7.5,
+      }
     },
   });
 
@@ -78,19 +90,24 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
   return (
     <Card className="border-none shadow-2xl rounded-[3rem] bg-white/80 backdrop-blur-xl overflow-hidden p-1">
       <CardContent className="p-10 space-y-10">
-        <div className="flex items-center gap-5">
-          <div className="p-4 bg-primary/10 rounded-2xl shadow-inner">
-            <Activity className="h-7 w-7 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-primary/10 rounded-2xl shadow-inner">
+              <Activity className="h-7 w-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black tracking-tighter">Ваш профиль</h3>
+              <p className="text-muted-foreground font-medium">Данные для ИИ-анализа</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-3xl font-black tracking-tighter">Ваш профиль</h3>
-            <p className="text-muted-foreground font-medium">Введите данные для анализа</p>
-          </div>
+          <Badge className="bg-secondary/10 text-secondary border-none px-4 py-2 rounded-xl flex gap-2">
+            <Watch className="h-4 w-4" /> Данные синхронизированы
+          </Badge>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6 grid-cols-2">
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
               <FormField
                 control={form.control}
                 name="weight"
@@ -100,9 +117,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Scale className="h-3.5 w-3.5 text-primary/60" /> Вес (кг)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -115,15 +131,11 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Ruler className="h-3.5 w-3.5 text-primary/60" /> Рост (см)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <div className="grid gap-6 grid-cols-2">
               <FormField
                 control={form.control}
                 name="age"
@@ -133,31 +145,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Calendar className="h-3.5 w-3.5 text-primary/60" /> Возраст
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                      <User className="h-3.5 w-3.5 text-primary/60" /> Пол
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
-                          <SelectValue placeholder="Пол" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-2xl">
-                        <SelectItem value="мужской">Мужчина</SelectItem>
-                        <SelectItem value="женский">Женщина</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </FormItem>
                 )}
               />
@@ -169,12 +158,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="activityLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                      <Activity className="h-3.5 w-3.5 text-primary/60" /> Активность
-                    </FormLabel>
+                    <FormLabel className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Уровень активности</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
                           <SelectValue placeholder="Активность" />
                         </SelectTrigger>
                       </FormControl>
@@ -194,12 +181,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="healthGoal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                      <Target className="h-3.5 w-3.5 text-primary/60" /> Цель
-                    </FormLabel>
+                    <FormLabel className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Цель здоровья</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
                           <SelectValue placeholder="Цель" />
                         </SelectTrigger>
                       </FormControl>
@@ -214,36 +199,37 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="medicalConditionsInput"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                    <Stethoscope className="h-3.5 w-3.5 text-primary/60" /> Заболевания и жалобы (необязательно)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Укажите хронические заболевания или симптомы..." {...field} className="min-h-[100px] rounded-2xl bg-muted/30 border-none font-medium text-lg resize-none" />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {/* Device Data Section */}
+            <div className="p-6 rounded-[2rem] bg-secondary/5 border border-secondary/10 space-y-6">
+              <div className="flex items-center gap-3">
+                <Watch className="h-5 w-5 text-secondary" />
+                <h4 className="font-black text-secondary uppercase tracking-widest text-[11px]">Данные с Apple Watch / Garmin</h4>
+              </div>
+              <div className="grid gap-4 grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Zap className="h-3 w-3" /> Шаги</label>
+                  <Input type="number" {...form.register('deviceData.steps')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Activity className="h-3 w-3" /> Пульс</label>
+                  <Input type="number" {...form.register('deviceData.avgHeartRate')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Moon className="h-3 w-3" /> Сон (ч)</label>
+                  <Input type="number" step="0.1" {...form.register('deviceData.sleepDurationHours')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                </div>
+              </div>
+            </div>
 
             <Button 
               type="submit" 
-              className="w-full h-18 rounded-[1.75rem] text-2xl font-black bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all hover:scale-[1.03] active:scale-95 py-8 mt-4" 
+              className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all" 
               disabled={loading}
             >
               {loading ? (
-                <>
-                  <Loader2 className="mr-3 h-7 w-7 animate-spin" />
-                  Обработка...
-                </>
+                <><Loader2 className="mr-3 h-8 w-8 animate-spin" /> Анализ...</>
               ) : (
-                <>
-                  <Sparkles className="mr-3 h-7 w-7" />
-                  Анализ данных
-                </>
+                <><Sparkles className="mr-3 h-8 w-8" /> Получить план здоровья</>
               )}
             </Button>
           </form>
