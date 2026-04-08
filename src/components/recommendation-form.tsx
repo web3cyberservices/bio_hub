@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart, ThumbsDown } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -37,6 +37,8 @@ const formSchema = z.object({
   gender: z.enum(['мужской', 'женский']),
   activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
+  smoking: z.enum(['да', 'нет']),
+  alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
   planDuration: z.enum(['день', 'неделя']),
@@ -66,6 +68,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       age: 30,
       activityLevel: 'средний',
       healthGoal: 'поддержать текущее состояние',
+      smoking: 'нет',
+      alcohol: 'не употребляю',
       favoriteFoods: '',
       dislikedFoods: '',
       planDuration: 'день',
@@ -112,6 +116,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Биометрия */}
             <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
               <FormField
                 control={form.control}
@@ -157,6 +162,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
+            {/* Активность и Цель */}
             <div className="grid gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -204,6 +210,57 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
+            {/* Вредные привычки */}
+            <div className="grid gap-6 md:grid-cols-2 p-6 rounded-[2rem] bg-muted/20 border border-muted/30">
+              <FormField
+                control={form.control}
+                name="smoking"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Cigarette className="h-3.5 w-3.5 text-primary/60" /> Вы курите?
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-12 rounded-xl bg-white/50 border-none font-bold">
+                          <SelectValue placeholder="Выберите" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="да">Да</SelectItem>
+                        <SelectItem value="нет">Нет</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="alcohol"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Wine className="h-3.5 w-3.5 text-primary/60" /> Алкоголь
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-12 rounded-xl bg-white/50 border-none font-bold">
+                          <SelectValue placeholder="Выберите частоту" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="не употребляю">Не употребляю</SelectItem>
+                        <SelectItem value="редко">Редко (праздники)</SelectItem>
+                        <SelectItem value="умеренно">Умеренно (1-2 раза в неделю)</SelectItem>
+                        <SelectItem value="часто">Часто</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Продукты */}
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -267,10 +324,11 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
+            {/* Устройства */}
             <div className="p-6 rounded-[2rem] bg-secondary/5 border border-secondary/10 space-y-6">
               <div className="flex items-center gap-3">
                 <Watch className="h-5 w-5 text-secondary" />
-                <h4 className="font-black text-secondary uppercase tracking-widest text-[11px]">Данные с Apple Watch / Garmin</h4>
+                <h4 className="font-black text-secondary uppercase tracking-widest text-[11px]">Данные носимых устройств</h4>
               </div>
               <div className="grid gap-4 grid-cols-3">
                 <div className="space-y-2">
