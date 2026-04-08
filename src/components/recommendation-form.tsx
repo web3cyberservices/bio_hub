@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -37,6 +37,8 @@ const formSchema = z.object({
   gender: z.enum(['мужской', 'женский']),
   activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
+  favoriteFoods: z.string().optional(),
+  planDuration: z.enum(['день', 'неделя']),
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
   medicalConditionsInput: z.string().optional(),
@@ -53,7 +55,6 @@ interface RecommendationFormProps {
 
 export function RecommendationForm({ onResult }: RecommendationFormProps) {
   const [loading, setLoading] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,6 +65,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       age: 30,
       activityLevel: 'средний',
       healthGoal: 'поддержать текущее состояние',
+      favoriteFoods: '',
+      planDuration: 'день',
       dietaryInput: '',
       labResultsInput: '',
       medicalConditionsInput: '',
@@ -192,6 +195,49 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                         <SelectItem value="снизить массу тела">Похудение</SelectItem>
                         <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
                         <SelectItem value="набор массы">Набор массы</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="favoriteFoods"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Heart className="h-3.5 w-3.5 text-primary/60" /> Любимые продукты
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Например: Авокадо, лосось, гречка, творог..." 
+                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <p className="text-[10px] text-muted-foreground italic">ИИ будет использовать этот список для составления вашего меню.</p>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="planDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Составить меню на:</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
+                          <SelectValue placeholder="Длительность" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-2xl">
+                        <SelectItem value="день">Сегодня (1 день)</SelectItem>
+                        <SelectItem value="неделя">Неделю (7 дней)</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>

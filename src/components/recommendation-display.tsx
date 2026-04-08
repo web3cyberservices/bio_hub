@@ -1,17 +1,20 @@
+import { useState } from 'react';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Sparkles, Flame, Beef, Droplets, Wheat, Activity, Info, Camera, ScanBarcode, Plus } from 'lucide-react';
+import { HeartPulse, Utensils, Pill, Sparkles, Flame, Beef, Droplets, Wheat, Activity, Info, Camera, ScanBarcode, Plus, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
 }
 
 export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
-  const { recommendations, macros } = data;
+  const { recommendations, macros, mealPlan } = data;
+  const [selectedDayIdx, setSelectedDayIdx] = useState(0);
 
   return (
     <div className="space-y-8 pb-12">
@@ -65,26 +68,6 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Активность (ккал)</p>
           </div>
         </Card>
-      </div>
-
-      {/* Quick Actions Bar */}
-      <div className="flex justify-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-[2rem] border border-white max-w-md mx-auto">
-        <UnifiedDataEntry>
-          <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all">
-            <Camera className="h-6 w-6" />
-          </Button>
-        </UnifiedDataEntry>
-        <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-muted/50 hover:bg-muted transition-all">
-          <ScanBarcode className="h-6 w-6" />
-        </Button>
-        <UnifiedDataEntry>
-          <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-muted/50 hover:bg-muted transition-all">
-            <Plus className="h-6 w-6" />
-          </Button>
-        </UnifiedDataEntry>
-        <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all">
-          <Activity className="h-6 w-6" />
-        </Button>
       </div>
 
       {/* Detailed Nutrients */}
@@ -145,6 +128,75 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Meal Plan Section */}
+      {mealPlan && mealPlan.length > 0 && (
+        <Card className="border-none shadow-xl bg-white overflow-hidden">
+          <CardHeader className="px-8 pt-8 flex flex-row items-center justify-between border-b pb-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-3 rounded-2xl">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black">План питания</CardTitle>
+                <CardDescription className="font-medium">Персональное меню с учетом ваших предпочтений</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {mealPlan.length > 1 && (
+              <div className="flex items-center justify-between bg-muted/20 px-8 py-4 border-b">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  disabled={selectedDayIdx === 0}
+                  onClick={() => setSelectedDayIdx(prev => prev - 1)}
+                  className="font-bold gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Назад
+                </Button>
+                <div className="text-center">
+                  <span className="text-sm font-black uppercase tracking-widest text-primary">
+                    {mealPlan[selectedDayIdx].day}
+                  </span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  disabled={selectedDayIdx === mealPlan.length - 1}
+                  onClick={() => setSelectedDayIdx(prev => prev + 1)}
+                  className="font-bold gap-2"
+                >
+                  Вперед <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
+            <div className="p-8 space-y-6">
+              {mealPlan[selectedDayIdx].meals.map((meal, idx) => (
+                <div key={idx} className="group flex gap-6 items-start p-6 rounded-3xl hover:bg-muted/30 transition-all border border-transparent hover:border-muted-foreground/10">
+                  <div className="min-w-[80px] pt-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+                      {meal.time}
+                    </span>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="text-lg font-black tracking-tight">{meal.name}</h4>
+                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                      {meal.description}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="secondary" className="font-black bg-white shadow-sm border px-3">
+                      {meal.calories} ккал
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recommendations Sections */}
       <div className="grid gap-6">
