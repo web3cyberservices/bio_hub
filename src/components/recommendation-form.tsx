@@ -47,11 +47,12 @@ import {
   Camera,
   Upload,
   X,
-  Trophy
+  Mic,
+  MicOff,
+  FileUp
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -78,9 +79,10 @@ interface RecommendationFormProps {
 
 export function RecommendationForm({ onResult, selectedDate }: RecommendationFormProps) {
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState<string | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [dietaryImage, setDietaryImage] = useState<string | null>(null);
+  const [labImage, setLabImage] = useState<string | null>(null);
+  const [activeCamera, setActiveCamera] = useState<'diet' | 'labs' | null>(null);
+  const [isRecording, setIsRecording] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -105,34 +107,33 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     },
   });
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'diet' | 'labs') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string);
-        setShowCamera(false);
+        if (type === 'diet') setDietaryImage(reader.result as string);
+        else setLabImage(reader.result as string);
+        setActiveCamera(null);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const startCamera = async () => {
-    setShowCamera(true);
+  const startCamera = async (type: 'diet' | 'labs') => {
+    setActiveCamera(type);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      setHasCameraPermission(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      setHasCameraPermission(false);
       toast({
         variant: 'destructive',
-        title: 'Доступ к камере отклонен',
-        description: 'Пожалуйста, разрешите доступ к камере в настройках браузера.',
+        title: 'Ошибка камеры',
+        description: 'Пожалуйста, разрешите доступ к камере в настройках.',
       });
+      setActiveCamera(null);
     }
   };
 
@@ -142,10 +143,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       stream.getTracks().forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
-    setShowCamera(false);
+    setActiveCamera(null);
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = (type: 'diet' | 'labs') => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
       canvas.width = videoRef.current.videoWidth;
@@ -153,10 +154,56 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0);
-        setImage(canvas.toDataURL('image/jpeg'));
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        if (type === 'diet') setDietaryImage(dataUrl);
+        else setLabImage(dataUrl);
         stopCamera();
       }
     }
+  };
+
+  const toggleVoiceInput = (fieldName: keyof z.infer<typeof formSchema>) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast({
+        variant: 'destructive',
+        title: 'Не поддерживается',
+        description: 'Ваш браузер не поддерживает голосовой ввод.',
+      });
+      return;
+    }
+
+    if (isRecording === fieldName) {
+      setIsRecording(null);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsRecording(fieldName);
+      toast({ title: "Голосовой ввод", description: "Слушаю вас..." });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const currentVal = form.getValues(fieldName);
+      form.setValue(fieldName, `${currentVal} ${transcript}`.trim());
+      setIsRecording(null);
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(null);
+      toast({ variant: 'destructive', title: "Ошибка", description: "Не удалось распознать голос." });
+    };
+
+    recognition.onend = () => setIsRecording(null);
+    
+    recognition.start();
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -165,11 +212,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       const result = await generatePersonalizedRecommendations({
         ...values,
         targetDate: selectedDate.toISOString(),
-        // Note: In a real app we'd handle the image in the AI flow if needed
       });
       onResult(result);
     } catch (error) {
-      console.error('Failed to generate recommendations:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка генерации',
@@ -195,7 +240,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           </div>
           <Badge className="bg-primary/5 text-primary border-none px-6 py-3 rounded-2xl flex gap-3 font-black uppercase tracking-widest text-[10px]">
             <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
-            Анализ в режиме реального времени
+            Интеллектуальный анализ 2.0
           </Badge>
         </div>
 
@@ -211,24 +256,24 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Users className="h-3.5 w-3.5" /> Биологический пол
+                        <Users className="h-3.5 w-3.5" /> Пол
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8 focus:ring-4 focus:ring-primary/10 transition-all">
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
-                          <SelectItem value="мужской" className="rounded-xl font-black text-lg py-3">Мужской</SelectItem>
-                          <SelectItem value="женский" className="rounded-xl font-black text-lg py-3">Женский</SelectItem>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="мужской">Мужской</SelectItem>
+                          <SelectItem value="женский">Женский</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
                   )}
                 />
                 {[
-                  { name: 'weight', label: 'Текущий Вес (кг)', icon: Scale },
+                  { name: 'weight', label: 'Вес (кг)', icon: Scale },
                   { name: 'height', label: 'Рост (см)', icon: Ruler },
                   { name: 'age', label: 'Возраст', icon: Calendar },
                 ].map((metric) => (
@@ -242,7 +287,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           <metric.icon className="h-3.5 w-3.5" /> {metric.label}
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8 focus:ring-4 focus:ring-primary/10 transition-all" />
+                          <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -259,12 +304,48 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   control={form.control}
                   name="labResultsInput"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                        <FlaskConical className="h-4 w-4 text-primary" /> Результаты анализов
-                      </FormLabel>
+                    <FormItem className="relative">
+                      <div className="flex items-center justify-between mb-4">
+                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                          <FlaskConical className="h-4 w-4 text-primary" /> Анализы
+                        </FormLabel>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className={cn("h-8 w-8 rounded-lg", isRecording === 'labResultsInput' && "bg-red-100 text-red-500 animate-pulse")}
+                            onClick={() => toggleVoiceInput('labResultsInput')}
+                          >
+                            {isRecording === 'labResultsInput' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => startCamera('labs')}>
+                            <Camera className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                       <FormControl>
-                        <Textarea placeholder="Введите данные из чекапа или лаб. тестов..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none placeholder:text-muted-foreground/40" {...field} />
+                        <div className="space-y-4">
+                          <Textarea placeholder="Результаты лаб. тестов..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none" {...field} />
+                          {(activeCamera === 'labs' || labImage) && (
+                            <div className="relative rounded-[2rem] overflow-hidden border-2 border-primary/20 aspect-video">
+                              {activeCamera === 'labs' ? (
+                                <>
+                                  <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                                    <Button type="button" onClick={() => capturePhoto('labs')} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                                    <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <img src={labImage!} className="w-full h-full object-cover" />
+                                  <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full" onClick={() => setLabImage(null)}><X className="h-4 w-4" /></Button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                     </FormItem>
                   )}
@@ -274,11 +355,22 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="medicalConditionsInput"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                        <Stethoscope className="h-4 w-4 text-primary" /> Жалобы и заболевания
-                      </FormLabel>
+                      <div className="flex items-center justify-between mb-4">
+                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                          <Stethoscope className="h-4 w-4 text-primary" /> Жалобы
+                        </FormLabel>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className={cn("h-8 w-8 rounded-lg", isRecording === 'medicalConditionsInput' && "bg-red-100 text-red-500 animate-pulse")}
+                          onClick={() => toggleVoiceInput('medicalConditionsInput')}
+                        >
+                          <Mic className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <FormControl>
-                        <Textarea placeholder="Опишите хронические заболевания или текущие симптомы..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none placeholder:text-muted-foreground/40" {...field} />
+                        <Textarea placeholder="Опишите симптомы..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -296,11 +388,22 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                     name="dietaryInput"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                          <Utensils className="h-4 w-4 text-primary" /> Дневник питания
-                        </FormLabel>
+                        <div className="flex items-center justify-between mb-4">
+                          <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                            <Utensils className="h-4 w-4 text-primary" /> Дневник питания
+                          </FormLabel>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500 animate-pulse")}
+                            onClick={() => toggleVoiceInput('dietaryInput')}
+                          >
+                            <Mic className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <FormControl>
-                          <Textarea placeholder="Что вы съели за последнее время? Опишите кратко..." className="min-h-[220px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none placeholder:text-muted-foreground/40" {...field} />
+                          <Textarea placeholder="Что вы сегодня ели? Надиктуйте или введите..." className="min-h-[220px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -311,39 +414,33 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                     <Camera className="h-4 w-4 text-primary" /> Фото еды
                   </label>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button type="button" variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={startCamera}>
+                    <Button type="button" variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={() => startCamera('diet')}>
                       <Camera className="h-8 w-8 text-primary" />
                       <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Камера</span>
                     </Button>
                     <label className="cursor-pointer">
                       <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center">
-                        <Upload className="h-8 w-8 text-primary" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Загрузить</span>
+                        <FileUp className="h-8 w-8 text-primary" />
+                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
                       </div>
-                      <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, 'diet')} />
                     </label>
                   </div>
                   
-                  {showCamera && (
+                  {activeCamera === 'diet' && (
                     <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-square">
                       <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                        <Button type="button" onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                        <Button type="button" onClick={() => capturePhoto('diet')} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
                         <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
                       </div>
                     </div>
                   )}
 
-                  {image && !showCamera && (
+                  {dietaryImage && activeCamera !== 'diet' && (
                     <div className="relative rounded-[2rem] overflow-hidden group border-4 border-primary/20">
-                      <img src={image} className="w-full aspect-square object-cover" />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setImage(null)}
-                      >
+                      <img src={dietaryImage} className="w-full aspect-square object-cover" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDietaryImage(null)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -352,149 +449,16 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 4. Strategic Targets */}
-            <div className="space-y-8">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 border-b pb-4">04. Стратегия и Цели</h4>
-              <div className="grid gap-10 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="activityLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground mb-4 uppercase tracking-[0.2em]">Уровень метаболизма</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black px-8 text-xl">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
-                          <SelectItem value="малоактивный" className="rounded-xl py-3 font-bold">Сидячий / Офис</SelectItem>
-                          <SelectItem value="среднеактивный" className="rounded-xl py-3 font-bold">Легкий фитнес</SelectItem>
-                          <SelectItem value="средний" className="rounded-xl py-3 font-bold">Средняя активность</SelectItem>
-                          <SelectItem value="активный" className="rounded-xl py-3 font-bold">Высокие нагрузки</SelectItem>
-                          <SelectItem value="перенагрузка" className="rounded-xl py-3 font-bold">Атлетический режим</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="healthGoal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground mb-4 uppercase tracking-[0.2em]">Глобальный таргет</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black px-8 text-xl">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
-                          <SelectItem value="снизить массу тела" className="rounded-xl py-3 font-bold">Снижение веса</SelectItem>
-                          <SelectItem value="поддержать текущее состояние" className="rounded-xl py-3 font-bold">Баланс и Тонус</SelectItem>
-                          <SelectItem value="набор массы" className="rounded-xl py-3 font-bold">Гипертрофия мышц</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* 5. Lifestyle & Habits */}
-            <div className="p-12 rounded-[2.5rem] bg-primary/5 border border-primary/10 grid gap-10 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="smoking"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                      <Cigarette className="h-4 w-4 text-primary" /> Курение
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-16 rounded-2xl bg-white border-none font-black px-8 shadow-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
-                        <SelectItem value="да" className="font-bold">Курильщик</SelectItem>
-                        <SelectItem value="нет" className="font-bold">Не курю</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="alcohol"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                      <Wine className="h-4 w-4 text-primary" /> Алкоголь
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="h-16 rounded-2xl bg-white border-none font-black px-8 shadow-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-xl border-none shadow-2xl">
-                        <SelectItem value="не употребляю" className="font-bold">Не употребляю</SelectItem>
-                        <SelectItem value="редко" className="font-bold">Редко</SelectItem>
-                        <SelectItem value="умеренно" className="font-bold">Умеренно</SelectItem>
-                        <SelectItem value="часто" className="font-bold">Часто</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-             {/* 6. Food Preferences */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-              <FormField
-                control={form.control}
-                name="favoriteFoods"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                      <Heart className="h-4 w-4 text-primary" /> Любимые ингредиенты
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Что добавить в меню?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none placeholder:text-muted-foreground/40" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dislikedFoods"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
-                      <ThumbsDown className="h-4 w-4 text-destructive" /> Стоп-лист (Исключить)
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Что строго запрещено?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-destructive/5 resize-none placeholder:text-muted-foreground/40" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <Button 
               type="submit" 
-              className="w-full h-28 rounded-[2rem] text-3xl font-black bg-primary shadow-[0_25px_50px_rgba(76,175,80,0.3)] transition-all hover:scale-[1.01] active:scale-95 group relative overflow-hidden" 
+              className="w-full h-28 rounded-[2rem] text-3xl font-black bg-primary shadow-[0_25px_50px_rgba(76,175,80,0.3)] transition-all hover:scale-[1.01] active:scale-95 group overflow-hidden" 
               disabled={loading}
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               {loading ? (
-                <><Loader2 className="mr-6 h-10 w-10 animate-spin" /> Глубокий анализ данных...</>
+                <><Loader2 className="mr-6 h-10 w-10 animate-spin" /> Биометрический анализ...</>
               ) : (
-                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Сгенерировать План</>
+                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Получить рекомендации</>
               )}
             </Button>
           </form>

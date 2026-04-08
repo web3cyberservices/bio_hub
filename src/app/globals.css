@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 140 20% 98%; /* Very light mint/greenish tint */
+    --background: 140 30% 96%; /* Pale mint background */
     --foreground: 140 40% 10%;
     --card: 0 0% 100%;
     --card-foreground: 140 40% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 140 40% 15%;
-    --primary: 142 45% 44%; /* Refined Medical Green */
+    --primary: 142 45% 44%; /* Medical Green */
     --primary-foreground: 0 0% 100%;
     --secondary: 24 95% 53%; /* Energy Orange */
     --secondary-foreground: 0 0% 100%;
-    --muted: 140 10% 94%;
+    --muted: 140 10% 90%;
     --muted-foreground: 140 10% 40%;
     --accent: 45 93% 47%; /* Gold Accent */
     --accent-foreground: 140 40% 15%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 140 10% 90%;
-    --input: 140 10% 90%;
+    --border: 140 10% 85%;
+    --input: 140 10% 85%;
     --ring: 142 45% 44%;
-    --radius: 1.5rem;
+    --radius: 2.5rem;
   }
 }
 
@@ -40,11 +40,11 @@
 }
 
 .premium-card {
-  @apply bg-white border border-white/50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.06)] rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-1;
+  @apply bg-white border border-white/50 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.08)] rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.12)] hover:-translate-y-1;
 }
 
 .glass-panel {
-  @apply bg-white/80 backdrop-blur-2xl border border-white/40 shadow-xl;
+  @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-xl;
 }
 
 .text-gradient {
@@ -57,12 +57,4 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Custom progress bars */
-.progress-premium {
-  @apply h-2 rounded-full bg-muted overflow-hidden;
-}
-.progress-premium > div {
-  @apply h-full bg-primary transition-all duration-1000 ease-out;
 }
