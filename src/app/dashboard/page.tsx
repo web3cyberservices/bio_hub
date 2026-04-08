@@ -104,21 +104,6 @@ export default function DashboardPage() {
                </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 md:gap-4">
-            <Button variant="outline" size="lg" className="rounded-2xl md:rounded-3xl border-2 h-14 w-14 md:h-20 md:w-20 p-0 hover:bg-primary/5 transition-all shadow-sm">
-              <History className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
-            </Button>
-            {result && (
-              <Button 
-                variant="default" 
-                size="lg"
-                onClick={() => setResult(null)}
-                className="flex-1 md:flex-none rounded-2xl md:rounded-3xl h-14 md:h-20 px-6 md:px-10 bg-secondary font-black uppercase tracking-widest text-[10px] md:text-xs gap-3 md:gap-4 shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
-              >
-                <RefreshCw className="h-5 w-5 md:h-6 md:w-6" /> Обновить данные
-              </Button>
-            )}
-          </div>
         </div>
 
         <div className="grid gap-10 md:gap-16">
