@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth } from 'lucide-react';
+import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +95,10 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
     });
   };
 
+  const addActivity = (activity: string) => {
+    setDescription(prev => prev ? `${prev}, ${activity}` : activity);
+  };
+
   const handleSubmit = async () => {
     if (!description && !image) {
       toast({
@@ -137,6 +141,15 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
     stopCamera();
   };
 
+  const sports = [
+    { name: 'Бег', icon: Timer },
+    { name: 'Футбол', icon: Activity },
+    { name: 'Теннис', icon: Trophy },
+    { name: 'Зал', icon: Zap },
+    { name: 'Йога', icon: Heart },
+    { name: 'Плавание', icon: Activity }
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       setIsOpen(open);
@@ -154,13 +167,47 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
           {!mealResult && !isSuccess ? (
             <>
               <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 rounded-2xl h-14 bg-muted/50 p-1">
-                  <TabsTrigger value="meal" className="rounded-xl font-bold gap-2 text-[11px]"><Activity className="h-4 w-4" /> Еда</TabsTrigger>
-                  <TabsTrigger value="labs" className="rounded-xl font-bold gap-2 text-[11px]"><FlaskConical className="h-4 w-4" /> Анализы</TabsTrigger>
-                  <TabsTrigger value="health" className="rounded-xl font-bold gap-2 text-[11px]"><Stethoscope className="h-4 w-4" /> Жалобы</TabsTrigger>
-                  <TabsTrigger value="devices" className="rounded-xl font-bold gap-2 text-[11px]"><Watch className="h-4 w-4" /> Устройства</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-5 rounded-2xl h-14 bg-muted/50 p-1">
+                  <TabsTrigger value="meal" className="rounded-xl font-bold gap-2 text-[10px]"><Activity className="h-4 w-4" /> Еда</TabsTrigger>
+                  <TabsTrigger value="activities" className="rounded-xl font-bold gap-2 text-[10px]"><Trophy className="h-4 w-4" /> Спорт</TabsTrigger>
+                  <TabsTrigger value="labs" className="rounded-xl font-bold gap-2 text-[10px]"><FlaskConical className="h-4 w-4" /> Анализы</TabsTrigger>
+                  <TabsTrigger value="health" className="rounded-xl font-bold gap-2 text-[10px]"><Stethoscope className="h-4 w-4" /> Жалобы</TabsTrigger>
+                  <TabsTrigger value="devices" className="rounded-xl font-bold gap-2 text-[10px]"><Watch className="h-4 w-4" /> Гаджеты</TabsTrigger>
                 </TabsList>
                 
+                <TabsContent value="activities" className="mt-8 space-y-6 animate-in fade-in duration-300">
+                  <div className="text-center space-y-2 mb-4">
+                    <h4 className="text-xl font-black">Что вы делали сегодня?</h4>
+                    <p className="text-sm text-muted-foreground font-medium">Это поможет ИИ скорректировать ваш план питания</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    {sports.map((sport) => (
+                      <Button
+                        key={sport.name}
+                        variant="outline"
+                        className="h-20 rounded-2xl flex flex-col gap-1 border-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                        onClick={() => addActivity(sport.name)}
+                      >
+                        <sport.icon className="h-5 w-5 text-primary" />
+                        <span className="text-xs font-bold">{sport.name}</span>
+                      </Button>
+                    ))}
+                  </div>
+
+                  <Textarea
+                    placeholder="Опишите интенсивность или добавьте другие активности..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="min-h-[120px] rounded-3xl bg-muted/30 border-none p-6 text-lg font-medium resize-none"
+                  />
+                  
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-xl shadow-primary/20" onClick={handleSubmit} disabled={loading}>
+                    {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Trophy className="mr-3 h-8 w-8" />}
+                    Добавить активности
+                  </Button>
+                </TabsContent>
+
                 <TabsContent value="devices" className="mt-8 space-y-6 animate-in fade-in duration-300">
                   <div className="text-center space-y-2 mb-8">
                     <h4 className="text-xl font-black">Подключите ваши девайсы</h4>

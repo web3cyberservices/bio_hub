@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine, Trophy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -41,6 +41,7 @@ const formSchema = z.object({
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
+  dailyActivities: z.string().optional(),
   planDuration: z.enum(['день', 'неделя']),
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
@@ -72,6 +73,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       alcohol: 'не употребляю',
       favoriteFoods: '',
       dislikedFoods: '',
+      dailyActivities: '',
       planDuration: 'день',
       dietaryInput: '',
       labResultsInput: '',
@@ -258,6 +260,25 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
             </div>
 
             <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="dailyActivities"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Trophy className="h-3.5 w-3.5 text-primary/60" /> Активности за сегодня
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Бег 30 мин, Футбол, Йога..." 
+                        className="min-h-[80px] rounded-2xl bg-muted/30 border-none p-4 font-medium" 
+                        {...field} 
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="favoriteFoods"
