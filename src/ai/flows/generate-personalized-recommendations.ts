@@ -91,7 +91,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       name: z.string().describe('Название блюда.'),
       description: z.string().describe('Состав или краткий способ приготовления.'),
       calories: z.number().describe('Калорийность приема пищи.'),
-      imageId: z.string().describe('ID изображения из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salad-chicken, lunch-salmon, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
+      imageId: z.string().describe('ID изображения из строго определенного списка.'),
     }))
   })).describe('Персонализированное меню на день или неделю.'),
   activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств и активностей.'),
@@ -110,75 +110,28 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `Вы — ИИ-нутрициолог, эксперт в области здоровья и велнеса. Ваша задача — предоставить персонализированные, контекстные и практические рекомендации.
+  prompt: `Вы — ИИ-нутрициолог, эксперт в области здоровья и велнеса. Ваша задача — предоставить персонализированные и практические рекомендации.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
-Контекст даты:
-Целевая дата для планирования: {{{targetDate}}}
+Контекст пользователя:
+- Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
+- Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
+- Курение: {{{smoking}}}, Алкоголь: {{{alcohol}}}.
+{{#if favoriteFoods}}Любимая еда: {{{favoriteFoods}}}{{/if}}
+{{#if dislikedFoods}}Нелюбимая еда: {{{dislikedFoods}}}{{/if}}
+{{#if dailyActivities}}Активности сегодня: {{{dailyActivities}}}{{/if}}
 
-Профиль здоровья пользователя:
-- Пол: {{{gender}}}
-- Вес: {{{weight}}} кг
-- Рост: {{{height}}} см
-- Возраст: {{{age}}} лет
-- Уровень активности: {{{activityLevel}}}
-- Цель: {{{healthGoal}}}
-- Курение: {{{smoking}}}
-- Алкоголь: {{{alcohol}}}
-
-{{#if dailyActivities}}
-Активности за этот день:
-{{{dailyActivities}}}
-{{/if}}
-
-{{#if favoriteFoods}}
-Любимые продукты пользователя (используйте их как основу при составлении меню):
-{{{favoriteFoods}}}
-{{/if}}
-
-{{#if dislikedFoods}}
-Нелюбимые продукты пользователя (СТРОГО ИСКЛЮЧИТЕ их из меню):
-{{{dislikedFoods}}}
-{{/if}}
-
-План нужен на: {{{planDuration}}}
-
-{{#if deviceData}}
-Данные с носимых устройств:
-- Шаги: {{deviceData.steps}}
-- Средний пульс: {{deviceData.avgHeartRate}} уд/мин
-- Сон: {{deviceData.sleepDurationHours}} ч
-{{/if}}
-
-{{#if medicalConditionsInput}}
-Медицинские условия/заболевания:
-{{{medicalConditionsInput}}}
-{{/if}}
-
-{{#if dietaryInput}}
-Данные о рационе пользователя:
-{{{dietaryInput}}}
-{{/if}}
-
-{{#if labResultsInput}}
-Данные лабораторных анализов:
-{{{labResultsInput}}}
-{{/if}}
-
-Важные инструкции:
-1. Рассчитайте суточную норму калорий (TDEE) на основе формулы Миффлина-Сан Жеора и уровня активности, С УЧЕТОМ конкретных активностей ({{{dailyActivities}}}).
-2. Учтите вредные привычки:
-   - Если пользователь курит (smoking: 'да'), добавьте рекомендации по повышенному потреблению витамина C и антиоксидантов.
-   - Если пользователь употребляет алкоголь умеренно или часто, добавьте рекомендации по поддержке печени (расторопша, холин) и гидратации.
-3. Составьте план питания (mealPlan) начиная с целевой даты ({{{targetDate}}}) на указанную длительность ({{{planDuration}}}). 
-4. В плане питания СТРОГО УЧИТЫВАЙТЕ любимые продукты пользователя и СТРОГО ИСКЛЮЧАЙТЕ нелюбимые продукты.
-5. Для каждого блюда выберите максимально релевантный imageId из списка:
-   - breakfast-omelette (для блюд из яиц), breakfast-oatmeal (каши), breakfast-smoothie (напитки/смузи)
-   - lunch-salad-chicken (салаты с птицей), lunch-salmon (рыбные блюда), lunch-soup (супы)
-   - dinner-steak (мясные блюда), dinner-white-fish (легкая рыба), dinner-tofu (вегетарианские основные блюда)
+Инструкции по Meal Plan:
+1. Составьте план на {{{planDuration}}}.
+2. Для КАЖДОГО блюда выберите ID из этого списка (и никакой другой!):
+   - breakfast-omelette (яйца), breakfast-oatmeal (каши), breakfast-smoothie (смузи)
+   - lunch-salad-chicken (салаты), lunch-salmon (рыба), lunch-soup (супы)
+   - dinner-steak (мясо), dinner-white-fish (белая рыба), dinner-tofu (вегетарианское)
    - snack-nuts (орехи), snack-yogurt (молочное), snack-avocado (тосты), snack-fruit (фрукты)
-6. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте активности в разделе activityAnalysis.`,
+
+3. Учтите дефициты витаминов если есть курение или алкоголь.
+4. Выдайте строго валидный JSON согласно схеме.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
@@ -189,6 +142,7 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await recommendationPrompt(input);
-    return output!;
+    if (!output) throw new Error('Model failed to generate valid output');
+    return output;
   }
 );

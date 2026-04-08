@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -207,7 +208,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     recognition.onstart = () => {
       setIsRecording(fieldName);
-      toast({ title: "Голосовой ввод", description: "Слушаю вас..." });
     };
 
     recognition.onresult = (event: any) => {
@@ -219,7 +219,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     recognition.onerror = () => {
       setIsRecording(null);
-      toast({ variant: 'destructive', title: "Ошибка", description: "Не удалось распознать голос." });
     };
 
     recognition.onend = () => setIsRecording(null);
@@ -408,7 +407,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
                           <SelectItem value="не употребляю" className="focus:bg-white/10 focus:text-white">Не употребляю</SelectItem>
-                          <SelectItem value="редко" className="focus:bg-white/10 focus:text-white">Редко (по праздникам)</SelectItem>
+                          <SelectItem value="редко" className="focus:bg-white/10 focus:text-white">Редко</SelectItem>
                           <SelectItem value="умеренно" className="focus:bg-white/10 focus:text-white">Умеренно</SelectItem>
                           <SelectItem value="часто" className="focus:bg-white/10 focus:text-white">Часто</SelectItem>
                         </SelectContent>

@@ -1,3 +1,6 @@
+
+'use client';
+
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
@@ -17,14 +20,16 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
 
   const getMealImage = (imageId: string) => {
+    // Безопасный поиск изображения с фолбеком
     const found = PlaceHolderImages.find(img => img.id === imageId);
     if (found) return found;
     
+    // Если ID не найден, возвращаем первое доступное или дефолт
     return PlaceHolderImages[0] || {
-      id: 'placeholder',
-      imageUrl: 'https://picsum.photos/seed/placeholder/400/300',
-      imageHint: 'healthy food',
-      description: 'Default healthy food image'
+      id: 'fallback',
+      imageUrl: 'https://picsum.photos/seed/fallback/400/300',
+      imageHint: 'healthy meal',
+      description: 'Healthy food placeholder'
     };
   };
 
@@ -35,9 +40,9 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   ], [macros]);
 
   return (
-    <div className="space-y-12 md:space-y-20 pb-24">
+    <div className="space-y-12 md:space-y-20 pb-24 animate-in fade-in duration-1000">
       {/* Mobile Macro Infographic */}
-      <div className="block md:hidden animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="block md:hidden">
         <Card className="premium-card p-6 border-none overflow-hidden bg-white/60 backdrop-blur-xl">
           <div className="flex flex-col items-center">
             <div className="relative w-full aspect-square max-w-[240px]">
@@ -88,7 +93,6 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
           { label: 'Сложные Углеводы', value: macros.carbs, unit: 'г', icon: Wheat, color: 'text-blue-500', bg: 'bg-blue-50' },
         ].map((stat, i) => (
           <Card key={i} className="premium-card border-none overflow-hidden relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             <CardContent className="p-8 flex flex-col gap-6">
               <div className={`${stat.bg} w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm`}>
                 <stat.icon className={`h-7 w-7 ${stat.color}`} />
@@ -118,11 +122,11 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
       )}
 
       {/* Meal Plan Navigator */}
-      {mealPlan && mealPlan.length > 0 && (
+      {mealPlan && mealPlan.length > 0 && selectedDayIdx < mealPlan.length && (
         <Card className="premium-card overflow-hidden border-none shadow-2xl">
           <CardHeader className="px-6 md:px-10 py-8 md:py-12 flex flex-col md:flex-row items-start md:items-center justify-between border-b bg-muted/20 gap-8">
             <div className="flex items-center gap-4 md:gap-6">
-              <div className="bg-primary/10 p-3 md:p-4 rounded-[1.25rem] md:rounded-[1.75rem] shadow-sm">
+              <div className="bg-primary/10 p-3 md:p-4 rounded-[1.75rem] shadow-sm">
                 <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               </div>
               <div>
@@ -132,14 +136,14 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
             </div>
             {mealPlan.length > 1 && (
               <div className="flex items-center gap-2 md:gap-4 bg-white p-1 md:p-2 rounded-2xl shadow-sm self-center md:self-auto">
-                <Button variant="ghost" size="icon" disabled={selectedDayIdx === 0} onClick={() => setSelectedDayIdx(p => p - 1)} className="rounded-xl h-10 w-10 md:h-12 md:w-12">
-                  <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+                <Button variant="ghost" size="icon" disabled={selectedDayIdx === 0} onClick={() => setSelectedDayIdx(p => p - 1)} className="rounded-xl h-10 w-10">
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
                 <Badge className="bg-primary/10 text-primary border-none text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] px-4 md:px-6 h-8 md:h-10 flex items-center rounded-xl">
                   {mealPlan[selectedDayIdx].day}
                 </Badge>
-                <Button variant="ghost" size="icon" disabled={selectedDayIdx === mealPlan.length - 1} onClick={() => setSelectedDayIdx(p => p + 1)} className="rounded-xl h-10 w-10 md:h-12 md:w-12">
-                  <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+                <Button variant="ghost" size="icon" disabled={selectedDayIdx === mealPlan.length - 1} onClick={() => setSelectedDayIdx(p => p + 1)} className="rounded-xl h-10 w-10">
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
             )}
@@ -158,7 +162,7 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
                       data-ai-hint={mealImg.imageHint} 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                       <p className="text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Info className="h-3 w-3" /> Нажми для деталей</p>
+                       <p className="text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Info className="h-3 w-3" /> Детали состава</p>
                     </div>
                   </div>
                   <div className="flex-1 space-y-4 md:space-y-6 py-2">
@@ -187,7 +191,7 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
         ].map((section, idx) => (
           <Card key={idx} className="premium-card flex flex-col border-none group">
             <CardHeader className="flex flex-row items-center gap-4 md:gap-6 border-b border-muted/50 p-6 md:p-10 bg-white group-hover:bg-muted/5 transition-colors">
-              <div className={`${section.bg} w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] md:rounded-[1.5rem] flex items-center justify-center shadow-sm`}>
+              <div className={`${section.bg} w-14 h-14 md:w-16 md:h-16 rounded-[1.25rem] flex items-center justify-center shadow-sm`}>
                 <section.icon className={`h-7 w-7 md:h-8 md:w-8 ${section.color}`} />
               </div>
               <CardTitle className="text-lg md:text-xl font-black uppercase tracking-[0.15em] md:tracking-[0.2em] leading-tight">{section.title}</CardTitle>
