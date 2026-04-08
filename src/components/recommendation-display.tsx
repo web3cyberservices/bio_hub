@@ -1,12 +1,12 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Sparkles, Flame, Beef, Droplets, Wheat, Activity, Info, Camera, ScanBarcode, Plus, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, Info, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { UnifiedDataEntry } from '@/components/unified-data-entry';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
@@ -15,6 +15,10 @@ interface RecommendationDisplayProps {
 export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   const { recommendations, macros, mealPlan } = data;
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+
+  const getMealImage = (imageId: string) => {
+    return PlaceHolderImages.find(img => img.id === imageId) || PlaceHolderImages[0];
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -172,27 +176,37 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
               </div>
             )}
             
-            <div className="p-8 space-y-6">
-              {mealPlan[selectedDayIdx].meals.map((meal, idx) => (
-                <div key={idx} className="group flex gap-6 items-start p-6 rounded-3xl hover:bg-muted/30 transition-all border border-transparent hover:border-muted-foreground/10">
-                  <div className="min-w-[80px] pt-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-                      {meal.time}
-                    </span>
+            <div className="p-8 space-y-8">
+              {mealPlan[selectedDayIdx].meals.map((meal, idx) => {
+                const mealImg = getMealImage(meal.imageId);
+                return (
+                  <div key={idx} className="group flex flex-col md:flex-row gap-6 p-6 rounded-[2.5rem] hover:bg-muted/30 transition-all border border-transparent hover:border-muted-foreground/10 bg-white/50 backdrop-blur-sm shadow-sm">
+                    <div className="relative w-full md:w-48 h-36 shrink-0 rounded-3xl overflow-hidden shadow-md">
+                      <Image
+                        src={mealImg.imageUrl}
+                        alt={meal.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        data-ai-hint={mealImg.imageHint}
+                      />
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-4 py-1.5 rounded-full">
+                          {meal.time}
+                        </span>
+                        <Badge variant="secondary" className="font-black bg-white shadow-sm border px-3">
+                          {meal.calories} ккал
+                        </Badge>
+                      </div>
+                      <h4 className="text-xl font-black tracking-tight">{meal.name}</h4>
+                      <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                        {meal.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <h4 className="text-lg font-black tracking-tight">{meal.name}</h4>
-                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                      {meal.description}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="secondary" className="font-black bg-white shadow-sm border px-3">
-                      {meal.calories} ккал
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

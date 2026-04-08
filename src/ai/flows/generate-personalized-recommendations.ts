@@ -53,12 +53,10 @@ const GenerateRecommendationsInputSchema = z.object({
     .string()
     .optional()
     .describe('Описание хронических заболеваний, жалоб или аллергий пользователя.'),
-  // Новое поле для активностей
   dailyActivities: z
     .string()
     .optional()
     .describe('Список конкретных активностей за сегодня (например: "Бег 5км", "Футбол 1 час", "Теннис").'),
-  // Данные с устройств
   deviceData: z.object({
     steps: z.number().optional().describe('Количество шагов за сегодня.'),
     avgHeartRate: z.number().optional().describe('Средний пульс в покое (уд/мин).'),
@@ -91,6 +89,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       name: z.string().describe('Название блюда.'),
       description: z.string().describe('Состав или краткий способ приготовления.'),
       calories: z.number().describe('Калорийность приема пищи.'),
+      imageId: z.string().describe('ID изображения из списка: breakfast-bowl, lunch-salad, dinner-protein, healthy-snack.'),
     }))
   })).describe('Персонализированное меню на день или неделю.'),
   activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств и активностей.'),
@@ -169,7 +168,8 @@ const recommendationPrompt = ai.definePrompt({
    - Если пользователь употребляет алкоголь умеренно или часто, добавьте рекомендации по поддержке печени (расторопша, холин) и гидратации.
 3. Составьте план питания (mealPlan) на указанную длительность ({{{planDuration}}}). 
 4. В плане питания СТРОГО УЧИТЫВАЙТЕ любимые продукты пользователя и СТРОГО ИСКЛЮЧАЙТЕ нелюбимые продукты.
-5. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте его сегодняшние активности в разделе activityAnalysis.`,
+5. Для каждого блюда выберите наиболее подходящий imageId из списка: breakfast-bowl (для завтраков), lunch-salad (для обедов/салатов), dinner-protein (для основных ужинов), healthy-snack (для перекусов).
+6. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте его сегодняшние активности в разделе activityAnalysis.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(

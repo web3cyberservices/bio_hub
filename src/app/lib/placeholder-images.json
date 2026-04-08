@@ -11,6 +11,30 @@
       "description": "Abstract health and data visualization",
       "imageUrl": "https://picsum.photos/seed/nutri2/600/400",
       "imageHint": "health analysis"
+    },
+    {
+      "id": "breakfast-bowl",
+      "description": "Healthy breakfast bowl with fruits and nuts",
+      "imageUrl": "https://picsum.photos/seed/breakfast/400/300",
+      "imageHint": "breakfast bowl"
+    },
+    {
+      "id": "lunch-salad",
+      "description": "Fresh garden salad with protein",
+      "imageUrl": "https://picsum.photos/seed/lunch/400/300",
+      "imageHint": "healthy salad"
+    },
+    {
+      "id": "dinner-protein",
+      "description": "Balanced dinner with protein and vegetables",
+      "imageUrl": "https://picsum.photos/seed/dinner/400/300",
+      "imageHint": "dinner plate"
+    },
+    {
+      "id": "healthy-snack",
+      "description": "Light and nutritious snack",
+      "imageUrl": "https://picsum.photos/seed/snack/400/300",
+      "imageHint": "healthy snack"
     }
   ]
 }
