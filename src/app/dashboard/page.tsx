@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NavBar } from '@/components/nav-bar';
 import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Activity } from 'lucide-react';
-import { format, addDays, startOfToday, isSameDay, isToday as isDateToday, isPast, isFuture } from 'date-fns';
+import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Activity, Sparkles } from 'lucide-react';
+import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,18 +16,11 @@ import { Badge } from '@/components/ui/badge';
 export default function DashboardPage() {
   const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);
   const [selectedDate, setSelectedDate] = useState(startOfToday());
-  const [days, setDays] = useState<Date[]>([]);
-
-  useEffect(() => {
-    // Generate a week range centered around selectedDate
-    const range = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i - 3));
-    setDays(range);
-  }, [selectedDate]);
 
   const getStatusLabel = (date: Date) => {
     if (isDateToday(date)) return "Сегодня";
-    if (isPast(date)) return "Прошлое";
-    if (isFuture(date)) return "План";
+    if (isPast(date)) return "История";
+    if (isFuture(date)) return "Прогноз";
     return "";
   };
 
@@ -35,63 +28,33 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F8FAF9]">
       <NavBar />
       
-      {/* Calendar Navigation */}
-      <div className="bg-white/60 backdrop-blur-md border-b sticky top-20 z-40 py-4 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-4 lg:hidden">
-            <h2 className="text-xl font-black">{getStatusLabel(selectedDate)}</h2>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon"><CalendarIcon className="h-5 w-5" /></Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                  locale={ru}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="flex justify-between items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="hidden lg:flex rounded-xl" 
-              onClick={() => setSelectedDate(prev => addDays(prev, -1))}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex-1 flex justify-around lg:justify-center lg:gap-8 overflow-x-auto no-scrollbar">
-              {days.map((day, i) => {
-                const isSelected = isSameDay(day, selectedDate);
-                const isToday = isDateToday(day);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedDate(day)}
-                    className={`flex flex-col items-center min-w-[70px] py-3 px-2 rounded-2xl transition-all duration-300 ${
-                      isSelected ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-105' : 'hover:bg-primary/5'
-                    }`}
-                  >
-                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>
-                      {format(day, 'EEE', { locale: ru })}
-                    </span>
-                    <span className="text-2xl font-black">{format(day, 'd')}</span>
-                    {isToday && !isSelected && <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5" />}
-                  </button>
-                );
-              })}
-            </div>
-            
-            <div className="hidden lg:flex items-center gap-2">
-               <Popover>
+      {/* Fixed Classic Navigation Bar */}
+      <div className="bg-white/80 backdrop-blur-xl border-b sticky top-20 z-40 py-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-2xl h-12 w-12 hover:bg-primary/5 transition-all" 
+                onClick={() => setSelectedDate(prev => addDays(prev, -1))}
+              >
+                <ChevronLeft className="h-6 w-6 text-primary" />
+              </Button>
+              
+              <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-xl border-2 hover:bg-primary/5 h-12 w-12"><CalendarIcon className="h-5 w-5" /></Button>
+                  <Button variant="ghost" className="px-6 h-14 rounded-3xl flex flex-col items-start gap-0.5 hover:bg-primary/5 transition-all">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
+                      {getStatusLabel(selectedDate)}
+                    </span>
+                    <span className="text-2xl font-black tracking-tighter flex items-center gap-2">
+                      {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+                      <CalendarIcon className="h-4 w-4 text-primary opacity-40" />
+                    </span>
+                  </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none" align="end">
+                <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none mt-4" align="center">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -101,78 +64,90 @@ export default function DashboardPage() {
                   />
                 </PopoverContent>
               </Popover>
+
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="rounded-xl h-12 w-12"
+                className="rounded-2xl h-12 w-12 hover:bg-primary/5 transition-all"
                 onClick={() => setSelectedDate(prev => addDays(prev, 1))}
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6 text-primary" />
               </Button>
             </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-4">
+             <Badge className="bg-secondary/10 text-secondary border-none px-6 py-2 rounded-2xl font-black uppercase tracking-widest text-[9px]">
+               Биометрический статус: Активен
+             </Badge>
           </div>
         </div>
       </div>
 
-      <main className="container mx-auto flex-1 px-4 py-12">
-        <div className="mb-12 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-3">
+      <main className="container mx-auto flex-1 px-4 py-16">
+        <div className="mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+          <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground">
-                {format(selectedDate, 'd MMMM', { locale: ru })}
-              </h1>
-              <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 font-black uppercase tracking-widest text-[10px]">
-                {getStatusLabel(selectedDate)}
-              </Badge>
+               <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center shadow-inner">
+                  <Sparkles className="h-8 w-8 text-primary" />
+               </div>
+               <div>
+                  <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground">
+                    Кабинет Здоровья
+                  </h1>
+                  <p className="text-muted-foreground text-xl font-medium max-w-xl leading-snug">
+                    {isFuture(selectedDate) 
+                      ? 'Ваша стратегия долголетия и прогноз состояния.' 
+                      : 'Аналитический отчет и рекомендации на основе ваших данных.'}
+                  </p>
+               </div>
             </div>
-            <p className="text-muted-foreground text-lg font-medium max-w-xl leading-snug">
-              {isFuture(selectedDate) 
-                ? 'Формируем вашу стратегию здоровья на будущий период.' 
-                : 'Детальный анализ вашего состояния и рекомендации на сегодня.'}
-            </p>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="lg" className="rounded-2xl border-2 h-16 w-16 p-0 hover:bg-primary/5">
-              <History className="h-6 w-6" />
+            <Button variant="outline" size="lg" className="rounded-3xl border-2 h-20 w-20 p-0 hover:bg-primary/5 transition-all shadow-sm">
+              <History className="h-8 w-8 text-muted-foreground" />
             </Button>
             {result && (
               <Button 
                 variant="default" 
                 size="lg"
                 onClick={() => setResult(null)}
-                className="rounded-2xl h-16 px-8 bg-secondary font-black uppercase tracking-widest text-xs gap-3 shadow-xl shadow-secondary/20"
+                className="rounded-3xl h-20 px-10 bg-secondary font-black uppercase tracking-widest text-xs gap-4 shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
               >
-                <RefreshCw className="h-5 w-5" /> Обновить анкету
+                <RefreshCw className="h-6 w-6" /> Обновить данные
               </Button>
             )}
           </div>
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-12">
+        <div className="grid gap-16">
           {!result && (
-            <div className="lg:col-span-12 max-w-5xl mx-auto w-full">
+            <div className="max-w-6xl mx-auto w-full animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <RecommendationForm onResult={setResult} selectedDate={selectedDate} />
             </div>
           )}
 
           {result && (
-            <div className="lg:col-span-12 space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out">
+            <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out">
               <RecommendationDisplay data={result} />
             </div>
           )}
         </div>
       </main>
       
-      <footer className="mt-32 border-t py-16 bg-white">
-        <div className="container mx-auto px-4 text-center space-y-4">
-          <div className="flex justify-center items-center gap-2 mb-4">
-             <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                <Activity className="h-4 w-4 text-primary" />
+      <footer className="mt-40 border-t py-20 bg-white/50 backdrop-blur-md">
+        <div className="container mx-auto px-4 text-center space-y-6">
+          <div className="flex justify-center items-center gap-3">
+             <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                <Activity className="h-5 w-5 text-primary" />
              </div>
-             <span className="font-headline font-black tracking-tighter text-xl">PRO Себя</span>
+             <span className="font-headline font-black tracking-tighter text-2xl">PRO Себя</span>
           </div>
-          <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Интеллектуальная биометрическая платформа управления здоровьем.</p>
-          <p className="text-muted-foreground/50 text-[9px] uppercase tracking-[0.3em]">© 2024 NEXT GEN BIOTECH LABS.</p>
+          <div className="max-w-lg mx-auto">
+             <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] mb-2">Интеллектуальная биометрическая платформа.</p>
+             <p className="text-muted-foreground/40 text-[9px] leading-relaxed">Система использует передовые алгоритмы машинного обучения для корреляции ваших клинических показателей, образа жизни и нутритивного статуса. Данные не являются медицинским диагнозом.</p>
+          </div>
+          <p className="text-muted-foreground/30 text-[8px] uppercase tracking-[0.5em] pt-8">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
         </div>
       </footer>
     </div>
