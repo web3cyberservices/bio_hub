@@ -18,9 +18,9 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState(startOfToday());
 
   const getStatusLabel = (date: Date) => {
-    if (isDateToday(date)) return "Сегодня";
-    if (isPast(date)) return "История";
-    if (isFuture(date)) return "Прогноз";
+    if (isDateToday(date)) return "СЕГОДНЯ";
+    if (isPast(date)) return "ИСТОРИЯ";
+    if (isFuture(date)) return "ПРОГНОЗ";
     return "";
   };
 
@@ -28,52 +28,52 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F8FAF9]">
       <NavBar />
       
-      {/* Fixed Classic Navigation Bar */}
-      <div className="bg-white/80 backdrop-blur-xl border-b sticky top-20 z-40 py-6 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+      {/* Sticky Navigation Bar */}
+      <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-2xl h-12 w-12 hover:bg-primary/5 transition-all" 
-                onClick={() => setSelectedDate(prev => addDays(prev, -1))}
-              >
-                <ChevronLeft className="h-6 w-6 text-primary" />
-              </Button>
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" className="px-6 h-14 rounded-3xl flex flex-col items-start gap-0.5 hover:bg-primary/5 transition-all">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
-                      {getStatusLabel(selectedDate)}
-                    </span>
-                    <span className="text-2xl font-black tracking-tighter flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-xl h-10 w-10 hover:bg-primary/5 transition-all" 
+              onClick={() => setSelectedDate(prev => addDays(prev, -1))}
+            >
+              <ChevronLeft className="h-5 w-5 text-primary" />
+            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="px-4 h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 transition-all min-w-[180px]">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
+                    {getStatusLabel(selectedDate)}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold tracking-tight">
                       {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
-                      <CalendarIcon className="h-4 w-4 text-primary opacity-40" />
                     </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none mt-4" align="center">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    initialFocus
-                    locale={ru}
-                  />
-                </PopoverContent>
-              </Popover>
+                    <CalendarIcon className="h-4 w-4 text-primary opacity-30" />
+                  </div>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.15)] border-none mt-4" align="center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
 
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-2xl h-12 w-12 hover:bg-primary/5 transition-all"
-                onClick={() => setSelectedDate(prev => addDays(prev, 1))}
-              >
-                <ChevronRight className="h-6 w-6 text-primary" />
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-xl h-10 w-10 hover:bg-primary/5 transition-all"
+              onClick={() => setSelectedDate(prev => addDays(prev, 1))}
+            >
+              <ChevronRight className="h-5 w-5 text-primary" />
+            </Button>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -145,7 +145,7 @@ export default function DashboardPage() {
           </div>
           <div className="max-w-lg mx-auto">
              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] mb-2">Интеллектуальная биометрическая платформа.</p>
-             <p className="text-muted-foreground/40 text-[9px] leading-relaxed">Система использует передовые алгоритмы машинного обучения для корреляции ваших клинических показателей, образа жизни и нутритивного статуса. Данные не являются медицинским диагнозом.</p>
+             <p className="text-muted-foreground/40 text-[9px] leading-relaxed">Система использует передовые алгоритмы машинного обучения для корреляции ваших клинических показателей, образа жизни и нутивтивного статуса. Данные не являются медицинским диагнозом.</p>
           </div>
           <p className="text-muted-foreground/30 text-[8px] uppercase tracking-[0.5em] pt-8">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
         </div>
