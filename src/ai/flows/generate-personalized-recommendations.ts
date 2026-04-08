@@ -7,6 +7,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateRecommendationsInputSchema = z.object({
+  targetDate: z.string().describe('Дата, на которую составляется план (ISO формат).'),
   weight: z.number().positive().describe('Текущий вес в килограммах.'),
   height: z.number().positive().describe('Текущий рост в сантиметрах.'),
   age: z.number().int().min(1).describe('Текущий возраст в годах.'),
@@ -112,6 +113,9 @@ const recommendationPrompt = ai.definePrompt({
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
+Контекст даты:
+Целевая дата для планирования: {{{targetDate}}}
+
 Профиль здоровья пользователя:
 - Пол: {{{gender}}}
 - Вес: {{{weight}}} кг
@@ -123,7 +127,7 @@ const recommendationPrompt = ai.definePrompt({
 - Алкоголь: {{{alcohol}}}
 
 {{#if dailyActivities}}
-Активности за сегодня:
+Активности за этот день:
 {{{dailyActivities}}}
 {{/if}}
 
@@ -141,7 +145,7 @@ const recommendationPrompt = ai.definePrompt({
 
 {{#if deviceData}}
 Данные с носимых устройств:
-- Шаги сегодня: {{deviceData.steps}}
+- Шаги: {{deviceData.steps}}
 - Средний пульс: {{deviceData.avgHeartRate}} уд/мин
 - Сон: {{deviceData.sleepDurationHours}} ч
 {{/if}}
@@ -166,10 +170,10 @@ const recommendationPrompt = ai.definePrompt({
 2. Учтите вредные привычки:
    - Если пользователь курит (smoking: 'да'), добавьте рекомендации по повышенному потреблению витамина C и антиоксидантов.
    - Если пользователь употребляет алкоголь умеренно или часто, добавьте рекомендации по поддержке печени (расторопша, холин) и гидратации.
-3. Составьте план питания (mealPlan) на указанную длительность ({{{planDuration}}}). 
+3. Составьте план питания (mealPlan) начиная с целевой даты ({{{targetDate}}}) на указанную длительность ({{{planDuration}}}). 
 4. В плане питания СТРОГО УЧИТЫВАЙТЕ любимые продукты пользователя и СТРОГО ИСКЛЮЧАЙТЕ нелюбимые продукты.
 5. Для каждого блюда выберите наиболее подходящий imageId из списка: breakfast-bowl (для завтраков), lunch-salad (для обедов/салатов), dinner-protein (для основных ужинов), healthy-snack (для перекусов).
-6. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте его сегодняшние активности в разделе activityAnalysis.`,
+6. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте активности в разделе activityAnalysis.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(

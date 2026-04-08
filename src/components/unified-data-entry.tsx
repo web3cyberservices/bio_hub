@@ -5,18 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart } from 'lucide-react';
+import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
+  selectedDate?: Date;
 }
 
-export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
+export function UnifiedDataEntry({ children, selectedDate = new Date() }: UnifiedDataEntryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('meal');
@@ -160,7 +163,12 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[650px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="p-10 bg-primary text-white">
-          <DialogTitle className="text-3xl font-black tracking-tight">Центр данных</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-3xl font-black tracking-tight">Центр данных</DialogTitle>
+            <Badge className="bg-white/20 text-white border-none px-4 py-2 rounded-xl flex gap-2 font-bold backdrop-blur-md">
+              <CalendarIcon className="h-4 w-4" /> {format(selectedDate, 'd MMMM', { locale: ru })}
+            </Badge>
+          </div>
         </DialogHeader>
         
         <div className="p-8 space-y-6 max-h-[80vh] overflow-y-auto no-scrollbar">
@@ -177,7 +185,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                 
                 <TabsContent value="activities" className="mt-8 space-y-6 animate-in fade-in duration-300">
                   <div className="text-center space-y-2 mb-4">
-                    <h4 className="text-xl font-black">Что вы делали сегодня?</h4>
+                    <h4 className="text-xl font-black">Что было сделано {format(selectedDate, 'd MMM', { locale: ru })}?</h4>
                     <p className="text-sm text-muted-foreground font-medium">Это поможет ИИ скорректировать ваш план питания</p>
                   </div>
                   
@@ -204,7 +212,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                   
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-xl shadow-primary/20" onClick={handleSubmit} disabled={loading}>
                     {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Trophy className="mr-3 h-8 w-8" />}
-                    Добавить активности
+                    Сохранить активности
                   </Button>
                 </TabsContent>
 
@@ -245,9 +253,12 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                 </TabsContent>
 
                 <TabsContent value="meal" className="mt-8 space-y-6">
+                  <div className="text-center space-y-2 mb-4">
+                    <h4 className="text-xl font-black">Прием пищи за {format(selectedDate, 'd MMMM', { locale: ru })}</h4>
+                  </div>
                   <div className="relative">
                     <Textarea
-                      placeholder="Что вы съели сегодня?"
+                      placeholder="Что вы съели? Опишите текстом или добавьте фото..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6 text-lg font-medium resize-none"
@@ -288,16 +299,16 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                   )}
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>
                     {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Sparkles className="mr-3 h-8 w-8" />}
-                    Проанализировать
+                    Проанализировать ИИ
                   </Button>
                 </TabsContent>
 
                 <TabsContent value="labs" className="mt-8 space-y-6">
                   <Textarea placeholder="Введите результаты анализов (текстом или приложите фото)..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Сохранить</Button>
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Сохранить в историю</Button>
                 </TabsContent>
                 <TabsContent value="health" className="mt-8 space-y-6">
-                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
+                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия на этот день..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Отправить ИИ</Button>
                 </TabsContent>
               </Tabs>
@@ -326,14 +337,14 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                   "{mealResult.analysis}"
                 </p>
               </div>
-              <Button className="w-full h-18 rounded-2xl font-black text-xl" onClick={reset}>Закрыть</Button>
+              <Button className="w-full h-18 rounded-2xl font-black text-xl" onClick={reset}>Готово</Button>
             </div>
           ) : (
             <div className="py-20 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500">
               <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
                 <CheckCircle2 className="h-12 w-12 text-primary" />
               </div>
-              <h3 className="text-3xl font-black">Данные обновлены!</h3>
+              <h3 className="text-3xl font-black">Данные за {format(selectedDate, 'd MMM', { locale: ru })} обновлены!</h3>
               <p className="text-muted-foreground font-medium">Ваши показатели успешно сохранены и будут учтены ИИ.</p>
               <Button className="w-64 h-16 rounded-2xl font-bold text-lg" onClick={reset}>Понятно</Button>
             </div>

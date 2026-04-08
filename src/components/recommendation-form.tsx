@@ -29,6 +29,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine, Trophy, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -55,9 +57,10 @@ const formSchema = z.object({
 
 interface RecommendationFormProps {
   onResult: (result: GenerateRecommendationsOutput) => void;
+  selectedDate: Date;
 }
 
-export function RecommendationForm({ onResult }: RecommendationFormProps) {
+export function RecommendationForm({ onResult, selectedDate }: RecommendationFormProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -89,7 +92,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      const result = await generatePersonalizedRecommendations(values);
+      const result = await generatePersonalizedRecommendations({
+        ...values,
+        targetDate: selectedDate.toISOString(),
+      });
       onResult(result);
     } catch (error) {
       console.error('Failed to generate recommendations:', error);
@@ -107,8 +113,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               <Activity className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h3 className="text-3xl font-black tracking-tighter">Ваш профиль</h3>
-              <p className="text-muted-foreground font-medium">Данные для ИИ-анализа</p>
+              <h3 className="text-3xl font-black tracking-tighter">План на {format(selectedDate, 'd MMM', { locale: ru })}</h3>
+              <p className="text-muted-foreground font-medium">Настройте параметры для генерации рекомендаций</p>
             </div>
           </div>
           <Badge className="bg-secondary/10 text-secondary border-none px-4 py-2 rounded-xl flex gap-2 font-bold">
@@ -288,7 +294,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                      <Trophy className="h-3.5 w-3.5 text-primary/60" /> Активности за сегодня
+                      <Trophy className="h-3.5 w-3.5 text-primary/60" /> Активности
                     </FormLabel>
                     <FormControl>
                       <Textarea 
@@ -344,7 +350,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="planDuration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Составить меню на:</FormLabel>
+                    <FormLabel className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">Длительность плана:</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold">
@@ -352,8 +358,8 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="rounded-2xl">
-                        <SelectItem value="день">Сегодня (1 день)</SelectItem>
-                        <SelectItem value="неделя">Неделю (7 дней)</SelectItem>
+                        <SelectItem value="день">Конкретный день (1 день)</SelectItem>
+                        <SelectItem value="неделя">Начиная с этой даты (7 дней)</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -390,7 +396,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               {loading ? (
                 <><Loader2 className="mr-3 h-8 w-8 animate-spin" /> Анализирую данные...</>
               ) : (
-                <><Sparkles className="mr-3 h-8 w-8" /> Получить план здоровья</>
+                <><Sparkles className="mr-3 h-8 w-8" /> Составить план</>
               )}
             </Button>
           </form>
