@@ -45,7 +45,7 @@ export default function DashboardPage() {
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon"><CalendarIcon className="h-5 w-5" /></Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-[2rem] overflow-hidden shadow-2xl border-none" align="end">
+              <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none" align="end">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -65,7 +65,7 @@ export default function DashboardPage() {
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <div className="flex-1 flex justify-between lg:justify-center lg:gap-6 overflow-x-auto no-scrollbar">
+            <div className="flex-1 flex justify-around lg:justify-center lg:gap-8 overflow-x-auto no-scrollbar">
               {days.map((day, i) => {
                 const isSelected = isSameDay(day, selectedDate);
                 const isToday = isDateToday(day);
@@ -73,14 +73,14 @@ export default function DashboardPage() {
                   <button
                     key={i}
                     onClick={() => setSelectedDate(day)}
-                    className={`flex flex-col items-center min-w-[60px] py-3 px-2 rounded-2xl transition-all duration-300 ${
+                    className={`flex flex-col items-center min-w-[70px] py-3 px-2 rounded-2xl transition-all duration-300 ${
                       isSelected ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-105' : 'hover:bg-primary/5'
                     }`}
                   >
-                    <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-1 ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isSelected ? 'text-white/70' : 'text-muted-foreground'}`}>
                       {format(day, 'EEE', { locale: ru })}
                     </span>
-                    <span className="text-xl font-black">{format(day, 'd')}</span>
+                    <span className="text-2xl font-black">{format(day, 'd')}</span>
                     {isToday && !isSelected && <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5" />}
                   </button>
                 );
@@ -90,9 +90,9 @@ export default function DashboardPage() {
             <div className="hidden lg:flex items-center gap-2">
                <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-xl border-2 hover:bg-primary/5"><CalendarIcon className="h-4 w-4" /></Button>
+                  <Button variant="outline" size="icon" className="rounded-xl border-2 hover:bg-primary/5 h-12 w-12"><CalendarIcon className="h-5 w-5" /></Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-[2rem] overflow-hidden shadow-2xl border-none" align="end">
+                <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-2xl border-none" align="end">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
@@ -105,7 +105,7 @@ export default function DashboardPage() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="rounded-xl"
+                className="rounded-xl h-12 w-12"
                 onClick={() => setSelectedDate(prev => addDays(prev, 1))}
               >
                 <ChevronRight className="h-5 w-5" />
@@ -188,7 +188,7 @@ export default function DashboardPage() {
       </footer>
 
       <UnifiedDataEntry selectedDate={selectedDate}>
-        <Button className="fixed bottom-10 right-10 w-20 h-20 rounded-[2rem] bg-primary shadow-[0_20px_60px_rgba(76,175,80,0.4)] lg:hidden flex items-center justify-center transition-transform active:scale-90">
+        <Button className="fixed bottom-10 right-10 w-20 h-20 rounded-[2rem] bg-primary shadow-[0_20px_60px_rgba(76,175,80,0.4)] lg:hidden flex items-center justify-center transition-transform active:scale-90 z-50">
           <Plus className="h-10 w-10 text-white" />
         </Button>
       </UnifiedDataEntry>
