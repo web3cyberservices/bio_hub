@@ -42,11 +42,10 @@ import {
   Cigarette, 
   Wine, 
   Trophy, 
-  Users 
+  Users,
+  Dna
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -64,11 +63,6 @@ const formSchema = z.object({
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
   medicalConditionsInput: z.string().optional(),
-  deviceData: z.object({
-    steps: z.coerce.number().optional(),
-    avgHeartRate: z.coerce.number().optional(),
-    sleepDurationHours: z.coerce.number().optional(),
-  }).optional(),
 });
 
 interface RecommendationFormProps {
@@ -94,11 +88,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       dislikedFoods: '',
       dailyActivities: '',
       planDuration: 'день',
-      deviceData: {
-        steps: 8000,
-        avgHeartRate: 65,
-        sleepDurationHours: 7.5,
-      }
     },
   });
 
@@ -119,50 +108,51 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
   return (
     <Card className="premium-card overflow-hidden">
-      <CardContent className="p-8 md:p-16 space-y-16">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="p-5 bg-primary/10 rounded-[1.75rem] shadow-sm">
-              <Activity className="h-10 w-10 text-primary" />
+      <CardContent className="p-8 md:p-16 lg:p-24 space-y-20">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="p-6 bg-primary/10 rounded-[2rem] shadow-[0_15px_30px_rgba(76,175,80,0.15)]">
+              <Dna className="h-12 w-12 text-primary" />
             </div>
             <div>
-              <h3 className="text-4xl font-black tracking-tighter">Параметры профиля</h3>
-              <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Уточните свои данные для анализа</p>
+              <h3 className="text-5xl font-black tracking-tighter leading-none">Биометрия</h3>
+              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[9px] mt-2">Точный расчет на основе ИИ алгоритмов</p>
             </div>
           </div>
-          <Badge className="bg-secondary/10 text-secondary border-none px-5 py-2.5 rounded-2xl flex gap-2 font-black uppercase tracking-widest text-[10px] animate-pulse">
-            <Watch className="h-4 w-4" /> Live Sync Active
+          <Badge className="bg-primary/5 text-primary border-none px-6 py-3 rounded-2xl flex gap-3 font-black uppercase tracking-widest text-[10px]">
+            <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
+            Анализ в режиме реального времени
           </Badge>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-16">
             {/* Core Metrics Grid */}
-            <div className="grid gap-10 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-12 grid-cols-2 lg:grid-cols-4">
               <FormField
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
-                      <Users className="h-3.5 w-3.5" /> Пол
+                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                      <Users className="h-3.5 w-3.5" /> Биологический пол
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-16 rounded-2xl bg-muted/30 border-none font-black text-xl px-6 focus:ring-2 focus:ring-primary/20">
+                        <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8 focus:ring-4 focus:ring-primary/10 transition-all">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="мужской" className="font-bold">Мужской</SelectItem>
-                        <SelectItem value="женский" className="font-bold">Женский</SelectItem>
+                      <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
+                        <SelectItem value="мужской" className="rounded-xl font-black text-lg py-3">Мужской</SelectItem>
+                        <SelectItem value="женский" className="rounded-xl font-black text-lg py-3">Женский</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
               {[
-                { name: 'weight', label: 'Вес (кг)', icon: Scale },
+                { name: 'weight', label: 'Текущий Вес (кг)', icon: Scale },
                 { name: 'height', label: 'Рост (см)', icon: Ruler },
                 { name: 'age', label: 'Возраст', icon: Calendar },
               ].map((metric) => (
@@ -172,11 +162,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name={metric.name as any}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
                         <metric.icon className="h-3.5 w-3.5" /> {metric.label}
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="h-16 rounded-2xl bg-muted/30 border-none font-black text-2xl px-6 focus:ring-2 focus:ring-primary/20" />
+                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8 focus:ring-4 focus:ring-primary/10 transition-all" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -184,26 +174,26 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               ))}
             </div>
 
-            {/* Strategy Selectors */}
-            <div className="grid gap-10 md:grid-cols-2">
+            {/* Strategic Selections */}
+            <div className="grid gap-12 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="activityLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground mb-3 uppercase tracking-[0.2em]">Активность</FormLabel>
+                    <FormLabel className="text-[10px] font-black text-muted-foreground mb-4 uppercase tracking-[0.2em]">Уровень метаболизма</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-16 rounded-2xl bg-muted/30 border-none font-bold px-6">
+                        <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black px-8 text-xl">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="малоактивный" className="font-medium">Сидячий образ жизни</SelectItem>
-                        <SelectItem value="среднеактивный" className="font-medium">Легкие нагрузки</SelectItem>
-                        <SelectItem value="средний" className="font-medium">Средняя активность</SelectItem>
-                        <SelectItem value="активный" className="font-medium">Высокая активность</SelectItem>
-                        <SelectItem value="перенагрузка" className="font-medium">Экстремальные нагрузки</SelectItem>
+                      <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
+                        <SelectItem value="малоактивный" className="rounded-xl py-3 font-bold">Сидячий / Офис</SelectItem>
+                        <SelectItem value="среднеактивный" className="rounded-xl py-3 font-bold">Легкий фитнес</SelectItem>
+                        <SelectItem value="средний" className="rounded-xl py-3 font-bold">Средняя активность</SelectItem>
+                        <SelectItem value="активный" className="rounded-xl py-3 font-bold">Высокие нагрузки</SelectItem>
+                        <SelectItem value="перенагрузка" className="rounded-xl py-3 font-bold">Атлетический режим</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -214,17 +204,17 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 name="healthGoal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground mb-3 uppercase tracking-[0.2em]">Глобальная цель</FormLabel>
+                    <FormLabel className="text-[10px] font-black text-muted-foreground mb-4 uppercase tracking-[0.2em]">Глобальный таргет</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-16 rounded-2xl bg-muted/30 border-none font-bold px-6">
+                        <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black px-8 text-xl">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
-                        <SelectItem value="снизить массу тела" className="font-medium">Снижение веса</SelectItem>
-                        <SelectItem value="поддержать текущее состояние" className="font-medium">Поддержание веса</SelectItem>
-                        <SelectItem value="набор массы" className="font-medium">Набор массы</SelectItem>
+                      <SelectContent className="rounded-[1.5rem] border-none shadow-2xl p-2">
+                        <SelectItem value="снизить массу тела" className="rounded-xl py-3 font-bold">Снижение веса</SelectItem>
+                        <SelectItem value="поддержать текущее состояние" className="rounded-xl py-3 font-bold">Баланс и Тонус</SelectItem>
+                        <SelectItem value="набор массы" className="rounded-xl py-3 font-bold">Гипертрофия мышц</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -232,25 +222,25 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               />
             </div>
 
-            {/* Habits Panel */}
-            <div className="grid gap-10 md:grid-cols-2 p-10 rounded-[2.5rem] bg-primary/5 border-2 border-primary/10">
+            {/* Lifestyle & Habits */}
+            <div className="p-12 rounded-[2.5rem] bg-primary/5 border border-primary/10 grid gap-12 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="smoking"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
-                      <Cigarette className="h-3.5 w-3.5 text-primary" /> Курение
+                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
+                      <Cigarette className="h-4 w-4 text-primary" /> Курение
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-xl bg-white border-none font-bold px-6 shadow-sm">
+                        <SelectTrigger className="h-16 rounded-2xl bg-white border-none font-black px-8 shadow-sm">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="rounded-xl border-none shadow-2xl">
-                        <SelectItem value="да">Да, курю</SelectItem>
-                        <SelectItem value="нет">Нет, не курю</SelectItem>
+                        <SelectItem value="да" className="font-bold">Курильщик</SelectItem>
+                        <SelectItem value="нет" className="font-bold">Не курю</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -261,20 +251,20 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 name="alcohol"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
-                      <Wine className="h-3.5 w-3.5 text-primary" /> Алкоголь
+                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
+                      <Wine className="h-4 w-4 text-primary" /> Алкоголь
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-xl bg-white border-none font-bold px-6 shadow-sm">
+                        <SelectTrigger className="h-16 rounded-2xl bg-white border-none font-black px-8 shadow-sm">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="rounded-xl border-none shadow-2xl">
-                        <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                        <SelectItem value="редко">Редко</SelectItem>
-                        <SelectItem value="умеренно">Умеренно</SelectItem>
-                        <SelectItem value="часто">Часто</SelectItem>
+                        <SelectItem value="не употребляю" className="font-bold">Не употребляю</SelectItem>
+                        <SelectItem value="редко" className="font-bold">Редко</SelectItem>
+                        <SelectItem value="умеренно" className="font-bold">Умеренно</SelectItem>
+                        <SelectItem value="часто" className="font-bold">Часто</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -282,18 +272,18 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               />
             </div>
 
-            {/* Preferences Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Foods Preference */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <FormField
                 control={form.control}
                 name="favoriteFoods"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
-                      <Heart className="h-3.5 w-3.5 text-primary" /> Любимые продукты
+                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
+                      <Heart className="h-4 w-4 text-primary" /> Любимые ингредиенты
                     </FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Что включить в рацион?" className="min-h-[140px] rounded-3xl bg-muted/30 border-none p-6 font-medium text-lg focus:ring-2 focus:ring-primary/20 resize-none" {...field} />
+                      <Textarea placeholder="Что добавить в меню?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-xl focus:ring-4 focus:ring-primary/5 resize-none placeholder:text-muted-foreground/40" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -303,11 +293,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 name="dislikedFoods"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-3 uppercase tracking-[0.2em]">
-                      <ThumbsDown className="h-3.5 w-3.5 text-destructive" /> Стоп-лист
+                    <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
+                      <ThumbsDown className="h-4 w-4 text-destructive" /> Стоп-лист (Исключить)
                     </FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Что строго исключить?" className="min-h-[140px] rounded-3xl bg-muted/30 border-none p-6 font-medium text-lg focus:ring-2 focus:ring-destructive/20 resize-none" {...field} />
+                      <Textarea placeholder="Что строго запрещено?" className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-xl focus:ring-4 focus:ring-destructive/5 resize-none placeholder:text-muted-foreground/40" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -316,13 +306,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
             <Button 
               type="submit" 
-              className="w-full h-24 rounded-3xl text-2xl font-black bg-primary shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95 group" 
+              className="w-full h-28 rounded-[2rem] text-3xl font-black bg-primary shadow-[0_25px_50px_rgba(76,175,80,0.3)] transition-all hover:scale-[1.01] active:scale-95 group relative overflow-hidden" 
               disabled={loading}
             >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               {loading ? (
-                <><Loader2 className="mr-4 h-10 w-10 animate-spin" /> Генерирую стратегию...</>
+                <><Loader2 className="mr-6 h-10 w-10 animate-spin" /> Формируем данные...</>
               ) : (
-                <><Sparkles className="mr-4 h-10 w-10 group-hover:rotate-12 transition-transform" /> Сформировать AI План</>
+                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Сформировать AI План</>
               )}
             </Button>
           </form>
