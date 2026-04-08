@@ -6,10 +6,9 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Info } from 'lucide-react';
+import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Activity } from 'lucide-react';
 import { format, addDays, startOfToday, isSameDay, isToday as isDateToday, isPast, isFuture } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
@@ -136,25 +135,15 @@ export default function DashboardPage() {
             <Button variant="outline" size="lg" className="rounded-2xl border-2 h-16 w-16 p-0 hover:bg-primary/5">
               <History className="h-6 w-6" />
             </Button>
-            {result ? (
+            {result && (
               <Button 
                 variant="default" 
                 size="lg"
                 onClick={() => setResult(null)}
                 className="rounded-2xl h-16 px-8 bg-secondary font-black uppercase tracking-widest text-xs gap-3 shadow-xl shadow-secondary/20"
               >
-                <RefreshCw className="h-5 w-5" /> Обновить анализ
+                <RefreshCw className="h-5 w-5" /> Обновить анкету
               </Button>
-            ) : (
-              <UnifiedDataEntry selectedDate={selectedDate}>
-                <Button 
-                  variant="default" 
-                  size="lg"
-                  className="rounded-2xl h-16 px-8 bg-primary font-black uppercase tracking-widest text-xs gap-3 shadow-2xl shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
-                >
-                  <Plus className="h-5 w-5" /> Добавить лог
-                </Button>
-              </UnifiedDataEntry>
             )}
           </div>
         </div>
@@ -178,7 +167,7 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 text-center space-y-4">
           <div className="flex justify-center items-center gap-2 mb-4">
              <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                <Plus className="h-4 w-4 text-primary" />
+                <Activity className="h-4 w-4 text-primary" />
              </div>
              <span className="font-headline font-black tracking-tighter text-xl">PRO Себя</span>
           </div>
@@ -186,12 +175,6 @@ export default function DashboardPage() {
           <p className="text-muted-foreground/50 text-[9px] uppercase tracking-[0.3em]">© 2024 NEXT GEN BIOTECH LABS.</p>
         </div>
       </footer>
-
-      <UnifiedDataEntry selectedDate={selectedDate}>
-        <Button className="fixed bottom-10 right-10 w-20 h-20 rounded-[2rem] bg-primary shadow-[0_20px_60px_rgba(76,175,80,0.4)] lg:hidden flex items-center justify-center transition-transform active:scale-90 z-50">
-          <Plus className="h-10 w-10 text-white" />
-        </Button>
-      </UnifiedDataEntry>
     </div>
   );
 }
