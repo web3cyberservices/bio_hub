@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart, ThumbsDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -38,6 +38,7 @@ const formSchema = z.object({
   activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   favoriteFoods: z.string().optional(),
+  dislikedFoods: z.string().optional(),
   planDuration: z.enum(['день', 'неделя']),
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
@@ -66,6 +67,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       activityLevel: 'средний',
       healthGoal: 'поддержать текущее состояние',
       favoriteFoods: '',
+      dislikedFoods: '',
       planDuration: 'день',
       dietaryInput: '',
       labResultsInput: '',
@@ -219,6 +221,26 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       />
                     </FormControl>
                     <p className="text-[10px] text-muted-foreground italic">ИИ будет использовать этот список для составления вашего меню.</p>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dislikedFoods"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80 text-destructive/80">
+                      <ThumbsDown className="h-3.5 w-3.5 text-destructive/60" /> Нелюбимые продукты
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Например: Кинза, лук, молочные продукты..." 
+                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <p className="text-[10px] text-muted-foreground italic">ИИ СТРОГО ИСКЛЮЧИТ эти продукты из вашего меню.</p>
                   </FormItem>
                 )}
               />
