@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine, Trophy } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Watch, Zap, Moon, Heart, ThumbsDown, Cigarette, Wine, Trophy, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -118,7 +118,29 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Users className="h-3.5 w-3.5 text-primary/60" /> Ваш пол
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold focus:ring-2 focus:ring-primary/20">
+                          <SelectValue placeholder="Пол" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-2xl">
+                        <SelectItem value="мужской">Мужской</SelectItem>
+                        <SelectItem value="женский">Женский</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="weight"
