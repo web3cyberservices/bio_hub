@@ -166,6 +166,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     { name: 'Плавание', icon: Activity }
   ];
 
+  const inputClasses = "h-14 rounded-xl bg-primary/90 border-none font-bold text-white text-lg placeholder:text-white/40 focus:ring-4 focus:ring-white/20";
+  const textareaClasses = "min-h-[150px] rounded-3xl bg-primary/90 border-none p-6 text-lg font-medium text-white resize-none placeholder:text-white/40 focus:ring-4 focus:ring-white/20";
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       setIsOpen(open);
@@ -220,7 +223,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     placeholder="Опишите интенсивность или добавьте другие активности..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="min-h-[120px] rounded-3xl bg-muted/30 border-none p-6 text-lg font-medium resize-none"
+                    className={textareaClasses}
                   />
                   
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-xl shadow-primary/20" onClick={handleSubmit} disabled={loading}>
@@ -240,19 +243,19 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Footprints className="h-3 w-3" /> Шаги
                       </label>
-                      <Input placeholder="0" value={steps} onChange={e => setSteps(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input placeholder="0" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Heart className="h-3 w-3" /> Пульс
                       </label>
-                      <Input placeholder="0" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input placeholder="0" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className={inputClasses} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Moon className="h-3 w-3" /> Сон (ч)
                       </label>
-                      <Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} type="number" className={inputClasses} />
                     </div>
                   </div>
                   
@@ -303,16 +306,16 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                       placeholder="Что вы съели? Опишите текстом или добавьте фото..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6 text-lg font-medium resize-none"
+                      className={textareaClasses}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={startCamera}>
+                    <Button variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={startCamera}>
                       <Camera className="h-8 w-8 text-primary" />
                       <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Камера</span>
                     </Button>
                     <label className="cursor-pointer">
-                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center">
+                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
                         <Upload className="h-8 w-8 text-primary" />
                         <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Загрузить</span>
                       </div>
@@ -346,11 +349,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </TabsContent>
 
                 <TabsContent value="labs" className="mt-8 space-y-6">
-                  <Textarea placeholder="Введите результаты анализов (текстом или приложите фото)..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
+                  <Textarea placeholder="Введите результаты анализов (текстом или приложите фото)..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Сохранить в историю</Button>
                 </TabsContent>
                 <TabsContent value="health" className="mt-8 space-y-6">
-                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия на этот день..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
+                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия на этот день..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Отправить ИИ</Button>
                 </TabsContent>
               </Tabs>

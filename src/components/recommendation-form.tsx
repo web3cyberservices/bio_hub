@@ -255,6 +255,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }
 
+  const inputClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
+  const selectTriggerClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20";
+  const textareaClasses = "min-h-[120px] rounded-[2rem] bg-primary/90 border-none p-8 font-bold text-white text-lg resize-none focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
+
   return (
     <Card className="premium-card overflow-hidden">
       <CardContent className="p-8 md:p-16 lg:p-24 space-y-24">
@@ -284,13 +288,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8 focus:ring-4 focus:ring-primary/10">
+                          <SelectTrigger className={selectTriggerClasses}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="мужской">Мужской</SelectItem>
-                          <SelectItem value="женский">Женский</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="мужской" className="focus:bg-white/10 focus:text-white">Мужской</SelectItem>
+                          <SelectItem value="женский" className="focus:bg-white/10 focus:text-white">Женский</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -311,7 +315,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           <metric.icon className="h-3.5 w-3.5" /> {metric.label}
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8 focus:ring-4 focus:ring-primary/10" />
+                          <Input type="number" {...field} className={cn(inputClasses, "text-3xl")} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -336,14 +340,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="снизить массу тела">Снизить массу тела</SelectItem>
-                          <SelectItem value="поддержать текущее состояние">Поддержать текущее состояние</SelectItem>
-                          <SelectItem value="набор массы">Набор массы</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="снизить массу тела" className="focus:bg-white/10 focus:text-white">Снизить массу тела</SelectItem>
+                          <SelectItem value="поддержать текущее состояние" className="focus:bg-white/10 focus:text-white">Поддержать текущее состояние</SelectItem>
+                          <SelectItem value="набор массы" className="focus:bg-white/10 focus:text-white">Набор массы</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -359,16 +363,16 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="малоактивный">Малоактивный</SelectItem>
-                          <SelectItem value="среднеактивный">Среднеактивный</SelectItem>
-                          <SelectItem value="средний">Средний</SelectItem>
-                          <SelectItem value="активный">Активный</SelectItem>
-                          <SelectItem value="перенагрузка">Перенагрузка</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="малоактивный" className="focus:bg-white/10 focus:text-white">Малоактивный</SelectItem>
+                          <SelectItem value="среднеактивный" className="focus:bg-white/10 focus:text-white">Среднеактивный</SelectItem>
+                          <SelectItem value="средний" className="focus:bg-white/10 focus:text-white">Средний</SelectItem>
+                          <SelectItem value="активный" className="focus:bg-white/10 focus:text-white">Активный</SelectItem>
+                          <SelectItem value="перенагрузка" className="focus:bg-white/10 focus:text-white">Перенагрузка</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -384,13 +388,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="да">Да, курю</SelectItem>
-                          <SelectItem value="нет">Нет, не курю</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="да" className="focus:bg-white/10 focus:text-white">Да, курю</SelectItem>
+                          <SelectItem value="нет" className="focus:bg-white/10 focus:text-white">Нет, не курю</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -406,15 +410,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                          <SelectItem value="редко">Редко (по праздникам)</SelectItem>
-                          <SelectItem value="умеренно">Умеренно</SelectItem>
-                          <SelectItem value="часто">Часто</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="не употребляю" className="focus:bg-white/10 focus:text-white">Не употребляю</SelectItem>
+                          <SelectItem value="редко" className="focus:bg-white/10 focus:text-white">Редко (по праздникам)</SelectItem>
+                          <SelectItem value="умеренно" className="focus:bg-white/10 focus:text-white">Умеренно</SelectItem>
+                          <SelectItem value="часто" className="focus:bg-white/10 focus:text-white">Часто</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -449,7 +453,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         <Footprints className="h-3.5 w-3.5 text-primary" /> Шаги за день
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -463,7 +467,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         <Heart className="h-3.5 w-3.5 text-secondary" /> Пульс в покое (уд/мин)
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -477,7 +481,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         <Moon className="h-3.5 w-3.5 text-accent-foreground" /> Сон (часы)
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -497,7 +501,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </Button>
                     </div>
                     <FormControl>
-                      <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className="min-h-[100px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                      <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className={textareaClasses} {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -524,7 +528,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Что вы любите? (авокадо, лосось, орехи...)" className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                        <Textarea placeholder="Что вы любите? (авокадо, лосось, орехи...)" className={textareaClasses} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -543,7 +547,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Что исключить? (кинза, молочные продукты...)" className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                        <Textarea placeholder="Что исключить? (кинза, молочные продукты...)" className={textareaClasses} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -558,13 +562,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-primary/5 border-none font-black text-2xl px-8 text-primary">
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-2xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-[1.5rem]">
-                          <SelectItem value="день">План на 1 день</SelectItem>
-                          <SelectItem value="неделя">План на неделю</SelectItem>
+                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
+                          <SelectItem value="день" className="focus:bg-white/10 focus:text-white">План на 1 день</SelectItem>
+                          <SelectItem value="неделя" className="focus:bg-white/10 focus:text-white">План на неделю</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -605,7 +609,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </div>
                       <FormControl>
                         <div className="space-y-4">
-                          <Textarea placeholder="Результаты лаб. тестов..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg focus:ring-4 focus:ring-primary/5 resize-none" {...field} />
+                          <Textarea placeholder="Результаты лаб. тестов..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
                           {(activeCamera === 'labs' || labImage) && (
                             <div className="relative rounded-[2rem] overflow-hidden border-2 border-primary/20 aspect-video">
                               {activeCamera === 'labs' ? (
@@ -649,7 +653,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Опишите симптомы..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
+                        <Textarea placeholder="Опишите симптомы..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -678,7 +682,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </Button>
                         </div>
                         <FormControl>
-                          <Textarea placeholder="Что вы съели? Надиктуйте или введите..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
+                          <Textarea placeholder="Что вы съели? Надиктуйте или введите..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -689,12 +693,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                     <Camera className="h-4 w-4 text-primary" /> Фото еды
                   </label>
                   <div className="grid grid-cols-2 gap-4">
-                    <Button type="button" variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={() => startCamera('diet')}>
+                    <Button type="button" variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={() => startCamera('diet')}>
                       <Camera className="h-8 w-8 text-primary" />
                       <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Камера</span>
                     </Button>
                     <label className="cursor-pointer">
-                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center">
+                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
                         <FileUp className="h-8 w-8 text-primary" />
                         <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
                       </div>
