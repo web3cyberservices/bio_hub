@@ -15,7 +15,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,29 +29,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   Loader2, 
   Sparkles, 
-  Activity, 
   Scale, 
   Ruler, 
   Calendar, 
-  Zap, 
-  Heart, 
-  ThumbsDown, 
-  Cigarette, 
-  Wine, 
   Users,
   Dna,
   FlaskConical,
   Stethoscope,
   Utensils,
   Camera,
-  Upload,
   X,
   Mic,
   MicOff,
-  FileUp
+  FileUp,
+  Heart
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -339,7 +333,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                                 </>
                               ) : (
                                 <>
-                                  <img src={labImage!} className="w-full h-full object-cover" />
+                                  <img src={labImage!} className="w-full h-full object-cover" alt="Labs" />
                                   <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full" onClick={() => setLabImage(null)}><X className="h-4 w-4" /></Button>
                                 </>
                               )}
@@ -439,7 +433,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
                   {dietaryImage && activeCamera !== 'diet' && (
                     <div className="relative rounded-[2rem] overflow-hidden group border-4 border-primary/20">
-                      <img src={dietaryImage} className="w-full aspect-square object-cover" />
+                      <img src={dietaryImage} className="w-full aspect-square object-cover" alt="Diet" />
                       <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDietaryImage(null)}>
                         <X className="h-4 w-4" />
                       </Button>

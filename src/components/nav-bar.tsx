@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Menu, User, ShieldCheck } from 'lucide-react';
+import { Activity, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,7 @@ export function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-[100] w-full bg-primary/85 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+    <nav className="sticky top-0 z-[100] w-full bg-primary/90 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-lg group-hover:scale-105 transition-all duration-500">
@@ -39,7 +39,7 @@ export function NavBar() {
           </Link>
           <Link href="/register">
             <Button className="rounded-2xl px-8 h-12 font-black uppercase tracking-widest text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-transform active:scale-95">
-              Начать путь
+              Регистрация
             </Button>
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden rounded-xl text-white">
