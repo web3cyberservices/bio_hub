@@ -1,9 +1,10 @@
-
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HeartPulse, Utensils, Pill, Sparkles, Flame, Beef, Droplets, Wheat, Activity, Info, Camera, ScanBarcode, Plus } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { MealLogger } from '@/components/meal-logger';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
@@ -68,14 +69,12 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
 
       {/* Quick Actions Bar */}
       <div className="flex justify-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-[2rem] border border-white max-w-md mx-auto">
-        <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-primary/10 text-primary hover:bg-primary/20 transition-all">
-          <Plus className="h-6 w-6" />
-        </Button>
+        <MealLogger />
         <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-muted/50 hover:bg-muted transition-all">
           <ScanBarcode className="h-6 w-6" />
         </Button>
         <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-muted/50 hover:bg-muted transition-all">
-          <Camera className="h-6 w-6" />
+          <Plus className="h-6 w-6" />
         </Button>
         <Button variant="ghost" size="icon" className="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary hover:bg-secondary/20 transition-all">
           <Activity className="h-6 w-6" />
