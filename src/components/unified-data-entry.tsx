@@ -10,7 +10,7 @@ import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -23,7 +23,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [connectingDevice, setConnectingDevice] = useState<string | null>(null);
@@ -47,14 +47,17 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
     setShowCamera(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      setHasCameraPermission(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
       toast({
         variant: 'destructive',
         title: 'Доступ к камере отклонен',
-        description: 'Пожалуйста, разрешите доступ к камере.',
+        description: 'Пожалуйста, разрешите доступ к камере в настройках браузера.',
       });
     }
   };
@@ -130,6 +133,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
     setImage(null);
     setMealResult(null);
     setIsSuccess(false);
+    setHasCameraPermission(null);
     stopCamera();
   };
 
@@ -146,7 +150,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
           <DialogTitle className="text-3xl font-black tracking-tight">Центр данных</DialogTitle>
         </DialogHeader>
         
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-6 max-h-[80vh] overflow-y-auto no-scrollbar">
           {!mealResult && !isSuccess ? (
             <>
               <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -222,6 +226,14 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                         <Button onClick={capturePhoto} className="rounded-full w-14 h-14 bg-white text-primary"><Camera className="h-7 w-7" /></Button>
                         <Button onClick={stopCamera} variant="destructive" className="rounded-full w-14 h-14"><X className="h-7 w-7" /></Button>
                       </div>
+                      {hasCameraPermission === false && (
+                        <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/80">
+                           <Alert variant="destructive" className="border-none bg-transparent">
+                              <AlertTitle className="text-white">Ошибка камеры</AlertTitle>
+                              <AlertDescription className="text-white/80">Пожалуйста, разрешите доступ к камере в настройках.</AlertDescription>
+                           </Alert>
+                        </div>
+                      )}
                     </div>
                   )}
                   {image && !showCamera && (
@@ -233,13 +245,12 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                   </Button>
                 </TabsContent>
 
-                {/* Other Tabs handled generically */}
                 <TabsContent value="labs" className="mt-8 space-y-6">
-                  <Textarea placeholder="Введите результаты анализов..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
+                  <Textarea placeholder="Введите результаты анализов (текстом или приложите фото)..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Сохранить</Button>
                 </TabsContent>
                 <TabsContent value="health" className="mt-8 space-y-6">
-                  <Textarea placeholder="Опишите ваши жалобы..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
+                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия..." value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[150px] rounded-3xl bg-muted/30 border-none p-6" />
                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Отправить ИИ</Button>
                 </TabsContent>
               </Tabs>
@@ -263,6 +274,11 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                    </div>
                  ))}
               </div>
+              <div className="bg-muted/30 p-6 rounded-[2rem]">
+                <p className="text-sm font-medium italic text-foreground/80 leading-relaxed">
+                  "{mealResult.analysis}"
+                </p>
+              </div>
               <Button className="w-full h-18 rounded-2xl font-black text-xl" onClick={reset}>Закрыть</Button>
             </div>
           ) : (
@@ -271,6 +287,7 @@ export function UnifiedDataEntry({ children }: UnifiedDataEntryProps) {
                 <CheckCircle2 className="h-12 w-12 text-primary" />
               </div>
               <h3 className="text-3xl font-black">Данные обновлены!</h3>
+              <p className="text-muted-foreground font-medium">Ваши показатели успешно сохранены и будут учтены ИИ.</p>
               <Button className="w-64 h-16 rounded-2xl font-bold text-lg" onClick={reset}>Понятно</Button>
             </div>
           )}

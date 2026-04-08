@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart, ThumbsDown } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Scale, Ruler, Calendar, Stethoscope, Watch, Zap, Moon, Heart, ThumbsDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
@@ -267,7 +267,6 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            {/* Device Data Section */}
             <div className="p-6 rounded-[2rem] bg-secondary/5 border border-secondary/10 space-y-6">
               <div className="flex items-center gap-3">
                 <Watch className="h-5 w-5 text-secondary" />
