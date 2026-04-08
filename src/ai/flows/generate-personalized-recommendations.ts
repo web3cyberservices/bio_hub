@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
@@ -90,7 +91,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       name: z.string().describe('Название блюда.'),
       description: z.string().describe('Состав или краткий способ приготовления.'),
       calories: z.number().describe('Калорийность приема пищи.'),
-      imageId: z.string().describe('ID изображения из списка: breakfast-bowl, lunch-salad, dinner-protein, healthy-snack.'),
+      imageId: z.string().describe('ID изображения из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salad-chicken, lunch-salmon, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
     }))
   })).describe('Персонализированное меню на день или неделю.'),
   activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств и активностей.'),
@@ -172,7 +173,11 @@ const recommendationPrompt = ai.definePrompt({
    - Если пользователь употребляет алкоголь умеренно или часто, добавьте рекомендации по поддержке печени (расторопша, холин) и гидратации.
 3. Составьте план питания (mealPlan) начиная с целевой даты ({{{targetDate}}}) на указанную длительность ({{{planDuration}}}). 
 4. В плане питания СТРОГО УЧИТЫВАЙТЕ любимые продукты пользователя и СТРОГО ИСКЛЮЧАЙТЕ нелюбимые продукты.
-5. Для каждого блюда выберите наиболее подходящий imageId из списка: breakfast-bowl (для завтраков), lunch-salad (для обедов/салатов), dinner-protein (для основных ужинов), healthy-snack (для перекусов).
+5. Для каждого блюда выберите максимально релевантный imageId из списка:
+   - breakfast-omelette (для блюд из яиц), breakfast-oatmeal (каши), breakfast-smoothie (напитки/смузи)
+   - lunch-salad-chicken (салаты с птицей), lunch-salmon (рыбные блюда), lunch-soup (супы)
+   - dinner-steak (мясные блюда), dinner-white-fish (легкая рыба), dinner-tofu (вегетарианские основные блюда)
+   - snack-nuts (орехи), snack-yogurt (молочное), snack-avocado (тосты), snack-fruit (фрукты)
 6. Подготовьте подробные рекомендации по образу жизни, диете и добавкам. Обязательно прокомментируйте активности в разделе activityAnalysis.`,
 });
 

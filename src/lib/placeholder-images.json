@@ -13,28 +13,82 @@
       "imageHint": "health analysis"
     },
     {
-      "id": "breakfast-bowl",
-      "description": "Healthy breakfast bowl with fruits and nuts",
-      "imageUrl": "https://picsum.photos/seed/breakfast/400/300",
-      "imageHint": "breakfast bowl"
+      "id": "breakfast-omelette",
+      "description": "Eggs and omelette with greens",
+      "imageUrl": "https://picsum.photos/seed/omelette/400/300",
+      "imageHint": "omelette breakfast"
     },
     {
-      "id": "lunch-salad",
-      "description": "Fresh garden salad with protein",
-      "imageUrl": "https://picsum.photos/seed/lunch/400/300",
-      "imageHint": "healthy salad"
+      "id": "breakfast-oatmeal",
+      "description": "Oatmeal porridge with fruits",
+      "imageUrl": "https://picsum.photos/seed/oatmeal/400/300",
+      "imageHint": "oatmeal porridge"
     },
     {
-      "id": "dinner-protein",
-      "description": "Balanced dinner with protein and vegetables",
-      "imageUrl": "https://picsum.photos/seed/dinner/400/300",
-      "imageHint": "dinner plate"
+      "id": "breakfast-smoothie",
+      "description": "Green smoothie or fruit bowl",
+      "imageUrl": "https://picsum.photos/seed/smoothie/400/300",
+      "imageHint": "healthy smoothie"
     },
     {
-      "id": "healthy-snack",
-      "description": "Light and nutritious snack",
-      "imageUrl": "https://picsum.photos/seed/snack/400/300",
-      "imageHint": "healthy snack"
+      "id": "lunch-salad-chicken",
+      "description": "Fresh salad with chicken breast",
+      "imageUrl": "https://picsum.photos/seed/chickensalad/400/300",
+      "imageHint": "chicken salad"
+    },
+    {
+      "id": "lunch-salmon",
+      "description": "Grilled salmon with vegetables",
+      "imageUrl": "https://picsum.photos/seed/salmon/400/300",
+      "imageHint": "grilled salmon"
+    },
+    {
+      "id": "lunch-soup",
+      "description": "Vegetable or cream soup",
+      "imageUrl": "https://picsum.photos/seed/soup/400/300",
+      "imageHint": "vegetable soup"
+    },
+    {
+      "id": "dinner-steak",
+      "description": "Beef steak with broccoli",
+      "imageUrl": "https://picsum.photos/seed/steak/400/300",
+      "imageHint": "beef steak"
+    },
+    {
+      "id": "dinner-white-fish",
+      "description": "Baked white fish with herbs",
+      "imageUrl": "https://picsum.photos/seed/whitefish/400/300",
+      "imageHint": "baked fish"
+    },
+    {
+      "id": "dinner-tofu",
+      "description": "Tofu stir fry with vegetables",
+      "imageUrl": "https://picsum.photos/seed/tofu/400/300",
+      "imageHint": "tofu stirfry"
+    },
+    {
+      "id": "snack-nuts",
+      "description": "Mix of nuts and dried fruits",
+      "imageUrl": "https://picsum.photos/seed/nuts/400/300",
+      "imageHint": "nuts snack"
+    },
+    {
+      "id": "snack-yogurt",
+      "description": "Greek yogurt with berries",
+      "imageUrl": "https://picsum.photos/seed/yogurt/400/300",
+      "imageHint": "yogurt berries"
+    },
+    {
+      "id": "snack-avocado",
+      "description": "Avocado toast on whole grain bread",
+      "imageUrl": "https://picsum.photos/seed/avotoast/400/300",
+      "imageHint": "avocado toast"
+    },
+    {
+      "id": "snack-fruit",
+      "description": "Fresh sliced fruits platter",
+      "imageUrl": "https://picsum.photos/seed/fruitplatter/400/300",
+      "imageHint": "fruit platter"
     }
   ]
 }
