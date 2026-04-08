@@ -33,7 +33,6 @@ import {
   Ruler, 
   Calendar, 
   Users,
-  Dna,
   FlaskConical,
   Stethoscope,
   Utensils,
@@ -49,7 +48,11 @@ import {
   GlassWater,
   Heart,
   Ban,
-  Timer
+  Timer,
+  Watch,
+  Footprints,
+  Moon,
+  RefreshCw
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +74,9 @@ const formSchema = z.object({
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
   medicalConditionsInput: z.string().optional(),
+  steps: z.coerce.number().optional(),
+  avgHeartRate: z.coerce.number().optional(),
+  sleepDurationHours: z.coerce.number().optional(),
 });
 
 interface RecommendationFormProps {
@@ -80,6 +86,7 @@ interface RecommendationFormProps {
 
 export function RecommendationForm({ onResult, selectedDate }: RecommendationFormProps) {
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [dietaryImage, setDietaryImage] = useState<string | null>(null);
   const [labImage, setLabImage] = useState<string | null>(null);
   const [activeCamera, setActiveCamera] = useState<'diet' | 'labs' | null>(null);
@@ -105,8 +112,24 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       dietaryInput: '',
       labResultsInput: '',
       medicalConditionsInput: '',
+      steps: 0,
+      avgHeartRate: 0,
+      sleepDurationHours: 0,
     },
   });
+
+  const simulateSync = async () => {
+    setSyncing(true);
+    await new Promise(r => setTimeout(r, 1500));
+    form.setValue('steps', Math.floor(Math.random() * (12000 - 4000) + 4000));
+    form.setValue('avgHeartRate', Math.floor(Math.random() * (75 - 60) + 60));
+    form.setValue('sleepDurationHours', Math.floor(Math.random() * (9 - 6) + 6));
+    setSyncing(false);
+    toast({
+      title: "Данные синхронизированы",
+      description: "Показатели Apple Health успешно импортированы.",
+    });
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'diet' | 'labs') => {
     const file = e.target.files?.[0];
@@ -210,9 +233,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
+      const { steps, avgHeartRate, sleepDurationHours, ...rest } = values;
       const result = await generatePersonalizedRecommendations({
-        ...values,
+        ...rest,
         targetDate: selectedDate.toISOString(),
+        deviceData: (steps || avgHeartRate || sleepDurationHours) ? {
+          steps,
+          avgHeartRate,
+          sleepDurationHours,
+        } : undefined,
       });
       onResult(result);
     } catch (error) {
@@ -394,10 +423,91 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 3. Preferences & Planning */}
+            {/* 3. Device & BioData */}
+            <div className="space-y-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 flex items-center gap-4">
+                  <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">03</span> Данные устройств и активность
+                </h4>
+                <Button 
+                  type="button" 
+                  onClick={simulateSync} 
+                  disabled={syncing}
+                  className="rounded-xl h-12 px-6 bg-primary/10 text-primary hover:bg-primary/20 border-none font-black uppercase tracking-widest text-[10px] gap-2"
+                >
+                  {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Синхронизировать данные
+                </Button>
+              </div>
+              <div className="grid gap-10 grid-cols-1 md:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="steps"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Footprints className="h-3.5 w-3.5 text-primary" /> Шаги за день
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="avgHeartRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Heart className="h-3.5 w-3.5 text-secondary" /> Пульс в покое (уд/мин)
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sleepDurationHours"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Moon className="h-3.5 w-3.5 text-accent-foreground" /> Сон (часы)
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="dailyActivities"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between mb-4">
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                        <Activity className="h-4 w-4 text-primary" /> Дополнительные активности
+                      </FormLabel>
+                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dailyActivities' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dailyActivities')}>
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className="min-h-[100px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* 4. Preferences & Planning */}
             <div className="space-y-10">
               <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">03</span> Предпочтения и Планирование
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">04</span> Предпочтения и Планирование
               </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
@@ -463,10 +573,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 4. Clinical Context */}
+            {/* 5. Clinical Context */}
             <div className="space-y-10">
               <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">04</span> Клинический контекст
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">05</span> Клинический контекст
               </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
@@ -547,13 +657,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 5. Daily Logs */}
+            {/* 6. Daily Logs */}
             <div className="space-y-10">
               <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">05</span> Дневник дня
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">06</span> Дневник питания
               </h4>
               <div className="grid gap-10 lg:grid-cols-12">
-                <div className="lg:col-span-8 space-y-10">
+                <div className="lg:col-span-8">
                   <FormField
                     control={form.control}
                     name="dietaryInput"
@@ -561,7 +671,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       <FormItem>
                         <div className="flex items-center justify-between mb-4">
                           <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                            <Utensils className="h-4 w-4 text-primary" /> Питание за день
+                            <Utensils className="h-4 w-4 text-primary" /> Рацион
                           </FormLabel>
                           <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dietaryInput')}>
                             <Mic className="h-4 w-4" />
@@ -569,25 +679,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </div>
                         <FormControl>
                           <Textarea placeholder="Что вы съели? Надиктуйте или введите..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="dailyActivities"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between mb-4">
-                          <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                            <Activity className="h-4 w-4 text-primary" /> Активности за день
-                          </FormLabel>
-                          <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dailyActivities' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dailyActivities')}>
-                            <Mic className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormControl>
-                          <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
                         </FormControl>
                       </FormItem>
                     )}

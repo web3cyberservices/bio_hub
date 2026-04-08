@@ -3,9 +3,10 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon } from 'lucide-react';
+import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon, Footprints, Moon, RefreshCw } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [isSuccess, setIsSuccess] = useState(false);
   const [connectingDevice, setConnectingDevice] = useState<string | null>(null);
   
+  // Device manual inputs
+  const [steps, setSteps] = useState<string>('');
+  const [heartRate, setHeartRate] = useState<string>('');
+  const [sleep, setSleep] = useState<string>('');
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
@@ -96,6 +102,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       title: 'Устройство подключено',
       description: `${name} теперь синхронизируется с PRO Себя.`,
     });
+    // Simulate auto-populating data
+    setSteps('8432');
+    setHeartRate('64');
+    setSleep('7.5');
   };
 
   const addActivity = (activity: string) => {
@@ -103,11 +113,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const handleSubmit = async () => {
-    if (!description && !image) {
+    if (!description && !image && !steps && !heartRate && !sleep) {
       toast({
         variant: 'destructive',
         title: 'Пустое поле',
-        description: 'Пожалуйста, добавьте текст или фото.',
+        description: 'Пожалуйста, добавьте текст, фото или показатели устройств.',
       });
       return;
     }
@@ -141,6 +151,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     setMealResult(null);
     setIsSuccess(false);
     setHasCameraPermission(null);
+    setSteps('');
+    setHeartRate('');
+    setSleep('');
     stopCamera();
   };
 
@@ -216,40 +229,69 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   </Button>
                 </TabsContent>
 
-                <TabsContent value="devices" className="mt-8 space-y-6 animate-in fade-in duration-300">
-                  <div className="text-center space-y-2 mb-8">
-                    <h4 className="text-xl font-black">Подключите ваши девайсы</h4>
-                    <p className="text-sm text-muted-foreground font-medium">Для автоматического учета активности, пульса и сна</p>
+                <TabsContent value="devices" className="mt-8 space-y-8 animate-in fade-in duration-300">
+                  <div className="text-center space-y-2">
+                    <h4 className="text-xl font-black">Биометрические показатели</h4>
+                    <p className="text-sm text-muted-foreground font-medium">Синхронизируйте или введите данные вручную</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Footprints className="h-3 w-3" /> Шаги
+                      </label>
+                      <Input placeholder="0" value={steps} onChange={e => setSteps(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Heart className="h-3 w-3" /> Пульс
+                      </label>
+                      <Input placeholder="0" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Moon className="h-3 w-3" /> Сон (ч)
+                      </label>
+                      <Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} type="number" className="h-14 rounded-xl bg-muted/30 border-none font-bold text-lg" />
+                    </div>
                   </div>
                   
-                  <div className="grid gap-4">
-                    {[
-                      { name: 'Apple Health', icon: Smartphone, color: 'bg-red-50 text-red-500' },
-                      { name: 'Google Fit', icon: Activity, color: 'bg-blue-50 text-blue-500' },
-                      { name: 'Garmin Connect', icon: Bluetooth, color: 'bg-blue-100 text-blue-800' },
-                      { name: 'Oura Ring', icon: Watch, color: 'bg-neutral-100 text-neutral-800' }
-                    ].map((device) => (
-                      <div key={device.name} className="flex items-center justify-between p-5 rounded-3xl bg-white border border-muted hover:border-primary/30 transition-all group">
-                        <div className="flex items-center gap-4">
-                          <div className={cn("p-3 rounded-2xl", device.color)}>
-                            <device.icon className="h-6 w-6" />
+                  <div className="space-y-4">
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Доступные устройства</p>
+                    <div className="grid gap-4">
+                      {[
+                        { name: 'Apple Health', icon: Smartphone, color: 'bg-red-50 text-red-500' },
+                        { name: 'Google Fit', icon: Activity, color: 'bg-blue-50 text-blue-500' },
+                        { name: 'Garmin Connect', icon: Bluetooth, color: 'bg-blue-100 text-blue-800' },
+                        { name: 'Oura Ring', icon: Watch, color: 'bg-neutral-100 text-neutral-800' }
+                      ].map((device) => (
+                        <div key={device.name} className="flex items-center justify-between p-5 rounded-3xl bg-white border border-muted hover:border-primary/30 transition-all group">
+                          <div className="flex items-center gap-4">
+                            <div className={cn("p-3 rounded-2xl", device.color)}>
+                              <device.icon className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-lg">{device.name}</p>
+                              <p className="text-xs text-muted-foreground">Автосинхронизация</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-lg">{device.name}</p>
-                            <p className="text-xs text-muted-foreground">Синхронизация данных</p>
-                          </div>
+                          <Button 
+                            variant={connectingDevice === device.name ? "ghost" : "outline"} 
+                            className="rounded-xl font-bold px-6 border-2"
+                            onClick={() => connectDevice(device.name)}
+                            disabled={!!connectingDevice}
+                          >
+                            {connectingDevice === device.name ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                            {connectingDevice === device.name ? "" : "Привязать"}
+                          </Button>
                         </div>
-                        <Button 
-                          variant={connectingDevice === device.name ? "ghost" : "outline"} 
-                          className="rounded-xl font-bold px-6 border-2"
-                          onClick={() => connectDevice(device.name)}
-                          disabled={!!connectingDevice}
-                        >
-                          {connectingDevice === device.name ? <Loader2 className="h-4 w-4 animate-spin" /> : "Привязать"}
-                        </Button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>
+                    Сохранить показатели
+                  </Button>
                 </TabsContent>
 
                 <TabsContent value="meal" className="mt-8 space-y-6">
