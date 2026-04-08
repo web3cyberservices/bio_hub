@@ -42,7 +42,14 @@ import {
   Mic,
   MicOff,
   FileUp,
-  Heart
+  Target,
+  Activity,
+  Zap,
+  Cigarette,
+  GlassWater,
+  Heart,
+  Ban,
+  Timer
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -221,7 +228,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
   return (
     <Card className="premium-card overflow-hidden">
-      <CardContent className="p-8 md:p-16 lg:p-24 space-y-20">
+      <CardContent className="p-8 md:p-16 lg:p-24 space-y-24">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
           <div className="flex items-center gap-8">
             <div className="p-6 bg-primary/10 rounded-[2rem] shadow-[0_15px_30px_rgba(76,175,80,0.15)]">
@@ -234,15 +241,18 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           </div>
           <Badge className="bg-primary/5 text-primary border-none px-6 py-3 rounded-2xl flex gap-3 font-black uppercase tracking-widest text-[10px]">
             <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
-            Интеллектуальный анализ 2.0
+            Интеллектуальный анализ 3.0
           </Badge>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-20">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-24">
+            
             {/* 1. Core Biometrics */}
-            <div className="space-y-8">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 border-b pb-4">01. Базовые показатели</h4>
+            <div className="space-y-10">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">01</span> Базовые показатели
+              </h4>
               <div className="grid gap-10 grid-cols-2 lg:grid-cols-4">
                 <FormField
                   control={form.control}
@@ -254,7 +264,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8">
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-2xl px-8 focus:ring-4 focus:ring-primary/10">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -281,7 +291,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           <metric.icon className="h-3.5 w-3.5" /> {metric.label}
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8" />
+                          <Input type="number" {...field} className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-3xl px-8 focus:ring-4 focus:ring-primary/10" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -290,9 +300,183 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 2. Clinical Context */}
-            <div className="space-y-8">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 border-b pb-4">02. Клинический контекст</h4>
+            {/* 2. Lifestyle & Goals */}
+            <div className="space-y-10">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">02</span> Цели и Образ жизни
+              </h4>
+              <div className="grid gap-10 lg:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="healthGoal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Target className="h-3.5 w-3.5" /> Основная цель
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="снизить массу тела">Снизить массу тела</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержать текущее состояние</SelectItem>
+                          <SelectItem value="набор массы">Набор массы</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="activityLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Zap className="h-3.5 w-3.5" /> Уровень активности
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="малоактивный">Малоактивный</SelectItem>
+                          <SelectItem value="среднеактивный">Среднеактивный</SelectItem>
+                          <SelectItem value="средний">Средний</SelectItem>
+                          <SelectItem value="активный">Активный</SelectItem>
+                          <SelectItem value="перенагрузка">Перенагрузка</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="smoking"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Cigarette className="h-3.5 w-3.5" /> Курение
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="да">Да, курю</SelectItem>
+                          <SelectItem value="нет">Нет, не курю</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="alcohol"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <GlassWater className="h-3.5 w-3.5" /> Алкоголь
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-muted/30 border-none font-black text-xl px-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
+                          <SelectItem value="редко">Редко (по праздникам)</SelectItem>
+                          <SelectItem value="умеренно">Умеренно</SelectItem>
+                          <SelectItem value="часто">Часто</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* 3. Preferences & Planning */}
+            <div className="space-y-10">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">03</span> Предпочтения и Планирование
+              </h4>
+              <div className="grid gap-10 lg:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="favoriteFoods"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between mb-4">
+                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                          <Heart className="h-4 w-4 text-primary" /> Любимые продукты
+                        </FormLabel>
+                        <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'favoriteFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('favoriteFoods')}>
+                          <Mic className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <FormControl>
+                        <Textarea placeholder="Что вы любите? (авокадо, лосось, орехи...)" className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="dislikedFoods"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between mb-4">
+                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                          <Ban className="h-4 w-4 text-destructive" /> Нелюбимые продукты
+                        </FormLabel>
+                        <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dislikedFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dislikedFoods')}>
+                          <Mic className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <FormControl>
+                        <Textarea placeholder="Что исключить? (кинза, молочные продукты...)" className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-6 font-bold text-lg resize-none" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="planDuration"
+                  render={({ field }) => (
+                    <FormItem className="lg:col-span-2">
+                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
+                        <Timer className="h-3.5 w-3.5" /> Длительность плана
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-20 rounded-[1.5rem] bg-primary/5 border-none font-black text-2xl px-8 text-primary">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-[1.5rem]">
+                          <SelectItem value="день">План на 1 день</SelectItem>
+                          <SelectItem value="неделя">План на неделю</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* 4. Clinical Context */}
+            <div className="space-y-10">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">04</span> Клинический контекст
+              </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -372,11 +556,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 3. Nutrition & Food Log */}
-            <div className="space-y-8">
-              <h4 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/50 border-b pb-4">03. Рацион и Логи</h4>
+            {/* 5. Daily Logs */}
+            <div className="space-y-10">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
+                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">05</span> Дневник дня
+              </h4>
               <div className="grid gap-10 lg:grid-cols-12">
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-8 space-y-10">
                   <FormField
                     control={form.control}
                     name="dietaryInput"
@@ -384,20 +570,33 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       <FormItem>
                         <div className="flex items-center justify-between mb-4">
                           <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                            <Utensils className="h-4 w-4 text-primary" /> Дневник питания
+                            <Utensils className="h-4 w-4 text-primary" /> Питание за день
                           </FormLabel>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="icon" 
-                            className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500 animate-pulse")}
-                            onClick={() => toggleVoiceInput('dietaryInput')}
-                          >
+                          <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dietaryInput')}>
                             <Mic className="h-4 w-4" />
                           </Button>
                         </div>
                         <FormControl>
-                          <Textarea placeholder="Что вы сегодня ели? Надиктуйте или введите..." className="min-h-[220px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
+                          <Textarea placeholder="Что вы съели? Надиктуйте или введите..." className="min-h-[160px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dailyActivities"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between mb-4">
+                          <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                            <Activity className="h-4 w-4 text-primary" /> Активности за день
+                          </FormLabel>
+                          <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dailyActivities' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dailyActivities')}>
+                            <Mic className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <FormControl>
+                          <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className="min-h-[120px] rounded-[2rem] bg-muted/30 border-none p-8 font-bold text-lg resize-none" {...field} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -417,7 +616,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         <FileUp className="h-8 w-8 text-primary" />
                         <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
                       </div>
-                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => handleFileUpload(e, 'diet')} />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'diet')} />
                     </label>
                   </div>
                   
@@ -452,7 +651,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               {loading ? (
                 <><Loader2 className="mr-6 h-10 w-10 animate-spin" /> Биометрический анализ...</>
               ) : (
-                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Получить рекомендации</>
+                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Сформировать план</>
               )}
             </Button>
           </form>
