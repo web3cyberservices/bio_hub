@@ -258,6 +258,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const inputClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
   const selectTriggerClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20";
   const textareaClasses = "min-h-[120px] rounded-[2rem] bg-primary/90 border-none p-8 font-bold text-white text-lg resize-none focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
+  const sectionHeaderClasses = "text-2xl font-black font-headline tracking-tighter text-foreground border-b pb-6 flex items-center gap-4 mb-10";
+  const sectionNumberClasses = "w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-base font-black shrink-0";
 
   return (
     <Card className="premium-card overflow-hidden">
@@ -266,9 +268,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-24">
             
             {/* 1. Core Biometrics */}
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">01</span> Базовые показатели
+            <div>
+              <h4 className={sectionHeaderClasses}>
+                <span className={sectionNumberClasses}>1</span> Базовые показатели
               </h4>
               <div className="grid gap-10 grid-cols-2 lg:grid-cols-4">
                 <FormField
@@ -318,9 +320,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             </div>
 
             {/* 2. Lifestyle & Goals */}
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">02</span> Цели и Образ жизни
+            <div>
+              <h4 className={sectionHeaderClasses}>
+                <span className={sectionNumberClasses}>2</span> Цели и Образ жизни
               </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
@@ -421,10 +423,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             </div>
 
             {/* 3. Device & BioData */}
-            <div className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 flex items-center gap-4">
-                  <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">03</span> Данные устройств и активность
+            <div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6 mb-10">
+                <h4 className={cn(sectionHeaderClasses, "border-none pb-0 mb-0")}>
+                  <span className={sectionNumberClasses}>3</span> Данные устройств и активность
                 </h4>
                 <Button 
                   type="button" 
@@ -484,7 +486,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 control={form.control}
                 name="dailyActivities"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="mt-10">
                     <div className="flex items-center justify-between mb-4">
                       <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                         <Activity className="h-4 w-4 text-primary" /> Дополнительные активности
@@ -502,9 +504,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             </div>
 
             {/* 4. Preferences & Planning */}
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">04</span> Предпочтения и Планирование
+            <div>
+              <h4 className={sectionHeaderClasses}>
+                <span className={sectionNumberClasses}>4</span> Предпочтения и Планирование
               </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
@@ -571,9 +573,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             </div>
 
             {/* 5. Clinical Context */}
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">05</span> Клинический контекст
+            <div>
+              <h4 className={sectionHeaderClasses}>
+                <span className={sectionNumberClasses}>5</span> Клинический контекст
               </h4>
               <div className="grid gap-10 lg:grid-cols-2">
                 <FormField
@@ -655,9 +657,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             </div>
 
             {/* 6. Daily Logs */}
-            <div className="space-y-10">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 border-b pb-6 flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground">06</span> Дневник питания
+            <div>
+              <h4 className={sectionHeaderClasses}>
+                <span className={sectionNumberClasses}>6</span> Дневник питания
               </h4>
               <div className="grid gap-10 lg:grid-cols-12">
                 <div className="lg:col-span-8">
