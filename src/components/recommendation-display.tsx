@@ -16,7 +16,16 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
 
   const getMealImage = (imageId: string) => {
-    return PlaceHolderImages.find(img => img.id === imageId) || PlaceHolderImages[0];
+    const found = PlaceHolderImages.find(img => img.id === imageId);
+    if (found) return found;
+    
+    // Fallback if no image or PlaceHolderImages is empty
+    return PlaceHolderImages[0] || {
+      id: 'placeholder',
+      imageUrl: 'https://picsum.photos/seed/placeholder/400/300',
+      imageHint: 'healthy food',
+      description: 'Default healthy food image'
+    };
   };
 
   return (
@@ -92,7 +101,13 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
               return (
                 <div key={idx} className="group flex flex-col lg:flex-row gap-12 p-8 rounded-[2.5rem] hover:bg-muted/30 transition-all duration-500 border border-transparent hover:border-border">
                   <div className="relative w-full lg:w-[320px] h-[220px] shrink-0 rounded-[2rem] overflow-hidden shadow-2xl">
-                    <Image src={mealImg.imageUrl} alt={meal.name} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" data-ai-hint={mealImg.imageHint} />
+                    <Image 
+                      src={mealImg.imageUrl} 
+                      alt={meal.name} 
+                      fill 
+                      className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                      data-ai-hint={mealImg.imageHint} 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                        <p className="text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><Info className="h-3 w-3" /> Нажми для деталей</p>
                     </div>
