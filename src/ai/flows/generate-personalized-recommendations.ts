@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
- *
- * - generatePersonalizedRecommendations - Функция, которая обрабатывает генерацию рекомендаций.
- * - GenerateRecommendationsInput - Тип входных данных для функции.
- * - GenerateRecommendationsOutput - Тип возвращаемых данных функции.
  */
 
 import {ai} from '@/ai/genkit';
@@ -39,6 +35,10 @@ const GenerateRecommendationsInputSchema = z.object({
     .string()
     .optional()
     .describe('Дополнительный текст с результатами недавних лабораторных анализов.'),
+  medicalConditionsInput: z
+    .string()
+    .optional()
+    .describe('Описание хронических заболеваний, жалоб или аллергий пользователя.'),
 });
 export type GenerateRecommendationsInput = z.infer<
   typeof GenerateRecommendationsInputSchema
@@ -86,6 +86,11 @@ const recommendationPrompt = ai.definePrompt({
 - Уровень активности: {{{activityLevel}}}
 - Цель: {{{healthGoal}}}
 
+{{#if medicalConditionsInput}}
+Медицинские условия/заболевания:
+{{{medicalConditionsInput}}}
+{{/if}}
+
 {{#if dietaryInput}}
 Данные о рационе пользователя:
 {{{dietaryInput}}}
@@ -100,6 +105,7 @@ const recommendationPrompt = ai.definePrompt({
 1. Рассчитайте суточную норму калорий (TDEE) на основе формулы Миффлина-Сан Жеора и уровня активности.
 2. Рассчитайте оптимальное распределение БЖУ (белки, жиры, углеводы) в граммах в зависимости от цели пользователя.
 3. Подготовьте подробные рекомендации по образу жизни, диете и добавкам.
+4. Если есть заболевания (medicalConditionsInput), обязательно учтите их в диетических рекомендациях (например, исключите сахар при диабете или глютен при целиакии).
 
 Если предоставлены данные о рационе или анализах, обязательно интегрируйте их в свой анализ.`,
 });

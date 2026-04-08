@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Apple, FlaskConical } from 'lucide-react';
+import { Loader2, Sparkles, Activity, Target, User, Scale, Ruler, Calendar, Stethoscope } from 'lucide-react';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -38,6 +38,7 @@ const formSchema = z.object({
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   dietaryInput: z.string().optional(),
   labResultsInput: z.string().optional(),
+  medicalConditionsInput: z.string().optional(),
 });
 
 interface RecommendationFormProps {
@@ -58,6 +59,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
       healthGoal: 'поддержать текущее состояние',
       dietaryInput: '',
       labResultsInput: '',
+      medicalConditionsInput: '',
     },
   });
 
@@ -161,52 +163,68 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="activityLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                    <Activity className="h-3.5 w-3.5 text-primary/60" /> Уровень активности
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
-                        <SelectValue placeholder="Активность" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="rounded-2xl">
-                      <SelectItem value="малоактивный">Сидячий образ жизни</SelectItem>
-                      <SelectItem value="среднеактивный">Легкие нагрузки</SelectItem>
-                      <SelectItem value="средний">Средние нагрузки</SelectItem>
-                      <SelectItem value="активный">Высокая активность</SelectItem>
-                      <SelectItem value="перенагрузка">Экстремальные нагрузки</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="activityLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Activity className="h-3.5 w-3.5 text-primary/60" /> Активность
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
+                          <SelectValue placeholder="Активность" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-2xl">
+                        <SelectItem value="малоактивный">Сидячий</SelectItem>
+                        <SelectItem value="среднеактивный">Легкий</SelectItem>
+                        <SelectItem value="средний">Средний</SelectItem>
+                        <SelectItem value="активный">Высокий</SelectItem>
+                        <SelectItem value="перенагрузка">Экстремальный</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="healthGoal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                      <Target className="h-3.5 w-3.5 text-primary/60" /> Цель
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
+                          <SelectValue placeholder="Цель" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-2xl">
+                        <SelectItem value="снизить массу тела">Похудение</SelectItem>
+                        <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
+                        <SelectItem value="набор массы">Набор массы</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
-              name="healthGoal"
+              name="medicalConditionsInput"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
-                    <Target className="h-3.5 w-3.5 text-primary/60" /> Ваша главная цель
+                    <Stethoscope className="h-3.5 w-3.5 text-primary/60" /> Заболевания и жалобы (необязательно)
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg">
-                        <SelectValue placeholder="Цель" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="rounded-2xl">
-                      <SelectItem value="снизить массу тела">Похудение</SelectItem>
-                      <SelectItem value="поддержать текущее состояние">Поддержание веса</SelectItem>
-                      <SelectItem value="набор массы">Набор мышечной массы</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Textarea placeholder="Укажите хронические заболевания или симптомы..." {...field} className="min-h-[100px] rounded-2xl bg-muted/30 border-none font-medium text-lg resize-none" />
+                  </FormControl>
                 </FormItem>
               )}
             />

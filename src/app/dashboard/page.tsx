@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
 
 export default function DashboardPage() {
   const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F8FAF9]">
       <NavBar />
       
-      {/* Calendar Navigation - Inspired by Screenshot */}
+      {/* Calendar Navigation */}
       <div className="bg-white border-b sticky top-16 z-40 py-4">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-4 lg:hidden">
@@ -85,26 +85,26 @@ export default function DashboardPage() {
                 <RefreshCw className="h-5 w-5" /> Обновить
               </Button>
             ) : (
-              <Button 
-                variant="default" 
-                size="lg"
-                className="rounded-2xl bg-primary font-bold gap-2 shadow-xl shadow-primary/20"
-              >
-                <Plus className="h-5 w-5" /> Добавить данные
-              </Button>
+              <UnifiedDataEntry>
+                <Button 
+                  variant="default" 
+                  size="lg"
+                  className="rounded-2xl bg-primary font-bold gap-2 shadow-xl shadow-primary/20"
+                >
+                  <Plus className="h-5 w-5" /> Добавить данные
+                </Button>
+              </UnifiedDataEntry>
             )}
           </div>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-12">
-          {/* Левая панель - Форма */}
           {!result && (
             <div className="lg:col-span-12 max-w-4xl mx-auto w-full">
               <RecommendationForm onResult={setResult} />
             </div>
           )}
 
-          {/* Результат - Виджеты как на скриншоте */}
           {result && (
             <div className="lg:col-span-12 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <RecommendationDisplay data={result} />
@@ -119,10 +119,11 @@ export default function DashboardPage() {
         </div>
       </footer>
 
-      {/* Mobile Floating Action Button */}
-      <Button className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-primary shadow-2xl lg:hidden">
-        <Plus className="h-8 w-8 text-white" />
-      </Button>
+      <UnifiedDataEntry>
+        <Button className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-primary shadow-2xl lg:hidden flex items-center justify-center">
+          <Plus className="h-8 w-8 text-white" />
+        </Button>
+      </UnifiedDataEntry>
     </div>
   );
 }
