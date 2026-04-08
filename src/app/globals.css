@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 142 40% 99%;
-    --foreground: 142 50% 5%;
+    --background: 120 20% 98%;
+    --foreground: 120 40% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 142 50% 10%;
+    --card-foreground: 120 40% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 142 50% 10%;
-    --primary: 142 76% 36%;
+    --popover-foreground: 120 40% 10%;
+    --primary: 122 39% 49%; /* #4CAF50 - Vibrant Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 142 60% 45%;
+    --secondary: 36 100% 50%; /* #FF9800 - Inviting Orange */
     --secondary-foreground: 0 0% 100%;
-    --muted: 142 20% 95%;
-    --muted-foreground: 142 15% 35%;
-    --accent: 142 80% 92%;
-    --accent-foreground: 142 50% 15%;
-    --destructive: 0 84% 60%;
+    --muted: 120 10% 95%;
+    --muted-foreground: 120 10% 40%;
+    --accent: 54 100% 62%; /* #FFEB3B - Cheerful Yellow */
+    --accent-foreground: 120 40% 15%;
+    --destructive: 4 90% 58%; /* #F44336 - Healthy Red */
     --destructive-foreground: 0 0% 100%;
-    --border: 142 20% 92%;
-    --input: 142 20% 92%;
-    --ring: 142 76% 36%;
-    --radius: 1.5rem;
+    --border: 120 10% 90%;
+    --input: 120 10% 90%;
+    --ring: 122 39% 49%;
+    --radius: 1rem;
   }
 }
 
@@ -39,40 +39,24 @@
   }
 }
 
-.glass-card {
-  @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_15px_45px_-10px_rgba(20,60,40,0.06)];
+.premium-card {
+  @apply bg-white border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)];
 }
 
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-gradient-flow;
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
 }
 
-@keyframes gradient-flow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animate-gradient-flow {
-  animation: gradient-flow 6s ease infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
-}
-
-.animate-float {
-  animation: float 8s ease-in-out infinite;
+.text-gradient-primary {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-muted;
+  @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-primary/20 rounded-full hover:bg-primary/40 transition-colors;
