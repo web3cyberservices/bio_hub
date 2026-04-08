@@ -262,13 +262,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   return (
     <Card className="premium-card overflow-hidden">
       <CardContent className="p-8 md:p-16 lg:p-24 space-y-24">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-end gap-10">
-          <Badge className="bg-primary/5 text-primary border-none px-6 py-3 rounded-2xl flex gap-3 font-black uppercase tracking-widest text-[10px]">
-            <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
-            Интеллектуальный анализ 3.0
-          </Badge>
-        </div>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-24">
             
