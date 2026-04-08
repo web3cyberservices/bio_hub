@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from 'react';
@@ -255,31 +256,31 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }
 
-  const inputClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
-  const selectTriggerClasses = "h-20 rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-8 focus:ring-4 focus:ring-white/20";
-  const textareaClasses = "min-h-[120px] rounded-[2rem] bg-primary/90 border-none p-8 font-bold text-white text-lg resize-none focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
-  const sectionHeaderClasses = "text-2xl font-black font-headline tracking-tighter text-foreground border-b pb-6 flex items-center gap-4 mb-10";
-  const sectionNumberClasses = "w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-base font-black shrink-0";
+  const inputClasses = "h-14 md:h-20 rounded-[1.25rem] md:rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-6 md:px-8 focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
+  const selectTriggerClasses = "h-14 md:h-20 rounded-[1.25rem] md:rounded-[1.5rem] bg-primary/90 border-none font-black text-white px-6 md:px-8 focus:ring-4 focus:ring-white/20";
+  const textareaClasses = "min-h-[100px] md:min-h-[120px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/90 border-none p-6 md:p-8 font-bold text-white text-base md:text-lg resize-none focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
+  const sectionHeaderClasses = "text-xl md:text-2xl font-black font-headline tracking-tighter text-foreground border-b pb-4 md:pb-6 flex items-center gap-3 md:gap-4 mb-6 md:mb-10";
+  const sectionNumberClasses = "w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm md:text-base font-black shrink-0";
 
   return (
     <Card className="premium-card overflow-hidden">
-      <CardContent className="p-8 md:p-16 lg:p-24 space-y-24">
+      <CardContent className="p-4 sm:p-8 md:p-16 lg:p-24 space-y-12 md:space-y-24">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-24">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12 md:space-y-24">
             
             {/* 1. Core Biometrics */}
             <div>
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>1</span> Базовые показатели
               </h4>
-              <div className="grid gap-10 grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-6 md:gap-10 grid-cols-2 lg:grid-cols-4">
                 <FormField
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Users className="h-3.5 w-3.5" /> Пол
+                    <FormItem className="col-span-2 md:col-span-1">
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Users className="h-3 md:h-3.5 w-3 md:w-3.5" /> Пол
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -306,11 +307,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                     name={metric.name as any}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                          <metric.icon className="h-3.5 w-3.5" /> {metric.label}
+                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                          <metric.icon className="h-3 md:h-3.5 w-3 md:w-3.5" /> {metric.label}
                         </FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} className={cn(inputClasses, "text-3xl")} />
+                          <Input type="number" {...field} className={cn(inputClasses, "text-xl md:text-3xl")} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -324,18 +325,18 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>2</span> Цели и Образ жизни
               </h4>
-              <div className="grid gap-10 lg:grid-cols-2">
+              <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="healthGoal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Target className="h-3.5 w-3.5" /> Основная цель
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Target className="h-3 md:h-3.5 w-3 md:w-3.5" /> Основная цель
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-sm md:text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -353,12 +354,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="activityLevel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Zap className="h-3.5 w-3.5" /> Уровень активности
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Zap className="h-3 md:h-3.5 w-3 md:w-3.5" /> Уровень активности
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-sm md:text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -378,12 +379,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="smoking"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Cigarette className="h-3.5 w-3.5" /> Курение
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Cigarette className="h-3 md:h-3.5 w-3 md:w-3.5" /> Курение
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-sm md:text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -400,12 +401,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="alcohol"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <GlassWater className="h-3.5 w-3.5" /> Алкоголь
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <GlassWater className="h-3 md:h-3.5 w-3 md:w-3.5" /> Алкоголь
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-xl")}>
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-sm md:text-xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -424,31 +425,31 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
             {/* 3. Device & BioData */}
             <div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6 mb-10">
-                <h4 className={cn(sectionHeaderClasses, "border-none pb-0 mb-0")}>
-                  <span className={sectionNumberClasses}>3</span> Данные устройств и активность
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 md:pb-6 mb-6 md:mb-10">
+                <h4 className="text-xl md:text-2xl font-black font-headline tracking-tighter text-foreground flex items-center gap-3">
+                  <span className={sectionNumberClasses}>3</span> Данные устройств
                 </h4>
                 <Button 
                   type="button" 
                   onClick={simulateSync} 
                   disabled={syncing}
-                  className="rounded-xl h-12 px-6 bg-primary/10 text-primary hover:bg-primary/20 border-none font-black uppercase tracking-widest text-[10px] gap-2"
+                  className="rounded-xl h-10 md:h-12 px-4 md:px-6 bg-primary/10 text-primary hover:bg-primary/20 border-none font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 self-start md:self-auto"
                 >
                   {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  Синхронизировать данные
+                  Синхронизировать
                 </Button>
               </div>
-              <div className="grid gap-10 grid-cols-1 md:grid-cols-3">
+              <div className="grid gap-6 md:gap-10 grid-cols-2 md:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="steps"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Footprints className="h-3.5 w-3.5 text-primary" /> Шаги за день
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Footprints className="h-3 md:h-3.5 w-3 md:w-3.5 text-primary" /> Шаги
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-xl md:text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -458,11 +459,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="avgHeartRate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Heart className="h-3.5 w-3.5 text-secondary" /> Пульс в покое (уд/мин)
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Heart className="h-3 md:h-3.5 w-3 md:w-3.5 text-secondary" /> Пульс
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-xl md:text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -471,12 +472,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   control={form.control}
                   name="sleepDurationHours"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Moon className="h-3.5 w-3.5 text-accent-foreground" /> Сон (часы)
+                    <FormItem className="col-span-2 md:col-span-1">
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Moon className="h-3 md:h-3.5 w-3 md:w-3.5 text-accent-foreground" /> Сон (ч)
                       </FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className={cn(inputClasses, "text-2xl")} />
+                        <Input type="number" {...field} className={cn(inputClasses, "text-xl md:text-2xl")} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -486,17 +487,17 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 control={form.control}
                 name="dailyActivities"
                 render={({ field }) => (
-                  <FormItem className="mt-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                        <Activity className="h-4 w-4 text-primary" /> Дополнительные активности
+                  <FormItem className="mt-8 md:mt-10">
+                    <div className="flex items-center justify-between mb-2 md:mb-4">
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                        <Activity className="h-4 w-4 text-primary" /> Активности
                       </FormLabel>
                       <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dailyActivities' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dailyActivities')}>
                         <Mic className="h-4 w-4" />
                       </Button>
                     </div>
                     <FormControl>
-                      <Textarea placeholder="Например: Бег 30 мин, Футбол 1 час..." className={textareaClasses} {...field} />
+                      <Textarea placeholder="Например: Бег 30 мин..." className={textareaClasses} {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -506,16 +507,16 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             {/* 4. Preferences & Planning */}
             <div>
               <h4 className={sectionHeaderClasses}>
-                <span className={sectionNumberClasses}>4</span> Предпочтения и Планирование
+                <span className={sectionNumberClasses}>4</span> Предпочтения
               </h4>
-              <div className="grid gap-10 lg:grid-cols-2">
+              <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="favoriteFoods"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between mb-4">
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                      <div className="flex items-center justify-between mb-2 md:mb-4">
+                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                           <Heart className="h-4 w-4 text-primary" /> Любимые продукты
                         </FormLabel>
                         <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'favoriteFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('favoriteFoods')}>
@@ -523,7 +524,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Что вы любите? (авокадо, лосось, орехи...)" className={textareaClasses} {...field} />
+                        <Textarea placeholder="Что вы любите?..." className={textareaClasses} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -533,8 +534,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="dislikedFoods"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between mb-4">
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                      <div className="flex items-center justify-between mb-2 md:mb-4">
+                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                           <Ban className="h-4 w-4 text-destructive" /> Нелюбимые продукты
                         </FormLabel>
                         <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dislikedFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dislikedFoods')}>
@@ -542,7 +543,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Что исключить? (кинза, молочные продукты...)" className={textareaClasses} {...field} />
+                        <Textarea placeholder="Что исключить?..." className={textareaClasses} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -551,13 +552,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   control={form.control}
                   name="planDuration"
                   render={({ field }) => (
-                    <FormItem className="lg:col-span-2">
-                      <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-4 uppercase tracking-[0.2em]">
-                        <Timer className="h-3.5 w-3.5" /> Длительность плана
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
+                        <Timer className="h-3 md:h-3.5 w-3 md:w-3.5" /> Длительность плана
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-2xl")}>
+                          <SelectTrigger className={cn(selectTriggerClasses, "text-base md:text-2xl")}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -577,14 +578,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>5</span> Клинический контекст
               </h4>
-              <div className="grid gap-10 lg:grid-cols-2">
+              <div className="grid gap-6 md:gap-10 grid-cols-1 lg:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="labResultsInput"
                   render={({ field }) => (
                     <FormItem className="relative">
-                      <div className="flex items-center justify-between mb-4">
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                      <div className="flex items-center justify-between mb-2 md:mb-4">
+                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                           <FlaskConical className="h-4 w-4 text-primary" /> Анализы
                         </FormLabel>
                         <div className="flex gap-2">
@@ -595,7 +596,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                             className={cn("h-8 w-8 rounded-lg", isRecording === 'labResultsInput' && "bg-red-100 text-red-500 animate-pulse")}
                             onClick={() => toggleVoiceInput('labResultsInput')}
                           >
-                            {isRecording === 'labResultsInput' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                            <Mic className="h-4 w-4" />
                           </Button>
                           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => startCamera('labs')}>
                             <Camera className="h-4 w-4" />
@@ -604,15 +605,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </div>
                       <FormControl>
                         <div className="space-y-4">
-                          <Textarea placeholder="Результаты лаб. тестов..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
+                          <Textarea placeholder="Результаты анализов..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
                           {(activeCamera === 'labs' || labImage) && (
-                            <div className="relative rounded-[2rem] overflow-hidden border-2 border-primary/20 aspect-video">
+                            <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 border-primary/20 aspect-video">
                               {activeCamera === 'labs' ? (
                                 <>
                                   <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                                   <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                                    <Button type="button" onClick={() => capturePhoto('labs')} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
-                                    <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                                    <Button type="button" onClick={() => capturePhoto('labs')} className="rounded-full w-10 h-10 bg-white text-primary"><Camera className="h-5 w-5" /></Button>
+                                    <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-10 h-10"><X className="h-5 w-5" /></Button>
                                   </div>
                                 </>
                               ) : (
@@ -633,8 +634,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   name="medicalConditionsInput"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between mb-4">
-                        <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                      <div className="flex items-center justify-between mb-2 md:mb-4">
+                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                           <Stethoscope className="h-4 w-4 text-primary" /> Жалобы
                         </FormLabel>
                         <Button 
@@ -648,7 +649,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                         </Button>
                       </div>
                       <FormControl>
-                        <Textarea placeholder="Опишите симптомы..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
+                        <Textarea placeholder="Опишите симптомы..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -661,15 +662,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>6</span> Дневник питания
               </h4>
-              <div className="grid gap-10 lg:grid-cols-12">
+              <div className="grid gap-6 md:gap-10 grid-cols-1 lg:grid-cols-12">
                 <div className="lg:col-span-8">
                   <FormField
                     control={form.control}
                     name="dietaryInput"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="flex items-center justify-between mb-4">
-                          <FormLabel className="text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
+                        <div className="flex items-center justify-between mb-2 md:mb-4">
+                          <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
                             <Utensils className="h-4 w-4 text-primary" /> Рацион
                           </FormLabel>
                           <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dietaryInput')}>
@@ -677,44 +678,44 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </Button>
                         </div>
                         <FormControl>
-                          <Textarea placeholder="Что вы съели? Надиктуйте или введите..." className={cn(textareaClasses, "min-h-[160px]")} {...field} />
+                          <Textarea placeholder="Что вы сегодня ели?..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
                         </FormControl>
                       </FormItem>
                     )}
                   />
                 </div>
-                <div className="lg:col-span-4 space-y-6">
-                  <label className="text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-4 uppercase tracking-[0.2em]">
+                <div className="lg:col-span-4 space-y-4 md:space-y-6">
+                  <label className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-2 md:mb-4 uppercase tracking-[0.2em]">
                     <Camera className="h-4 w-4 text-primary" /> Фото еды
                   </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button type="button" variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={() => startCamera('diet')}>
-                      <Camera className="h-8 w-8 text-primary" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Камера</span>
+                  <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <Button type="button" variant="outline" className="h-20 md:h-28 rounded-[1.5rem] md:rounded-[2rem] border-dashed border-2 flex flex-col gap-1 md:gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={() => startCamera('diet')}>
+                      <Camera className="h-6 md:h-8 w-6 md:w-8 text-primary" />
+                      <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground">Камера</span>
                     </Button>
                     <label className="cursor-pointer">
-                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
-                        <FileUp className="h-8 w-8 text-primary" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
+                      <div className="h-20 md:h-28 rounded-[1.5rem] md:rounded-[2rem] border-dashed border-2 flex flex-col gap-1 md:gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
+                        <FileUp className="h-6 md:h-8 w-6 md:w-8 text-primary" />
+                        <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
                       </div>
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'diet')} />
                     </label>
                   </div>
                   
                   {activeCamera === 'diet' && (
-                    <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-square">
+                    <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-black aspect-square">
                       <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                        <Button type="button" onClick={() => capturePhoto('diet')} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
-                        <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                        <Button type="button" onClick={() => capturePhoto('diet')} className="rounded-full w-10 h-10 bg-white text-primary"><Camera className="h-5 w-5" /></Button>
+                        <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-10 h-10"><X className="h-5 w-5" /></Button>
                       </div>
                     </div>
                   )}
 
                   {dietaryImage && activeCamera !== 'diet' && (
-                    <div className="relative rounded-[2rem] overflow-hidden group border-4 border-primary/20">
+                    <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group border-4 border-primary/20">
                       <img src={dietaryImage} className="w-full aspect-square object-cover" alt="Diet" />
-                      <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDietaryImage(null)}>
+                      <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" onClick={() => setDietaryImage(null)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -725,14 +726,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
             <Button 
               type="submit" 
-              className="w-full h-28 rounded-[2rem] text-3xl font-black bg-primary shadow-[0_25px_50px_rgba(76,175,80,0.3)] transition-all hover:scale-[1.01] active:scale-95 group overflow-hidden" 
+              className="w-full h-20 sm:h-24 md:h-28 rounded-[1.5rem] md:rounded-[2rem] text-xl sm:text-2xl md:text-3xl font-black bg-primary shadow-[0_25px_50px_rgba(76,175,80,0.3)] transition-all hover:scale-[1.01] active:scale-95 group overflow-hidden" 
               disabled={loading}
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               {loading ? (
-                <><Loader2 className="mr-6 h-10 w-10 animate-spin" /> Биометрический анализ...</>
+                <><Loader2 className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 animate-spin" /> Анализ...</>
               ) : (
-                <><Sparkles className="mr-6 h-10 w-10 group-hover:rotate-12 transition-transform" /> Сформировать план</>
+                <><Sparkles className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 group-hover:rotate-12 transition-transform" /> Сформировать план</>
               )}
             </Button>
           </form>

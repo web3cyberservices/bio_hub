@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -29,13 +30,13 @@ export default function DashboardPage() {
       <NavBar />
       
       {/* Sticky Navigation Bar */}
-      <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-4 shadow-sm">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-2 md:py-4 shadow-sm">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="rounded-xl h-10 w-10 hover:bg-primary/5 transition-all" 
+              className="rounded-xl h-9 w-9 md:h-10 md:w-10 hover:bg-primary/5 transition-all" 
               onClick={() => setSelectedDate(prev => addDays(prev, -1))}
             >
               <ChevronLeft className="h-5 w-5 text-primary" />
@@ -43,19 +44,19 @@ export default function DashboardPage() {
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" className="px-4 h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 transition-all min-w-[180px]">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
+                <Button variant="ghost" className="px-2 md:px-4 h-12 md:h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 transition-all min-w-[140px] md:min-w-[180px]">
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
                     {getStatusLabel(selectedDate)}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold tracking-tight">
+                    <span className="text-sm md:text-xl font-bold tracking-tight">
                       {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
                     </span>
-                    <CalendarIcon className="h-4 w-4 text-primary opacity-30" />
+                    <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 text-primary opacity-30" />
                   </div>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 rounded-[2.5rem] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.15)] border-none mt-4" align="center">
+              <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.15)] border-none mt-2 md:mt-4" align="center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -69,33 +70,33 @@ export default function DashboardPage() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="rounded-xl h-10 w-10 hover:bg-primary/5 transition-all"
+              className="rounded-xl h-9 w-9 md:h-10 md:w-10 hover:bg-primary/5 transition-all"
               onClick={() => setSelectedDate(prev => addDays(prev, 1))}
             >
               <ChevronRight className="h-5 w-5 text-primary" />
             </Button>
           </div>
 
-          <div className="hidden md:flex items-center gap-4">
-             <Badge className="bg-secondary/10 text-secondary border-none px-6 py-2 rounded-2xl font-black uppercase tracking-widest text-[9px]">
-               Биометрический статус: Активен
+          <div className="flex items-center gap-4">
+             <Badge className="bg-secondary/10 text-secondary border-none px-4 md:px-6 py-1.5 md:py-2 rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-[9px]">
+               Статус: Активен
              </Badge>
           </div>
         </div>
       </div>
 
-      <main className="container mx-auto flex-1 px-4 py-16">
-        <div className="mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
+      <main className="container mx-auto flex-1 px-4 py-8 md:py-16">
+        <div className="mb-10 md:mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-8 md:gap-10">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-               <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center shadow-inner">
-                  <Sparkles className="h-8 w-8 text-primary" />
+               <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-inner shrink-0">
+                  <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                </div>
                <div>
-                  <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground">
+                  <h1 className="text-3xl sm:text-4xl md:text-7xl font-black tracking-tighter text-foreground leading-none">
                     Кабинет Здоровья
                   </h1>
-                  <p className="text-muted-foreground text-xl font-medium max-w-xl leading-snug">
+                  <p className="text-muted-foreground text-base md:text-xl font-medium max-w-xl leading-snug mt-2">
                     {isFuture(selectedDate) 
                       ? 'Ваша стратегия долголетия и прогноз состояния.' 
                       : 'Аналитический отчет и рекомендации на основе ваших данных.'}
@@ -103,24 +104,24 @@ export default function DashboardPage() {
                </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="lg" className="rounded-3xl border-2 h-20 w-20 p-0 hover:bg-primary/5 transition-all shadow-sm">
-              <History className="h-8 w-8 text-muted-foreground" />
+          <div className="flex items-center gap-3 md:gap-4">
+            <Button variant="outline" size="lg" className="rounded-2xl md:rounded-3xl border-2 h-14 w-14 md:h-20 md:w-20 p-0 hover:bg-primary/5 transition-all shadow-sm">
+              <History className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
             </Button>
             {result && (
               <Button 
                 variant="default" 
                 size="lg"
                 onClick={() => setResult(null)}
-                className="rounded-3xl h-20 px-10 bg-secondary font-black uppercase tracking-widest text-xs gap-4 shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
+                className="flex-1 md:flex-none rounded-2xl md:rounded-3xl h-14 md:h-20 px-6 md:px-10 bg-secondary font-black uppercase tracking-widest text-[10px] md:text-xs gap-3 md:gap-4 shadow-2xl shadow-secondary/20 hover:scale-105 active:scale-95 transition-all"
               >
-                <RefreshCw className="h-6 w-6" /> Обновить данные
+                <RefreshCw className="h-5 w-5 md:h-6 md:w-6" /> Обновить данные
               </Button>
             )}
           </div>
         </div>
 
-        <div className="grid gap-16">
+        <div className="grid gap-10 md:gap-16">
           {!result && (
             <div className="max-w-6xl mx-auto w-full animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <RecommendationForm onResult={setResult} selectedDate={selectedDate} />
@@ -128,26 +129,26 @@ export default function DashboardPage() {
           )}
 
           {result && (
-            <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out">
+            <div className="space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out">
               <RecommendationDisplay data={result} />
             </div>
           )}
         </div>
       </main>
       
-      <footer className="mt-40 border-t py-20 bg-white/50 backdrop-blur-md">
+      <footer className="mt-20 md:mt-40 border-t py-12 md:py-20 bg-white/50 backdrop-blur-md">
         <div className="container mx-auto px-4 text-center space-y-6">
           <div className="flex justify-center items-center gap-3">
-             <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center">
-                <Activity className="h-5 w-5 text-primary" />
+             <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                <Activity className="h-4 w-4 md:h-5 md:w-5 text-primary" />
              </div>
-             <span className="font-headline font-black tracking-tighter text-2xl">PRO Себя</span>
+             <span className="font-headline font-black tracking-tighter text-xl md:text-2xl">PRO Себя</span>
           </div>
           <div className="max-w-lg mx-auto">
-             <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[10px] mb-2">Интеллектуальная биометрическая платформа.</p>
-             <p className="text-muted-foreground/40 text-[9px] leading-relaxed">Система использует передовые алгоритмы машинного обучения для корреляции ваших клинических показателей, образа жизни и нутивтивного статуса. Данные не являются медицинским диагнозом.</p>
+             <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[8px] md:text-[10px] mb-2">Интеллектуальная биометрическая платформа.</p>
+             <p className="text-muted-foreground/40 text-[8px] md:text-[9px] leading-relaxed">Система использует передовые алгоритмы машинного обучения для корреляции ваших клинических показателей. Не является медицинским диагнозом.</p>
           </div>
-          <p className="text-muted-foreground/30 text-[8px] uppercase tracking-[0.5em] pt-8">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
+          <p className="text-muted-foreground/30 text-[7px] md:text-[8px] uppercase tracking-[0.5em] pt-4 md:pt-8">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
         </div>
       </footer>
     </div>
