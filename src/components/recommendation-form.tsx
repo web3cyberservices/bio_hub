@@ -229,16 +229,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   return (
     <Card className="premium-card overflow-hidden">
       <CardContent className="p-8 md:p-16 lg:p-24 space-y-24">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
-          <div className="flex items-center gap-8">
-            <div className="p-6 bg-primary/10 rounded-[2rem] shadow-[0_15px_30px_rgba(76,175,80,0.15)]">
-              <Dna className="h-12 w-12 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-5xl font-black tracking-tighter leading-none">Биометрия</h3>
-              <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-[9px] mt-2">Единый центр управления здоровьем</p>
-            </div>
-          </div>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-end gap-10">
           <Badge className="bg-primary/5 text-primary border-none px-6 py-3 rounded-2xl flex gap-3 font-black uppercase tracking-widest text-[10px]">
             <span className="w-2 h-2 bg-primary rounded-full animate-ping" />
             Интеллектуальный анализ 3.0
