@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from 'react';
@@ -40,7 +39,6 @@ import {
   Camera,
   X,
   Mic,
-  MicOff,
   FileUp,
   Target,
   Activity,
@@ -50,12 +48,10 @@ import {
   Heart,
   Ban,
   Timer,
-  Watch,
   Footprints,
   Moon,
   RefreshCw
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 

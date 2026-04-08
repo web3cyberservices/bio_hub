@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, History, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Activity, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Sparkles, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -26,7 +25,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAF9]">
+    <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
       {/* Sticky Navigation Bar */}
@@ -78,8 +77,8 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
-             <Badge className="bg-secondary/10 text-secondary border-none px-4 md:px-6 py-1.5 md:py-2 rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-[9px]">
-               Статус: Активен
+             <Badge className="bg-primary/10 text-primary border-none px-4 md:px-6 py-1.5 md:py-2 rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-[9px]">
+               Биометрический статус: Активен
              </Badge>
           </div>
         </div>
