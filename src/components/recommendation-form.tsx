@@ -97,7 +97,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
   }
 
   return (
-    <Card className="border-none shadow-2xl rounded-[3rem] bg-white/80 backdrop-blur-xl overflow-hidden p-1">
+    <Card className="border-none shadow-[0_32px_80px_-20px_rgba(20,60,40,0.12)] rounded-[3rem] bg-white overflow-hidden p-1">
       <CardContent className="p-10 space-y-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-5">
@@ -109,14 +109,13 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               <p className="text-muted-foreground font-medium">Данные для ИИ-анализа</p>
             </div>
           </div>
-          <Badge className="bg-secondary/10 text-secondary border-none px-4 py-2 rounded-xl flex gap-2">
+          <Badge className="bg-secondary/10 text-secondary border-none px-4 py-2 rounded-xl flex gap-2 font-bold">
             <Watch className="h-4 w-4" /> Данные синхронизированы
           </Badge>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Биометрия */}
             <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
               <FormField
                 control={form.control}
@@ -127,7 +126,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Scale className="h-3.5 w-3.5 text-primary/60" /> Вес (кг)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg focus:ring-2 focus:ring-primary/20" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -141,7 +140,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Ruler className="h-3.5 w-3.5 text-primary/60" /> Рост (см)
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg focus:ring-2 focus:ring-primary/20" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -155,14 +154,13 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                       <Calendar className="h-3.5 w-3.5 text-primary/60" /> Возраст
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg" />
+                      <Input type="number" {...field} className="h-14 rounded-2xl bg-muted/30 border-none font-bold text-lg focus:ring-2 focus:ring-primary/20" />
                     </FormControl>
                   </FormItem>
                 )}
               />
             </div>
 
-            {/* Активность и Цель */}
             <div className="grid gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -210,8 +208,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            {/* Вредные привычки */}
-            <div className="grid gap-6 md:grid-cols-2 p-6 rounded-[2rem] bg-muted/20 border border-muted/30">
+            <div className="grid gap-6 md:grid-cols-2 p-8 rounded-[2.5rem] bg-primary/5 border border-primary/10">
               <FormField
                 control={form.control}
                 name="smoking"
@@ -222,7 +219,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 rounded-xl bg-white/50 border-none font-bold">
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none font-bold">
                           <SelectValue placeholder="Выберите" />
                         </SelectTrigger>
                       </FormControl>
@@ -244,7 +241,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-12 rounded-xl bg-white/50 border-none font-bold">
+                        <SelectTrigger className="h-12 rounded-xl bg-white border-none font-bold">
                           <SelectValue placeholder="Выберите частоту" />
                         </SelectTrigger>
                       </FormControl>
@@ -260,7 +257,6 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            {/* Продукты */}
             <div className="space-y-6">
               <FormField
                 control={form.control}
@@ -273,11 +269,10 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                     <FormControl>
                       <Textarea 
                         placeholder="Например: Авокадо, лосось, гречка, творог..." 
-                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4" 
+                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4 font-medium" 
                         {...field} 
                       />
                     </FormControl>
-                    <p className="text-[10px] text-muted-foreground italic">ИИ будет использовать этот список для составления вашего меню.</p>
                   </FormItem>
                 )}
               />
@@ -287,17 +282,16 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
                 name="dislikedFoods"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80 text-destructive/80">
+                    <FormLabel className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-destructive/80">
                       <ThumbsDown className="h-3.5 w-3.5 text-destructive/60" /> Нелюбимые продукты
                     </FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Например: Кинза, лук, молочные продукты..." 
-                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4" 
+                        className="min-h-[100px] rounded-2xl bg-muted/30 border-none p-4 font-medium" 
                         {...field} 
                       />
                     </FormControl>
-                    <p className="text-[10px] text-muted-foreground italic">ИИ СТРОГО ИСКЛЮЧИТ эти продукты из вашего меню.</p>
                   </FormItem>
                 )}
               />
@@ -324,8 +318,7 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               />
             </div>
 
-            {/* Устройства */}
-            <div className="p-6 rounded-[2rem] bg-secondary/5 border border-secondary/10 space-y-6">
+            <div className="p-8 rounded-[2.5rem] bg-secondary/5 border border-secondary/10 space-y-6">
               <div className="flex items-center gap-3">
                 <Watch className="h-5 w-5 text-secondary" />
                 <h4 className="font-black text-secondary uppercase tracking-widest text-[11px]">Данные носимых устройств</h4>
@@ -333,26 +326,26 @@ export function RecommendationForm({ onResult }: RecommendationFormProps) {
               <div className="grid gap-4 grid-cols-3">
                 <div className="space-y-2">
                   <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Zap className="h-3 w-3" /> Шаги</label>
-                  <Input type="number" {...form.register('deviceData.steps')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                  <Input type="number" {...form.register('deviceData.steps')} className="h-12 rounded-xl bg-white border-none font-bold text-center" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Activity className="h-3 w-3" /> Пульс</label>
-                  <Input type="number" {...form.register('deviceData.avgHeartRate')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                  <Input type="number" {...form.register('deviceData.avgHeartRate')} className="h-12 rounded-xl bg-white border-none font-bold text-center" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1"><Moon className="h-3 w-3" /> Сон (ч)</label>
-                  <Input type="number" step="0.1" {...form.register('deviceData.sleepDurationHours')} className="h-12 rounded-xl bg-white/50 border-none font-bold text-center" />
+                  <Input type="number" step="0.1" {...form.register('deviceData.sleepDurationHours')} className="h-12 rounded-xl bg-white border-none font-bold text-center" />
                 </div>
               </div>
             </div>
 
             <Button 
               type="submit" 
-              className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all" 
+              className="w-full h-20 rounded-[2rem] text-2xl font-black bg-primary shadow-2xl shadow-primary/30 hover:scale-[1.01] transition-all" 
               disabled={loading}
             >
               {loading ? (
-                <><Loader2 className="mr-3 h-8 w-8 animate-spin" /> Анализ...</>
+                <><Loader2 className="mr-3 h-8 w-8 animate-spin" /> Анализирую данные...</>
               ) : (
                 <><Sparkles className="mr-3 h-8 w-8" /> Получить план здоровья</>
               )}
