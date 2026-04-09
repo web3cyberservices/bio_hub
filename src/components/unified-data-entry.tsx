@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon, Footprints, Moon, RefreshCw, MessageSquare } from 'lucide-react';
+import { Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon, Footprints, Moon, RefreshCw, MessageSquare, GraduationCap } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [connectingDevice, setConnectingDevice] = useState<string | null>(null);
   
   const [steps, setSteps] = useState<string>('');
   const [heartRate, setHeartRate] = useState<string>('');
@@ -93,14 +92,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
-  const connectDevice = async (name: string) => {
-    setConnectingDevice(name);
-    await new Promise(r => setTimeout(r, 1500));
-    setConnectingDevice(null);
-    toast({ title: 'Готово', description: `${name} синхронизирован.` });
-    setSteps('9200'); setHeartRate('68'); setSleep('8.2');
-  };
-
   const addActivity = (activity: string) => {
     setDescription(prev => prev ? `${prev}, ${activity}` : activity);
   };
@@ -119,8 +110,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           photoDataUri: image || undefined,
           refinement: isRefinement ? refinement : undefined,
         });
+        // Полная перезапись результата для "стирания" ошибок
         setMealResult(result);
-        if (isRefinement) setRefinement('');
+        if (isRefinement) {
+          setRefinement('');
+          toast({ title: 'ИИ обучен', description: 'Данные обновлены на основе вашей правки.' });
+        }
       } else {
         await new Promise(r => setTimeout(r, 1000));
         setIsSuccess(true);
@@ -204,7 +199,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </TabsContent>
 
                 <TabsContent value="meal" className="mt-8 space-y-6">
-                  <Textarea placeholder="Что вы съели?..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
+                  <Textarea placeholder="Что вы сегодня ели?..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
                   <div className="grid grid-cols-2 gap-4">
                     <Button variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={startCamera}>
                       <Camera className="h-8 w-8 text-primary" />
@@ -246,7 +241,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           ) : mealResult ? (
             <div className="space-y-8 animate-in fade-in duration-500">
                <div className="text-center space-y-2">
-                <Badge className="bg-primary/10 text-primary border-none px-6 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">AI Распознано</Badge>
+                <Badge className="bg-primary/10 text-primary border-none px-6 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2">
+                  <GraduationCap className="h-3 w-3" /> Обучаемый AI 3.0
+                </Badge>
                 <h3 className="text-4xl font-black tracking-tight">{mealResult.mealName}</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -262,35 +259,35 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                    </div>
                  ))}
               </div>
-              <div className="bg-muted/30 p-6 rounded-[2rem]">
-                <p className="text-sm font-medium italic text-foreground/80 leading-relaxed italic">"{mealResult.analysis}"</p>
+              <div className="bg-muted/30 p-6 rounded-[2rem] border-l-4 border-primary">
+                <p className="text-sm font-medium italic text-foreground/80 leading-relaxed">"{mealResult.analysis}"</p>
               </div>
 
-              {/* Refinement Loop UI in Unified Center */}
+              {/* Улучшенная петля уточнения */}
               <div className="space-y-3 pt-2">
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                  <MessageSquare className="h-3 w-3" /> Ошибка в составе? Уточните детали
+                  <MessageSquare className="h-3 w-3" /> Ошибка в составе? Уточните, и я запомню
                 </label>
                 <div className="flex gap-2">
                   <Input 
-                    placeholder="Например: 'это был борщ без картофеля'"
+                    placeholder="Например: 'это кролик, а не курица'"
                     value={refinement}
                     onChange={(e) => setRefinement(e.target.value)}
-                    className="h-12 rounded-xl bg-primary/10 border-none font-bold placeholder:text-primary/40 focus:ring-2 focus:ring-primary/20"
+                    className="h-14 rounded-xl bg-primary/10 border-none font-bold placeholder:text-primary/40 focus:ring-2 focus:ring-primary/20"
                   />
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-12 w-12 rounded-xl bg-primary text-white shrink-0 hover:bg-primary/90"
+                    className="h-14 w-14 rounded-xl bg-primary text-white shrink-0 hover:bg-primary/90 shadow-lg shadow-primary/20"
                     onClick={() => handleSubmit(true)}
                     disabled={loading || !refinement}
                   >
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <RefreshCw className="h-6 w-6" />}
                   </Button>
                 </div>
               </div>
 
-              <Button className="w-full h-18 rounded-2xl font-black text-xl" onClick={reset}>Готово</Button>
+              <Button className="w-full h-18 rounded-2xl font-black text-xl bg-muted text-foreground hover:bg-muted/80" onClick={reset}>Вернуться назад</Button>
             </div>
           ) : (
             <div className="py-20 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500">
