@@ -1,20 +1,26 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { NavBar } from '@/components/nav-bar';
 import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Sparkles, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Sparkles, Calendar as CalendarIcon, History, Target } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
-  const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);
+  // Храним результаты в объекте, где ключи — даты в формате YYYY-MM-DD
+  const [resultsByDate, setResultsByDate] = useState<Record<string, GenerateRecommendationsOutput>>({});
   const [selectedDate, setSelectedDate] = useState(startOfToday());
+
+  const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const currentResult = resultsByDate[dateKey];
 
   const getStatusLabel = (date: Date) => {
     if (isDateToday(date)) return "СЕГОДНЯ";
@@ -23,11 +29,18 @@ export default function DashboardPage() {
     return "";
   };
 
+  const handleResult = (result: GenerateRecommendationsOutput) => {
+    setResultsByDate(prev => ({
+      ...prev,
+      [dateKey]: result
+    }));
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
-      {/* Sticky Navigation Bar */}
+      {/* Sticky Navigation Bar - Control Center for the Daily Reset */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-2 md:py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-center gap-4">
           <div className="flex items-center gap-1 md:gap-2">
@@ -82,16 +95,24 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
                <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-inner shrink-0">
-                  <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                  {isDateToday(selectedDate) ? (
+                    <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                  ) : isPast(selectedDate) ? (
+                    <History className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                  ) : (
+                    <Target className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                  )}
                </div>
                <div>
                   <h1 className="text-3xl sm:text-4xl md:text-7xl font-black tracking-tighter text-foreground leading-none">
-                    Кабинет Здоровья
+                    {isDateToday(selectedDate) ? "Сегодня" : format(selectedDate, 'd MMMM', { locale: ru })}
                   </h1>
                   <p className="text-muted-foreground text-base md:text-xl font-medium max-w-xl leading-snug mt-2">
-                    {isFuture(selectedDate) 
-                      ? 'Ваша стратегия долголетия и прогноз состояния.' 
-                      : 'Аналитический отчет и рекомендации на основе ваших данных.'}
+                    {isDateToday(selectedDate) 
+                      ? 'Ваш чистый лист. Начните день с анализа показателей.' 
+                      : isPast(selectedDate)
+                      ? 'Архив ваших достижений и лог показателей.'
+                      : 'Стратегический прогноз и планирование.'}
                   </p>
                </div>
             </div>
@@ -99,15 +120,36 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-10 md:gap-16">
-          {!result && (
+          {!currentResult ? (
             <div className="max-w-6xl mx-auto w-full animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              <RecommendationForm onResult={setResult} selectedDate={selectedDate} />
+              <div className="text-center mb-10 md:mb-16 space-y-4">
+                <Badge variant="outline" className="px-6 py-2 rounded-xl border-primary/20 text-primary font-black uppercase tracking-widest text-[10px]">
+                  Данные отсутствуют
+                </Badge>
+                <h2 className="text-2xl md:text-4xl font-black tracking-tight">Заполните анкету для этого дня</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto font-medium">Каждый день — это новая возможность. Введите свои биометрические данные или синхронизируйте устройства, чтобы ИИ подготовил отчет.</p>
+              </div>
+              <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
             </div>
-          )}
-
-          {result && (
+          ) : (
             <div className="space-y-10 md:space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 ease-out">
-              <RecommendationDisplay data={result} />
+              <div className="flex justify-between items-center px-4 md:px-0">
+                <Badge className="bg-primary/10 text-primary border-none px-4 py-2 rounded-xl font-black uppercase tracking-widest text-[10px]">
+                  Отчет сформирован
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  className="text-muted-foreground hover:text-primary font-bold text-xs gap-2"
+                  onClick={() => setResultsByDate(prev => {
+                    const next = {...prev};
+                    delete next[dateKey];
+                    return next;
+                  })}
+                >
+                  <Sparkles className="h-4 w-4" /> Пересчитать день
+                </Button>
+              </div>
+              <RecommendationDisplay data={currentResult} />
             </div>
           )}
         </div>
