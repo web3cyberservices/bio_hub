@@ -36,8 +36,8 @@ export default function Home() {
               </p>
             </div>
             
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            {/* CTA Buttons - Hidden on mobile, visible from sm breakpoint */}
+            <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Link href="/register">
                 <Button size="lg" className="h-16 px-10 text-xl font-black rounded-3xl bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(20,184,166,0.3)] transition-all hover:scale-105 active:scale-95 group">
                   Регистрация <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
