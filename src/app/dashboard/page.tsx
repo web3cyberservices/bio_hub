@@ -11,7 +11,6 @@ import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
   const [result, setResult] = useState<GenerateRecommendationsOutput | null>(null);
@@ -30,7 +29,7 @@ export default function DashboardPage() {
       
       {/* Sticky Navigation Bar */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-2 md:py-4 shadow-sm">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-4 flex items-center justify-center gap-4">
           <div className="flex items-center gap-1 md:gap-2">
             <Button 
               variant="ghost" 
@@ -74,12 +73,6 @@ export default function DashboardPage() {
             >
               <ChevronRight className="h-5 w-5 text-primary" />
             </Button>
-          </div>
-
-          <div className="flex items-center gap-4">
-             <Badge className="bg-primary/10 text-primary border-none px-4 md:px-6 py-1.5 md:py-2 rounded-2xl font-black uppercase tracking-widest text-[8px] md:text-[9px]">
-               Биометрический статус: Активен
-             </Badge>
           </div>
         </div>
       </div>

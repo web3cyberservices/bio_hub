@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,14 +17,19 @@ interface RecommendationDisplayProps {
 export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   const { recommendations, macros, mealPlan, activityAnalysis } = data;
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getMealImage = (imageId: string) => {
-    // Безопасный поиск изображения с фолбеком
-    const found = PlaceHolderImages.find(img => img.id === imageId);
-    if (found) return found;
+    // Безопасный поиск изображения с фолбеком и проверкой на существованиеimageUrl
+    const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
+    if (found?.imageUrl) return found;
     
-    // Если ID не найден, возвращаем первое доступное или дефолт
-    return PlaceHolderImages[0] || {
+    // Гарантированный возврат объекта, чтобы избежать TypeError
+    return (PlaceHolderImages && PlaceHolderImages[0]) || {
       id: 'fallback',
       imageUrl: 'https://picsum.photos/seed/fallback/400/300',
       imageHint: 'healthy meal',
@@ -33,9 +38,9 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
   };
 
   const chartData = useMemo(() => [
-    { name: 'Белки', value: macros.protein * 4, color: 'hsl(var(--primary))', raw: macros.protein },
-    { name: 'Жиры', value: macros.fat * 9, color: 'hsl(var(--secondary))', raw: macros.fat },
-    { name: 'Углеводы', value: macros.carbs * 4, color: 'hsl(var(--accent))', raw: macros.carbs },
+    { name: 'Белки', value: Math.max(0, macros.protein * 4), color: 'hsl(var(--primary))', raw: macros.protein },
+    { name: 'Жиры', value: Math.max(0, macros.fat * 9), color: 'hsl(var(--secondary))', raw: macros.fat },
+    { name: 'Углеводы', value: Math.max(0, macros.carbs * 4), color: 'hsl(var(--accent))', raw: macros.carbs },
   ], [macros]);
 
   return (
@@ -45,25 +50,27 @@ export function RecommendationDisplay({ data }: RecommendationDisplayProps) {
         <Card className="premium-card p-6 border-none overflow-hidden bg-white/60 backdrop-blur-xl">
           <div className="flex flex-col items-center">
             <div className="relative w-full aspect-square max-w-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={65}
-                    outerRadius={85}
-                    paddingAngle={8}
-                    dataKey="value"
-                    stroke="none"
-                    cornerRadius={10}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={85}
+                      paddingAngle={8}
+                      dataKey="value"
+                      stroke="none"
+                      cornerRadius={10}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-4xl font-black tracking-tighter leading-none">{macros.calories}</span>
                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Ккал / День</span>

@@ -90,7 +90,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       name: z.string().describe('Название блюда.'),
       description: z.string().describe('Состав или краткий способ приготовления.'),
       calories: z.number().describe('Калорийность приема пищи.'),
-      imageId: z.string().describe('ID изображения из строго определенного списка.'),
+      imageId: z.string().describe('ID изображения из СТРОГОГО списка.'),
     }))
   })).describe('Персонализированное меню на день или неделю.'),
   activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств и активностей.'),
@@ -117,20 +117,20 @@ const recommendationPrompt = ai.definePrompt({
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
 - Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
 - Курение: {{{smoking}}}, Алкоголь: {{{alcohol}}}.
+{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}
 {{#if favoriteFoods}}Любимая еда: {{{favoriteFoods}}}{{/if}}
 {{#if dislikedFoods}}Нелюбимая еда: {{{dislikedFoods}}}{{/if}}
 {{#if dailyActivities}}Активности сегодня: {{{dailyActivities}}}{{/if}}
 
 Инструкции по Meal Plan:
 1. Составьте план на {{{planDuration}}}.
-2. Для КАЖДОГО блюда выберите ID из этого списка (и никакой другой!):
-   - breakfast-omelette (яйца), breakfast-oatmeal (каши), breakfast-smoothie (смузи)
-   - lunch-salad-chicken (салаты), lunch-salmon (рыба), lunch-soup (супы)
-   - dinner-steak (мясо), dinner-white-fish (белая рыба), dinner-tofu (вегетарианское)
-   - snack-nuts (орехи), snack-yogurt (молочное), snack-avocado (тосты), snack-fruit (фрукты)
+2. Для КАЖДОГО блюда выберите ID СТРОГО из этого списка:
+   - breakfast-omelette, breakfast-oatmeal, breakfast-smoothie
+   - lunch-salad-chicken, lunch-salmon, lunch-soup
+   - dinner-steak, dinner-white-fish, dinner-tofu
+   - snack-nuts, snack-yogurt, snack-avocado, snack-fruit
 
-3. Учтите дефициты витаминов если есть курение или алкоголь.
-4. Выдайте строго валидный JSON согласно схеме. Если какая-то информация отсутствует, используйте разумные значения по умолчанию на основе параметров пользователя.`,
+3. Выдайте строго валидный JSON согласно схеме. Если какая-то информация отсутствует, используйте разумные значения по умолчанию на основе параметров пользователя.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
