@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/nav-bar';
@@ -9,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, Mail, MessageSquare, Send, Zap, Loader2 } from 'lucide-react';
-import { useAuth } from '@/firebase';
+import { Activity, Send, Zap, Loader2, LogIn } from 'lucide-react';
+import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,8 +18,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { auth } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +35,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: 'Успешный вход',
+        description: 'Добро пожаловать в личный кабинет!',
+      });
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -56,6 +67,11 @@ export default function LoginPage() {
   };
 
   const handleSocialStub = (name: string) => {
+    // If user clicks Messenger Max, we'll just mock redirect for prototyping if requested
+    if (name === 'Messenger Max') {
+      router.push('/dashboard');
+      return;
+    }
     toast({
       title: 'В разработке',
       description: `Вход через ${name} будет доступен в ближайшем обновлении.`,
@@ -66,7 +82,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       <main className="flex flex-1 items-center justify-center p-4">
-        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden">
+        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
           <CardHeader className="space-y-2 text-center bg-primary text-white p-8">
             <div className="flex justify-center mb-2">
               <div className="rounded-2xl bg-white p-3 shadow-xl">
@@ -104,10 +120,10 @@ export default function LoginPage() {
             </div>
 
             <Button 
-              className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg group"
+              className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg group transition-all active:scale-95"
               onClick={() => handleSocialStub('Messenger Max')}
             >
-              <Zap className="h-4 w-4 fill-white group-hover:animate-pulse" /> Messenger Max
+              <Zap className="h-4 w-4 fill-white group-hover:animate-pulse" /> Вход через Messenger Max
             </Button>
             
             <div className="relative">
@@ -147,11 +163,11 @@ export default function LoginPage() {
                 />
               </div>
               <Button 
-                className="w-full h-16 text-lg bg-primary hover:bg-primary/90 rounded-2xl font-black shadow-xl shadow-primary/20" 
+                className="w-full h-16 text-lg bg-primary hover:bg-primary/90 rounded-2xl font-black shadow-xl shadow-primary/20 flex gap-2" 
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Войти'}
+                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <><LogIn className="h-5 w-5" /> Войти</>}
               </Button>
             </form>
             
