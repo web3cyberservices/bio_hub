@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Mic, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon, Footprints, Moon, RefreshCw } from 'lucide-react';
+import { Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, Stethoscope, CheckCircle2, Watch, Smartphone, Bluetooth, Trophy, Timer, Zap, Heart, Calendar as CalendarIcon, Footprints, Moon, RefreshCw, MessageSquare } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('meal');
   const [description, setDescription] = useState('');
+  const [refinement, setRefinement] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -32,7 +33,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [isSuccess, setIsSuccess] = useState(false);
   const [connectingDevice, setConnectingDevice] = useState<string | null>(null);
   
-  // Device manual inputs
   const [steps, setSteps] = useState<string>('');
   const [heartRate, setHeartRate] = useState<string>('');
   const [sleep, setSleep] = useState<string>('');
@@ -61,12 +61,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
       setHasCameraPermission(false);
       toast({
         variant: 'destructive',
-        title: 'Доступ к камере отклонен',
-        description: 'Пожалуйста, разрешите доступ к камере в настройках браузера.',
+        title: 'Доступ отклонен',
+        description: 'Включите камеру в настройках.',
       });
     }
   };
@@ -96,29 +95,19 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const connectDevice = async (name: string) => {
     setConnectingDevice(name);
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
     setConnectingDevice(null);
-    toast({
-      title: 'Устройство подключено',
-      description: `${name} теперь синхронизируется с PRO Себя.`,
-    });
-    // Simulate auto-populating data
-    setSteps('8432');
-    setHeartRate('64');
-    setSleep('7.5');
+    toast({ title: 'Готово', description: `${name} синхронизирован.` });
+    setSteps('9200'); setHeartRate('68'); setSleep('8.2');
   };
 
   const addActivity = (activity: string) => {
     setDescription(prev => prev ? `${prev}, ${activity}` : activity);
   };
 
-  const handleSubmit = async () => {
-    if (!description && !image && !steps && !heartRate && !sleep) {
-      toast({
-        variant: 'destructive',
-        title: 'Пустое поле',
-        description: 'Пожалуйста, добавьте текст, фото или показатели устройств.',
-      });
+  const handleSubmit = async (isRefinement = false) => {
+    if (!description && !image && !steps && !heartRate && !sleep && !refinement) {
+      toast({ variant: 'destructive', title: 'Пусто', description: 'Введите данные.' });
       return;
     }
 
@@ -128,59 +117,43 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         const result = await analyzeMeal({
           description,
           photoDataUri: image || undefined,
+          refinement: isRefinement ? refinement : undefined,
         });
         setMealResult(result);
+        if (isRefinement) setRefinement('');
       } else {
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise(r => setTimeout(r, 1000));
         setIsSuccess(true);
       }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Не удалось обработать данные.',
-      });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось обработать.' });
     } finally {
       setLoading(false);
     }
   };
 
   const reset = () => {
-    setDescription('');
-    setImage(null);
-    setMealResult(null);
-    setIsSuccess(false);
-    setHasCameraPermission(null);
-    setSteps('');
-    setHeartRate('');
-    setSleep('');
+    setDescription(''); setRefinement(''); setImage(null); setMealResult(null);
+    setIsSuccess(false); setHasCameraPermission(null); setSteps(''); setHeartRate(''); setSleep('');
     stopCamera();
   };
 
   const sports = [
-    { name: 'Бег', icon: Timer },
-    { name: 'Футбол', icon: Activity },
-    { name: 'Теннис', icon: Trophy },
-    { name: 'Зал', icon: Zap },
-    { name: 'Йога', icon: Heart },
-    { name: 'Плавание', icon: Activity }
+    { name: 'Бег', icon: Timer }, { name: 'Футбол', icon: Activity },
+    { name: 'Теннис', icon: Trophy }, { name: 'Зал', icon: Zap },
+    { name: 'Йога', icon: Heart }, { name: 'Плавание', icon: Activity }
   ];
 
   const inputClasses = "h-14 rounded-xl bg-primary/90 border-none font-bold text-white text-lg placeholder:text-white/40 focus:ring-4 focus:ring-white/20";
   const textareaClasses = "min-h-[150px] rounded-3xl bg-primary/90 border-none p-6 text-lg font-medium text-white resize-none placeholder:text-white/40 focus:ring-4 focus:ring-white/20";
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      setIsOpen(open);
-      if (!open) reset();
-    }}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[650px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="p-10 bg-primary text-white">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-3xl font-black tracking-tight">Центр данных</DialogTitle>
+            <DialogTitle className="text-3xl font-black tracking-tight">Био-Центр</DialogTitle>
             <Badge className="bg-white/20 text-white border-none px-4 py-2 rounded-xl flex gap-2 font-bold backdrop-blur-md">
               <CalendarIcon className="h-4 w-4" /> {format(selectedDate, 'd MMMM', { locale: ru })}
             </Badge>
@@ -200,124 +173,47 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </TabsList>
                 
                 <TabsContent value="activities" className="mt-8 space-y-6 animate-in fade-in duration-300">
-                  <div className="text-center space-y-2 mb-4">
-                    <h4 className="text-xl font-black">Что было сделано {format(selectedDate, 'd MMM', { locale: ru })}?</h4>
-                    <p className="text-sm text-muted-foreground font-medium">Это поможет ИИ скорректировать ваш план питания</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-3">
+                   <div className="grid grid-cols-3 gap-3">
                     {sports.map((sport) => (
-                      <Button
-                        key={sport.name}
-                        variant="outline"
-                        className="h-20 rounded-2xl flex flex-col gap-1 border-2 hover:bg-primary/5 hover:border-primary/30 transition-all"
-                        onClick={() => addActivity(sport.name)}
-                      >
+                      <Button key={sport.name} variant="outline" className="h-20 rounded-2xl flex flex-col gap-1 border-2" onClick={() => addActivity(sport.name)}>
                         <sport.icon className="h-5 w-5 text-primary" />
                         <span className="text-xs font-bold">{sport.name}</span>
                       </Button>
                     ))}
                   </div>
-
-                  <Textarea
-                    placeholder="Опишите интенсивность или добавьте другие активности..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className={textareaClasses}
-                  />
-                  
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary shadow-xl shadow-primary/20" onClick={handleSubmit} disabled={loading}>
-                    {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Trophy className="mr-3 h-8 w-8" />}
-                    Сохранить активности
-                  </Button>
+                  <Textarea placeholder="Опишите активности..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={() => handleSubmit(false)}>Сохранить</Button>
                 </TabsContent>
 
                 <TabsContent value="devices" className="mt-8 space-y-8 animate-in fade-in duration-300">
-                  <div className="text-center space-y-2">
-                    <h4 className="text-xl font-black">Биометрические показатели</h4>
-                    <p className="text-sm text-muted-foreground font-medium">Синхронизируйте или введите данные вручную</p>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Footprints className="h-3 w-3" /> Шаги
-                      </label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Footprints className="h-3 w-3" /> Шаги</label>
                       <Input placeholder="0" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Heart className="h-3 w-3" /> Пульс
-                      </label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Heart className="h-3 w-3" /> Пульс</label>
                       <Input placeholder="0" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className={inputClasses} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Moon className="h-3 w-3" /> Сон (ч)
-                      </label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2"><Moon className="h-3 w-3" /> Сон (ч)</label>
                       <Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} type="number" className={inputClasses} />
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Доступные устройства</p>
-                    <div className="grid gap-4">
-                      {[
-                        { name: 'Apple Health', icon: Smartphone, color: 'bg-red-50 text-red-500' },
-                        { name: 'Google Fit', icon: Activity, color: 'bg-blue-50 text-blue-500' },
-                        { name: 'Garmin Connect', icon: Bluetooth, color: 'bg-blue-100 text-blue-800' },
-                        { name: 'Oura Ring', icon: Watch, color: 'bg-neutral-100 text-neutral-800' }
-                      ].map((device) => (
-                        <div key={device.name} className="flex items-center justify-between p-5 rounded-3xl bg-white border border-muted hover:border-primary/30 transition-all group">
-                          <div className="flex items-center gap-4">
-                            <div className={cn("p-3 rounded-2xl", device.color)}>
-                              <device.icon className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-lg">{device.name}</p>
-                              <p className="text-xs text-muted-foreground">Автосинхронизация</p>
-                            </div>
-                          </div>
-                          <Button 
-                            variant={connectingDevice === device.name ? "ghost" : "outline"} 
-                            className="rounded-xl font-bold px-6 border-2"
-                            onClick={() => connectDevice(device.name)}
-                            disabled={!!connectingDevice}
-                          >
-                            {connectingDevice === device.name ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                            {connectingDevice === device.name ? "" : "Привязать"}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>
-                    Сохранить показатели
-                  </Button>
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={() => handleSubmit(false)}>Сохранить биометрию</Button>
                 </TabsContent>
 
                 <TabsContent value="meal" className="mt-8 space-y-6">
-                  <div className="text-center space-y-2 mb-4">
-                    <h4 className="text-xl font-black">Прием пищи за {format(selectedDate, 'd MMMM', { locale: ru })}</h4>
-                  </div>
-                  <div className="relative">
-                    <Textarea
-                      placeholder="Что вы съели? Опишите текстом или добавьте фото..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className={textareaClasses}
-                    />
-                  </div>
+                  <Textarea placeholder="Что вы съели?..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={startCamera}>
+                    <Button variant="outline" className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2" onClick={startCamera}>
                       <Camera className="h-8 w-8 text-primary" />
-                      <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Камера</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Камера</span>
                     </Button>
                     <label className="cursor-pointer">
-                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
+                      <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center">
                         <Upload className="h-8 w-8 text-primary" />
-                        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Загрузить</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Файл</span>
                       </div>
                       <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                     </label>
@@ -329,39 +225,28 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         <Button onClick={capturePhoto} className="rounded-full w-14 h-14 bg-white text-primary"><Camera className="h-7 w-7" /></Button>
                         <Button onClick={stopCamera} variant="destructive" className="rounded-full w-14 h-14"><X className="h-7 w-7" /></Button>
                       </div>
-                      {hasCameraPermission === false && (
-                        <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/80">
-                           <Alert variant="destructive" className="border-none bg-transparent">
-                              <AlertTitle className="text-white">Ошибка камеры</AlertTitle>
-                              <AlertDescription className="text-white/80">Пожалуйста, разрешите доступ к камере в настройках.</AlertDescription>
-                           </Alert>
-                        </div>
-                      )}
                     </div>
                   )}
-                  {image && !showCamera && (
-                    <img src={image} className="rounded-[2.5rem] w-full aspect-video object-cover" />
-                  )}
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>
-                    {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Sparkles className="mr-3 h-8 w-8" />}
-                    Проанализировать ИИ
+                  {image && !showCamera && <img src={image} className="rounded-[2.5rem] w-full aspect-video object-cover" />}
+                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={() => handleSubmit(false)} disabled={loading}>
+                    {loading ? <Loader2 className="mr-3 h-8 w-8 animate-spin" /> : <Sparkles className="mr-3 h-8 w-8" />} Распознать AI
                   </Button>
                 </TabsContent>
 
                 <TabsContent value="labs" className="mt-8 space-y-6">
-                  <Textarea placeholder="Введите результаты анализов (текстом или приложите фото)..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Сохранить в историю</Button>
+                   <Textarea placeholder="Результаты анализов..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
+                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={() => handleSubmit(false)}>Загрузить</Button>
                 </TabsContent>
                 <TabsContent value="health" className="mt-8 space-y-6">
-                  <Textarea placeholder="Опишите ваши жалобы или медицинские условия на этот день..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
-                  <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={handleSubmit} disabled={loading}>Отправить ИИ</Button>
+                   <Textarea placeholder="Опишите жалобы..." value={description} onChange={(e) => setDescription(e.target.value)} className={textareaClasses} />
+                   <Button className="w-full h-20 rounded-[1.75rem] text-2xl font-black bg-primary" onClick={() => handleSubmit(false)}>Отправить</Button>
                 </TabsContent>
               </Tabs>
             </>
           ) : mealResult ? (
             <div className="space-y-8 animate-in fade-in duration-500">
                <div className="text-center space-y-2">
-                <Badge className="bg-primary/10 text-primary border-none px-6 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">ИИ Проанализировал</Badge>
+                <Badge className="bg-primary/10 text-primary border-none px-6 py-1.5 rounded-full font-black uppercase tracking-widest text-[10px]">AI Распознано</Badge>
                 <h3 className="text-4xl font-black tracking-tight">{mealResult.mealName}</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -378,19 +263,39 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                  ))}
               </div>
               <div className="bg-muted/30 p-6 rounded-[2rem]">
-                <p className="text-sm font-medium italic text-foreground/80 leading-relaxed">
-                  "{mealResult.analysis}"
-                </p>
+                <p className="text-sm font-medium italic text-foreground/80 leading-relaxed italic">"{mealResult.analysis}"</p>
               </div>
+
+              {/* Refinement Loop UI in Unified Center */}
+              <div className="space-y-3 pt-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <MessageSquare className="h-3 w-3" /> Ошибка в составе? Уточните детали
+                </label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Например: 'это был борщ без картофеля'"
+                    value={refinement}
+                    onChange={(e) => setRefinement(e.target.value)}
+                    className="h-12 rounded-xl bg-primary/10 border-none font-bold placeholder:text-primary/40 focus:ring-2 focus:ring-primary/20"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-12 w-12 rounded-xl bg-primary text-white shrink-0 hover:bg-primary/90"
+                    onClick={() => handleSubmit(true)}
+                    disabled={loading || !refinement}
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
+                  </Button>
+                </div>
+              </div>
+
               <Button className="w-full h-18 rounded-2xl font-black text-xl" onClick={reset}>Готово</Button>
             </div>
           ) : (
             <div className="py-20 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500">
-              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-12 w-12 text-primary" />
-              </div>
-              <h3 className="text-3xl font-black">Данные за {format(selectedDate, 'd MMM', { locale: ru })} обновлены!</h3>
-              <p className="text-muted-foreground font-medium">Ваши показатели успешно сохранены и будут учтены ИИ.</p>
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center"><CheckCircle2 className="h-12 w-12 text-primary" /></div>
+              <h3 className="text-3xl font-black">Данные обновлены!</h3>
               <Button className="w-64 h-16 rounded-2xl font-bold text-lg" onClick={reset}>Понятно</Button>
             </div>
           )}

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Camera, Upload, Send, Loader2, Sparkles, X, Beef, Wheat, Droplets, Activity } from 'lucide-react';
+import { Camera, Upload, Loader2, Sparkles, X, Beef, Wheat, Droplets, Activity, MessageSquare } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ export function MealLogger() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [description, setDescription] = useState('');
+  const [refinement, setRefinement] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeMealOutput | null>(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -76,12 +77,12 @@ export function MealLogger() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!description && !image) {
+  const handleSubmit = async (isRefinement = false) => {
+    if (!description && !image && !refinement) {
       toast({
         variant: 'destructive',
         title: 'Данные не введены',
-        description: 'Опишите еду текстом или добавьте фото.',
+        description: 'Опишите еду или добавьте фото.',
       });
       return;
     }
@@ -91,13 +92,15 @@ export function MealLogger() {
       const analysis = await analyzeMeal({
         description,
         photoDataUri: image || undefined,
+        refinement: isRefinement ? refinement : undefined,
       });
       setResult(analysis);
+      if (isRefinement) setRefinement('');
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Ошибка анализа',
-        description: 'Не удалось проанализировать блюдо. Попробуйте еще раз.',
+        description: 'Не удалось обработать данные. Попробуйте еще раз.',
       });
     } finally {
       setLoading(false);
@@ -106,6 +109,7 @@ export function MealLogger() {
 
   const reset = () => {
     setDescription('');
+    setRefinement('');
     setImage(null);
     setResult(null);
     stopCamera();
@@ -123,18 +127,18 @@ export function MealLogger() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="p-8 bg-primary text-white">
-          <DialogTitle className="text-2xl font-black">Добавить прием пищи</DialogTitle>
+          <DialogTitle className="text-2xl font-black">Логгер питания</DialogTitle>
         </DialogHeader>
         <div className="p-8 space-y-6 max-h-[80vh] overflow-y-auto no-scrollbar">
           {!result ? (
             <>
               <div className="space-y-4">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Описание или фото</label>
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Описание или фото</label>
                 <Input
-                  placeholder="Что вы съели? Например: Омлет из 2 яиц с сыром"
+                  placeholder="Что вы съели? Например: Борщ со сметаной"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="h-14 rounded-2xl bg-muted/30 border-none font-medium"
+                  className="h-16 rounded-2xl bg-primary/90 border-none font-bold text-white placeholder:text-white/40"
                 />
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -144,12 +148,12 @@ export function MealLogger() {
                     onClick={startCamera}
                   >
                     <Camera className="h-6 w-6 text-primary" />
-                    <span className="text-xs font-bold uppercase">Камера</span>
+                    <span className="text-[10px] font-black uppercase">Камера</span>
                   </Button>
                   <label className="cursor-pointer">
                     <div className="h-24 rounded-2xl border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/50 transition-all">
                       <Upload className="h-6 w-6 text-primary" />
-                      <span className="text-xs font-bold uppercase">Загрузить</span>
+                      <span className="text-[10px] font-black uppercase">Файл</span>
                     </div>
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   </label>
@@ -170,7 +174,7 @@ export function MealLogger() {
                       <div className="absolute inset-0 flex items-center justify-center p-4 bg-black/80">
                          <Alert variant="destructive" className="border-none bg-transparent">
                             <AlertTitle className="text-white">Ошибка камеры</AlertTitle>
-                            <AlertDescription className="text-white/80">Пожалуйста, разрешите доступ к камере.</AlertDescription>
+                            <AlertDescription className="text-white/80">Разрешите доступ к камере.</AlertDescription>
                          </Alert>
                       </div>
                     )}
@@ -193,61 +197,80 @@ export function MealLogger() {
               </div>
 
               <Button
-                className="w-full h-16 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20"
-                onClick={handleSubmit}
+                className="w-full h-18 rounded-2xl text-xl font-black bg-primary shadow-xl shadow-primary/20"
+                onClick={() => handleSubmit(false)}
                 disabled={loading}
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                    Анализирую...
-                  </>
+                  <><Loader2 className="mr-2 h-6 w-6 animate-spin" /> Анализ...</>
                 ) : (
-                  <>
-                    <Sparkles className="mr-2 h-6 w-6" />
-                    Узнать состав
-                  </>
+                  <><Sparkles className="mr-2 h-6 w-6" /> Распознать</>
                 )}
               </Button>
             </>
           ) : (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center space-y-2">
-                <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">Распознано ИИ</Badge>
-                <h3 className="text-3xl font-black tracking-tight">{result.mealName}</h3>
+                <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">AI BioScan 3.0</Badge>
+                <h3 className="text-3xl font-black tracking-tight leading-none">{result.mealName}</h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Card className="border-none bg-primary/5 p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                <Card className="border-none bg-primary/5 p-4 rounded-[1.5rem] flex flex-col items-center justify-center text-center">
                    <Activity className="h-5 w-5 text-primary mb-2" />
                    <p className="text-2xl font-black">{result.calories}</p>
                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Ккал</p>
                 </Card>
-                <Card className="border-none bg-secondary/10 p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                <Card className="border-none bg-secondary/10 p-4 rounded-[1.5rem] flex flex-col items-center justify-center text-center">
                    <Beef className="h-5 w-5 text-secondary mb-2" />
                    <p className="text-2xl font-black">{result.protein}г</p>
                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Белки</p>
                 </Card>
-                <Card className="border-none bg-accent/20 p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                <Card className="border-none bg-accent/20 p-4 rounded-[1.5rem] flex flex-col items-center justify-center text-center">
                    <Droplets className="h-5 w-5 text-accent-foreground mb-2" />
                    <p className="text-2xl font-black">{result.fat}г</p>
                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Жиры</p>
                 </Card>
-                <Card className="border-none bg-muted p-4 rounded-3xl flex flex-col items-center justify-center text-center">
+                <Card className="border-none bg-muted p-4 rounded-[1.5rem] flex flex-col items-center justify-center text-center">
                    <Wheat className="h-5 w-5 text-muted-foreground mb-2" />
                    <p className="text-2xl font-black">{result.carbs}г</p>
                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Углеводы</p>
                 </Card>
               </div>
 
-              <div className="bg-muted/30 p-6 rounded-[2rem]">
+              <div className="bg-muted/30 p-5 rounded-[1.75rem]">
                 <p className="text-sm font-medium leading-relaxed italic text-foreground/80">
                   "{result.analysis}"
                 </p>
               </div>
 
+              {/* Refinement Loop UI */}
+              <div className="space-y-3 pt-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <MessageSquare className="h-3 w-3" /> Ошибка? Уточните детали
+                </label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Например: 'это борщ с мясом, 350 мл'"
+                    value={refinement}
+                    onChange={(e) => setRefinement(e.target.value)}
+                    className="h-12 rounded-xl bg-primary/10 border-none font-bold placeholder:text-primary/40 focus:ring-2 focus:ring-primary/20"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-12 w-12 rounded-xl bg-primary text-white shrink-0 hover:bg-primary/90"
+                    onClick={() => handleSubmit(true)}
+                    disabled={loading || !refinement}
+                  >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                  </Button>
+                </div>
+                <p className="text-[9px] text-muted-foreground italic px-1">Уточните ингредиенты или размер порции для пересчета.</p>
+              </div>
+
               <Button variant="outline" className="w-full h-14 rounded-2xl font-bold" onClick={() => setResult(null)}>
-                Добавить еще
+                Записать еще одно блюдо
               </Button>
             </div>
           )}
