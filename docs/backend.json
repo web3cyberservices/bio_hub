@@ -1,0 +1,30 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Профиль пользователя с биометрическими данными и целями",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Уникальный ID пользователя из Firebase Auth" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "age": { "type": "number" },
+        "healthGoal": { "type": "string", "enum": ["снизить массу тела", "поддержать текущее состояние", "набор массы"] }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Данные профиля пользователя"
+    }
+  }
+}
