@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -13,6 +12,7 @@ import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
+import { AISpecialistChat } from '@/components/ai-specialist-chat';
 
 export default function DashboardPage() {
   // Храним результаты в объекте, где ключи — даты в формате YYYY-MM-DD
@@ -154,6 +154,9 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Floating AI Specialist Chat */}
+      <AISpecialistChat />
       
       <footer className="mt-20 md:mt-40 border-t py-12 md:py-20 bg-white/50 backdrop-blur-md">
         <div className="container mx-auto px-4 text-center space-y-6">
