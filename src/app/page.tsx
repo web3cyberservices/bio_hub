@@ -17,30 +17,38 @@ export default function Home() {
         </div>
 
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-8 md:py-16 text-center max-w-6xl">
-          <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* AI Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase tracking-[0.2em] shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 fill-primary" />
-              <span>Personal AI Health Intelligence</span>
+        <section className="container mx-auto px-4 py-12 md:py-24 text-center max-w-6xl">
+          <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            
+            {/* Logo Emphasis */}
+            <div className="flex flex-col items-center justify-center gap-6">
+              <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-[2.5rem] shadow-2xl shadow-primary/20 flex items-center justify-center border-4 border-primary/10 animate-in zoom-in duration-700">
+                <Activity className="h-12 w-12 md:h-16 md:w-16 text-primary" />
+              </div>
+              
+              <div className="space-y-4">
+                <h1 className="text-6xl md:text-9xl font-black font-headline tracking-tighter leading-none text-foreground">
+                  PRO <span className="text-primary/80">Себя</span>
+                </h1>
+                <div className="h-1.5 w-24 md:w-40 bg-primary mx-auto rounded-full" />
+              </div>
             </div>
             
-            {/* Главный заголовок */}
-            <div className="space-y-2">
-              <h1 className="text-5xl md:text-8xl font-black font-headline tracking-tighter leading-[0.9] text-foreground">
-                Твое тело — <br />
-                <span className="text-gradient italic">твои правила.</span>
-              </h1>
-              <p className="max-w-2xl mx-auto text-lg md:text-2xl text-muted-foreground font-medium leading-tight">
-                PRO Себя — ИИ-платформа нового поколения для управления здоровьем через анализы, биоритмы и умное питание.
+            {/* Concise Description */}
+            <div className="max-w-2xl mx-auto space-y-4">
+              <p className="text-xl md:text-3xl text-foreground font-black tracking-tight leading-tight">
+                Интеллектуальный хаб вашего здоровья.
+              </p>
+              <p className="text-base md:text-xl text-muted-foreground font-medium leading-relaxed">
+                Персональная ИИ-платформа для управления питанием и биоритмами на основе клинических данных и показателей ваших носимых устройств.
               </p>
             </div>
             
-            {/* CTA Buttons - Hidden on mobile, visible from sm breakpoint */}
-            <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            {/* CTA Buttons - Hidden on mobile */}
+            <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Link href="/register">
                 <Button size="lg" className="h-16 px-10 text-xl font-black rounded-3xl bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(20,184,166,0.3)] transition-all hover:scale-105 active:scale-95 group">
-                  Регистрация <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                  Начать путь <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/dashboard">
@@ -68,7 +76,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Floating Features Row (Visible on scroll or larger screens) */}
+        {/* Floating Features Row */}
         <section className="container mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
@@ -99,9 +107,9 @@ export default function Home() {
             <span className="font-headline text-xl font-black tracking-tighter">PRO Себя</span>
           </div>
           <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-             <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
-             <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
-             <Link href="#" className="hover:text-primary transition-colors">Contact</Link>
+             <Link href="#" className="hover:text-primary transition-colors">Методология</Link>
+             <Link href="#" className="hover:text-primary transition-colors">Приватность</Link>
+             <Link href="#" className="hover:text-primary transition-colors">Контакты</Link>
           </div>
           <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">© 2024 NEXT GEN HEALTH.</p>
         </div>
