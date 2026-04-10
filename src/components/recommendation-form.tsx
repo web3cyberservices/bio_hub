@@ -89,8 +89,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const { firestore } = useFirestore();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [dietaryImage, setDietaryImage] = useState<string | null>(null);
-  const [labImage, setLabImage] = useState<string | null>(null);
   const [activeCamera, setActiveCamera] = useState<'diet' | 'labs' | null>(null);
   const [isRecording, setIsRecording] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -127,7 +125,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     },
   });
 
-  // Заполняем форму данными из профиля, если они есть
   useEffect(() => {
     if (userData) {
       const fields = ['gender', 'weight', 'height', 'age', 'activityLevel', 'healthGoal', 'smoking', 'alcohol'];
@@ -148,73 +145,17 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     setSyncing(false);
     toast({
       title: "Данные синхронизированы",
-      description: "Показатели Apple Health успешно импортированы.",
+      description: "Показатели здоровья успешно импортированы.",
     });
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'diet' | 'labs') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'diet') setDietaryImage(reader.result as string);
-        else setLabImage(reader.result as string);
-        setActiveCamera(null);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const startCamera = async (type: 'diet' | 'labs') => {
-    setActiveCamera(type);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка камеры',
-        description: 'Пожалуйста, разрешите доступ к камере в настройках.',
-      });
-      setActiveCamera(null);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setActiveCamera(null);
-  };
-
-  const capturePhoto = (type: 'diet' | 'labs') => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg');
-        if (type === 'diet') setDietaryImage(dataUrl);
-        else setLabImage(dataUrl);
-        stopCamera();
-      }
-    }
   };
 
   const toggleVoiceInput = (fieldName: keyof z.infer<typeof formSchema>) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
     if (!SpeechRecognition) {
       toast({
         variant: 'destructive',
         title: 'Не поддерживается',
-        description: 'Ваш браузер не поддерживает голосовой ввод.',
+        description: 'Браузер не поддерживает голосовой ввод.',
       });
       return;
     }
@@ -226,26 +167,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'ru-RU';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      setIsRecording(fieldName);
-    };
-
+    recognition.onstart = () => setIsRecording(fieldName);
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       const currentVal = form.getValues(fieldName);
       form.setValue(fieldName, `${currentVal} ${transcript}`.trim());
       setIsRecording(null);
     };
-
-    recognition.onerror = () => {
-      setIsRecording(null);
-    };
-
+    recognition.onerror = () => setIsRecording(null);
     recognition.onend = () => setIsRecording(null);
-    
     recognition.start();
   };
 
@@ -253,7 +183,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      // Сохраняем биометрические данные в профиль пользователя (обезличивание на уровне приложения)
+      // Сохраняем биометрические данные в профиль пользователя
       const profileData = {
         weight: values.weight,
         height: values.height,
@@ -268,10 +198,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       
       setDoc(doc(firestore, 'users', user.uid), profileData, { merge: true });
 
-      // Отправляем в ИИ ТОЛЬКО необходимые для расчета данные (БЕЗ имени, email и т.д.)
-      const { steps, avgHeartRate, sleepDurationHours, ...rest } = values;
+      // Обезличиваем данные для ИИ (отправляем только метрики)
+      const { steps, avgHeartRate, sleepDurationHours, ...anonymizedData } = values;
+      
       const result = await generatePersonalizedRecommendations({
-        ...rest,
+        ...anonymizedData,
         targetDate: selectedDate.toISOString(),
         deviceData: (steps || avgHeartRate || sleepDurationHours) ? {
           steps,
@@ -279,12 +210,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           sleepDurationHours,
         } : undefined,
       });
+      
       onResult(result);
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка генерации',
-        description: 'Не удалось создать план. Попробуйте еще раз.',
+        title: 'Ошибка анализа',
+        description: 'Не удалось сформировать план. Попробуйте еще раз.',
       });
     } finally {
       setLoading(false);
@@ -299,9 +231,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
   if (loadingProfile) {
     return (
-      <Card className="premium-card p-20 flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-      </Card>
+      </div>
     );
   }
 
@@ -311,7 +243,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12 md:space-y-24">
             
-            {/* 1. Core Biometrics */}
             <div>
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>1</span> Базовые показатели
@@ -332,8 +263,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="мужской" className="focus:bg-white/10 focus:text-white">Мужской</SelectItem>
-                          <SelectItem value="женский" className="focus:bg-white/10 focus:text-white">Женский</SelectItem>
+                          <SelectItem value="мужской">Мужской</SelectItem>
+                          <SelectItem value="женский">Женский</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -363,7 +294,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 2. Lifestyle & Goals */}
             <div>
               <h4 className={sectionHeaderClasses}>
                 <span className={sectionNumberClasses}>2</span> Цели и Образ жизни
@@ -384,9 +314,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="снизить массу тела" className="focus:bg-white/10 focus:text-white">Снизить массу тела</SelectItem>
-                          <SelectItem value="поддержать текущее состояние" className="focus:bg-white/10 focus:text-white">Поддержать текущее состояние</SelectItem>
-                          <SelectItem value="набор массы" className="focus:bg-white/10 focus:text-white">Набор массы</SelectItem>
+                          <SelectItem value="снизить массу тела">Снизить массу тела</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержать текущее состояние</SelectItem>
+                          <SelectItem value="набор массы">Набор массы</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -398,7 +328,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
-                        <Zap className="h-3 md:h-3.5 w-3 md:w-3.5" /> Уровень активности
+                        <Zap className="h-3 md:h-3.5 w-3 md:w-3.5" /> Активность
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -407,11 +337,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="малоактивный" className="focus:bg-white/10 focus:text-white">Малоактивный</SelectItem>
-                          <SelectItem value="среднеактивный" className="focus:bg-white/10 focus:text-white">Среднеактивный</SelectItem>
-                          <SelectItem value="средний" className="focus:bg-white/10 focus:text-white">Средний</SelectItem>
-                          <SelectItem value="активный" className="focus:bg-white/10 focus:text-white">Активный</SelectItem>
-                          <SelectItem value="перенагрузка" className="focus:bg-white/10 focus:text-white">Перенагрузка</SelectItem>
+                          <SelectItem value="малоактивный">Малоактивный</SelectItem>
+                          <SelectItem value="среднеактивный">Среднеактивный</SelectItem>
+                          <SelectItem value="средний">Средний</SelectItem>
+                          <SelectItem value="активный">Активный</SelectItem>
+                          <SelectItem value="перенагрузка">Перенагрузка</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -432,8 +362,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="да" className="focus:bg-white/10 focus:text-white">Да, курю</SelectItem>
-                          <SelectItem value="нет" className="focus:bg-white/10 focus:text-white">Нет, не курю</SelectItem>
+                          <SelectItem value="да">Да</SelectItem>
+                          <SelectItem value="нет">Нет</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -454,10 +384,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="не употребляю" className="focus:bg-white/10 focus:text-white">Не употребляю</SelectItem>
-                          <SelectItem value="редко" className="focus:bg-white/10 focus:text-white">Редко</SelectItem>
-                          <SelectItem value="умеренно" className="focus:bg-white/10 focus:text-white">Умеренно</SelectItem>
-                          <SelectItem value="часто" className="focus:bg-white/10 focus:text-white">Часто</SelectItem>
+                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
+                          <SelectItem value="редко">Редко</SelectItem>
+                          <SelectItem value="умеренно">Умеренно</SelectItem>
+                          <SelectItem value="часто">Часто</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -466,11 +396,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
               </div>
             </div>
 
-            {/* 3. Device & BioData */}
             <div>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 md:pb-6 mb-6 md:mb-10">
                 <h4 className="text-xl md:text-2xl font-black font-headline tracking-tighter text-foreground flex items-center gap-3">
-                  <span className={sectionNumberClasses}>3</span> Данные устройств
+                  <span className={sectionNumberClasses}>3</span> Данные гаджетов
                 </h4>
                 <Button 
                   type="button" 
@@ -526,190 +455,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="dailyActivities"
-                render={({ field }) => (
-                  <FormItem className="mt-8 md:mt-10">
-                    <div className="flex items-center justify-between mb-2 md:mb-4">
-                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                        <Activity className="h-4 w-4 text-primary" /> Активности
-                      </FormLabel>
-                      <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dailyActivities' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dailyActivities')}>
-                        <Mic className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <FormControl>
-                      <Textarea placeholder="Например: Бег 30 мин..." className={textareaClasses} {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* 4. Preferences & Planning */}
-            <div>
-              <h4 className={sectionHeaderClasses}>
-                <span className={sectionNumberClasses}>4</span> Предпочтения
-              </h4>
-              <div className="grid gap-6 md:gap-10 grid-cols-1 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="favoriteFoods"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between mb-2 md:mb-4">
-                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                          <Heart className="h-4 w-4 text-primary" /> Любимые продукты
-                        </FormLabel>
-                        <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'favoriteFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('favoriteFoods')}>
-                          <Mic className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <FormControl>
-                        <Textarea placeholder="Что вы любите?..." className={textareaClasses} {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="dislikedFoods"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between mb-2 md:mb-4">
-                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                          <Ban className="h-4 w-4 text-destructive" /> Нелюбимые продукты
-                        </FormLabel>
-                        <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dislikedFoods' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dislikedFoods')}>
-                          <Mic className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <FormControl>
-                        <Textarea placeholder="Что исключить?..." className={textareaClasses} {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="planDuration"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-2 mb-2 md:mb-4 uppercase tracking-[0.2em]">
-                        <Timer className="h-3 md:h-3.5 w-3 md:w-3.5" /> Длительность плана
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className={cn(selectTriggerClasses, "text-base md:text-2xl")}>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-[1.5rem] bg-primary text-white border-none">
-                          <SelectItem value="день" className="focus:bg-white/10 focus:text-white">План на 1 день</SelectItem>
-                          <SelectItem value="неделя" className="focus:bg-white/10 focus:text-white">План на неделю</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* 5. Clinical Context */}
-            <div>
-              <h4 className={sectionHeaderClasses}>
-                <span className={sectionNumberClasses}>5</span> Клинический контекст
-              </h4>
-              <div className="grid gap-6 md:gap-10 grid-cols-1 lg:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="labResultsInput"
-                  render={({ field }) => (
-                    <FormItem className="relative">
-                      <div className="flex items-center justify-between mb-2 md:mb-4">
-                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                          <FlaskConical className="h-4 w-4 text-primary" /> Анализы
-                        </FormLabel>
-                        <div className="flex gap-2">
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="icon" 
-                            className={cn("h-8 w-8 rounded-lg", isRecording === 'labResultsInput' && "bg-red-100 text-red-500 animate-pulse")}
-                            onClick={() => toggleVoiceInput('labResultsInput')}
-                          >
-                            <Mic className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => startCamera('labs')}>
-                            <Camera className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <FormControl>
-                        <div className="space-y-4">
-                          <Textarea placeholder="Результаты анализов..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="medicalConditionsInput"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between mb-2 md:mb-4">
-                        <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                          <Stethoscope className="h-4 w-4 text-primary" /> Жалобы
-                        </FormLabel>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-8 w-8 rounded-lg", isRecording === 'medicalConditionsInput' && "bg-red-100 text-red-500 animate-pulse")}
-                          onClick={() => toggleVoiceInput('medicalConditionsInput')}
-                        >
-                          <Mic className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <FormControl>
-                        <Textarea placeholder="Опишите симптомы..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* 6. Daily Logs */}
-            <div>
-              <h4 className={sectionHeaderClasses}>
-                <span className={sectionNumberClasses}>6</span> Дневник питания
-              </h4>
-              <div className="grid gap-6 md:gap-10 grid-cols-1 lg:grid-cols-12">
-                <div className="lg:col-span-12">
-                  <FormField
-                    control={form.control}
-                    name="dietaryInput"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between mb-2 md:mb-4">
-                          <FormLabel className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 uppercase tracking-[0.2em]">
-                            <Utensils className="h-4 w-4 text-primary" /> Рацион
-                          </FormLabel>
-                          <Button type="button" variant="ghost" size="icon" className={cn("h-8 w-8 rounded-lg", isRecording === 'dietaryInput' && "bg-red-100 text-red-500")} onClick={() => toggleVoiceInput('dietaryInput')}>
-                            <Mic className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormControl>
-                          <Textarea placeholder="Что вы сегодня ели?..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
             </div>
 
             <Button 
@@ -719,9 +464,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
             >
               <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
               {loading ? (
-                <><Loader2 className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 animate-spin" /> Анализ...</>
+                <><Loader2 className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 animate-spin" /> Обработка данных...</>
               ) : (
-                <><Sparkles className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 group-hover:rotate-12 transition-transform" /> Сформировать план</>
+                <><Sparkles className="mr-3 md:mr-6 h-6 md:h-10 w-6 md:w-10 group-hover:rotate-12 transition-transform" /> Сформировать отчет</>
               )}
             </Button>
           </form>
