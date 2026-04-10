@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { NavBar } from '@/components/nav-bar';
 import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Sparkles, Calendar as CalendarIcon, History, Target, LayoutDashboard, Utensils, UserCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2 } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,14 +16,24 @@ import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MealLogger } from '@/components/meal-logger';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function DashboardPage() {
-  const [resultsByDate, setResultsByDate] = useState<Record<string, GenerateRecommendationsOutput>>({});
+  const { user } = useUser();
+  const { firestore } = useFirestore();
   const [selectedDate, setSelectedDate] = useState(startOfToday());
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
-  const currentResult = resultsByDate[dateKey];
+  
+  // Получаем рекомендацию из Firestore для выбранной даты
+  const recommendationRef = useMemo(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+  }, [firestore, user, dateKey]);
+
+  const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
 
   const getStatusLabel = (date: Date) => {
     if (isDateToday(date)) return "СЕГОДНЯ";
@@ -33,18 +43,25 @@ export default function DashboardPage() {
   };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
-    setResultsByDate(prev => ({
-      ...prev,
-      [dateKey]: result
-    }));
+    if (!firestore || !user) return;
+    
+    // Сохраняем результат в Firestore для конкретной даты
+    const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+    setDoc(docRef, {
+      date: dateKey,
+      data: result,
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+    
     setActiveTab("dashboard");
   };
+
+  const currentResult = recommendationDoc?.data as GenerateRecommendationsOutput | undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
-      {/* Date Navigation Bar */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-20 z-40 py-2 md:py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-1 md:gap-2 mx-auto">
@@ -92,7 +109,6 @@ export default function DashboardPage() {
             </Button>
           </div>
           
-          {/* Quick Action: Meal Logger (only if result exists) */}
           {currentResult && (
             <div className="hidden md:block">
               <MealLogger />
@@ -117,58 +133,66 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          <TabsContent value="dashboard" className="mt-0 outline-none">
-            {currentResult ? (
-              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex items-center gap-4 mb-6">
-                   <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                      <LayoutDashboard className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-                   </div>
-                   <div>
-                      <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Обзор дня</h2>
-                      <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши ключевые показатели и аналитика.</p>
-                   </div>
-                </div>
-                <RecommendationDisplay data={currentResult} mode="dashboard" />
-              </div>
-            ) : (
-              <NoDataView onResult={handleResult} selectedDate={selectedDate} />
-            )}
-          </TabsContent>
-
-          <TabsContent value="meals" className="mt-0 outline-none">
-            {currentResult ? (
-              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <div className="flex items-center gap-4 mb-6">
-                   <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                      <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-                   </div>
-                   <div>
-                      <h2 className="text-2xl md:text-5xl font-black tracking-tighter">План питания</h2>
-                      <p className="text-muted-foreground text-xs md:text-base font-medium">Персонализированное меню, оптимизированное ИИ.</p>
-                   </div>
-                </div>
-                <RecommendationDisplay data={currentResult} mode="meals" />
-              </div>
-            ) : (
-              <NoDataView onResult={handleResult} selectedDate={selectedDate} />
-            )}
-          </TabsContent>
-
-          <TabsContent value="profile" className="mt-0 outline-none">
-            <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="flex items-center gap-4 mb-10">
-                 <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                    <UserCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-                 </div>
-                 <div>
-                    <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Личный кабинет</h2>
-                    <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши биометрические данные и цели здоровья.</p>
-                 </div>
-              </div>
-              <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
+          {loadingRec ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
             </div>
-          </TabsContent>
+          ) : (
+            <>
+              <TabsContent value="dashboard" className="mt-0 outline-none">
+                {currentResult ? (
+                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex items-center gap-4 mb-6">
+                       <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                          <LayoutDashboard className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                       </div>
+                       <div>
+                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Обзор дня</h2>
+                          <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши ключевые показатели и аналитика.</p>
+                       </div>
+                    </div>
+                    <RecommendationDisplay data={currentResult} mode="dashboard" />
+                  </div>
+                ) : (
+                  <NoDataView onResult={handleResult} selectedDate={selectedDate} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="meals" className="mt-0 outline-none">
+                {currentResult ? (
+                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex items-center gap-4 mb-6">
+                       <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                          <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                       </div>
+                       <div>
+                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter">План питания</h2>
+                          <p className="text-muted-foreground text-xs md:text-base font-medium">Персонализированное меню, оптимизированное ИИ.</p>
+                       </div>
+                    </div>
+                    <RecommendationDisplay data={currentResult} mode="meals" />
+                  </div>
+                ) : (
+                  <NoDataView onResult={handleResult} selectedDate={selectedDate} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="profile" className="mt-0 outline-none">
+                <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex items-center gap-4 mb-10">
+                     <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                        <UserCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                     </div>
+                     <div>
+                        <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Личный кабинет</h2>
+                        <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши биометрические данные и цели здоровья.</p>
+                     </div>
+                  </div>
+                  <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
+                </div>
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </main>
 

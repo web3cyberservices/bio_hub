@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -55,6 +55,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -83,6 +85,8 @@ interface RecommendationFormProps {
 }
 
 export function RecommendationForm({ onResult, selectedDate }: RecommendationFormProps) {
+  const { user } = useUser();
+  const { firestore } = useFirestore();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [dietaryImage, setDietaryImage] = useState<string | null>(null);
@@ -91,6 +95,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const [isRecording, setIsRecording] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+
+  const userDocRef = useMemo(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userData, loading: loadingProfile } = useDoc<any>(userDocRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -115,6 +126,18 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       sleepDurationHours: 0,
     },
   });
+
+  // Заполняем форму данными из профиля, если они есть
+  useEffect(() => {
+    if (userData) {
+      const fields = ['gender', 'weight', 'height', 'age', 'activityLevel', 'healthGoal', 'smoking', 'alcohol'];
+      fields.forEach((field) => {
+        if (userData[field]) {
+          form.setValue(field as any, userData[field]);
+        }
+      });
+    }
+  }, [userData, form]);
 
   const simulateSync = async () => {
     setSyncing(true);
@@ -227,8 +250,25 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !firestore) return;
     setLoading(true);
     try {
+      // Сохраняем биометрические данные в профиль пользователя (обезличивание на уровне приложения)
+      const profileData = {
+        weight: values.weight,
+        height: values.height,
+        age: values.age,
+        gender: values.gender,
+        healthGoal: values.healthGoal,
+        activityLevel: values.activityLevel,
+        smoking: values.smoking,
+        alcohol: values.alcohol,
+        updatedAt: new Date().toISOString()
+      };
+      
+      setDoc(doc(firestore, 'users', user.uid), profileData, { merge: true });
+
+      // Отправляем в ИИ ТОЛЬКО необходимые для расчета данные (БЕЗ имени, email и т.д.)
       const { steps, avgHeartRate, sleepDurationHours, ...rest } = values;
       const result = await generatePersonalizedRecommendations({
         ...rest,
@@ -256,6 +296,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const textareaClasses = "min-h-[100px] md:min-h-[120px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/90 border-none p-6 md:p-8 font-bold text-white text-base md:text-lg resize-none focus:ring-4 focus:ring-white/20 placeholder:text-white/40";
   const sectionHeaderClasses = "text-xl md:text-2xl font-black font-headline tracking-tighter text-foreground border-b pb-4 md:pb-6 flex items-center gap-3 md:gap-4 mb-6 md:mb-10";
   const sectionNumberClasses = "w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm md:text-base font-black shrink-0";
+
+  if (loadingProfile) {
+    return (
+      <Card className="premium-card p-20 flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+      </Card>
+    );
+  }
 
   return (
     <Card className="premium-card overflow-hidden">
@@ -601,24 +649,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       <FormControl>
                         <div className="space-y-4">
                           <Textarea placeholder="Результаты анализов..." className={cn(textareaClasses, "min-h-[140px] md:min-h-[160px]")} {...field} />
-                          {(activeCamera === 'labs' || labImage) && (
-                            <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 border-primary/20 aspect-video">
-                              {activeCamera === 'labs' ? (
-                                <>
-                                  <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                                    <Button type="button" onClick={() => capturePhoto('labs')} className="rounded-full w-10 h-10 bg-white text-primary"><Camera className="h-5 w-5" /></Button>
-                                    <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-10 h-10"><X className="h-5 w-5" /></Button>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <img src={labImage!} className="w-full h-full object-cover" alt="Labs" />
-                                  <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full" onClick={() => setLabImage(null)}><X className="h-4 w-4" /></Button>
-                                </>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </FormControl>
                     </FormItem>
@@ -658,7 +688,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 <span className={sectionNumberClasses}>6</span> Дневник питания
               </h4>
               <div className="grid gap-6 md:gap-10 grid-cols-1 lg:grid-cols-12">
-                <div className="lg:col-span-8">
+                <div className="lg:col-span-12">
                   <FormField
                     control={form.control}
                     name="dietaryInput"
@@ -678,43 +708,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                       </FormItem>
                     )}
                   />
-                </div>
-                <div className="lg:col-span-4 space-y-4 md:space-y-6">
-                  <label className="text-[9px] md:text-[10px] font-black text-muted-foreground flex items-center gap-3 mb-2 md:mb-4 uppercase tracking-[0.2em]">
-                    <Camera className="h-4 w-4 text-primary" /> Фото еды
-                  </label>
-                  <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <Button type="button" variant="outline" className="h-20 md:h-28 rounded-[1.5rem] md:rounded-[2rem] border-dashed border-2 flex flex-col gap-1 md:gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all" onClick={() => startCamera('diet')}>
-                      <Camera className="h-6 md:h-8 w-6 md:w-8 text-primary" />
-                      <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground">Камера</span>
-                    </Button>
-                    <label className="cursor-pointer">
-                      <div className="h-20 md:h-28 rounded-[1.5rem] md:rounded-[2rem] border-dashed border-2 flex flex-col gap-1 md:gap-2 items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all">
-                        <FileUp className="h-6 md:h-8 w-6 md:w-8 text-primary" />
-                        <span className="text-[7px] md:text-[8px] font-black uppercase tracking-widest text-muted-foreground">Файл</span>
-                      </div>
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'diet')} />
-                    </label>
-                  </div>
-                  
-                  {activeCamera === 'diet' && (
-                    <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-black aspect-square">
-                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-                        <Button type="button" onClick={() => capturePhoto('diet')} className="rounded-full w-10 h-10 bg-white text-primary"><Camera className="h-5 w-5" /></Button>
-                        <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-10 h-10"><X className="h-5 w-5" /></Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {dietaryImage && activeCamera !== 'diet' && (
-                    <div className="relative rounded-[1.5rem] md:rounded-[2rem] overflow-hidden group border-4 border-primary/20">
-                      <img src={dietaryImage} className="w-full aspect-square object-cover" alt="Diet" />
-                      <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity" onClick={() => setDietaryImage(null)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

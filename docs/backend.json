@@ -13,9 +13,23 @@
         "weight": { "type": "number" },
         "height": { "type": "number" },
         "age": { "type": "number" },
-        "healthGoal": { "type": "string", "enum": ["снизить массу тела", "поддержать текущее состояние", "набор массы"] }
+        "gender": { "type": "string", "enum": ["мужской", "женский"] },
+        "healthGoal": { "type": "string", "enum": ["снизить массу тела", "поддержать текущее состояние", "набор массы"] },
+        "activityLevel": { "type": "string", "enum": ["малоактивный", "среднеактивный", "средний", "активный", "перенагрузка"] },
+        "smoking": { "type": "string", "enum": ["да", "нет"] },
+        "alcohol": { "type": "string", "enum": ["не употребляю", "редко", "умеренно", "часто"] }
       },
       "required": ["uid", "email"]
+    },
+    "DailyRecommendation": {
+      "title": "DailyRecommendation",
+      "description": "Сохраненная рекомендация ИИ на конкретную дату",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "data": { "type": "object", "description": "Результат выполнения generatePersonalizedRecommendations" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -25,6 +39,10 @@
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "Данные профиля пользователя"
+    },
+    "/users/{userId}/recommendations/{date}": {
+      "schema": "DailyRecommendation",
+      "description": "История ежедневных рекомендаций и планов питания"
     }
   }
 }
