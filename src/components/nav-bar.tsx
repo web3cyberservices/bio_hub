@@ -1,14 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Activity, UserCircle, LogIn, Sparkles } from 'lucide-react';
+import { Activity, LogIn, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useUser } from '@/firebase';
 
 export function NavBar() {
-  const pathname = usePathname();
   const { user, loading } = useUser();
 
   return (
@@ -35,7 +32,7 @@ export function NavBar() {
         
         {/* Справа: Кнопки управления */}
         <div className="flex items-center gap-2 md:gap-4 ml-auto">
-          {!loading && (
+          {!loading ? (
             <>
               {user ? (
                 <Link href="/dashboard">
@@ -49,19 +46,19 @@ export function NavBar() {
                   <Link href="/login">
                     <Button variant="ghost" className="h-10 md:h-12 font-black text-[9px] md:text-[10px] uppercase tracking-widest text-white hover:bg-white/10 px-3 md:px-6 flex gap-1 items-center">
                       <LogIn className="h-3.5 w-3.5" /> 
-                      <span className="hidden xs:inline">Войти</span>
-                      <span className="xs:hidden">Вход</span>
+                      <span>Войти</span>
                     </Button>
                   </Link>
                   <Link href="/register">
                     <Button className="rounded-xl md:rounded-2xl px-3 md:px-5 h-10 md:h-12 font-black uppercase tracking-widest text-[8px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-all active:scale-95">
-                      <span className="hidden xs:inline">Регистрация</span>
-                      <span className="xs:hidden">Рег</span>
+                      <span>Регистрация</span>
                     </Button>
                   </Link>
                 </div>
               )}
             </>
+          ) : (
+            <div className="h-10 md:h-12 w-24 bg-white/10 animate-pulse rounded-xl md:rounded-2xl" />
           )}
         </div>
       </div>
