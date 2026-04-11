@@ -110,7 +110,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход.',
+        description: 'Не удалось выполнить быстрый вход. Проверьте подключение к Firebase.',
       });
     } finally {
       setLoading(false);
