@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -10,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Activity, Mail, Send, Zap, Loader2, Sparkles } from 'lucide-react';
+import { Activity, Mail, Send, User, GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {
@@ -85,22 +84,35 @@ export default function RegisterPage() {
     }
   };
 
-  const handleMessengerMaxLogin = async () => {
-    if (!auth) return;
+  const handleQuickLogin = async (role: 'user' | 'specialist') => {
+    if (!auth || !firestore) return;
     setLoading(true);
     try {
-      // Анонимный вход как "быстрый вход" в приложение
-      await signInAnonymously(auth);
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          profileType: role,
+          createdAt: new Date().toISOString(),
+          displayName: role === 'user' ? 'Гость-Пользователь' : 'Гость-Специалист',
+        });
+      }
+
       router.push('/dashboard');
       toast({
         title: 'Вход выполнен',
-        description: 'Вы вошли через Messenger Max',
+        description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось авторизоваться. Убедитесь в настройках Auth.',
+        description: 'Не удалось выполнить быстрый вход.',
       });
     } finally {
       setLoading(false);
@@ -155,14 +167,25 @@ export default function RegisterPage() {
               </Button>
             </div>
 
-            <Button 
-              className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg group transition-all active:scale-95"
-              onClick={handleMessengerMaxLogin}
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white group-hover:animate-pulse" />} 
-              Вход через Messenger Max
-            </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <Button 
+                className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg hover:bg-foreground/90 transition-all"
+                onClick={() => handleQuickLogin('user')}
+                disabled={loading}
+              >
+                <User className="h-4 w-4" /> 
+                Войти как пользователь
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full h-14 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[9px] gap-2 shadow-sm hover:bg-foreground/5 transition-all"
+                onClick={() => handleQuickLogin('specialist')}
+                disabled={loading}
+              >
+                <GraduationCap className="h-4 w-4" /> 
+                Войти как специалист
+              </Button>
+            </div>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

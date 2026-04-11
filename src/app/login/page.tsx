@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, Send, Zap, Loader2, LogIn } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
+import { Activity, Send, User, GraduationCap, Loader2, LogIn } from 'lucide-react';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { auth } = useAuth();
+  const { firestore } = useFirestore();
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
@@ -66,22 +67,36 @@ export default function LoginPage() {
     }
   };
 
-  const handleMessengerMaxLogin = async () => {
-    if (!auth) return;
+  const handleQuickLogin = async (role: 'user' | 'specialist') => {
+    if (!auth || !firestore) return;
     setLoading(true);
     try {
-      // Анонимный вход как "быстрый вход" в приложение
-      await signInAnonymously(auth);
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+
+      // Проверяем, существует ли профиль, если нет — создаем с выбранной ролью
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          profileType: role,
+          createdAt: new Date().toISOString(),
+          displayName: role === 'user' ? 'Гость-Пользователь' : 'Гость-Специалист',
+        });
+      }
+
       router.push('/dashboard');
       toast({
-        title: 'Био-Хаб активирован',
-        description: 'Вход выполнен успешно.',
+        title: 'Вход выполнен',
+        description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось войти. Проверьте настройки авторизации.',
+        description: 'Не удалось выполнить быстрый вход.',
       });
     } finally {
       setLoading(false);
@@ -136,14 +151,25 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            <Button 
-              className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg group transition-all active:scale-95"
-              onClick={handleMessengerMaxLogin}
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white group-hover:animate-pulse" />} 
-              Вход через Messenger Max
-            </Button>
+            <div className="grid grid-cols-1 gap-3">
+              <Button 
+                className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg hover:bg-foreground/90 transition-all"
+                onClick={() => handleQuickLogin('user')}
+                disabled={loading}
+              >
+                <User className="h-4 w-4" /> 
+                Войти как пользователь
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full h-14 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[9px] gap-2 shadow-sm hover:bg-foreground/5 transition-all"
+                onClick={() => handleQuickLogin('specialist')}
+                disabled={loading}
+              >
+                <GraduationCap className="h-4 w-4" /> 
+                Войти как специалист
+              </Button>
+            </div>
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
