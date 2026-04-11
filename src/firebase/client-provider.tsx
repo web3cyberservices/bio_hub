@@ -8,10 +8,19 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
   const [instance, setInstance] = useState<ReturnType<typeof initializeFirebase> | null>(null);
 
   useEffect(() => {
-    setInstance(initializeFirebase());
+    try {
+      setInstance(initializeFirebase());
+    } catch (e) {
+      console.error('Critical error in FirebaseClientProvider:', e);
+    }
   }, []);
 
-  if (!instance) return null;
+  // Если Firebase еще не инициализирован (первый рендер), 
+  // мы все равно рендерим children, но без контекста Firebase.
+  // Когда instance появится, FirebaseProvider обернет их.
+  if (!instance) {
+    return <>{children}</>;
+  }
 
   return (
     <FirebaseProvider

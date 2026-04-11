@@ -6,17 +6,16 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 export function initializeFirebase() {
-  let firebaseApp: FirebaseApp;
-  let firestore: Firestore;
-  let auth: Auth;
+  let firebaseApp: FirebaseApp | null = null;
+  let firestore: Firestore | null = null;
+  let auth: Auth | null = null;
 
-  // Проверка на валидность API ключа перед инициализацией
-  const isValidConfig = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined';
+  // Проверка на наличие конфигурации
+  const hasConfig = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined';
 
-  if (!isValidConfig) {
-    console.warn('Firebase API Key is missing. Please connect your project in Firebase Studio.');
-    // Возвращаем пустые объекты, чтобы предотвратить крэш приложения на этапе инициализации
-    return { firebaseApp: null as any, firestore: null as any, auth: null as any };
+  if (!hasConfig) {
+    console.warn('Firebase configuration is missing. Please connect your project in the Firebase Studio interface.');
+    return { firebaseApp, firestore, auth };
   }
 
   try {
@@ -24,11 +23,14 @@ export function initializeFirebase() {
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
   } catch (error) {
-    console.error('Firebase initialization error:', error);
-    return { firebaseApp: null as any, firestore: null as any, auth: null as any };
+    console.error('Failed to initialize Firebase services:', error);
   }
 
-  return { firebaseApp, firestore, auth };
+  return { 
+    firebaseApp: firebaseApp as FirebaseApp, 
+    firestore: firestore as Firestore, 
+    auth: auth as Auth 
+  };
 }
 
 export * from './provider';

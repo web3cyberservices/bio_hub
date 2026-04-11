@@ -14,10 +14,16 @@ export function useUser() {
       setLoading(false);
       return;
     }
-    return onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    }, (error) => {
+      console.error('Auth state change error:', error);
       setLoading(false);
     });
+
+    return () => unsubscribe();
   }, [auth]);
 
   return { user, loading };

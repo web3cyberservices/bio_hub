@@ -62,7 +62,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase еще не загружены.',
+        description: 'Сервисы Firebase еще не загружены. Проверьте настройки.',
       });
       return;
     }
@@ -70,31 +70,31 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const userCredential = await signInAnonymously(auth);
-      const user = userCredential.user;
+      const testUser = userCredential.user;
 
-      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocRef = doc(firestore, 'users', testUser.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
-          uid: user.uid,
+          uid: testUser.uid,
           profileType: role,
           createdAt: new Date().toISOString(),
           displayName: role === 'user' ? 'Тестовый Пользователь' : 'Тестовый Специалист',
         });
       }
 
-      router.push('/dashboard');
       toast({
         title: 'Тестовый вход выполнен',
         description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
       });
+      router.push('/dashboard');
     } catch (error: any) {
       console.error('Quick Login Error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход. Убедитесь, что анонимная авторизация включена в консоли Firebase.',
+        description: 'Не удалось выполнить быстрый вход. Проверьте настройки Firebase.',
       });
     } finally {
       setLoading(false);
@@ -125,7 +125,7 @@ export default function RegisterPage() {
                 disabled={loading}
               >
                 <User className="h-5 w-5" /> 
-                Войти как пользователь
+                Тест: Войти как пользователь
               </Button>
               <Button 
                 variant="outline"
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                 disabled={loading}
               >
                 <GraduationCap className="h-5 w-5" /> 
-                Войти как специалист
+                Тест: Войти как специалист
               </Button>
             </div>
 
