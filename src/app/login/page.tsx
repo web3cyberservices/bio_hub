@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Проверьте подключение в Studio.',
+        description: 'Сервис авторизации недоступен. Проверьте подключение к Firebase.',
       });
       return;
     }
@@ -47,7 +47,6 @@ export default function LoginPage() {
         title: 'Успешный вход',
         description: 'Добро пожаловать в личный кабинет!',
       });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -64,7 +63,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase недоступны. Убедитесь, что вы подключили проект в Studio.',
+        description: 'Сервисы Firebase недоступны. Настройте проект в Studio.',
       });
       return;
     }
@@ -96,7 +95,9 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка входа',
-        description: error.message || 'Не удалось выполнить быстрый вход. Проверьте настройки анонимной авторизации.',
+        description: error.code === 'auth/operation-not-allowed' 
+          ? 'Анонимная авторизация не включена в консоли Firebase.' 
+          : 'Не удалось выполнить быстрый вход. Проверьте настройки.',
       });
     } finally {
       setLoading(false);

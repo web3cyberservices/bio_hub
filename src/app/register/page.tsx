@@ -27,7 +27,14 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
+    if (!auth || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: 'Сервисы Firebase не готовы.',
+      });
+      return;
+    }
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -62,7 +69,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase еще не загружены. Проверьте настройки.',
+        description: 'Сервисы Firebase недоступны.',
       });
       return;
     }
@@ -94,7 +101,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход. Проверьте настройки Firebase.',
+        description: 'Не удалось выполнить быстрый вход.',
       });
     } finally {
       setLoading(false);

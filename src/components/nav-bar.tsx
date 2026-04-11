@@ -12,7 +12,7 @@ export function NavBar() {
     <nav className="sticky top-0 z-[100] w-full bg-primary/95 backdrop-blur-xl border-b border-white/10 shadow-lg">
       <div className="container mx-auto flex h-16 md:h-20 items-center justify-between px-4 md:px-8">
         
-        {/* Слева: Логотип и Название */}
+        {/* Логотип */}
         <Link 
           href="/" 
           className="flex items-center gap-2 md:gap-3 group transition-all shrink-0"
@@ -30,35 +30,31 @@ export function NavBar() {
           </div>
         </Link>
         
-        {/* Справа: Кнопки управления */}
+        {/* Кнопки */}
         <div className="flex items-center gap-2 md:gap-4 ml-auto">
-          {!loading ? (
-            <>
-              {user ? (
-                <Link href="/dashboard">
-                  <Button className="rounded-xl md:rounded-2xl px-4 md:px-8 h-10 md:h-12 font-black uppercase tracking-widest text-[9px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-all active:scale-95 flex gap-2">
-                    <Sparkles className="h-4 w-4 hidden sm:block" /> 
-                    <span>Био-Хаб</span>
-                  </Button>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-1.5 md:gap-3">
-                  <Link href="/login">
-                    <Button variant="ghost" className="h-10 md:h-12 font-black text-[9px] md:text-[10px] uppercase tracking-widest text-white hover:bg-white/10 px-3 md:px-6 flex gap-1 items-center">
-                      <LogIn className="h-3.5 w-3.5" /> 
-                      <span>Войти</span>
-                    </Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button className="rounded-xl md:rounded-2xl px-3 md:px-5 h-10 md:h-12 font-black uppercase tracking-widest text-[8px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-all active:scale-95">
-                      <span>Регистрация</span>
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </>
-          ) : (
+          {loading ? (
             <div className="h-10 md:h-12 w-24 bg-white/10 animate-pulse rounded-xl md:rounded-2xl" />
+          ) : user ? (
+            <Link href="/dashboard">
+              <Button className="rounded-xl md:rounded-2xl px-4 md:px-8 h-10 md:h-12 font-black uppercase tracking-widest text-[9px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-all active:scale-95 flex gap-2">
+                <Sparkles className="h-4 w-4 hidden sm:block" /> 
+                <span>Био-Хаб</span>
+              </Button>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-1.5 md:gap-3">
+              <Link href="/login">
+                <Button variant="ghost" className="h-10 md:h-12 font-black text-[9px] md:text-[10px] uppercase tracking-widest text-white hover:bg-white/10 px-3 md:px-6 flex gap-1 items-center">
+                  <LogIn className="h-3.5 w-3.5" /> 
+                  <span>Войти</span>
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="rounded-xl md:rounded-2xl px-3 md:px-5 h-10 md:h-12 font-black uppercase tracking-widest text-[8px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-all active:scale-95">
+                  <span>Регистрация</span>
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>

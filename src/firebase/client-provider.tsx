@@ -16,7 +16,8 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  // Мы ВСЕГДА рендерим провайдер, чтобы хуки useAuth/useFirestore не возвращали ошибку контекста
+  // ВСЕГДА рендерим детей, чтобы интерфейс не исчезал.
+  // Хуки внутри будут получать null, если Firebase не инициализирован.
   return (
     <FirebaseProvider
       firebaseApp={instance?.firebaseApp || null as any}
