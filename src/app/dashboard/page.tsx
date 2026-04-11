@@ -7,7 +7,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,25 +15,37 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MealLogger } from '@/components/meal-logger';
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const { firestore } = useFirestore();
-  const [selectedDate, setSelectedDate] = useState(startOfToday());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  // Избегаем ошибок гидратации, устанавливая дату после монтирования
+  useEffect(() => {
+    setSelectedDate(startOfToday());
+  }, []);
+
+  const dateKey = useMemo(() => selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, [selectedDate]);
   
-  // Получаем рекомендацию из Firestore для выбранной даты
   const recommendationRef = useMemo(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
   const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+
+  if (!selectedDate) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
 
   const getStatusLabel = (date: Date) => {
     if (isDateToday(date)) return "СЕГОДНЯ";
@@ -43,9 +55,8 @@ export default function DashboardPage() {
   };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || !dateKey) return;
     
-    // Сохраняем результат в Firestore для конкретной даты
     const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
     setDoc(docRef, {
       date: dateKey,
@@ -69,7 +80,7 @@ export default function DashboardPage() {
               variant="ghost" 
               size="icon" 
               className="rounded-xl h-9 w-9 md:h-10 md:w-10 hover:bg-primary/5 transition-all" 
-              onClick={() => setSelectedDate(prev => addDays(prev, -1))}
+              onClick={() => setSelectedDate(prev => prev ? addDays(prev, -1) : null)}
             >
               <ChevronLeft className="h-5 w-5 text-primary" />
             </Button>
@@ -103,17 +114,19 @@ export default function DashboardPage() {
               variant="ghost" 
               size="icon" 
               className="rounded-xl h-9 w-9 md:h-10 md:w-10 hover:bg-primary/5 transition-all"
-              onClick={() => setSelectedDate(prev => addDays(prev, 1))}
+              onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}
             >
               <ChevronRight className="h-5 w-5 text-primary" />
             </Button>
           </div>
           
-          {currentResult && (
-            <div className="hidden md:block">
-              <MealLogger />
-            </div>
-          )}
+          <div className="hidden md:block">
+            <UnifiedDataEntry selectedDate={selectedDate}>
+              <Button className="rounded-2xl h-12 gap-2 bg-primary hover:bg-primary/90 font-bold px-6 shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4" /> Добавить данные
+              </Button>
+            </UnifiedDataEntry>
+          </div>
         </div>
       </div>
 
@@ -128,7 +141,7 @@ export default function DashboardPage() {
                 <Utensils className="h-4 w-4" /> План питания
               </TabsTrigger>
               <TabsTrigger value="profile" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                <UserCircle className="h-4 w-4" /> Личный кабинет
+                <UserCircle className="h-4 w-4" /> Профиль
               </TabsTrigger>
             </TabsList>
           </div>
@@ -147,8 +160,8 @@ export default function DashboardPage() {
                           <LayoutDashboard className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                        </div>
                        <div>
-                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Обзор дня</h2>
-                          <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши ключевые показатели и аналитика.</p>
+                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground">Обзор дня</h2>
+                          <p className="text-muted-foreground text-xs md:text-base font-medium">Ключевые показатели и биометрическая аналитика.</p>
                        </div>
                     </div>
                     <RecommendationDisplay data={currentResult} mode="dashboard" />
@@ -166,7 +179,7 @@ export default function DashboardPage() {
                           <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                        </div>
                        <div>
-                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter">План питания</h2>
+                          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground">Гастро-план</h2>
                           <p className="text-muted-foreground text-xs md:text-base font-medium">Персонализированное меню, оптимизированное ИИ.</p>
                        </div>
                     </div>
@@ -184,7 +197,7 @@ export default function DashboardPage() {
                         <UserCircle className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                      </div>
                      <div>
-                        <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Личный кабинет</h2>
+                        <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground">Личный кабинет</h2>
                         <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши биометрические данные и цели здоровья.</p>
                      </div>
                   </div>

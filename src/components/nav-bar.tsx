@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,7 +16,7 @@ export function NavBar() {
     <nav className="sticky top-0 z-[100] w-full bg-primary/90 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
         
-        {/* Логотип и Название: Показываем всегда, кроме мобильной версии до входа */}
+        {/* Логотип и Название: Показываем всегда на десктопе, а на мобилке только если залогинен */}
         <Link 
           href="/" 
           className={cn(
@@ -37,11 +38,11 @@ export function NavBar() {
         </Link>
         
         {/* Правая часть */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 ml-auto md:ml-0">
           {!loading && (
             <>
               {user ? (
-                /* Если вход выполнен: Показываем только логотип (слева) и кнопку кабинета */
+                /* Если вход выполнен */
                 <Link href="/dashboard">
                   <Button className="rounded-2xl px-4 md:px-8 h-10 md:h-12 font-black uppercase tracking-widest text-[8px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-transform active:scale-95 flex gap-2">
                     <UserCircle className="h-4 w-4" /> 
