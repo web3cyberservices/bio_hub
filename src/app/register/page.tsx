@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -12,9 +11,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Activity, Mail, Send, Zap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/toast';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -36,7 +35,6 @@ export default function RegisterPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Создаем профиль в Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         uid: user.uid,
         displayName: name,
@@ -83,6 +81,23 @@ export default function RegisterPage() {
         title: 'Ошибка Google Auth',
         description: error.message,
       });
+    }
+  };
+
+  const handleMessengerMaxLogin = async () => {
+    if (!auth) return;
+    setLoading(true);
+    try {
+      await signInAnonymously(auth);
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: 'Не удалось авторизоваться.',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,9 +151,11 @@ export default function RegisterPage() {
 
             <Button 
               className="w-full h-14 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg group"
-              onClick={() => handleSocialStub('Messenger Max')}
+              onClick={handleMessengerMaxLogin}
+              disabled={loading}
             >
-              <Zap className="h-4 w-4 fill-white" /> Регистрация через Messenger Max
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 fill-white" />} 
+              Регистрация через Messenger Max
             </Button>
 
             <div className="relative">
