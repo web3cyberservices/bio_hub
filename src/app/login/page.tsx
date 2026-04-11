@@ -79,8 +79,8 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка Messenger Max',
-        description: 'Не удалось войти через мессенджер.',
+        title: 'Ошибка',
+        description: 'Не удалось войти через мессенджер. Убедитесь, что Anonymous Auth включен.',
       });
     } finally {
       setLoading(false);

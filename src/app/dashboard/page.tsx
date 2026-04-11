@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/nav-bar';
 import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
@@ -21,6 +22,7 @@ import { doc, setDoc } from 'firebase/firestore';
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -28,6 +30,13 @@ export default function DashboardPage() {
   useEffect(() => {
     setSelectedDate(startOfToday());
   }, []);
+
+  // Перенаправление если не авторизован
+  useEffect(() => {
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
 
   const dateKey = useMemo(() => selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, [selectedDate]);
   
@@ -150,7 +159,7 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          {loadingRec ? (
+          {(loadingRec && user) ? (
             <div className="flex flex-col items-center justify-center py-24 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка данных...</p>
