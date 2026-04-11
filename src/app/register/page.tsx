@@ -57,31 +57,6 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    if (!auth || !firestore) return;
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        displayName: user.displayName || 'Пользователь',
-        email: user.email,
-        photoURL: user.photoURL,
-        createdAt: new Date().toISOString(),
-      }, { merge: true });
-
-      router.push('/dashboard');
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка Google Auth',
-        description: error.message,
-      });
-    }
-  };
-
   const handleQuickLogin = async (role: 'user' | 'specialist') => {
     if (!auth || !firestore) {
       toast({
