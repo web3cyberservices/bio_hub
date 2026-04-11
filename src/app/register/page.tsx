@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Activity, User, GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
