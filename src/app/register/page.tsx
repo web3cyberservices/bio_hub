@@ -119,7 +119,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход. Убедитесь, что анонимная авторизация включена.',
+        description: 'Не удалось выполнить быстрый вход. Убедитесь, что анонимная авторизация включена в консоли Firebase.',
       });
     } finally {
       setLoading(false);
