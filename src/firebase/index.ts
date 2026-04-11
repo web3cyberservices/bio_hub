@@ -15,7 +15,7 @@ export function initializeFirebase() {
 
   if (!hasConfig) {
     console.warn('Firebase configuration is missing. Please connect your project in the Firebase Studio interface.');
-    return { firebaseApp, firestore, auth };
+    return { firebaseApp: null, firestore: null, auth: null };
   }
 
   try {

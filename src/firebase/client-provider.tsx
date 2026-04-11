@@ -16,7 +16,7 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  // Если Firebase еще не инициализирован (первый рендер) или произошла ошибка
+  // Если Firebase не инициализирован (нет конфига), все равно рендерим дочерние элементы
   if (!instance || !instance.firebaseApp) {
     return <>{children}</>;
   }
