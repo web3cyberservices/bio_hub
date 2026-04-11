@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -88,17 +89,18 @@ export default function RegisterPage() {
     if (!auth) return;
     setLoading(true);
     try {
+      // Анонимный вход как "быстрый вход" в приложение
       await signInAnonymously(auth);
+      router.push('/dashboard');
       toast({
         title: 'Вход выполнен',
         description: 'Вы вошли через Messenger Max',
       });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось авторизоваться.',
+        description: 'Не удалось авторизоваться. Убедитесь в настройках Auth.',
       });
     } finally {
       setLoading(false);

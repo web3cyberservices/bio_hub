@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,18 +70,18 @@ export default function LoginPage() {
     if (!auth) return;
     setLoading(true);
     try {
-      // Выполняем анонимный вход для быстрого доступа
+      // Анонимный вход как "быстрый вход" в приложение
       await signInAnonymously(auth);
+      router.push('/dashboard');
       toast({
         title: 'Био-Хаб активирован',
-        description: 'Вы успешно вошли через Messenger Max!',
+        description: 'Вход выполнен успешно.',
       });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось войти через мессенджер. Убедитесь, что Anonymous Auth включен.',
+        description: 'Не удалось войти. Проверьте настройки авторизации.',
       });
     } finally {
       setLoading(false);
