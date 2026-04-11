@@ -32,7 +32,14 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: 'Сервис авторизации недоступен. Проверьте подключение в Studio.',
+      });
+      return;
+    }
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -57,7 +64,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase недоступны. Проверьте подключение в Studio.',
+        description: 'Сервисы Firebase недоступны. Убедитесь, что вы подключили проект в Studio.',
       });
       return;
     }
@@ -89,7 +96,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка входа',
-        description: 'Не удалось выполнить быстрый вход. Проверьте настройки Firebase.',
+        description: error.message || 'Не удалось выполнить быстрый вход. Проверьте настройки анонимной авторизации.',
       });
     } finally {
       setLoading(false);

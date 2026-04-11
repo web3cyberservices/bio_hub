@@ -16,16 +16,12 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
     }
   }, []);
 
-  // Если Firebase не инициализирован (нет конфига), все равно рендерим дочерние элементы
-  if (!instance || !instance.firebaseApp) {
-    return <>{children}</>;
-  }
-
+  // Мы ВСЕГДА рендерим провайдер, чтобы хуки useAuth/useFirestore не возвращали ошибку контекста
   return (
     <FirebaseProvider
-      firebaseApp={instance.firebaseApp}
-      firestore={instance.firestore}
-      auth={instance.auth}
+      firebaseApp={instance?.firebaseApp || null as any}
+      firestore={instance?.firestore || null as any}
+      auth={instance?.auth || null as any}
     >
       {children}
     </FirebaseProvider>

@@ -10,11 +10,12 @@ export function initializeFirebase() {
   let firestore: Firestore | null = null;
   let auth: Auth | null = null;
 
-  // Проверка на наличие конфигурации
-  const hasConfig = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined';
+  // Проверка на наличие конфигурации. 
+  // Мы позволяем инициализацию, если есть хотя бы Project ID, чтобы избежать фатальных ошибок.
+  const hasConfig = firebaseConfig.apiKey && firebaseConfig.apiKey !== 'undefined' && firebaseConfig.apiKey !== '';
 
   if (!hasConfig) {
-    console.warn('Firebase configuration is missing. Please connect your project in the Firebase Studio interface.');
+    console.warn('Firebase configuration is missing or incomplete. Please connect your project in the Firebase Studio interface.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
