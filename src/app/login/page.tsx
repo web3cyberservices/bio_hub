@@ -76,7 +76,7 @@ export default function LoginPage() {
           profileType: role,
           createdAt: new Date().toISOString(),
           displayName: role === 'user' ? 'Тестовый Пользователь' : 'Тестовый Специалист',
-        });
+        }, { merge: true });
       }
 
       toast({

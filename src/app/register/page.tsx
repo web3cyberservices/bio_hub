@@ -39,7 +39,7 @@ export default function RegisterPage() {
         email: email,
         profileType: 'user',
         createdAt: new Date().toISOString(),
-      });
+      }, { merge: true });
 
       toast({
         title: 'Успешная регистрация',
@@ -81,7 +81,7 @@ export default function RegisterPage() {
           profileType: role,
           createdAt: new Date().toISOString(),
           displayName: role === 'user' ? 'Тестовый Пользователь' : 'Тестовый Специалист',
-        });
+        }, { merge: true });
       }
 
       toast({
