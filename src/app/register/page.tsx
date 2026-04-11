@@ -83,7 +83,15 @@ export default function RegisterPage() {
   };
 
   const handleQuickLogin = async (role: 'user' | 'specialist') => {
-    if (!auth || !firestore) return;
+    if (!auth || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка инициализации',
+        description: 'Сервисы Firebase еще не загружены.',
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
       const userCredential = await signInAnonymously(auth);
@@ -107,10 +115,11 @@ export default function RegisterPage() {
         description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
       });
     } catch (error: any) {
+      console.error('Quick Login Error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход. Проверьте подключение к Firebase.',
+        description: 'Не удалось выполнить быстрый вход. Убедитесь, что анонимная авторизация включена.',
       });
     } finally {
       setLoading(false);
