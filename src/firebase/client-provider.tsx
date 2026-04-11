@@ -12,7 +12,7 @@ export function FirebaseClientProvider({ children }: { children: React.ReactNode
       const firebaseInstance = initializeFirebase();
       setInstance(firebaseInstance);
     } catch (e) {
-      console.error('Critical error in FirebaseClientProvider:', e);
+      console.error('Критическая ошибка инициализации Firebase:', e);
     }
   }, []);
 

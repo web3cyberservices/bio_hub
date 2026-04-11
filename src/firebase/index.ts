@@ -10,11 +10,14 @@ export function initializeFirebase() {
   let firestore: Firestore | null = null;
   let auth: Auth | null = null;
 
-  // Проверка на наличие конфигурации.
-  const hasConfig = firebaseConfig.apiKey && firebaseConfig.apiKey !== "" && firebaseConfig.apiKey !== "undefined";
+  // Тщательная проверка конфигурации
+  const isValidConfig = 
+    firebaseConfig.apiKey && 
+    firebaseConfig.apiKey.length > 10 && 
+    firebaseConfig.apiKey !== "undefined";
 
-  if (!hasConfig) {
-    console.warn('Firebase configuration is missing. Connect your project in Firebase Studio.');
+  if (!isValidConfig) {
+    console.warn('Firebase: Ожидание настройки конфигурации. Подключите проект в Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
@@ -23,7 +26,7 @@ export function initializeFirebase() {
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
   } catch (error) {
-    console.error('Failed to initialize Firebase services:', error);
+    console.error('Firebase: Ошибка инициализации сервисов:', error);
   }
 
   return { 
