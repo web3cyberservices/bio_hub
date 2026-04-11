@@ -69,10 +69,11 @@ export default function LoginPage() {
     if (!auth) return;
     setLoading(true);
     try {
+      // Выполняем анонимный вход для быстрого доступа
       await signInAnonymously(auth);
       toast({
-        title: 'Вход выполнен',
-        description: 'Вы вошли через Messenger Max!',
+        title: 'Био-Хаб активирован',
+        description: 'Вы успешно вошли через Messenger Max!',
       });
       router.push('/dashboard');
     } catch (error: any) {
@@ -105,7 +106,7 @@ export default function LoginPage() {
               </div>
             </div>
             <CardTitle className="text-3xl font-black tracking-tighter">Вход в PRO Себя</CardTitle>
-            <CardDescription className="text-white/70 font-medium">
+            <CardDescription className="text-white/70 font-medium text-xs md:text-sm">
               Ваш персональный биометрический хаб
             </CardDescription>
           </CardHeader>
@@ -113,7 +114,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline" 
-                className="h-14 rounded-2xl border-2 font-bold gap-2 hover:bg-primary/5 transition-all"
+                className="h-14 rounded-2xl border-2 font-bold gap-2 hover:bg-primary/5 transition-all text-xs"
                 onClick={handleGoogleLogin}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -126,7 +127,7 @@ export default function LoginPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="h-14 rounded-2xl border-2 font-bold gap-2 hover:bg-[#0088cc]/5 transition-all"
+                className="h-14 rounded-2xl border-2 font-bold gap-2 hover:bg-[#0088cc]/5 transition-all text-xs"
                 onClick={() => handleSocialStub('Telegram')}
               >
                 <Send className="h-5 w-5 text-[#0088cc]" />
