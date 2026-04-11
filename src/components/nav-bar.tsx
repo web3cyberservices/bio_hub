@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -16,12 +15,12 @@ export function NavBar() {
     <nav className="sticky top-0 z-[100] w-full bg-primary/90 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
         
-        {/* Логотип и Название */}
+        {/* Логотип и Название: Показываем всегда, кроме мобильной версии до входа */}
         <Link 
           href="/" 
           className={cn(
             "flex items-center gap-3 group transition-all",
-            !user && "hidden md:flex" // Скрываем логотип на мобильном, если не залогинен (по просьбе)
+            !user && "hidden md:flex" 
           )}
         >
           <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-2xl bg-white shadow-lg group-hover:scale-105 transition-all duration-500">
@@ -42,7 +41,7 @@ export function NavBar() {
           {!loading && (
             <>
               {user ? (
-                /* Если вход выполнен */
+                /* Если вход выполнен: Показываем только логотип (слева) и кнопку кабинета */
                 <Link href="/dashboard">
                   <Button className="rounded-2xl px-4 md:px-8 h-10 md:h-12 font-black uppercase tracking-widest text-[8px] md:text-[10px] bg-white text-primary shadow-xl hover:bg-white/90 transition-transform active:scale-95 flex gap-2">
                     <UserCircle className="h-4 w-4" /> 
@@ -50,7 +49,7 @@ export function NavBar() {
                   </Button>
                 </Link>
               ) : (
-                /* Если вход НЕ выполнен: кнопки по центру на мобилках */
+                /* Если вход НЕ выполнен: Только кнопки входа и регистрации */
                 <div className="flex items-center gap-3 w-full justify-center md:w-auto">
                   <Link href="/login">
                     <Button variant="ghost" className="h-10 md:h-12 font-black text-[9px] md:text-[10px] uppercase tracking-widest text-white hover:bg-white/10 px-3 md:px-6 flex gap-2">
