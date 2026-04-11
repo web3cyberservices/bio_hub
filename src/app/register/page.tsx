@@ -13,7 +13,7 @@ import { Activity, Mail, Send, Zap, Loader2, Sparkles } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { useToast } from '@/hooks/toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -90,7 +90,7 @@ export default function RegisterPage() {
     try {
       await signInAnonymously(auth);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: any)) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
