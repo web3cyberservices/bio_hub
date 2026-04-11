@@ -5,18 +5,22 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
+/**
+ * Инициализирует сервисы Firebase с защитой от пустой конфигурации.
+ */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp | null = null;
   let firestore: Firestore | null = null;
   let auth: Auth | null = null;
 
-  // Тщательная проверка конфигурации
-  const isValidConfig = 
+  // Проверяем, что конфиг не пустой, чтобы избежать ошибки "trimEnd" или "invalid-api-key"
+  const hasValidConfig = 
+    firebaseConfig && 
     firebaseConfig.apiKey && 
-    firebaseConfig.apiKey.length > 10 && 
+    firebaseConfig.apiKey !== "" &&
     firebaseConfig.apiKey !== "undefined";
 
-  if (!isValidConfig) {
+  if (!hasValidConfig) {
     console.warn('Firebase: Ожидание настройки конфигурации. Подключите проект в Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
@@ -26,13 +30,13 @@ export function initializeFirebase() {
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
   } catch (error) {
-    console.error('Firebase: Ошибка инициализации сервисов:', error);
+    console.error('Firebase: Ошибка при инициализации сервисов:', error);
   }
 
   return { 
-    firebaseApp: firebaseApp as FirebaseApp, 
-    firestore: firestore as Firestore, 
-    auth: auth as Auth 
+    firebaseApp, 
+    firestore, 
+    auth 
   };
 }
 

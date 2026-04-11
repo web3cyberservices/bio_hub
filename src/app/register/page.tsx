@@ -30,8 +30,8 @@ export default function RegisterPage() {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Сервисы Firebase не готовы. Подключите проект в Studio.',
+        title: 'Сервис недоступен',
+        description: 'Подключите проект Firebase в Studio.',
       });
       return;
     }
@@ -101,7 +101,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход. Проверьте метод Anonymous Auth.',
+        description: 'Убедитесь, что Anonymous Auth включен.',
       });
     } finally {
       setLoading(false);

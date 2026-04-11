@@ -35,8 +35,8 @@ export default function LoginPage() {
     if (!auth) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Подключите Firebase в Studio.',
+        title: 'Сервис недоступен',
+        description: 'Подключите проект Firebase в Studio.',
       });
       return;
     }
@@ -45,7 +45,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Успешный вход',
-        description: 'Добро пожаловать в личный кабинет!',
+        description: 'Добро пожаловать!',
       });
     } catch (error: any) {
       toast({
@@ -63,7 +63,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase недоступны. Проверьте подключение проекта.',
+        description: 'Подключите проект Firebase в Studio.',
       });
       return;
     }
@@ -94,8 +94,8 @@ export default function LoginPage() {
       console.error('Quick Login Error:', error);
       toast({
         variant: 'destructive',
-        title: 'Ошибка входа',
-        description: 'Не удалось выполнить быстрый вход. Убедитесь, что Anonymous Auth включен.',
+        title: 'Ошибка',
+        description: 'Убедитесь, что Anonymous Auth включен в консоли Firebase.',
       });
     } finally {
       setLoading(false);
