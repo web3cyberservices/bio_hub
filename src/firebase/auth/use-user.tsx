@@ -6,7 +6,7 @@ import { useAuth } from '../provider';
 
 /**
  * Хук для получения текущего пользователя.
- * Завершает загрузку, даже если сервис Auth недоступен.
+ * Теперь корректно завершает загрузку, если сервис Auth недоступен.
  */
 export function useUser() {
   const { auth } = useAuth();
@@ -14,7 +14,6 @@ export function useUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Если auth не инициализирован (нет конфига), сразу выключаем загрузку
     if (!auth) {
       setLoading(false);
       return;
@@ -24,7 +23,7 @@ export function useUser() {
       setUser(currentUser);
       setLoading(false);
     }, (error) => {
-      console.error('Ошибка состояния авторизации:', error);
+      console.error('Auth state error:', error);
       setLoading(false);
     });
 

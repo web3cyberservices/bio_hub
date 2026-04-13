@@ -35,18 +35,15 @@ export default function LoginPage() {
     if (!auth) {
       toast({
         variant: 'destructive',
-        title: 'Сервис недоступен',
-        description: 'Подключите проект Firebase в Studio.',
+        title: 'Ошибка',
+        description: 'Сервис авторизации недоступен. Проверьте настройки Firebase.',
       });
       return;
     }
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast({
-        title: 'Успешный вход',
-        description: 'Добро пожаловать!',
-      });
+      toast({ title: 'Успешный вход' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -62,8 +59,8 @@ export default function LoginPage() {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка инициализации',
-        description: 'Подключите проект Firebase в Studio.',
+        title: 'Ошибка',
+        description: 'Сервисы Firebase еще не подключены в Studio.',
       });
       return;
     }
@@ -85,13 +82,9 @@ export default function LoginPage() {
         }, { merge: true });
       }
 
-      toast({
-        title: 'Тестовый вход выполнен',
-        description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
-      });
+      toast({ title: 'Вход выполнен' });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Quick Login Error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
@@ -106,7 +99,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       <main className="flex flex-1 items-center justify-center p-4">
-        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden">
           <CardHeader className="space-y-2 text-center bg-primary text-white p-8">
             <div className="flex justify-center mb-2">
               <div className="rounded-2xl bg-white p-3 shadow-xl">
@@ -114,14 +107,14 @@ export default function LoginPage() {
               </div>
             </div>
             <CardTitle className="text-3xl font-black tracking-tighter">Вход в PRO Себя</CardTitle>
-            <CardDescription className="text-white/70 font-medium text-xs md:text-sm">
+            <CardDescription className="text-white/70 font-medium text-xs">
               Ваш персональный биометрический хаб
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="grid grid-cols-1 gap-4">
               <Button 
-                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3 shadow-lg hover:bg-foreground/90 transition-all border-b-4 border-black/20"
+                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
                 onClick={() => handleQuickLogin('user')}
                 disabled={loading}
               >
@@ -130,7 +123,7 @@ export default function LoginPage() {
               </Button>
               <Button 
                 variant="outline"
-                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3 shadow-sm hover:bg-foreground/5 transition-all"
+                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3"
                 onClick={() => handleQuickLogin('specialist')}
                 disabled={loading}
               >
@@ -144,47 +137,47 @@ export default function LoginPage() {
                 <span className="w-full border-t border-muted" />
               </div>
               <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                <span className="bg-white px-4 text-muted-foreground/60">Или стандартный вход</span>
+                <span className="bg-white px-4 text-muted-foreground/60">Или почта</span>
               </div>
             </div>
 
             <form onSubmit={handleEmailLogin} className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="name@example.com" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 rounded-xl border-2 focus:ring-primary/20"
+                  className="h-12 rounded-xl"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пароль</Label>
+                <Label htmlFor="password">Пароль</Label>
                 <Input 
                   id="password" 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl border-2 focus:ring-primary/20"
+                  className="h-12 rounded-xl"
                   required
                 />
               </div>
               <Button 
-                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black shadow-xl shadow-primary/20 flex gap-2" 
+                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black shadow-xl" 
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><LogIn className="h-5 w-5" /> Войти по почте</>}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><LogIn className="h-5 w-5 mr-2" /> Войти</>}
               </Button>
             </form>
             
             <div className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Нет аккаунта?{' '}
               <Link href="/register" className="text-primary hover:underline font-black">
-                Зарегистрироваться
+                Создать
               </Link>
             </div>
           </CardContent>

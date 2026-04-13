@@ -6,7 +6,7 @@ import { FirebaseProvider } from './provider';
 
 /**
  * Провайдер, который инициализирует Firebase на стороне клиента.
- * Не блокирует рендеринг детей, даже если Firebase еще не настроен.
+ * Не блокирует рендеринг детей (NavBar и т.д.), даже если Firebase еще не настроен.
  */
 export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
   const [instance, setInstance] = useState<ReturnType<typeof initializeFirebase> | null>(null);

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, User, GraduationCap, Loader2, Sparkles } from 'lucide-react';
+import { Sparkles, Loader2, User, GraduationCap } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -30,8 +30,8 @@ export default function RegisterPage() {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Сервис недоступен',
-        description: 'Подключите проект Firebase в Studio.',
+        title: 'Ошибка',
+        description: 'Сервисы Firebase недоступны.',
       });
       return;
     }
@@ -48,15 +48,12 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       }, { merge: true });
 
-      toast({
-        title: 'Успешная регистрация',
-        description: `Добро пожаловать, ${name}!`,
-      });
+      toast({ title: 'Регистрация успешна' });
       router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка регистрации',
+        title: 'Ошибка',
         description: error.message,
       });
     } finally {
@@ -68,8 +65,8 @@ export default function RegisterPage() {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка инициализации',
-        description: 'Сервисы Firebase недоступны.',
+        title: 'Ошибка',
+        description: 'Firebase еще не настроен.',
       });
       return;
     }
@@ -91,17 +88,13 @@ export default function RegisterPage() {
         }, { merge: true });
       }
 
-      toast({
-        title: 'Тестовый вход выполнен',
-        description: `Вы вошли как ${role === 'user' ? 'пользователь' : 'специалист'}.`,
-      });
+      toast({ title: 'Вход выполнен' });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Quick Login Error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Убедитесь, что Anonymous Auth включен.',
+        description: 'Включите Anonymous Auth в консоли Firebase.',
       });
     } finally {
       setLoading(false);
@@ -112,36 +105,36 @@ export default function RegisterPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       <main className="flex flex-1 items-center justify-center p-4">
-        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden">
           <CardHeader className="space-y-2 text-center bg-primary text-white p-8">
             <div className="flex justify-center mb-2">
               <div className="rounded-2xl bg-white p-3 shadow-xl">
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter">Присоединиться</CardTitle>
-            <CardDescription className="text-white/70 font-medium text-xs md:text-sm">
-              Начните свой путь к Bio-оптимизации
+            <CardTitle className="text-3xl font-black tracking-tighter">Регистрация</CardTitle>
+            <CardDescription className="text-white/70 font-medium text-xs">
+              Присоединяйтесь к Bio-хабу PRO Себя
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="grid grid-cols-1 gap-4">
+             <div className="grid grid-cols-1 gap-4">
               <Button 
-                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3 shadow-lg hover:bg-foreground/90 transition-all border-b-4 border-black/20"
+                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
                 onClick={() => handleQuickLogin('user')}
                 disabled={loading}
               >
                 <User className="h-5 w-5" /> 
-                Тест: Войти как пользователь
+                Тест: Как пользователь
               </Button>
               <Button 
                 variant="outline"
-                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3 shadow-sm hover:bg-foreground/5 transition-all"
+                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3"
                 onClick={() => handleQuickLogin('specialist')}
                 disabled={loading}
               >
                 <GraduationCap className="h-5 w-5" /> 
-                Тест: Войти как специалист
+                Тест: Как специалист
               </Button>
             </div>
 
@@ -157,46 +150,46 @@ export default function RegisterPage() {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid gap-3">
                 <div className="grid gap-1.5">
-                  <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</Label>
+                  <Label htmlFor="name">Имя</Label>
                   <Input 
                     id="name" 
-                    placeholder="Иван Иванов" 
+                    placeholder="Имя" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-12 rounded-xl border-2 focus:ring-primary/20"
+                    className="h-12 rounded-xl"
                     required
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="name@example.com" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 rounded-xl border-2 focus:ring-primary/20"
+                    className="h-12 rounded-xl"
                     required
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пароль</Label>
+                  <Label htmlFor="password">Пароль</Label>
                   <Input 
                     id="password" 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 rounded-xl border-2 focus:ring-primary/20"
+                    className="h-12 rounded-xl"
                     required
                   />
                 </div>
               </div>
               <Button 
-                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black shadow-xl shadow-primary/20 flex gap-2 mt-2" 
+                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black shadow-xl mt-2" 
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 mr-2" />}
                 Создать аккаунт
               </Button>
             </form>
