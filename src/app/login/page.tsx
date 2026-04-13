@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, User, GraduationCap, Loader2, LogIn } from 'lucide-react';
+import { Activity, User, GraduationCap, Loader2, LogIn, Sparkles } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Проверьте настройки Firebase.',
+        description: 'Сервис авторизации недоступен.',
       });
       return;
     }
@@ -60,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервисы Firebase еще не подключены в Studio.',
+        description: 'Firebase не настроен.',
       });
       return;
     }
@@ -88,7 +88,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Убедитесь, что Anonymous Auth включен в консоли Firebase.',
+        description: 'Убедитесь, что Anonymous Auth включен.',
       });
     } finally {
       setLoading(false);
@@ -118,17 +118,8 @@ export default function LoginPage() {
                 onClick={() => handleQuickLogin('user')}
                 disabled={loading}
               >
-                <User className="h-5 w-5" /> 
-                Тест: Войти как пользователь
-              </Button>
-              <Button 
-                variant="outline"
-                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3"
-                onClick={() => handleQuickLogin('specialist')}
-                disabled={loading}
-              >
-                <GraduationCap className="h-5 w-5" /> 
-                Тест: Войти как специалист
+                <Sparkles className="h-5 w-5 text-accent" /> 
+                Тестовый вход (Быстрый)
               </Button>
             </div>
             

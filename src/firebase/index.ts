@@ -14,15 +14,15 @@ export function initializeFirebase() {
   let firestore: Firestore | null = null;
   let auth: Auth | null = null;
 
-  // Проверяем наличие валидного конфига
+  // Проверяем наличие валидного конфига. 
+  // Если ключи не прописаны, возвращаем null-объекты, чтобы не "ронять" приложение.
   const hasValidConfig = 
     firebaseConfig && 
-    firebaseConfig.apiKey && 
-    firebaseConfig.apiKey !== "" &&
+    typeof firebaseConfig.apiKey === 'string' &&
+    firebaseConfig.apiKey.length > 0 &&
     firebaseConfig.apiKey !== "undefined";
 
   if (!hasValidConfig) {
-    console.warn('Firebase: Конфигурация не найдена. Подключите проект в Firebase Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { NavBar } from '@/components/nav-bar';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, ShieldCheck, Zap, Activity, CheckCircle2, TrendingUp, Users } from 'lucide-react';
+import { QuickTestButton } from '@/components/quick-test-button';
+import { ArrowRight, Activity, ShieldCheck, Zap, CheckCircle2, TrendingUp, Users } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -44,16 +45,12 @@ export default function Home() {
               </p>
             </div>
             
-            {/* CTA Buttons - Hidden on mobile */}
-            <div className="hidden sm:flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <QuickTestButton />
               <Link href="/register">
-                <Button size="lg" className="h-16 px-10 text-xl font-black rounded-3xl bg-primary hover:bg-primary/90 shadow-[0_20px_50px_rgba(20,184,166,0.3)] transition-all hover:scale-105 active:scale-95 group">
-                  Начать путь <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button size="lg" variant="ghost" className="h-16 px-10 text-xl font-black rounded-3xl hover:bg-primary/5 border-2 border-transparent hover:border-primary/20 transition-all">
-                  Демо-версия
+                <Button size="lg" variant="ghost" className="h-16 px-10 text-xl font-black rounded-3xl hover:bg-primary/5 border-2 border-transparent hover:border-primary/20 transition-all gap-2">
+                  Регистрация <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
             </div>
