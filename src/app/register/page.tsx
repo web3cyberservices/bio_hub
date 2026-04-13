@@ -66,7 +66,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Firebase еще не настроен.',
+        description: 'Подключите проект в Studio.',
       });
       return;
     }
@@ -189,8 +189,7 @@ export default function RegisterPage() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 mr-2" />}
-                Создать аккаунт
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><Sparkles className="h-5 w-5 mr-2" /> Создать аккаунт</div>}
               </Button>
             </form>
 

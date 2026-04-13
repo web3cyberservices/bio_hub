@@ -15,12 +15,11 @@ export function initializeFirebase() {
   let auth: Auth | null = null;
 
   // Проверяем наличие валидного конфига. 
-  // Если ключи не прописаны, возвращаем null-объекты, чтобы не "ронять" приложение.
+  // API ключ должен быть строкой и иметь длину (обычно > 20 символов).
   const hasValidConfig = 
     firebaseConfig && 
     typeof firebaseConfig.apiKey === 'string' &&
-    firebaseConfig.apiKey.length > 0 &&
-    firebaseConfig.apiKey !== "undefined";
+    firebaseConfig.apiKey.length > 5;
 
   if (!hasValidConfig) {
     return { firebaseApp: null, firestore: null, auth: null };

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, User, GraduationCap, Loader2, LogIn, Sparkles } from 'lucide-react';
+import { Activity, Loader2, LogIn, Sparkles } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -60,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Firebase не настроен.',
+        description: 'Подключите Firebase в Studio.',
       });
       return;
     }
@@ -88,7 +88,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Убедитесь, что Anonymous Auth включен.',
+        description: 'Включите Anonymous Auth в консоли Firebase.',
       });
     } finally {
       setLoading(false);
@@ -161,7 +161,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><LogIn className="h-5 w-5 mr-2" /> Войти</>}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><LogIn className="h-5 w-5 mr-2" /> Войти</div>}
               </Button>
             </form>
             
