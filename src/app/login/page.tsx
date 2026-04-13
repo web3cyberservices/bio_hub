@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен.',
+        description: 'Сервис авторизации недоступен. Подключите Firebase.',
       });
       return;
     }
@@ -60,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Подключите Firebase в Studio.',
+        description: 'Подключите проект в Studio.',
       });
       return;
     }

@@ -22,6 +22,7 @@ export function initializeFirebase() {
     firebaseConfig.apiKey.length > 5;
 
   if (!hasValidConfig) {
+    console.warn('Firebase: Конфигурация отсутствует. Подключите проект в Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 

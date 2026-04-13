@@ -31,7 +31,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервисы Firebase недоступны.',
+        description: 'Сервисы Firebase недоступны. Подключите проект.',
       });
       return;
     }
@@ -126,15 +126,6 @@ export default function RegisterPage() {
               >
                 <User className="h-5 w-5" /> 
                 Тест: Как пользователь
-              </Button>
-              <Button 
-                variant="outline"
-                className="w-full h-16 rounded-2xl border-2 border-foreground text-foreground font-black uppercase tracking-widest text-[11px] gap-3"
-                onClick={() => handleQuickLogin('specialist')}
-                disabled={loading}
-              >
-                <GraduationCap className="h-5 w-5" /> 
-                Тест: Как специалист
               </Button>
             </div>
 
