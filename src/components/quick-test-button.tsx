@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -17,11 +17,12 @@ export function QuickTestButton() {
   const { toast } = useToast();
 
   const handleQuickTest = async () => {
-    if (!auth || !firestore) {
+    // Если ключи не прописаны в Studio
+    if (!auth || !auth.config) {
       toast({
         variant: 'destructive',
-        title: 'Firebase не подключен',
-        description: 'Нажмите кнопку "Connect to Firebase" в Studio.',
+        title: 'Firebase не настроен',
+        description: 'Пожалуйста, нажмите кнопку "Connect to Firebase" в верхней панели Studio.',
       });
       return;
     }
@@ -31,25 +32,28 @@ export function QuickTestButton() {
       const userCredential = await signInAnonymously(auth);
       const user = userCredential.user;
 
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
+      if (firestore) {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          profileType: 'user',
-          createdAt: new Date().toISOString(),
-          displayName: 'Тестовый Пользователь',
-        }, { merge: true });
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+            uid: user.uid,
+            profileType: 'user',
+            createdAt: new Date().toISOString(),
+            displayName: 'Тестовый Пользователь',
+          }, { merge: true });
+        }
       }
 
       toast({ title: 'Вход выполнен', description: 'Добро пожаловать в Bio-хаб!' });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         variant: 'destructive',
-        title: 'Ошибка входа',
-        description: 'Убедитесь, что Anonymous Auth включен в Firebase Console.',
+        title: 'Ошибка авторизации',
+        description: 'Убедитесь, что в Firebase Console (раздел Authentication) ВКЛЮЧЕН метод "Анонимный вход".',
       });
     } finally {
       setLoading(false);

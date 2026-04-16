@@ -7,7 +7,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, LogOut } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,12 +16,14 @@ import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
-import { useUser, useFirestore, useDoc } from '@/firebase';
+import { useUser, useFirestore, useDoc, useAuth } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
+  const { auth } = useAuth();
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,6 +48,13 @@ export default function DashboardPage() {
   }, [firestore, user, dateKey]);
 
   const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+
+  const handleLogout = async () => {
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
+  };
 
   if (!selectedDate || userLoading) {
     return (
@@ -132,12 +141,15 @@ export default function DashboardPage() {
             </Button>
           </div>
           
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex items-center gap-4">
             <UnifiedDataEntry selectedDate={selectedDate}>
               <Button className="rounded-2xl h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-6 shadow-lg shadow-primary/20">
                 <Plus className="h-4 w-4" /> Добавить данные
               </Button>
             </UnifiedDataEntry>
+            <Button variant="outline" size="icon" onClick={handleLogout} className="rounded-2xl h-12 w-12 border-primary/20 text-primary hover:bg-primary/5">
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>

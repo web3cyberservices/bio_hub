@@ -6,22 +6,24 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Инициализирует сервисы Firebase с максимальной защитой.
- * Предотвращает ошибку trimEnd, возникающую при пустых ключах.
+ * Инициализирует сервисы Firebase.
+ * Возвращает null для сервисов, если конфигурация не валидна (пустые строки).
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  // Строгая проверка валидности конфигурации
+  // Проверяем, что ключи не пустые (Studio должна их заполнить)
   const isConfigValid = 
     firebaseConfig && 
-    typeof firebaseConfig.apiKey === 'string' && 
-    firebaseConfig.apiKey.trim().length > 10; // API ключ обычно длиннее 10 символов
+    firebaseConfig.apiKey && 
+    firebaseConfig.apiKey.length > 0 &&
+    firebaseConfig.projectId &&
+    firebaseConfig.projectId.length > 0;
 
   if (!isConfigValid) {
-    console.warn('Firebase: Проект не подключен или конфигурация пуста. Используйте Studio для подключения.');
+    console.warn('Firebase: Конфигурация не найдена. Подключите проект в Studio (кнопка "Connect to Firebase").');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
