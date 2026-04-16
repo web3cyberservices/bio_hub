@@ -35,16 +35,16 @@
     @apply bg-background text-foreground font-body antialiased selection:bg-primary/20 selection:text-primary;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tight font-bold;
+    @apply font-headline tracking-tighter font-bold;
   }
 }
 
 .premium-card {
-  @apply bg-white border border-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] rounded-[3rem] transition-all duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1;
+  @apply bg-white/80 backdrop-blur-xl border border-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] rounded-[3.5rem] transition-all duration-700 hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.12)] hover:-translate-y-1.5;
 }
 
 .glass-panel {
-  @apply bg-white/70 backdrop-blur-3xl border border-white/40 shadow-2xl rounded-[3rem];
+  @apply bg-white/70 backdrop-blur-3xl border border-white/40 shadow-2xl rounded-[3.5rem];
 }
 
 .text-gradient {
@@ -65,10 +65,19 @@
 
 @keyframes float {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
+  50% { transform: translateY(-20px); }
   100% { transform: translateY(0px); }
 }
 
 .macro-ring {
   @apply transition-all duration-1000 ease-out;
+  stroke-dashoffset: var(--offset, 100);
+}
+
+.bio-ring-glow {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+}
+
+.dock-blur {
+  @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.1)];
 }
