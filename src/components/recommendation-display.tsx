@@ -5,19 +5,31 @@ import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, ChevronRight, ChevronLeft, Zap, Footprints, Moon, Heart } from 'lucide-react';
+import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, ChevronRight, ChevronLeft, Zap, Footprints, Moon, Heart, Droplet, LineChart, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
   mode?: 'dashboard' | 'meals';
 }
 
+// Демо-данные для графика веса
+const weightData = [
+  { date: '01.03', weight: 75.5 },
+  { date: '05.03', weight: 74.8 },
+  { date: '10.03', weight: 74.2 },
+  { date: '15.03', weight: 74.5 },
+  { date: '20.03', weight: 73.9 },
+  { date: '25.03', weight: 73.5 },
+  { date: 'Сегодня', weight: 73.2 },
+];
+
 export function RecommendationDisplay({ data, mode = 'dashboard' }: RecommendationDisplayProps) {
   const { recommendations, macros, currentIntake, mealPlan, activityAnalysis } = data;
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
+  const [waterGlasses, setWaterGlasses] = useState(5);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -35,7 +47,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     };
   };
 
-  // Данные для круговых диаграмм прогресса КБЖУ
   const nutrients = [
     { name: 'Белки', current: currentIntake?.protein || 0, goal: macros.protein, color: 'hsl(var(--primary))', icon: Beef },
     { name: 'Жиры', current: currentIntake?.fat || 0, goal: macros.fat, color: 'hsl(var(--secondary))', icon: Droplets },
@@ -46,7 +57,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     return (
       <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
         
-        {/* КБЖУ Счётчики (Круги прогресса) */}
+        {/* КБЖУ Счётчики (FatSecret Style) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="premium-card p-6 border-none bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center text-center">
             <div className="relative w-32 h-32 flex items-center justify-center">
@@ -57,13 +68,13 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                   className="text-primary transition-all duration-1000" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black leading-none">{currentIntake?.calories}</span>
-                <span className="text-[7px] font-black uppercase text-muted-foreground">из {macros.calories}</span>
+                <span className="text-2xl font-black leading-none">{macros.calories - (currentIntake?.calories || 0)}</span>
+                <span className="text-[7px] font-black uppercase text-muted-foreground">осталось ккал</span>
                 <Flame className="h-3 w-3 text-primary mt-1" />
               </div>
             </div>
-            <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Калории (ккал)</h4>
-            <p className="text-[9px] font-bold text-primary mt-1">Осталось: {Math.max(0, macros.calories - (currentIntake?.calories || 0))}</p>
+            <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Баланс энергии</h4>
+            <p className="text-[9px] font-bold text-primary mt-1">Цель: {macros.calories} ккал</p>
           </Card>
 
           {nutrients.map((n, i) => (
@@ -83,12 +94,93 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                 </div>
               </div>
               <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{n.name}</h4>
-              <p className="text-[9px] font-bold mt-1" style={{ color: n.color }}>Ещё: {Math.max(0, n.goal - n.current)}г</p>
+              <p className="text-[9px] font-bold mt-1" style={{ color: n.color }}>{Math.round((n.current / n.goal) * 100)}% от нормы</p>
             </Card>
           ))}
         </div>
 
-        {/* Биометрия и Гаджеты */}
+        {/* Секция Вода и Вес (YAZIO Style) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Трекер воды */}
+          <Card className="premium-card border-none bg-white/80 backdrop-blur-xl p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Droplet className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Гидратация</h3>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Цель: 2500 мл (10 стаканов)</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-blue-500">{waterGlasses * 250}<span className="text-xs ml-1 opacity-50">мл</span></p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 justify-between mb-8">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setWaterGlasses(i + 1)}
+                  className={`w-10 h-12 rounded-xl transition-all flex items-center justify-center ${i < waterGlasses ? 'bg-blue-500 text-white shadow-lg shadow-blue-200' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`}
+                >
+                  <Droplet className={i < waterGlasses ? 'fill-current' : ''} size={18} />
+                </button>
+              ))}
+            </div>
+            
+            <Button 
+              className="w-full h-12 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 font-black text-[10px] uppercase tracking-widest"
+              onClick={() => setWaterGlasses(prev => prev + 1)}
+            >
+              Добавить 250 мл
+            </Button>
+          </Card>
+
+          {/* График веса */}
+          <Card className="premium-card border-none bg-white/80 backdrop-blur-xl p-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+                  <TrendingDown className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Динамика веса</h3>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">-2.3 кг за месяц</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black">73.2<span className="text-xs ml-1 opacity-50">кг</span></p>
+              </div>
+            </div>
+            
+            <div className="h-[150px] w-full mt-4">
+              {mounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weightData}>
+                    <defs>
+                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                    <XAxis dataKey="date" hide />
+                    <YAxis hide domain={['dataMin - 1', 'dataMax + 1']} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
+                      labelStyle={{ fontWeight: 'bold' }}
+                    />
+                    <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorWeight)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Биометрия (Apple Health Style) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[
             { label: 'Шаги сегодня', value: '8,420', unit: 'шагов', icon: Footprints, color: 'text-blue-500', bg: 'bg-blue-50' },
@@ -118,7 +210,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                 <Zap className="h-6 w-6 text-white fill-white" />
               </div>
               <div className="flex-1 space-y-1">
-                <h3 className="text-lg md:text-xl font-black tracking-tight">AI Био-Анализ</h3>
+                <h3 className="text-lg md:text-xl font-black tracking-tight">Интеллектуальный отчет</h3>
                 <p className="text-white/70 font-medium text-sm md:text-base italic">{activityAnalysis}</p>
               </div>
             </div>
@@ -162,8 +254,8 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                   <Utensils className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl md:text-2xl font-black tracking-tight">Гастрономический план</CardTitle>
-                  <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Настроено под ваши биоритмы</CardDescription>
+                  <CardTitle className="text-xl md:text-2xl font-black tracking-tight">Дневник питания</CardTitle>
+                  <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Детальный расчет по приемам пищи</CardDescription>
                 </div>
               </div>
               {mealPlan.length > 1 && (

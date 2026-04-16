@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -204,8 +203,8 @@ export function ProfileCabinet() {
     );
   }
 
-  const inputClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 focus:ring-2 focus:ring-primary/20";
-  const selectClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6";
+  const inputClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all";
+  const selectClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 transition-all";
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -214,12 +213,12 @@ export function ProfileCabinet() {
           <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
         </div>
         <div>
-          <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Личный кабинет</h2>
+          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground">Личный кабинет</h2>
           <p className="text-muted-foreground text-xs md:text-base font-medium">Управление вашим биометрическим профилем.</p>
         </div>
       </div>
 
-      <Card className="premium-card overflow-hidden border-none shadow-2xl">
+      <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
@@ -339,7 +338,7 @@ export function ProfileCabinet() {
                       <FormControl>
                         <Textarea 
                           placeholder="Например: Гемоглобин 145, Холестерин 4.2..." 
-                          className="min-h-[200px] rounded-[1.5rem] bg-white border-muted p-6 text-sm font-medium focus:ring-4 focus:ring-primary/10" 
+                          className="min-h-[200px] rounded-[1.5rem] bg-white border-muted p-6 text-sm font-medium focus:ring-4 focus:ring-primary/10 shadow-inner" 
                           {...field} 
                         />
                       </FormControl>
@@ -368,30 +367,30 @@ export function ProfileCabinet() {
                     </div>
 
                     {showCamera && (
-                      <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-video">
+                      <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-video shadow-2xl">
                         <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
                         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                          <Button type="button" onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                          <Button type="button" onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary hover:scale-110 transition-all"><Camera className="h-6 w-6" /></Button>
                           <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
                         </div>
                       </div>
                     )}
 
                     {labFile && !showCamera && (
-                      <div className="relative rounded-[2rem] overflow-hidden border p-4 bg-muted/20 group">
+                      <div className="relative rounded-[2rem] overflow-hidden border p-4 bg-muted/20 group animate-in zoom-in duration-300">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                             {labFile.startsWith('data:image') ? <ImageIcon className="h-6 w-6 text-primary" /> : <FileText className="h-6 w-6 text-primary" />}
                           </div>
                           <div className="flex-1 overflow-hidden">
                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Документ загружен</p>
-                            <p className="text-xs font-bold truncate">Прикрепленный результат анализа</p>
+                            <p className="text-xs font-bold truncate">Результат анализа</p>
                           </div>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="text-destructive"
+                            className="text-destructive hover:bg-destructive/10"
                             onClick={() => {
                               setLabFile(null);
                               form.setValue('labResultsFile', '');
@@ -401,7 +400,7 @@ export function ProfileCabinet() {
                           </Button>
                         </div>
                         {labFile.startsWith('data:image') && (
-                          <div className="mt-4 rounded-xl overflow-hidden aspect-video">
+                          <div className="mt-4 rounded-xl overflow-hidden aspect-video border-2 border-white">
                             <img src={labFile} alt="Analysis Preview" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -409,15 +408,15 @@ export function ProfileCabinet() {
                     )}
                   </div>
                 </div>
-                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-2 px-2">
-                  ИИ проанализирует загруженные документы и учтет их в рекомендациях.
+                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-2 px-2 text-muted-foreground/60">
+                  ИИ проанализирует загруженные документы и учтет их в ваших биометрических рекомендациях.
                 </CardDescription>
               </div>
 
               <Button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
+                className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all active:scale-95"
               >
                 {loading ? (
                   <><Loader2 className="mr-4 animate-spin h-8 w-8" /> Сохранение...</>
