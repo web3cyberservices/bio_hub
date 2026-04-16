@@ -23,7 +23,7 @@
     --border: 140 10% 90%;
     --input: 140 10% 90%;
     --ring: 142 45% 44%;
-    --radius: 2rem;
+    --radius: 2.5rem;
   }
 }
 
@@ -40,11 +40,11 @@
 }
 
 .premium-card {
-  @apply bg-white border border-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1;
+  @apply bg-white border border-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] rounded-[3rem] transition-all duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1;
 }
 
-.glass-card {
-  @apply bg-white/70 backdrop-blur-2xl border border-white/40 shadow-xl rounded-[2.5rem];
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-3xl border border-white/40 shadow-2xl rounded-[3rem];
 }
 
 .text-gradient {
@@ -60,11 +60,15 @@
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 8s ease-in-out infinite;
 }
 
 @keyframes float {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-15px); }
   100% { transform: translateY(0px); }
+}
+
+.macro-ring {
+  @apply transition-all duration-1000 ease-out;
 }
