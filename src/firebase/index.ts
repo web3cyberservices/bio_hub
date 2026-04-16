@@ -1,29 +1,29 @@
 'use client';
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Инициализирует сервисы Firebase.
- * Возвращает null для сервисов, если конфигурация не валидна (пустые строки).
+ * Безопасная инициализация Firebase.
+ * Возвращает null для сервисов, если конфигурация еще не заполнена в Studio.
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  // Проверяем, что ключи не пустые (Studio должна их заполнить)
+  // Проверка на наличие ключей. Studio должна заполнить их в config.ts.
   const isConfigValid = 
     firebaseConfig && 
-    firebaseConfig.apiKey && 
-    firebaseConfig.apiKey.length > 0 &&
-    firebaseConfig.projectId &&
-    firebaseConfig.projectId.length > 0;
+    typeof firebaseConfig.apiKey === 'string' && 
+    firebaseConfig.apiKey.trim().length > 0 &&
+    typeof firebaseConfig.projectId === 'string' &&
+    firebaseConfig.projectId.trim().length > 0;
 
   if (!isConfigValid) {
-    console.warn('Firebase: Конфигурация не найдена. Подключите проект в Studio (кнопка "Connect to Firebase").');
+    console.warn('Firebase: Ожидание подключения проекта в Studio...');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 

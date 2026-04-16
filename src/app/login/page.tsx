@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Подключите проект Firebase в Studio.',
+        description: 'Сервис авторизации не настроен. Нажмите "Connect to Firebase" в Studio.',
       });
       return;
     }
@@ -60,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Подключите проект в Studio для работы авторизации.',
+        description: 'Подключите проект через кнопку "Connect to Firebase" в Studio.',
       });
       return;
     }

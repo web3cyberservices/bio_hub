@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -17,12 +17,12 @@ export function QuickTestButton() {
   const { toast } = useToast();
 
   const handleQuickTest = async () => {
-    // Если ключи не прописаны в Studio
-    if (!auth || !auth.config) {
+    // Если Firebase еще не инициализирован (нет ключей в config.ts)
+    if (!auth) {
       toast({
         variant: 'destructive',
-        title: 'Firebase не настроен',
-        description: 'Пожалуйста, нажмите кнопку "Connect to Firebase" в верхней панели Studio.',
+        title: 'Био-хаб не готов',
+        description: 'Пожалуйста, нажмите кнопку "Connect to Firebase" в верхней панели Firebase Studio, чтобы активировать проект.',
       });
       return;
     }
@@ -46,14 +46,14 @@ export function QuickTestButton() {
         }
       }
 
-      toast({ title: 'Вход выполнен', description: 'Добро пожаловать в Bio-хаб!' });
+      toast({ title: 'Доступ разрешен', description: 'Добро пожаловать в Bio-хаб!' });
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка авторизации',
-        description: 'Убедитесь, что в Firebase Console (раздел Authentication) ВКЛЮЧЕН метод "Анонимный вход".',
+        description: 'Убедитесь, что в Firebase Console (Authentication) включен "Anonymous sign-in".',
       });
     } finally {
       setLoading(false);
