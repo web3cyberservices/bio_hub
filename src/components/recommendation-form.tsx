@@ -110,7 +110,16 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         setDoc(doc(firestore, 'users', user.uid), profileData, { merge: true });
       }
 
-      const { steps, avgHeartRate, sleepDurationHours, bloodPressure, ...biometrics } = values;
+      // Извлекаем только те поля, которые ожидаются схемой Genkit
+      const { 
+        steps, 
+        avgHeartRate, 
+        sleepDurationHours, 
+        bloodPressure, 
+        planDuration, // Исключаем planDuration, так как его нет в GenerateRecommendationsInputSchema
+        ...biometrics 
+      } = values;
+
       const result = await generatePersonalizedRecommendations({
         ...biometrics,
         targetDate: selectedDate.toISOString(),
@@ -123,8 +132,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       });
       
       onResult(result);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка анализа ИИ' });
+    } catch (error: any) {
+      console.error('AI Analysis Error Detail:', error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка анализа ИИ',
+        description: error.message || 'Проверьте подключение к интернету или попробуйте позже.'
+      });
     } finally {
       setLoading(false);
     }
@@ -179,8 +193,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                     <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
                       <SelectItem value="малоактивный">Малая</SelectItem>
+                      <SelectItem value="среднеактивный">Среднеактивная</SelectItem>
                       <SelectItem value="средний">Средняя</SelectItem>
                       <SelectItem value="активный">Высокая</SelectItem>
+                      <SelectItem value="перенагрузка">Интенсивная</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

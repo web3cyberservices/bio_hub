@@ -102,7 +102,7 @@ const recommendationPrompt = ai.definePrompt({
 1. Рассчитайте Bio-Score (0-100) на основе веса, активности, сна и вредных привычек.
 2. Подберите оптимальное окно интервального голодания (например, 16:8) исходя из целей.
 3. Оцените микронутриенты (Железо, Магний, Омега-3, Вит D), которые критичны для этого пользователя.
-4. Сформируйте Meal Plan. Используйте ID изображений: breakfast-omelette, breakfast-oatmeal, lunch-salmon, dinner-steak, snack-nuts.
+4. Сформируйте Meal Plan минимум на один день. Используйте ТОЛЬКО следующие ID изображений: breakfast-omelette, breakfast-oatmeal, lunch-salmon, dinner-steak, snack-nuts.
 
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
