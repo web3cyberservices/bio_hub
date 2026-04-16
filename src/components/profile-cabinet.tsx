@@ -34,8 +34,8 @@ import {
   Save, 
   Loader2,
   Stethoscope,
-  Smoking,
-  Wine
+  Activity,
+  Settings
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc } from '@/firebase';
