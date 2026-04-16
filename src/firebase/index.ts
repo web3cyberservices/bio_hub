@@ -15,14 +15,13 @@ export function initializeFirebase() {
   let auth: Auth | null = null;
 
   // Проверяем наличие валидного конфига. 
-  // API ключ должен быть строкой и иметь длину (обычно > 20 символов).
   const hasValidConfig = 
     firebaseConfig && 
     typeof firebaseConfig.apiKey === 'string' &&
-    firebaseConfig.apiKey.length > 5;
+    firebaseConfig.apiKey.trim().length > 5;
 
   if (!hasValidConfig) {
-    console.warn('Firebase: Конфигурация отсутствует. Подключите проект в Studio.');
+    console.warn('Firebase: Конфигурация отсутствует. Нажмите "Connect to Firebase" в Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 

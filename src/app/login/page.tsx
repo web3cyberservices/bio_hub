@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Подключите Firebase.',
+        description: 'Сервис авторизации недоступен. Нажмите "Connect to Firebase" в Studio.',
       });
       return;
     }
@@ -55,7 +55,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = async (role: 'user' | 'specialist') => {
+  const handleQuickLogin = async () => {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
@@ -76,9 +76,9 @@ export default function LoginPage() {
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: testUser.uid,
-          profileType: role,
+          profileType: 'user',
           createdAt: new Date().toISOString(),
-          displayName: role === 'user' ? 'Тестовый Пользователь' : 'Тестовый Специалист',
+          displayName: 'Тестовый Пользователь',
         }, { merge: true });
       }
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-1 gap-4">
               <Button 
                 className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
-                onClick={() => handleQuickLogin('user')}
+                onClick={handleQuickLogin}
                 disabled={loading}
               >
                 <Sparkles className="h-5 w-5 text-accent" /> 
