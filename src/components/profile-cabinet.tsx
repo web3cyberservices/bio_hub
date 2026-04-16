@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,19 +23,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription } from '@/components/ui/card';
 import { 
   User, 
   Scale, 
   Ruler, 
   Calendar, 
   FlaskConical, 
-  CheckCircle2, 
   Save, 
   Loader2,
-  Stethoscope,
   Activity,
-  Settings
+  Settings,
+  Camera,
+  Upload,
+  X,
+  FileText,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc } from '@/firebase';
@@ -51,6 +54,7 @@ const profileSchema = z.object({
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   labResults: z.string().optional(),
+  labResultsFile: z.string().optional(),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -60,6 +64,9 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [labFile, setLabFile] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
   const { data: userData, loading: docLoading } = useDoc<any>(userDocRef);
@@ -76,10 +83,10 @@ export function ProfileCabinet() {
       smoking: 'нет',
       alcohol: 'не употребляю',
       labResults: '',
+      labResultsFile: '',
     },
   });
 
-  // Заполнение формы данными из Firestore при загрузке
   useEffect(() => {
     if (userData) {
       form.reset({
@@ -92,16 +99,76 @@ export function ProfileCabinet() {
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
         labResults: userData.labResults || '',
+        labResultsFile: userData.labResultsFile || '',
       });
+      if (userData.labResultsFile) {
+        setLabFile(userData.labResultsFile);
+      }
     }
   }, [userData, form]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setLabFile(base64);
+        form.setValue('labResultsFile', base64);
+        setShowCamera(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startCamera = async () => {
+    setShowCamera(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка камеры',
+        description: 'Не удалось получить доступ к камере.',
+      });
+      setShowCamera(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoRef.current, 0, 0);
+        const base64 = canvas.toDataURL('image/jpeg');
+        setLabFile(base64);
+        form.setValue('labResultsFile', base64);
+        stopCamera();
+      }
+    }
+  };
 
   async function onSubmit(values: ProfileValues) {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Firebase не подключен. Нажмите "Connect to Firebase" в Studio.',
+        description: 'Firebase не подключен.',
       });
       return;
     }
@@ -115,13 +182,13 @@ export function ProfileCabinet() {
 
       toast({
         title: 'Профиль обновлен',
-        description: 'Ваши биометрические данные успешно сохранены.',
+        description: 'Все данные, включая анализы, сохранены.',
       });
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Ошибка сохранения',
-        description: 'Не удалось обновить данные профиля.',
+        description: 'Не удалось обновить данные.',
       });
     } finally {
       setLoading(false);
@@ -220,7 +287,7 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Привычки */}
+              {/* Образ жизни */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />
@@ -257,28 +324,94 @@ export function ProfileCabinet() {
               </div>
 
               {/* Анализы */}
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <FlaskConical className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Медицинские анализы</h3>
                 </div>
-                <FormField control={form.control} name="labResults" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
-                      Введите результаты анализов из бел. медцентров (Инвитро, Синэво, Лодэ и др.)
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Например: Гемоглобин 145, Холестерин 4.2, Витамин D 35..." 
-                        className="min-h-[150px] rounded-[1.5rem] bg-white border-muted p-6 text-sm font-medium focus:ring-4 focus:ring-primary/10" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-2 px-2">
-                      ИИ учтет эти данные при формировании ваших рекомендаций и плана питания.
-                    </CardDescription>
-                  </FormItem>
-                )} />
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <FormField control={form.control} name="labResults" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
+                        Текстовое описание показателей
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Например: Гемоглобин 145, Холестерин 4.2..." 
+                          className="min-h-[200px] rounded-[1.5rem] bg-white border-muted p-6 text-sm font-medium focus:ring-4 focus:ring-primary/10" 
+                          {...field} 
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )} />
+
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Прикрепить фото или файл бланка</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all"
+                        onClick={startCamera}
+                      >
+                        <Camera className="h-7 w-7 text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Снять фото</span>
+                      </Button>
+                      <label className="cursor-pointer">
+                        <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all">
+                          <Upload className="h-7 w-7 text-primary" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Файл</span>
+                        </div>
+                        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
+                      </label>
+                    </div>
+
+                    {showCamera && (
+                      <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-video">
+                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                          <Button type="button" onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                          <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {labFile && !showCamera && (
+                      <div className="relative rounded-[2rem] overflow-hidden border p-4 bg-muted/20 group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                            {labFile.startsWith('data:image') ? <ImageIcon className="h-6 w-6 text-primary" /> : <FileText className="h-6 w-6 text-primary" />}
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Документ загружен</p>
+                            <p className="text-xs font-bold truncate">Прикрепленный результат анализа</p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() => {
+                              setLabFile(null);
+                              form.setValue('labResultsFile', '');
+                            }}
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
+                        </div>
+                        {labFile.startsWith('data:image') && (
+                          <div className="mt-4 rounded-xl overflow-hidden aspect-video">
+                            <img src={labFile} alt="Analysis Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-2 px-2">
+                  ИИ проанализирует загруженные документы и учтет их в рекомендациях.
+                </CardDescription>
               </div>
 
               <Button 
@@ -289,7 +422,7 @@ export function ProfileCabinet() {
                 {loading ? (
                   <><Loader2 className="mr-4 animate-spin h-8 w-8" /> Сохранение...</>
                 ) : (
-                  <><Save className="mr-4 h-8 w-8" /> Сохранить в Bio-Hub</>
+                  <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>
                 )}
               </Button>
             </form>
