@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Нажмите "Connect to Firebase" в Studio.',
+        description: 'Сервис авторизации недоступен. Подключите проект Firebase.',
       });
       return;
     }
@@ -60,7 +60,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Подключите проект в Studio.',
+        description: 'Подключите проект в Studio для работы авторизации.',
       });
       return;
     }
@@ -112,16 +112,14 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="grid grid-cols-1 gap-4">
-              <Button 
-                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
-                onClick={handleQuickLogin}
-                disabled={loading}
-              >
-                <Sparkles className="h-5 w-5 text-accent" /> 
-                Тестовый вход (Быстрый)
-              </Button>
-            </div>
+            <Button 
+              className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
+              onClick={handleQuickLogin}
+              disabled={loading}
+            >
+              <Sparkles className="h-5 w-5 text-accent" /> 
+              Тестовый вход (Быстрый)
+            </Button>
             
             <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">

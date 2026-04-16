@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, User, GraduationCap } from 'lucide-react';
+import { Sparkles, Loader2, User } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -31,7 +31,7 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервисы Firebase недоступны. Подключите проект.',
+        description: 'Сервисы Firebase недоступны. Подключите проект в Studio.',
       });
       return;
     }
@@ -61,7 +61,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleQuickLogin = async (role: 'user' | 'specialist') => {
+  const handleQuickLogin = async () => {
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
@@ -82,9 +82,9 @@ export default function RegisterPage() {
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: testUser.uid,
-          profileType: role,
+          profileType: 'user',
           createdAt: new Date().toISOString(),
-          displayName: role === 'user' ? 'Тестовый Пользователь' : 'Тестовый Специалист',
+          displayName: 'Тестовый Пользователь',
         }, { merge: true });
       }
 
@@ -118,16 +118,14 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-             <div className="grid grid-cols-1 gap-4">
-              <Button 
-                className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
-                onClick={() => handleQuickLogin('user')}
-                disabled={loading}
-              >
-                <User className="h-5 w-5" /> 
-                Тест: Как пользователь
-              </Button>
-            </div>
+            <Button 
+              className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
+              onClick={handleQuickLogin}
+              disabled={loading}
+            >
+              <User className="h-5 w-5" /> 
+              Тест: Быстрый старт
+            </Button>
 
             <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">

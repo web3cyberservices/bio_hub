@@ -7,21 +7,20 @@ import { firebaseConfig } from './config';
 
 /**
  * Инициализирует сервисы Firebase с защитой от пустой конфигурации.
- * Предотвращает ошибку "trimEnd" при отсутствии API-ключа.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp | null = null;
   let firestore: Firestore | null = null;
   let auth: Auth | null = null;
 
-  // Проверяем наличие валидного конфига. 
+  // Проверяем наличие валидного конфига перед инициализацией
   const hasValidConfig = 
     firebaseConfig && 
-    typeof firebaseConfig.apiKey === 'string' &&
-    firebaseConfig.apiKey.trim().length > 5;
+    typeof firebaseConfig.apiKey === 'string' && 
+    firebaseConfig.apiKey.length > 10;
 
   if (!hasValidConfig) {
-    console.warn('Firebase: Конфигурация отсутствует. Нажмите "Connect to Firebase" в Studio.');
+    console.warn('Firebase Config: Не обнаружен или пуст. Подключите проект в Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
@@ -30,7 +29,7 @@ export function initializeFirebase() {
     firestore = getFirestore(firebaseApp);
     auth = getAuth(firebaseApp);
   } catch (error) {
-    console.error('Firebase: Ошибка при инициализации сервисов:', error);
+    console.error('Firebase Initialization Error:', error);
   }
 
   return { 
