@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 140 30% 96%; /* Pale mint background #F0F7F2 */
-    --foreground: 140 40% 10%;
+    --background: 140 30% 98%; /* Ultra light mint #F7FAF8 */
+    --foreground: 140 50% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 140 40% 15%;
+    --card-foreground: 140 50% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 140 40% 15%;
-    --primary: 142 45% 44%; /* Medical Green */
+    --popover-foreground: 140 50% 10%;
+    --primary: 142 45% 44%; /* Deep Medical Green */
     --primary-foreground: 0 0% 100%;
     --secondary: 24 95% 53%; /* Energy Orange */
     --secondary-foreground: 0 0% 100%;
-    --muted: 140 10% 90%;
-    --muted-foreground: 140 10% 40%;
+    --muted: 140 10% 94%;
+    --muted-foreground: 140 10% 45%;
     --accent: 45 93% 47%; /* Gold Accent */
-    --accent-foreground: 140 40% 15%;
+    --accent-foreground: 140 50% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 140 10% 85%;
-    --input: 140 10% 85%;
+    --border: 140 10% 90%;
+    --input: 140 10% 90%;
     --ring: 142 45% 44%;
-    --radius: 2.5rem;
+    --radius: 2rem;
   }
 }
 
@@ -32,23 +32,23 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/20 selection:text-primary;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tighter;
+    @apply font-headline tracking-tight font-bold;
   }
 }
 
 .premium-card {
-  @apply bg-white border border-white/50 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.08)] rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.12)] hover:-translate-y-1;
+  @apply bg-white border border-white/60 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] rounded-[2.5rem] transition-all duration-500 hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-1;
 }
 
-.glass-panel {
-  @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-xl;
+.glass-card {
+  @apply bg-white/70 backdrop-blur-2xl border border-white/40 shadow-xl rounded-[2.5rem];
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground to-primary/60;
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground/90 to-primary/70;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -57,4 +57,14 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
