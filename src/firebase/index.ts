@@ -1,40 +1,46 @@
 'use client';
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
+
+interface FirebaseInstance {
+  firebaseApp: FirebaseApp | null;
+  firestore: Firestore | null;
+  auth: Auth | null;
+}
 
 /**
  * Безопасная инициализация Firebase.
  * Возвращает null для сервисов, если конфигурация еще не заполнена в Studio.
+ * Это предотвращает ошибку trimEnd и другие сбои при пустых ключах.
  */
-export function initializeFirebase() {
+export function initializeFirebase(): FirebaseInstance {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  // Проверка на наличие ключей. Studio должна заполнить их в config.ts.
+  // Проверка валидности конфигурации
+  const hasKey = (key: string | undefined) => typeof key === 'string' && key.length > 10;
+  
   const isConfigValid = 
     firebaseConfig && 
-    typeof firebaseConfig.apiKey === 'string' && 
-    firebaseConfig.apiKey.trim().length > 0 &&
-    typeof firebaseConfig.projectId === 'string' &&
-    firebaseConfig.projectId.trim().length > 0;
+    hasKey(firebaseConfig.apiKey) && 
+    hasKey(firebaseConfig.projectId);
 
   if (!isConfigValid) {
-    console.warn('Firebase: Ожидание подключения проекта в Studio...');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
   try {
-    const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    const firestore = getFirestore(firebaseApp);
-    const auth = getAuth(firebaseApp);
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
     
     return { 
-      firebaseApp, 
-      firestore, 
+      firebaseApp: app, 
+      firestore: db, 
       auth 
     };
   } catch (error) {

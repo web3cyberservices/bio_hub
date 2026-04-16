@@ -17,12 +17,12 @@ export function QuickTestButton() {
   const { toast } = useToast();
 
   const handleQuickTest = async () => {
-    // Если Firebase еще не инициализирован (нет ключей в config.ts)
+    // Проверка на наличие инициализированного Auth
     if (!auth) {
       toast({
         variant: 'destructive',
-        title: 'Био-хаб не готов',
-        description: 'Пожалуйста, нажмите кнопку "Connect to Firebase" в верхней панели Firebase Studio, чтобы активировать проект.',
+        title: 'Био-хаб не подключен',
+        description: 'Пожалуйста, нажмите кнопку "Connect to Firebase" в верхней части Firebase Studio.',
       });
       return;
     }
@@ -53,7 +53,7 @@ export function QuickTestButton() {
       toast({
         variant: 'destructive',
         title: 'Ошибка авторизации',
-        description: 'Убедитесь, что в Firebase Console (Authentication) включен "Anonymous sign-in".',
+        description: 'Убедитесь, что в Firebase Console включен метод "Anonymous".',
       });
     } finally {
       setLoading(false);

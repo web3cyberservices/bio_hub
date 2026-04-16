@@ -6,7 +6,7 @@ import { useAuth } from '../provider';
 
 /**
  * Хук для получения текущего пользователя.
- * Теперь корректно завершает загрузку, если сервис Auth недоступен.
+ * Безопасно завершает загрузку, если сервис Auth недоступен.
  */
 export function useUser() {
   const { auth } = useAuth();
@@ -23,7 +23,6 @@ export function useUser() {
       setUser(currentUser);
       setLoading(false);
     }, (error) => {
-      console.error('Auth state error:', error);
       setLoading(false);
     });
 
