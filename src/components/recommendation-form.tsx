@@ -37,7 +37,8 @@ import {
   RefreshCw,
   Footprints,
   Heart,
-  Moon
+  Moon,
+  Activity
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
@@ -55,6 +56,7 @@ const formSchema = z.object({
   steps: z.coerce.number().optional(),
   avgHeartRate: z.coerce.number().optional(),
   sleepDurationHours: z.coerce.number().optional(),
+  bloodPressure: z.string().optional(),
   planDuration: z.enum(['день', 'неделя']).default('день'),
 });
 
@@ -84,6 +86,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       steps: 6500,
       avgHeartRate: 72,
       sleepDurationHours: 7.5,
+      bloodPressure: '120/80',
       planDuration: 'день',
     },
   });
@@ -93,9 +96,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     await new Promise(r => setTimeout(r, 800));
     form.setValue('steps', Math.floor(Math.random() * 8000 + 4000));
     form.setValue('avgHeartRate', Math.floor(Math.random() * 15 + 60));
-    form.setValue('sleepDurationHours', Math.floor(Math.random() * 2 + 6));
+    form.setValue('sleepDurationHours', Math.floor(Math.random() * 2 + 6.5));
+    form.setValue('bloodPressure', `${Math.floor(Math.random() * 10 + 115)}/${Math.floor(Math.random() * 10 + 75)}`);
     setSyncing(false);
-    toast({ title: "Синхронизация завершена" });
+    toast({ title: "Биометрические данные обновлены" });
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -106,7 +110,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         setDoc(doc(firestore, 'users', user.uid), profileData, { merge: true });
       }
 
-      const { steps, avgHeartRate, sleepDurationHours, ...biometrics } = values;
+      const { steps, avgHeartRate, sleepDurationHours, bloodPressure, ...biometrics } = values;
       const result = await generatePersonalizedRecommendations({
         ...biometrics,
         targetDate: selectedDate.toISOString(),
@@ -114,6 +118,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           steps: steps || 0,
           avgHeartRate: avgHeartRate || 0,
           sleepDurationHours: sleepDurationHours || 0,
+          bloodPressure: bloodPressure || '120/80',
         },
       });
       
@@ -189,7 +194,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   {syncing ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />} Синхронизация
                 </Button>
               </div>
-              <div className="grid gap-6 grid-cols-3">
+              <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
                 <FormField control={form.control} name="steps" render={({ field }) => (
                   <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Footprints className="h-3 w-3" /> Шаги</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                 )} />
@@ -197,7 +202,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Heart className="h-3 w-3" /> Пульс</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="sleepDurationHours" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Moon className="h-3 w-3" /> Сон (ч)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Moon className="h-3 w-3" /> Сон (ч)</FormLabel><FormControl><Input type="number" step="0.5" {...field} className={inputClasses} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="bloodPressure" render={({ field }) => (
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Activity className="h-3 w-3" /> Давление</FormLabel><FormControl><Input placeholder="120/80" {...field} className={inputClasses} /></FormControl></FormItem>
                 )} />
               </div>
             </div>

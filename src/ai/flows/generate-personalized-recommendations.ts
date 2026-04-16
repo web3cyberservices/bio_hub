@@ -62,6 +62,7 @@ const GenerateRecommendationsInputSchema = z.object({
     steps: z.number().optional().describe('Количество шагов за сегодня.'),
     avgHeartRate: z.number().optional().describe('Средний пульс в покое (уд/мин).'),
     sleepDurationHours: z.number().optional().describe('Продолжительность сна (часы).'),
+    bloodPressure: z.string().optional().describe('Артериальное давление (например, "120/80").'),
   }).optional().describe('Данные синхронизированные с носимых устройств (Apple Health, Google Fit и т.д.)'),
 });
 export type GenerateRecommendationsInput = z.infer<
@@ -83,6 +84,12 @@ const GenerateRecommendationsOutputSchema = z.object({
     fat: z.number().describe('Рекомендуемое количество жиров (г).'),
     carbs: z.number().describe('Рекомендуемое количество углеводов (г).'),
   }),
+  currentIntake: z.object({
+    calories: z.number().default(0),
+    protein: z.number().default(0),
+    fat: z.number().default(0),
+    carbs: z.number().default(0),
+  }).optional().describe('Текущее потребление за сегодня (для отображения прогресса).'),
   mealPlan: z.array(z.object({
     day: z.string().describe('День (например, "День 1" или "Понедельник").'),
     meals: z.array(z.object({
@@ -117,7 +124,7 @@ const recommendationPrompt = ai.definePrompt({
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
 - Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
 - Курение: {{{smoking}}}, Алкоголь: {{{alcohol}}}.
-{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}
+{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч, Давление: {{deviceData.bloodPressure}}.{{/if}}
 {{#if favoriteFoods}}Любимая еда: {{{favoriteFoods}}}{{/if}}
 {{#if dislikedFoods}}Нелюбимая еда: {{{dislikedFoods}}}{{/if}}
 {{#if dailyActivities}}Активности сегодня: {{{dailyActivities}}}{{/if}}
@@ -142,6 +149,16 @@ const generateRecommendationsFlow = ai.defineFlow(
   async (input) => {
     const {output} = await recommendationPrompt(input);
     if (!output) throw new Error('Model failed to generate valid output');
-    return output;
+    
+    // Симулируем текущее потребление для наглядности в демо, если оно не предоставлено
+    return {
+      ...output,
+      currentIntake: {
+        calories: Math.floor(output.macros.calories * 0.6),
+        protein: Math.floor(output.macros.protein * 0.5),
+        fat: Math.floor(output.macros.fat * 0.7),
+        carbs: Math.floor(output.macros.carbs * 0.4),
+      }
+    };
   }
 );

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -6,7 +5,7 @@ import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, ChevronRight, ChevronLeft, Zap, Info } from 'lucide-react';
+import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, ChevronRight, ChevronLeft, Zap, Footprints, Moon, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -17,7 +16,7 @@ interface RecommendationDisplayProps {
 }
 
 export function RecommendationDisplay({ data, mode = 'dashboard' }: RecommendationDisplayProps) {
-  const { recommendations, macros, mealPlan, activityAnalysis } = data;
+  const { recommendations, macros, currentIntake, mealPlan, activityAnalysis } = data;
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -36,78 +35,79 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     };
   };
 
-  const chartData = useMemo(() => [
-    { name: 'Белки', value: Math.max(0, (macros.protein || 0) * 4), color: 'hsl(var(--primary))', raw: macros.protein || 0 },
-    { name: 'Жиры', value: Math.max(0, (macros.fat || 0) * 9), color: 'hsl(var(--secondary))', raw: macros.fat || 0 },
-    { name: 'Углеводы', value: Math.max(0, (macros.carbs || 0) * 4), color: 'hsl(var(--accent))', raw: macros.carbs || 0 },
-  ], [macros]);
+  // Данные для круговых диаграмм прогресса КБЖУ
+  const nutrients = [
+    { name: 'Белки', current: currentIntake?.protein || 0, goal: macros.protein, color: 'hsl(var(--primary))', icon: Beef },
+    { name: 'Жиры', current: currentIntake?.fat || 0, goal: macros.fat, color: 'hsl(var(--secondary))', icon: Droplets },
+    { name: 'Углеводы', current: currentIntake?.carbs || 0, goal: macros.carbs, color: 'hsl(var(--accent))', icon: Wheat },
+  ];
 
   if (mode === 'dashboard') {
     return (
       <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
-        {/* Macros & Infographics */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          <Card className="premium-card p-6 border-none overflow-hidden bg-white/60 backdrop-blur-xl lg:col-span-1">
-            <div className="flex flex-col items-center">
-              <div className="relative w-full aspect-square max-w-[200px] md:max-w-[240px]">
-                {mounted && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={85}
-                        paddingAngle={8}
-                        dataKey="value"
-                        stroke="none"
-                        cornerRadius={10}
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-4xl font-black tracking-tighter leading-none">{macros.calories}</span>
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">Ккал</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 w-full gap-2 mt-4">
-                {chartData.map((stat, i) => (
-                   <div key={i} className="flex flex-col items-center p-2 rounded-xl bg-white/40 border shadow-sm">
-                     <div className="w-1.5 h-1.5 rounded-full mb-1" style={{ backgroundColor: stat.color }} />
-                     <span className="text-sm font-black tracking-tight">{stat.raw}г</span>
-                     <span className="text-[7px] font-bold text-muted-foreground uppercase">{stat.name}</span>
-                   </div>
-                ))}
+        
+        {/* КБЖУ Счётчики (Круги прогресса) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="premium-card p-6 border-none bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center text-center">
+            <div className="relative w-32 h-32 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90">
+                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="8" className="text-muted/20" />
+                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="364.4" 
+                  strokeDashoffset={364.4 - (364.4 * Math.min(1, (currentIntake?.calories || 0) / macros.calories))} 
+                  className="text-primary transition-all duration-1000" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black leading-none">{currentIntake?.calories}</span>
+                <span className="text-[7px] font-black uppercase text-muted-foreground">из {macros.calories}</span>
+                <Flame className="h-3 w-3 text-primary mt-1" />
               </div>
             </div>
+            <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Калории (ккал)</h4>
+            <p className="text-[9px] font-bold text-primary mt-1">Осталось: {Math.max(0, macros.calories - (currentIntake?.calories || 0))}</p>
           </Card>
 
-          <div className="lg:col-span-2 grid grid-cols-2 gap-4 md:gap-6">
-            {[
-              { label: 'Суточные Калории', value: macros.calories, unit: 'ккал', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-50' },
-              { label: 'Целевой Белок', value: macros.protein, unit: 'г', icon: Beef, color: 'text-primary', bg: 'bg-primary/5' },
-              { label: 'Здоровые Жиры', value: macros.fat, unit: 'г', icon: Droplets, color: 'text-secondary', bg: 'bg-secondary/5' },
-              { label: 'Сложные Углеводы', value: macros.carbs, unit: 'г', icon: Wheat, color: 'text-blue-500', bg: 'bg-blue-50' },
-            ].map((stat, i) => (
-              <Card key={i} className="premium-card border-none overflow-hidden relative group">
-                <CardContent className="p-6 md:p-8 flex flex-col gap-4">
-                  <div className={`${stat.bg} w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center`}>
-                    <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-2xl md:text-3xl font-black tracking-tighter">{stat.value}<span className="text-[10px] ml-1 opacity-40 uppercase">{stat.unit}</span></p>
-                    <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {nutrients.map((n, i) => (
+            <Card key={i} className="premium-card p-6 border-none bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center text-center">
+              <div className="relative w-28 h-28 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90">
+                  <circle cx="56" cy="56" r="50" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/20" />
+                  <circle cx="56" cy="56" r="50" fill="none" stroke="currentColor" strokeWidth="6" strokeDasharray="314" 
+                    strokeDashoffset={314 - (314 * Math.min(1, n.current / n.goal))} 
+                    style={{ color: n.color }}
+                    className="transition-all duration-1000" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-xl font-black leading-none">{n.current}г</span>
+                  <span className="text-[6px] font-black uppercase text-muted-foreground">из {n.goal}г</span>
+                  <n.icon className="h-3 w-3 mt-1" style={{ color: n.color }} />
+                </div>
+              </div>
+              <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{n.name}</h4>
+              <p className="text-[9px] font-bold mt-1" style={{ color: n.color }}>Ещё: {Math.max(0, n.goal - n.current)}г</p>
+            </Card>
+          ))}
+        </div>
+
+        {/* Биометрия и Гаджеты */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {[
+            { label: 'Шаги сегодня', value: '8,420', unit: 'шагов', icon: Footprints, color: 'text-blue-500', bg: 'bg-blue-50' },
+            { label: 'Качество сна', value: '7.5', unit: 'часов', icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+            { label: 'Пульс (bpm)', value: '72', unit: 'уд/мин', icon: Heart, color: 'text-red-500', bg: 'bg-red-50' },
+            { label: 'Давление', value: '118/78', unit: 'мм рт.ст.', icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
+          ].map((stat, i) => (
+            <Card key={i} className="premium-card border-none overflow-hidden group">
+              <CardContent className="p-6 md:p-8 flex flex-col gap-4">
+                <div className={`${stat.bg} w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center`}>
+                  <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-black tracking-tighter">{stat.value}<span className="text-[10px] ml-1 opacity-40 uppercase">{stat.unit}</span></p>
+                  <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Activity Analysis */}
@@ -118,7 +118,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                 <Zap className="h-6 w-6 text-white fill-white" />
               </div>
               <div className="flex-1 space-y-1">
-                <h3 className="text-lg md:text-xl font-black tracking-tight">Биометрический анализ</h3>
+                <h3 className="text-lg md:text-xl font-black tracking-tight">AI Био-Анализ</h3>
                 <p className="text-white/70 font-medium text-sm md:text-base italic">{activityAnalysis}</p>
               </div>
             </div>
