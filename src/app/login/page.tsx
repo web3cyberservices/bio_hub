@@ -20,15 +20,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { auth } = useAuth();
   const { firestore } = useFirestore();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (!userLoading && user) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, userLoading, router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации недоступен. Подключите проект Firebase.',
+        description: 'Сервис авторизации недоступен. Подключите проект Firebase в Studio.',
       });
       return;
     }
@@ -88,12 +88,20 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Включите Anonymous Auth в консоли Firebase.',
+        description: 'Убедитесь, что анонимная авторизация включена в консоли Firebase.',
       });
     } finally {
       setLoading(false);
     }
   };
+
+  if (userLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
@@ -117,7 +125,7 @@ export default function LoginPage() {
               onClick={handleQuickLogin}
               disabled={loading}
             >
-              <Sparkles className="h-5 w-5 text-accent" /> 
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 text-accent" />}
               Тестовый вход (Быстрый)
             </Button>
             

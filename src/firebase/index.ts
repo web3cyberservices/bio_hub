@@ -6,37 +6,39 @@ import { getAuth, Auth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
- * Инициализирует сервисы Firebase с защитой от пустой конфигурации.
+ * Инициализирует сервисы Firebase с максимальной защитой.
+ * Предотвращает ошибку trimEnd, возникающую при пустых ключах.
  */
 export function initializeFirebase() {
-  let firebaseApp: FirebaseApp | null = null;
-  let firestore: Firestore | null = null;
-  let auth: Auth | null = null;
+  if (typeof window === 'undefined') {
+    return { firebaseApp: null, firestore: null, auth: null };
+  }
 
-  // Проверяем наличие валидного конфига перед инициализацией
-  const hasValidConfig = 
+  // Строгая проверка валидности конфигурации
+  const isConfigValid = 
     firebaseConfig && 
     typeof firebaseConfig.apiKey === 'string' && 
-    firebaseConfig.apiKey.length > 10;
+    firebaseConfig.apiKey.trim().length > 10; // API ключ обычно длиннее 10 символов
 
-  if (!hasValidConfig) {
-    console.warn('Firebase Config: Не обнаружен или пуст. Подключите проект в Studio.');
+  if (!isConfigValid) {
+    console.warn('Firebase: Проект не подключен или конфигурация пуста. Используйте Studio для подключения.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
   try {
-    firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    firestore = getFirestore(firebaseApp);
-    auth = getAuth(firebaseApp);
+    const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    const firestore = getFirestore(firebaseApp);
+    const auth = getAuth(firebaseApp);
+    
+    return { 
+      firebaseApp, 
+      firestore, 
+      auth 
+    };
   } catch (error) {
     console.error('Firebase Initialization Error:', error);
+    return { firebaseApp: null, firestore: null, auth: null };
   }
-
-  return { 
-    firebaseApp, 
-    firestore, 
-    auth 
-  };
 }
 
 export * from './provider';
