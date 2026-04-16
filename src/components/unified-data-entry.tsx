@@ -10,7 +10,7 @@ import {
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  MessageSquare, Droplet, Scale, Flame, User
+  MessageSquare, Droplet, Scale, Flame, User, Utensils, Brain
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
