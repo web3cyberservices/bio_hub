@@ -1,83 +1,200 @@
-import Link from 'next/link';
-import { NavBar } from '@/components/nav-bar';
-import { Button } from '@/components/ui/button';
-import { QuickTestButton } from '@/components/quick-test-button';
-import { ArrowRight, Activity, ShieldCheck, Activity as ActivityIcon, CheckCircle2, TrendingUp, Users } from 'lucide-react';
+"use client";
 
-export default function Home() {
+import { useState, useMemo, useEffect } from 'react';
+import { NavBar } from '@/components/nav-bar';
+import { RecommendationForm } from '@/components/recommendation-form';
+import { RecommendationDisplay } from '@/components/recommendation-display';
+import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles } from 'lucide-react';
+import { format, addDays, startOfToday } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
+import { AISpecialistChat } from '@/components/ai-specialist-chat';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+
+export default function LandingDashboardPage() {
+  const { user, loading: userLoading } = useUser();
+  const { firestore } = useFirestore();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [localResult, setLocalResult] = useState<GenerateRecommendationsOutput | null>(null);
+
+  useEffect(() => {
+    setSelectedDate(startOfToday());
+  }, []);
+
+  const dateKey = useMemo(() => selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, [selectedDate]);
+  
+  const recommendationRef = useMemo(() => {
+    if (!firestore || !user || !dateKey) return null;
+    return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+  }, [firestore, user, dateKey]);
+
+  const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+
+  if (!selectedDate || userLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40">Инициализация био-хаба...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleResult = (result: GenerateRecommendationsOutput) => {
+    setLocalResult(result);
+    if (firestore && user && dateKey) {
+      const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+      setDoc(docRef, {
+        date: dateKey,
+        data: result,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+    }
+    setActiveTab("dashboard");
+  };
+
+  const currentResult = localResult || (recommendationDoc?.data as GenerateRecommendationsOutput | undefined);
+
   return (
-    <div className="flex min-h-screen flex-col bg-background selection:bg-primary/20 overflow-x-hidden">
+    <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
-      <main className="flex-1 flex flex-col justify-center relative overflow-hidden">
-        {/* Анимированный био-фон */}
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-[10%] left-[10%] w-[40rem] h-[40rem] bg-primary/10 rounded-full blur-[120px] animate-pulse duration-[8s]" />
-          <div className="absolute bottom-[10%] right-[5%] w-[30rem] h-[30rem] bg-secondary/10 rounded-full blur-[100px] animate-pulse delay-1000 duration-[10s]" />
-        </div>
-
-        {/* Hero Section */}
-        <section className="container mx-auto px-4 py-12 md:py-24 text-center max-w-6xl">
-          <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <div className="bg-white/90 backdrop-blur-xl border-b sticky top-16 md:top-20 z-40 py-3 md:py-4 shadow-sm">
+        <div className="container mx-auto px-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1 md:gap-2 mx-auto">
+            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setSelectedDate(prev => prev ? addDays(prev, -1) : null)}>
+              <ChevronLeft className="h-5 w-5 text-primary" />
+            </Button>
             
-            <div className="flex flex-col items-center justify-center gap-6">
-              <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-[2.5rem] shadow-2xl shadow-primary/20 flex items-center justify-center border-4 border-primary/10">
-                <ActivityIcon className="h-12 w-12 md:h-16 md:w-16 text-primary" />
-              </div>
-              
-              <div className="space-y-4">
-                <h1 className="text-6xl md:text-9xl font-black font-headline tracking-tighter leading-none text-foreground">
-                  PRO <span className="text-primary/80">Себя</span>
-                </h1>
-                <div className="h-1.5 w-24 md:w-40 bg-primary mx-auto rounded-full" />
-              </div>
-            </div>
-            
-            <div className="max-w-2xl mx-auto space-y-4">
-              <p className="text-xl md:text-3xl text-foreground font-black tracking-tight">
-                Интеллектуальный хаб вашего здоровья.
-              </p>
-              <p className="text-base md:text-xl text-muted-foreground font-medium">
-                Персональная ИИ-платформа для управления питанием и биоритмами на основе ваших данных.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <QuickTestButton />
-              <Link href="/register">
-                <Button size="lg" variant="ghost" className="h-16 px-10 text-xl font-black rounded-3xl gap-2">
-                  Регистрация <ArrowRight className="h-5 w-5" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="px-4 h-12 md:h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 min-w-[150px] md:min-w-[200px]">
+                  <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary/60">БИО-РИТМ</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm md:text-xl font-bold tracking-tight">
+                      {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+                    </span>
+                    <CalendarIcon className="h-4 w-4 text-primary opacity-30" />
+                  </div>
                 </Button>
-              </Link>
-            </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 rounded-[2rem] overflow-hidden" align="center">
+                <Calendar mode="single" selected={selectedDate} onSelect={(date) => date && setSelectedDate(date)} locale={ru} />
+              </PopoverContent>
+            </Popover>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 pt-10 max-w-4xl mx-auto">
-              {[
-                { icon: TrendingUp, label: "Точность", value: "98.4%", color: "text-primary" },
-                { icon: ShieldCheck, label: "Приватность", value: "AES-256", color: "text-secondary" },
-                { icon: Activity, label: "Анализ", value: "Real-time", color: "text-accent-foreground" },
-                { icon: Users, label: "Комьюнити", value: "50k+", color: "text-primary" }
-              ].map((stat, i) => (
-                <div key={i} className="flex flex-col items-center p-4 rounded-3xl bg-white/40 group hover:bg-white/60 transition-colors">
-                  <stat.icon className={`h-6 w-6 mb-2 ${stat.color}`} />
-                  <span className="text-xl font-black">{stat.value}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</span>
-                </div>
-              ))}
-            </div>
+            <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}>
+              <ChevronRight className="h-5 w-5 text-primary" />
+            </Button>
           </div>
-        </section>
+          
+          <div className="hidden lg:flex items-center gap-4">
+            <UnifiedDataEntry selectedDate={selectedDate}>
+              <Button className="rounded-2xl h-12 gap-2 bg-primary font-black px-6">
+                <Plus className="h-4 w-4" /> Добавить данные
+              </Button>
+            </UnifiedDataEntry>
+          </div>
+        </div>
+      </div>
+
+      <main className="container mx-auto flex-1 px-4 py-8 md:py-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-10">
+          <div className="flex justify-center">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1.5 rounded-[2rem] h-16 md:h-20 border shadow-md max-w-2xl w-full">
+              <TabsTrigger value="dashboard" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+                <LayoutDashboard className="h-4 w-4" /> Обзор
+              </TabsTrigger>
+              <TabsTrigger value="meals" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+                <Utensils className="h-4 w-4" /> Еда
+              </TabsTrigger>
+              <TabsTrigger value="wizard" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+                <Sparkles className="h-4 w-4" /> Анализ
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <TabsContent value="dashboard" className="mt-0 outline-none">
+              {currentResult ? (
+                <div className="space-y-10">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                        <LayoutDashboard className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                     </div>
+                     <div>
+                        <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Здоровье сегодня</h2>
+                        <p className="text-muted-foreground text-xs md:text-base font-medium">Биометрический анализ на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
+                     </div>
+                  </div>
+                  <RecommendationDisplay data={currentResult} mode="dashboard" />
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <Badge variant="outline" className="mb-4">Данные не загружены</Badge>
+                  <h2 className="text-4xl font-black mb-4">Начните био-анализ</h2>
+                  <p className="text-muted-foreground mb-8">Перейдите во вкладку «Анализ», чтобы ИИ подготовил рекомендации.</p>
+                  <Button onClick={() => setActiveTab("wizard")} className="rounded-2xl h-16 px-10 text-xl font-black gap-2">
+                    Создать отчет <Sparkles className="h-6 w-6" />
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="meals" className="mt-0 outline-none">
+              {currentResult ? (
+                <div className="space-y-10">
+                  <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                        <Utensils className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                     </div>
+                     <div>
+                        <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Меню Bio-Tech</h2>
+                        <p className="text-muted-foreground text-xs md:text-base font-medium">Рацион, оптимизированный под ваш метаболизм.</p>
+                     </div>
+                  </div>
+                  <RecommendationDisplay data={currentResult} mode="meals" />
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <h2 className="text-3xl font-black">План питания не сформирован</h2>
+                  <Button onClick={() => setActiveTab("wizard")} className="mt-6 rounded-2xl h-14 px-8 font-black">Настроить сейчас</Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="wizard" className="mt-0 outline-none">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center gap-4 mb-10">
+                   <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
+                      <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                   </div>
+                   <div>
+                      <h2 className="text-2xl md:text-5xl font-black tracking-tighter">Мастер Рекомендаций</h2>
+                      <p className="text-muted-foreground text-xs md:text-base font-medium">Введите данные для мгновенного анализа.</p>
+                   </div>
+                </div>
+                <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
       </main>
 
-      <footer className="py-8 border-t bg-white/50 backdrop-blur-md">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-              <ActivityIcon className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-headline text-xl font-black tracking-tighter">PRO Себя</span>
-          </div>
-          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">© 2024 NEXT GEN HEALTH.</p>
+      <AISpecialistChat />
+      
+      <footer className="mt-20 border-t py-12 bg-white/50 backdrop-blur-md">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground/30 text-[8px] uppercase tracking-[0.5em]">© 2024 PRO СЕБЯ. ВСЕ БИОМЕТРИЧЕСКИЕ ДАННЫЕ ЗАЩИЩЕНЫ.</p>
         </div>
       </footer>
     </div>

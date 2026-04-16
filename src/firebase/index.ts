@@ -13,16 +13,14 @@ interface FirebaseInstance {
 
 /**
  * Безопасная инициализация Firebase.
- * Возвращает null для сервисов, если конфигурация еще не заполнена в Studio.
- * Это предотвращает ошибку trimEnd и другие сбои при пустых ключах.
+ * Возвращает null для сервисов, если конфигурация пуста, не вызывая ошибок SDK.
  */
 export function initializeFirebase(): FirebaseInstance {
   if (typeof window === 'undefined') {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  // Проверка валидности конфигурации
-  const hasKey = (key: string | undefined) => typeof key === 'string' && key.length > 10;
+  const hasKey = (key: string | undefined) => typeof key === 'string' && key.length > 5;
   
   const isConfigValid = 
     firebaseConfig && 
@@ -30,6 +28,7 @@ export function initializeFirebase(): FirebaseInstance {
     hasKey(firebaseConfig.projectId);
 
   if (!isConfigValid) {
+    console.warn("Firebase: Конфигурация не найдена. Работа в автономном режиме.");
     return { firebaseApp: null, firestore: null, auth: null };
   }
 

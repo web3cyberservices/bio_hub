@@ -5,24 +5,32 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { useAuth } from '../provider';
 
 /**
- * Хук для получения текущего пользователя.
- * Безопасно завершает загрузку, если сервис Auth недоступен.
+ * Хук для получения пользователя.
+ * Если Auth не настроен, возвращает "публичного" пользователя для беспрепятственного входа.
  */
 export function useUser() {
   const { auth } = useAuth();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Если Firebase Auth не инициализирован, создаем виртуального пользователя
     if (!auth) {
+      setUser({ uid: 'public-user', displayName: 'Гость' });
       setLoading(false);
       return;
     }
     
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        // Всегда даем доступ, даже без входа
+        setUser({ uid: 'public-user', displayName: 'Гость' });
+      }
       setLoading(false);
     }, (error) => {
+      setUser({ uid: 'public-user', displayName: 'Гость' });
       setLoading(false);
     });
 
