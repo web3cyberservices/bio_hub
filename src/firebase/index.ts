@@ -20,7 +20,7 @@ export function initializeFirebase(): FirebaseInstance {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  // Проверка валидности строк конфигурации для предотвращения ошибок типа trimEnd или undefined
+  // Проверка валидности строк конфигурации
   const isValidStr = (s: any) => typeof s === 'string' && s.trim().length > 5;
   
   const isConfigValid = 
@@ -29,6 +29,7 @@ export function initializeFirebase(): FirebaseInstance {
     isValidStr(firebaseConfig.projectId);
 
   if (!isConfigValid) {
+    console.warn('Firebase: Конфигурация не найдена. Подключите проект через Studio.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
@@ -43,7 +44,7 @@ export function initializeFirebase(): FirebaseInstance {
       auth 
     };
   } catch (error) {
-    console.warn('Firebase: Ошибка инициализации, переход в автономный режим.');
+    console.error('Firebase: Ошибка инициализации:', error);
     return { firebaseApp: null, firestore: null, auth: null };
   }
 }
