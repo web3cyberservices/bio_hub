@@ -20,15 +20,15 @@ export function initializeFirebase(): FirebaseInstance {
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
-  const hasKey = (key: string | undefined) => typeof key === 'string' && key.length > 5;
+  // Проверка валидности строк конфигурации для предотвращения ошибок типа trimEnd или undefined
+  const isValidStr = (s: any) => typeof s === 'string' && s.trim().length > 5;
   
   const isConfigValid = 
     firebaseConfig && 
-    hasKey(firebaseConfig.apiKey) && 
-    hasKey(firebaseConfig.projectId);
+    isValidStr(firebaseConfig.apiKey) && 
+    isValidStr(firebaseConfig.projectId);
 
   if (!isConfigValid) {
-    console.warn("Firebase: Конфигурация не найдена. Работа в автономном режиме.");
     return { firebaseApp: null, firestore: null, auth: null };
   }
 
@@ -43,7 +43,7 @@ export function initializeFirebase(): FirebaseInstance {
       auth 
     };
   } catch (error) {
-    console.error('Firebase Initialization Error:', error);
+    console.warn('Firebase: Ошибка инициализации, переход в автономный режим.');
     return { firebaseApp: null, firestore: null, auth: null };
   }
 }

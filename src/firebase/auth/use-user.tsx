@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useAuth } from '../provider';
 
 /**
@@ -14,7 +14,7 @@ export function useUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Если Firebase Auth не инициализирован, создаем виртуального пользователя
+    // Если Firebase Auth не инициализирован или не подключен, используем гостевой режим
     if (!auth) {
       setUser({ uid: 'public-user', displayName: 'Гость' });
       setLoading(false);
@@ -25,11 +25,11 @@ export function useUser() {
       if (currentUser) {
         setUser(currentUser);
       } else {
-        // Всегда даем доступ, даже без входа
         setUser({ uid: 'public-user', displayName: 'Гость' });
       }
       setLoading(false);
-    }, (error) => {
+    }, () => {
+      // В случае любой ошибки Auth возвращаем гостя
       setUser({ uid: 'public-user', displayName: 'Гость' });
       setLoading(false);
     });
