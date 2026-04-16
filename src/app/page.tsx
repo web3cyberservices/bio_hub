@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles, Settings } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
+import { ProfileCabinet } from '@/components/profile-cabinet';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -110,15 +112,18 @@ export default function LandingDashboardPage() {
       <main className="container mx-auto flex-1 px-4 py-8 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-10">
           <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1.5 rounded-[2rem] h-16 md:h-20 border shadow-md max-w-2xl w-full">
-              <TabsTrigger value="dashboard" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1.5 rounded-[2rem] h-16 md:h-20 border shadow-md max-w-4xl w-full">
+              <TabsTrigger value="dashboard" className="rounded-[1.5rem] px-4 md:px-6 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
                 <LayoutDashboard className="h-4 w-4" /> Обзор
               </TabsTrigger>
-              <TabsTrigger value="meals" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+              <TabsTrigger value="meals" className="rounded-[1.5rem] px-4 md:px-6 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
                 <Utensils className="h-4 w-4" /> Еда
               </TabsTrigger>
-              <TabsTrigger value="wizard" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+              <TabsTrigger value="wizard" className="rounded-[1.5rem] px-4 md:px-6 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
                 <Sparkles className="h-4 w-4" /> Анализ
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="rounded-[1.5rem] px-4 md:px-6 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1">
+                <UserCircle className="h-4 w-4" /> Личный кабинет
               </TabsTrigger>
             </TabsList>
           </div>
@@ -185,6 +190,10 @@ export default function LandingDashboardPage() {
                 </div>
                 <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
               </div>
+            </TabsContent>
+
+            <TabsContent value="profile" className="mt-0 outline-none">
+              <ProfileCabinet />
             </TabsContent>
           </div>
         </Tabs>
