@@ -5,31 +5,34 @@ import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, ChevronRight, ChevronLeft, Zap, Footprints, Moon, Heart, Droplet, LineChart, TrendingDown } from 'lucide-react';
+import { 
+  HeartPulse, Utensils, Pill, Flame, Beef, Droplets, Wheat, Activity, 
+  ChevronRight, ChevronLeft, Zap, Footprints, Moon, Heart, Droplet, 
+  TrendingDown, Timer, ShieldCheck, Star, Brain, Apple
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { LineChart as ReLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '@/lib/utils';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
   mode?: 'dashboard' | 'meals';
 }
 
-// Демо-данные для графика веса
 const weightData = [
   { date: '01.03', weight: 75.5 },
   { date: '05.03', weight: 74.8 },
   { date: '10.03', weight: 74.2 },
   { date: '15.03', weight: 74.5 },
   { date: '20.03', weight: 73.9 },
-  { date: '25.03', weight: 73.5 },
   { date: 'Сегодня', weight: 73.2 },
 ];
 
 export function RecommendationDisplay({ data, mode = 'dashboard' }: RecommendationDisplayProps) {
-  const { recommendations, macros, currentIntake, mealPlan, activityAnalysis } = data;
+  const { bioScore, recommendations, macros, micronutrients, fastingWindow, mealPlan, activityAnalysis } = data;
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
-  const [waterGlasses, setWaterGlasses] = useState(5);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -38,124 +41,173 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
 
   const getMealImage = (imageId: string) => {
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    if (found?.imageUrl) return found;
-    return (PlaceHolderImages && PlaceHolderImages[0]) || {
-      id: 'fallback',
-      imageUrl: 'https://picsum.photos/seed/fallback/400/300',
-      imageHint: 'healthy meal',
-      description: 'Healthy food placeholder'
-    };
+    return found?.imageUrl || 'https://picsum.photos/seed/fallback/400/300';
   };
-
-  const nutrients = [
-    { name: 'Белки', current: currentIntake?.protein || 0, goal: macros.protein, color: 'hsl(var(--primary))', icon: Beef },
-    { name: 'Жиры', current: currentIntake?.fat || 0, goal: macros.fat, color: 'hsl(var(--secondary))', icon: Droplets },
-    { name: 'Углеводы', current: currentIntake?.carbs || 0, goal: macros.carbs, color: 'hsl(var(--accent))', icon: Wheat },
-  ];
 
   if (mode === 'dashboard') {
     return (
-      <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700">
+      <div className="space-y-8 md:space-y-12 animate-in fade-in duration-1000">
         
-        {/* КБЖУ Счётчики (FatSecret Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="premium-card p-6 border-none bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center text-center">
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="8" className="text-muted/20" />
-                <circle cx="64" cy="64" r="58" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="364.4" 
-                  strokeDashoffset={364.4 - (364.4 * Math.min(1, (currentIntake?.calories || 0) / macros.calories))} 
-                  className="text-primary transition-all duration-1000" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black leading-none">{macros.calories - (currentIntake?.calories || 0)}</span>
-                <span className="text-[7px] font-black uppercase text-muted-foreground">осталось ккал</span>
-                <Flame className="h-3 w-3 text-primary mt-1" />
-              </div>
-            </div>
-            <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Баланс энергии</h4>
-            <p className="text-[9px] font-bold text-primary mt-1">Цель: {macros.calories} ккал</p>
-          </Card>
-
-          {nutrients.map((n, i) => (
-            <Card key={i} className="premium-card p-6 border-none bg-white/80 backdrop-blur-xl flex flex-col items-center justify-center text-center">
-              <div className="relative w-28 h-28 flex items-center justify-center">
+        {/* ВЕРХНЯЯ ПАНЕЛЬ: BIO-SCORE И ГЛАВНЫЕ МЕТРИКИ (YAZIO + LIFESUM STYLE) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 premium-card border-none bg-gradient-to-br from-primary to-primary/80 text-white p-8 md:p-12 relative overflow-hidden">
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+              <div className="relative w-40 h-40 shrink-0">
                 <svg className="w-full h-full -rotate-90">
-                  <circle cx="56" cy="56" r="50" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/20" />
-                  <circle cx="56" cy="56" r="50" fill="none" stroke="currentColor" strokeWidth="6" strokeDasharray="314" 
-                    strokeDashoffset={314 - (314 * Math.min(1, n.current / n.goal))} 
-                    style={{ color: n.color }}
-                    className="transition-all duration-1000" />
+                  <circle cx="80" cy="80" r="74" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="12" />
+                  <circle cx="80" cy="80" r="74" fill="none" stroke="white" strokeWidth="12" strokeDasharray="465" 
+                    strokeDashoffset={465 - (465 * bioScore / 100)} className="transition-all duration-1000 ease-out" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xl font-black leading-none">{n.current}г</span>
-                  <span className="text-[6px] font-black uppercase text-muted-foreground">из {n.goal}г</span>
-                  <n.icon className="h-3 w-3 mt-1" style={{ color: n.color }} />
+                  <span className="text-5xl font-black">{bioScore}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-70">Bio-Score</span>
                 </div>
               </div>
-              <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{n.name}</h4>
-              <p className="text-[9px] font-bold mt-1" style={{ color: n.color }}>{Math.round((n.current / n.goal) * 100)}% от нормы</p>
-            </Card>
-          ))}
-        </div>
-
-        {/* Секция Вода и Вес (YAZIO Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Трекер воды */}
-          <Card className="premium-card border-none bg-white/80 backdrop-blur-xl p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Droplet className="h-5 w-5 text-blue-500" />
+              <div className="space-y-4 text-center md:text-left">
+                <Badge className="bg-white/20 text-white border-none px-4 py-1 rounded-full font-black uppercase tracking-widest text-[10px]">Ваш индекс здоровья</Badge>
+                <h3 className="text-2xl md:text-4xl font-black tracking-tighter leading-none">Отличный прогресс!</h3>
+                <p className="text-white/80 font-medium max-w-md">Ваши биометрические показатели на 12% лучше, чем на прошлой неделе. Продолжайте в том же духе.</p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
+                   <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase">Иммунитет Ок</span>
+                   </div>
+                   <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md">
+                      <Star className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase">Гормоны в норме</span>
+                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-black tracking-tight">Гидратация</h3>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Цель: 2500 мл (10 стаканов)</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-black text-blue-500">{waterGlasses * 250}<span className="text-xs ml-1 opacity-50">мл</span></p>
               </div>
             </div>
-            
-            <div className="flex flex-wrap gap-2 justify-between mb-8">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => setWaterGlasses(i + 1)}
-                  className={`w-10 h-12 rounded-xl transition-all flex items-center justify-center ${i < waterGlasses ? 'bg-blue-500 text-white shadow-lg shadow-blue-200' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`}
-                >
-                  <Droplet className={i < waterGlasses ? 'fill-current' : ''} size={18} />
-                </button>
-              ))}
-            </div>
-            
-            <Button 
-              className="w-full h-12 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 font-black text-[10px] uppercase tracking-widest"
-              onClick={() => setWaterGlasses(prev => prev + 1)}
-            >
-              Добавить 250 мл
-            </Button>
+            <Activity className="absolute -bottom-10 -right-10 h-64 w-64 text-white/5" />
           </Card>
 
-          {/* График веса */}
-          <Card className="premium-card border-none bg-white/80 backdrop-blur-xl p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-                  <TrendingDown className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black tracking-tight">Динамика веса</h3>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">-2.3 кг за месяц</p>
-                </div>
+          {/* Интервальное голодание (YAZIO Style) */}
+          <Card className="premium-card border-none bg-white p-8 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+                     <Timer className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <h3 className="text-lg font-black tracking-tight">Голодание</h3>
+               </div>
+               <Badge variant="outline" className="border-indigo-100 text-indigo-600 font-black">{fastingWindow?.type || '16:8'}</Badge>
+            </div>
+            <div className="space-y-6">
+              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="absolute inset-y-0 left-0 bg-indigo-500 transition-all duration-1000" 
+                  style={{ width: `${fastingWindow?.progress || 65}%` }}
+                />
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-black">73.2<span className="text-xs ml-1 opacity-50">кг</span></p>
+              <div className="flex justify-between items-end">
+                <div>
+                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Осталось</p>
+                   <p className="text-3xl font-black text-indigo-500">{fastingWindow?.remainingTime || '05:42'}</p>
+                </div>
+                <Button className="rounded-xl h-10 px-6 bg-indigo-500 hover:bg-indigo-600 font-black text-[10px] uppercase">Старт</Button>
               </div>
             </div>
-            
-            <div className="h-[150px] w-full mt-4">
+          </Card>
+        </div>
+
+        {/* НУТРИЕНТЫ И МИКРОНУТРИЕНТЫ (CRONOMETER STYLE) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           <Card className="lg:col-span-2 premium-card p-8 border-none bg-white">
+              <div className="flex items-center gap-3 mb-8">
+                <Apple className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-black tracking-tight">Микронутриенты и Витамины</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                {(micronutrients || [
+                  { name: 'Магний', current: 320, goal: 400, unit: 'мг' },
+                  { name: 'Железо', current: 15, goal: 18, unit: 'мг' },
+                  { name: 'Витамин D', current: 400, goal: 2000, unit: 'ME' },
+                  { name: 'Омега-3', current: 1.2, goal: 1.6, unit: 'г' },
+                ]).map((micro, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                      <span className="text-muted-foreground">{micro.name}</span>
+                      <span className="text-foreground">{micro.current} / {micro.goal} {micro.unit}</span>
+                    </div>
+                    <Progress value={(micro.current / micro.goal) * 100} className="h-2" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-4">
+                 <Brain className="h-5 w-5 text-primary shrink-0" />
+                 <p className="text-xs font-medium text-muted-foreground italic">ИИ советует: добавьте в рацион шпинат и тыквенные семечки для восполнения дефицита Магния.</p>
+              </div>
+           </Card>
+
+           {/* Счётчик воды (FatSecret Style) */}
+           <Card className="premium-card p-8 border-none bg-blue-50/50">
+              <div className="flex flex-col h-full justify-between">
+                <div className="flex items-center gap-3 mb-6">
+                  <Droplet className="h-6 w-6 text-blue-500" />
+                  <h3 className="text-xl font-black tracking-tight">Вода</h3>
+                </div>
+                <div className="grid grid-cols-4 gap-2 mb-6">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className={cn(
+                      "aspect-square rounded-xl border-2 flex items-center justify-center transition-all",
+                      i < 7 ? "bg-blue-500 border-blue-500 text-white" : "border-blue-100 bg-white"
+                    )}>
+                      <Droplet size={16} className={i < 7 ? "fill-current" : "text-blue-100"} />
+                    </div>
+                  ))}
+                </div>
+                <Button className="w-full h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 font-black text-xl">+ 250 мл</Button>
+              </div>
+           </Card>
+        </div>
+
+        {/* ТАЙМЛАЙН ПИТАНИЯ (FATSECRET STYLE) */}
+        <div className="space-y-6">
+           <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-black tracking-tighter">Дневник Bio-Tech питания</h3>
+              <Button variant="outline" className="rounded-xl font-black text-[10px] uppercase">Экспорт PDF</Button>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {mealPlan[0].meals.map((meal, idx) => (
+                <Card key={idx} className="premium-card border-none overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                  <div className="relative aspect-video">
+                    <Image src={getMealImage(meal.imageId)} alt={meal.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <Badge className="absolute top-4 left-4 bg-white/20 backdrop-blur-md text-white border-none font-black text-[8px] uppercase">{meal.time}</Badge>
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                       <h4 className="text-lg font-black leading-tight truncate">{meal.name}</h4>
+                    </div>
+                  </div>
+                  <CardContent className="p-5 space-y-4">
+                     <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <span>{meal.calories} Ккал</span>
+                        <div className="flex gap-2">
+                           <span className="text-primary">{meal.protein || 0}Б</span>
+                           <span className="text-secondary">{meal.fat || 0}Ж</span>
+                           <span className="text-accent-foreground">{meal.carbs || 0}У</span>
+                        </div>
+                     </div>
+                     <p className="text-xs font-medium text-muted-foreground line-clamp-2">{meal.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+           </div>
+        </div>
+
+        {/* ДИНАМИКА ВЕСА (CRONOMETER STYLE) */}
+        <Card className="premium-card p-8 border-none bg-white">
+           <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                 <TrendingDown className="h-6 w-6 text-primary" />
+                 <h3 className="text-xl font-black tracking-tight">Динамика прогресса</h3>
+              </div>
+              <div className="text-right">
+                 <p className="text-3xl font-black">73.2 <span className="text-xs text-muted-foreground">кг</span></p>
+                 <p className="text-[10px] font-black text-primary uppercase">-2.4 кг за период</p>
+              </div>
+           </div>
+           <div className="h-[300px] w-full">
               {mounted && (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weightData}>
@@ -165,143 +217,59 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                    <XAxis dataKey="date" hide />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 'bold'}} />
                     <YAxis hide domain={['dataMin - 1', 'dataMax + 1']} />
                     <Tooltip 
                       contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ fontWeight: 'bold' }}
                     />
-                    <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorWeight)" />
+                    <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={4} fillOpacity={1} fill="url(#colorWeight)" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
-            </div>
-          </Card>
-        </div>
-
-        {/* Биометрия (Apple Health Style) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[
-            { label: 'Шаги сегодня', value: '8,420', unit: 'шагов', icon: Footprints, color: 'text-blue-500', bg: 'bg-blue-50' },
-            { label: 'Качество сна', value: '7.5', unit: 'часов', icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-            { label: 'Пульс (bpm)', value: '72', unit: 'уд/мин', icon: Heart, color: 'text-red-500', bg: 'bg-red-50' },
-            { label: 'Давление', value: '118/78', unit: 'мм рт.ст.', icon: Activity, color: 'text-primary', bg: 'bg-primary/10' },
-          ].map((stat, i) => (
-            <Card key={i} className="premium-card border-none overflow-hidden group">
-              <CardContent className="p-6 md:p-8 flex flex-col gap-4">
-                <div className={`${stat.bg} w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center`}>
-                  <stat.icon className={`h-5 w-5 md:h-6 md:w-6 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-2xl md:text-3xl font-black tracking-tighter">{stat.value}<span className="text-[10px] ml-1 opacity-40 uppercase">{stat.unit}</span></p>
-                  <p className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Activity Analysis */}
-        {activityAnalysis && (
-          <Card className="premium-card border-none bg-foreground text-white p-6 md:p-8">
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
-                <Zap className="h-6 w-6 text-white fill-white" />
-              </div>
-              <div className="flex-1 space-y-1">
-                <h3 className="text-lg md:text-xl font-black tracking-tight">Интеллектуальный отчет</h3>
-                <p className="text-white/70 font-medium text-sm md:text-base italic">{activityAnalysis}</p>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Insights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { title: 'Образ жизни', icon: HeartPulse, color: 'text-primary', content: recommendations.lifestyle, bg: 'bg-primary/5' },
-            { title: 'Диета', icon: Utensils, color: 'text-secondary', content: recommendations.diet, bg: 'bg-secondary/5' },
-            { title: 'Добавки', icon: Pill, color: 'text-accent-foreground', content: recommendations.supplements, bg: 'bg-accent/10' },
-          ].map((section, idx) => (
-            <Card key={idx} className="premium-card flex flex-col border-none group">
-              <CardHeader className="flex flex-row items-center gap-4 p-6 border-b border-muted/50 bg-white group-hover:bg-muted/5 transition-colors">
-                <div className={`${section.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>
-                  <section.icon className={`h-5 w-5 ${section.color}`} />
-                </div>
-                <CardTitle className="text-xs md:text-sm font-black uppercase tracking-widest">{section.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 flex-1 bg-white">
-                <p className="text-sm leading-relaxed text-muted-foreground font-medium whitespace-pre-wrap line-clamp-6 group-hover:line-clamp-none transition-all">
-                  {section.content}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+           </div>
+        </Card>
       </div>
     );
   }
 
+  // Вкладка ЕДА (FatSecret Style Detail)
   if (mode === 'meals') {
     return (
-      <div className="space-y-10 animate-in fade-in duration-700">
-        {mealPlan && mealPlan.length > 0 && selectedDayIdx < mealPlan.length && (
-          <Card className="premium-card overflow-hidden border-none shadow-xl">
-            <CardHeader className="px-6 md:px-10 py-8 flex flex-col md:flex-row items-center justify-between border-b bg-muted/20 gap-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-primary/10 p-3 rounded-2xl">
-                  <Utensils className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl md:text-2xl font-black tracking-tight">Дневник питания</CardTitle>
-                  <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-1">Детальный расчет по приемам пищи</CardDescription>
-                </div>
+      <div className="space-y-8 animate-in fade-in duration-700">
+         {mealPlan[selectedDayIdx].meals.map((meal, idx) => (
+           <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col md:flex-row">
+              <div className="relative w-full md:w-64 h-48 shrink-0">
+                 <Image src={getMealImage(meal.imageId)} alt={meal.name} fill className="object-cover" />
               </div>
-              {mealPlan.length > 1 && (
-                <div className="flex items-center gap-2 bg-white p-1 rounded-xl shadow-sm">
-                  <Button variant="ghost" size="icon" disabled={selectedDayIdx === 0} onClick={() => setSelectedDayIdx(p => p - 1)} className="rounded-lg h-8 w-8">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-widest px-4 h-8 flex items-center rounded-lg">
-                    {mealPlan[selectedDayIdx].day}
-                  </Badge>
-                  <Button variant="ghost" size="icon" disabled={selectedDayIdx === mealPlan.length - 1} onClick={() => setSelectedDayIdx(p => p + 1)} className="rounded-lg h-8 w-8">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent className="p-6 md:p-10 space-y-8 md:space-y-12">
-              {mealPlan[selectedDayIdx].meals.map((meal, idx) => {
-                const mealImg = getMealImage(meal.imageId);
-                return (
-                  <div key={idx} className="group flex flex-col lg:flex-row gap-6 md:gap-10 p-6 md:p-8 rounded-[2rem] hover:bg-muted/30 transition-all duration-500 border border-transparent hover:border-border">
-                    <div className="relative w-full lg:w-[280px] h-[160px] md:h-[200px] shrink-0 rounded-[1.5rem] overflow-hidden shadow-lg">
-                      <Image 
-                        src={mealImg.imageUrl} 
-                        alt={meal.name} 
-                        fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-1000" 
-                        data-ai-hint={mealImg.imageHint} 
-                      />
+              <div className="p-8 flex-1 space-y-4">
+                 <div className="flex justify-between items-start">
+                    <div>
+                       <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase mb-2">{meal.time}</Badge>
+                       <h3 className="text-2xl font-black tracking-tight">{meal.name}</h3>
                     </div>
-                    <div className="flex-1 space-y-4 py-2">
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-primary text-white border-none px-4 py-1.5 rounded-lg font-black uppercase tracking-widest text-[8px]">
-                          {meal.time}
-                        </Badge>
-                        <span className="font-black text-lg md:text-xl tracking-tighter text-primary">{meal.calories}<span className="text-[9px] ml-1 uppercase text-muted-foreground font-bold">Ккал</span></span>
-                      </div>
-                      <h4 className="text-xl md:text-3xl font-black tracking-tighter leading-none">{meal.name}</h4>
-                      <p className="text-muted-foreground leading-relaxed font-medium text-sm md:text-base pr-4">{meal.description}</p>
+                    <div className="text-right">
+                       <p className="text-2xl font-black text-primary">{meal.calories} <span className="text-xs opacity-50">Ккал</span></p>
                     </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
+                 </div>
+                 <p className="text-muted-foreground font-medium">{meal.description}</p>
+                 <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                    <div className="text-center">
+                       <p className="text-lg font-black">{meal.protein || 0}г</p>
+                       <p className="text-[9px] font-bold text-muted-foreground uppercase">Белки</p>
+                    </div>
+                    <div className="text-center">
+                       <p className="text-lg font-black">{meal.fat || 0}г</p>
+                       <p className="text-[9px] font-bold text-muted-foreground uppercase">Жиры</p>
+                    </div>
+                    <div className="text-center">
+                       <p className="text-lg font-black">{meal.carbs || 0}г</p>
+                       <p className="text-[9px] font-bold text-muted-foreground uppercase">Углеводы</p>
+                    </div>
+                 </div>
+              </div>
+           </Card>
+         ))}
       </div>
     );
   }

@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
+ * Обновлен для поддержки Bio-Score, микронутриентов и интервального голодания.
  */
 
 import {ai} from '@/ai/genkit';
@@ -30,81 +31,58 @@ const GenerateRecommendationsInputSchema = z.object({
     .describe('Основная цель пользователя в области здоровья.'),
   smoking: z.enum(['да', 'нет']).describe('Курит ли пользователь.'),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).describe('Частота употребления алкоголя.'),
-  favoriteFoods: z
-    .string()
-    .optional()
-    .describe('Список любимых продуктов пользователя для включения в меню.'),
-  dislikedFoods: z
-    .string()
-    .optional()
-    .describe('Список нелюбимых продуктов пользователя для исключения из меню.'),
-  planDuration: z
-    .enum(['день', 'неделя'])
-    .default('день')
-    .describe('Длительность плана питания.'),
-  dietaryInput: z
-    .string()
-    .optional()
-    .describe('Дополнительный текст с описанием ежедневного рациона питания.'),
-  labResultsInput: z
-    .string()
-    .optional()
-    .describe('Дополнительный текст с результатами недавних лабораторных анализов.'),
-  medicalConditionsInput: z
-    .string()
-    .optional()
-    .describe('Описание хронических заболеваний, жалоб или аллергий пользователя.'),
-  dailyActivities: z
-    .string()
-    .optional()
-    .describe('Список конкретных активностей за сегодня (например: "Бег 5км", "Футбол 1 час", "Теннис").'),
+  favoriteFoods: z.string().optional(),
+  dislikedFoods: z.string().optional(),
+  labResultsInput: z.string().optional(),
   deviceData: z.object({
-    steps: z.number().optional().describe('Количество шагов за сегодня.'),
-    avgHeartRate: z.number().optional().describe('Средний пульс в покое (уд/мин).'),
-    sleepDurationHours: z.number().optional().describe('Продолжительность сна (часы).'),
-    bloodPressure: z.string().optional().describe('Артериальное давление (например, "120/80").'),
-  }).optional().describe('Данные синхронизированные с носимых устройств (Apple Health, Google Fit и т.д.)'),
+    steps: z.number().optional(),
+    avgHeartRate: z.number().optional(),
+    sleepDurationHours: z.number().optional(),
+    bloodPressure: z.string().optional(),
+  }).optional(),
 });
-export type GenerateRecommendationsInput = z.infer<
-  typeof GenerateRecommendationsInputSchema
->;
+export type GenerateRecommendationsInput = z.infer<typeof GenerateRecommendationsInputSchema>;
 
 const GenerateRecommendationsOutputSchema = z.object({
+  bioScore: z.number().min(0).max(100).describe('Общий индекс здоровья за сегодня (0-100).'),
   recommendations: z.object({
-    lifestyle:
-      z.string().describe('Персонализированные рекомендации по образу жизни (сон, стресс, активность).'),
-    diet:
-      z.string().describe('Персонализированные диетические рекомендации, включая выбор продуктов.'),
-    supplements:
-      z.string().describe('Персонализированные рекомендации по витаминам и БАДам.'),
+    lifestyle: z.string(),
+    diet: z.string(),
+    supplements: z.string(),
   }),
   macros: z.object({
-    calories: z.number().describe('Рекомендуемая суточная норма калорий (ккал).'),
-    protein: z.number().describe('Рекомендуемое количество белка (г).'),
-    fat: z.number().describe('Рекомендуемое количество жиров (г).'),
-    carbs: z.number().describe('Рекомендуемое количество углеводов (г).'),
+    calories: z.number(),
+    protein: z.number(),
+    fat: z.number(),
+    carbs: z.number(),
   }),
-  currentIntake: z.object({
-    calories: z.number().default(0),
-    protein: z.number().default(0),
-    fat: z.number().default(0),
-    carbs: z.number().default(0),
-  }).optional().describe('Текущее потребление за сегодня (для отображения прогресса).'),
+  micronutrients: z.array(z.object({
+    name: z.string().describe('Название (например, Магний, Витамин C).'),
+    current: z.number().describe('Текущее значение (мг/мкг).'),
+    goal: z.number().describe('Целевое значение.'),
+    unit: z.string().describe('Единица измерения.'),
+  })).describe('Микронутриенты для отслеживания.'),
+  fastingWindow: z.object({
+    type: z.string().describe('Тип (например, 16:8).'),
+    remainingTime: z.string().describe('Осталось времени до конца окна.'),
+    progress: z.number().describe('Процент прохождения окна.'),
+  }).optional(),
   mealPlan: z.array(z.object({
-    day: z.string().describe('День (например, "День 1" или "Понедельник").'),
+    day: z.string(),
     meals: z.array(z.object({
-      time: z.string().describe('Время или название приема пищи (Завтрак, Обед и т.д.).'),
-      name: z.string().describe('Название блюда.'),
-      description: z.string().describe('Состав или краткий способ приготовления.'),
-      calories: z.number().describe('Калорийность приема пищи.'),
-      imageId: z.string().describe('ID изображения из СТРОГОГО списка.'),
+      time: z.string(),
+      name: z.string(),
+      description: z.string(),
+      calories: z.number(),
+      protein: z.number().optional(),
+      fat: z.number().optional(),
+      carbs: z.number().optional(),
+      imageId: z.string(),
     }))
-  })).describe('Персонализированное меню на день или неделю.'),
-  activityAnalysis: z.string().optional().describe('Краткий анализ данных с носимых устройств и активностей.'),
+  })),
+  activityAnalysis: z.string().optional(),
 });
-export type GenerateRecommendationsOutput = z.infer<
-  typeof GenerateRecommendationsOutputSchema
->;
+export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendationsOutputSchema>;
 
 export async function generatePersonalizedRecommendations(
   input: GenerateRecommendationsInput
@@ -116,28 +94,22 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `Вы — ИИ-нутрициолог, эксперт в области здоровья и велнеса. Ваша задача — предоставить персонализированные и практические рекомендации.
+  prompt: `Вы — ИИ-биохакер и нутрициолог высшего уровня. Ваша задача — создать глубокий аналитический отчет.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
+
+ИНСТРУКЦИИ:
+1. Рассчитайте Bio-Score (0-100) на основе веса, активности, сна и вредных привычек.
+2. Подберите оптимальное окно интервального голодания (например, 16:8) исходя из целей.
+3. Оцените микронутриенты (Железо, Магний, Омега-3, Вит D), которые критичны для этого пользователя.
+4. Сформируйте Meal Plan. Используйте ID изображений: breakfast-omelette, breakfast-oatmeal, lunch-salmon, dinner-steak, snack-nuts.
 
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
 - Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
 - Курение: {{{smoking}}}, Алкоголь: {{{alcohol}}}.
-{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч, Давление: {{deviceData.bloodPressure}}.{{/if}}
-{{#if favoriteFoods}}Любимая еда: {{{favoriteFoods}}}{{/if}}
-{{#if dislikedFoods}}Нелюбимая еда: {{{dislikedFoods}}}{{/if}}
-{{#if dailyActivities}}Активности сегодня: {{{dailyActivities}}}{{/if}}
-
-Инструкции по Meal Plan:
-1. Составьте план на {{{planDuration}}}.
-2. Для КАЖДОГО блюда выберите ID СТРОГО из этого списка:
-   - breakfast-omelette, breakfast-oatmeal, breakfast-smoothie
-   - lunch-salad-chicken, lunch-salmon, lunch-soup
-   - dinner-steak, dinner-white-fish, dinner-tofu
-   - snack-nuts, snack-yogurt, snack-avocado, snack-fruit
-
-3. Выдайте строго валидный JSON согласно схеме. Если какая-то информация отсутствует, используйте разумные значения по умолчанию на основе параметров пользователя.`,
+{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}
+{{#if labResultsInput}}Результаты анализов: {{{labResultsInput}}}{{/if}}`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
@@ -149,16 +121,6 @@ const generateRecommendationsFlow = ai.defineFlow(
   async (input) => {
     const {output} = await recommendationPrompt(input);
     if (!output) throw new Error('Model failed to generate valid output');
-    
-    // Симулируем текущее потребление для наглядности в демо, если оно не предоставлено
-    return {
-      ...output,
-      currentIntake: {
-        calories: Math.floor(output.macros.calories * 0.6),
-        protein: Math.floor(output.macros.protein * 0.5),
-        fat: Math.floor(output.macros.fat * 0.7),
-        carbs: Math.floor(output.macros.carbs * 0.4),
-      }
-    };
+    return output;
   }
 );
