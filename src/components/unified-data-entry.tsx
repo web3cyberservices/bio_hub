@@ -10,12 +10,11 @@ import {
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  MessageSquare, Droplet, Scale, Flame, User, Utensils, Brain, Plus
+  Droplet, Scale, Utensils, Brain
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
