@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
- * Добавлена логика повторных попыток (retry) и строгая фильтрация изображений еды.
+ * Добавлена логика повторных попыток (retry), строгая фильтрация изображений и детальная разбивка блюд.
  */
 
 import {ai} from '@/ai/genkit';
@@ -32,8 +31,6 @@ const GenerateRecommendationsInputSchema = z.object({
     .describe('Основная цель пользователя в области здоровья.'),
   smoking: z.enum(['да', 'нет']).describe('Курит ли пользователь.'),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).describe('Частота употребления алкоголя.'),
-  favoriteFoods: z.string().optional(),
-  dislikedFoods: z.string().optional(),
   labResultsInput: z.string().optional(),
   deviceData: z.object({
     steps: z.number().optional(),
@@ -58,15 +55,15 @@ const GenerateRecommendationsOutputSchema = z.object({
     carbs: z.number(),
   }),
   micronutrients: z.array(z.object({
-    name: z.string().describe('Название (например, Магний, Витамин C).'),
-    current: z.number().describe('Текущее значение (мг/мкг).'),
-    goal: z.number().describe('Целевое значение.'),
-    unit: z.string().describe('Единица измерения.'),
-  })).describe('Микронутриенты для отслеживания.'),
+    name: z.string(),
+    current: z.number(),
+    goal: z.number(),
+    unit: z.string(),
+  })),
   fastingWindow: z.object({
-    type: z.string().describe('Тип (например, 16:8).'),
-    remainingTime: z.string().describe('Осталось времени до конца окна.'),
-    progress: z.number().describe('Процент прохождения окна.'),
+    type: z.string(),
+    remainingTime: z.string(),
+    progress: z.number(),
   }).optional(),
   mealPlan: z.array(z.object({
     day: z.string(),
@@ -78,10 +75,13 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string().describe('ID изображения СТРОГО из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
+      imageId: z.string().describe('ID из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
+      components: z.array(z.object({
+        ingredient: z.string().describe('Название ингредиента'),
+        weight: z.string().describe('Вес с единицами измерения, например "250г"')
+      })).describe('Разбивка блюда на составляющие компоненты с указанием веса.')
     }))
   })),
-  activityAnalysis: z.string().optional(),
 });
 export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendationsOutputSchema>;
 
@@ -95,34 +95,23 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `Вы — ИИ-биохакер и нутрициолог высшего уровня. Ваша задача — создать глубокий аналитический отчет.
+  prompt: `Вы — ИИ-биохакер и нутрициолог. Создайте глубокий аналитический отчет.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
-ИНСТРУКЦИИ ПО ИЗОБРАЖЕНИЯМ ЕДЫ (КРИТИЧЕСКИ ВАЖНО):
-Для каждого приема пищи вы ДОЛЖНЫ выбрать наиболее подходящий imageId ТОЛЬКО из этого списка:
-- Для каш, овсянки: breakfast-oatmeal
-- Для яиц, омлетов: breakfast-omelette
-- Для смузи, ягодных чаш: breakfast-smoothie
-- Для лосося, семги, морепродуктов: lunch-salmon
-- Для салатов с курицей или мясом: lunch-salad-chicken
-- Для супов: lunch-soup
-- Для говядины, стейков: dinner-steak
-- Для белой рыбы (треска, минтай): dinner-white-fish
-- Для вегетарианских блюд с тофу: dinner-tofu
-- Для орехов: snack-nuts
-- Для йогуртов: snack-yogurt
-- Для авокадо-тостов: snack-avocado
-- Для фруктовых нарезок: snack-fruit
+ИНСТРУКЦИИ ПО КОМПОНЕНТАМ БЛЮД:
+Для каждого блюда в mealPlan вы ДОЛЖНЫ предоставить массив components. 
+Например, если блюдо "Овсяная каша с орехами (300г)", в components должно быть: 
+- { ingredient: "Овсяная каша", weight: "250г" }
+- { ingredient: "Грецкие орехи", weight: "50г" }
 
-ЗАПРЕЩЕНО использовать любые другие ID. Если подходящего ID нет, выберите максимально близкий по смыслу из списка.
+ИНСТРУКЦИИ ПО ИЗОБРАЖЕНИЯМ:
+Используйте ТОЛЬКО: breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
 
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
 - Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
-- Курение: {{{smoking}}}, Алкоголь: {{{alcohol}}}.
-{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}
-{{#if labResultsInput}}Результаты анализов: {{{labResultsInput}}}{{/if}}`,
+{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
@@ -141,7 +130,7 @@ const generateRecommendationsFlow = ai.defineFlow(
       } catch (err: any) {
         lastError = err;
         if (err.message?.includes('503') || err.status === 503) {
-          await new Promise(resolve => setTimeout(resolve, 1500 * (i + 1)));
+          await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
           continue;
         }
         throw err;

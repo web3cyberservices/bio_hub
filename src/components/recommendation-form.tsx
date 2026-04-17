@@ -31,8 +31,6 @@ import {
   Scale, 
   Ruler, 
   Calendar, 
-  Users,
-  Target,
   Zap,
   RefreshCw,
   Footprints,
@@ -41,7 +39,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
@@ -57,7 +55,6 @@ const formSchema = z.object({
   avgHeartRate: z.coerce.number().optional(),
   sleepDurationHours: z.coerce.number().optional(),
   bloodPressure: z.string().optional(),
-  planDuration: z.enum(['день', 'неделя']).default('день'),
 });
 
 interface RecommendationFormProps {
@@ -71,6 +68,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
+
+  const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,9 +87,28 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       avgHeartRate: 72,
       sleepDurationHours: 7.5,
       bloodPressure: '120/80',
-      planDuration: 'день',
     },
   });
+
+  // Автозаполнение из профиля при загрузке
+  useEffect(() => {
+    if (userData) {
+      form.reset({
+        gender: userData.gender || 'мужской',
+        weight: userData.weight || 70,
+        height: userData.height || 175,
+        age: userData.age || 30,
+        activityLevel: userData.activityLevel || 'средний',
+        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
+        smoking: userData.smoking || 'нет',
+        alcohol: userData.alcohol || 'не употребляю',
+        steps: form.getValues('steps'),
+        avgHeartRate: form.getValues('avgHeartRate'),
+        sleepDurationHours: form.getValues('sleepDurationHours'),
+        bloodPressure: form.getValues('bloodPressure'),
+      });
+    }
+  }, [userData, form]);
 
   const simulateSync = async () => {
     setSyncing(true);
@@ -105,20 +124,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      if (firestore && user && user.uid !== 'public-user') {
-        const profileData = { ...values, updatedAt: new Date().toISOString() };
-        setDoc(doc(firestore, 'users', user.uid), profileData, { merge: true });
+      // Сохраняем профиль
+      if (firestore && user) {
+        await setDoc(doc(firestore, 'users', user.uid), {
+          ...values,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
       }
 
-      // Извлекаем только те поля, которые ожидаются схемой Genkit
-      const { 
-        steps, 
-        avgHeartRate, 
-        sleepDurationHours, 
-        bloodPressure, 
-        planDuration, // Исключаем planDuration, так как его нет в GenerateRecommendationsInputSchema
-        ...biometrics 
-      } = values;
+      const { steps, avgHeartRate, sleepDurationHours, bloodPressure, ...biometrics } = values;
 
       const result = await generatePersonalizedRecommendations({
         ...biometrics,
@@ -133,11 +147,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       
       onResult(result);
     } catch (error: any) {
-      console.error('AI Analysis Error Detail:', error);
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа ИИ',
-        description: error.message || 'Проверьте подключение к интернету или попробуйте позже.'
+        description: error.message || 'Попробуйте позже.'
       });
     } finally {
       setLoading(false);
@@ -205,7 +218,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b pb-4">
-                <h4 className="text-xl font-black flex items-center gap-2"><Zap className="h-5 w-5 text-accent" /> Биометрия носимых устройств</h4>
+                <h4 className="text-xl font-black flex items-center gap-2"><Zap className="h-5 w-5 text-accent" /> Носимые устройства</h4>
                 <Button type="button" onClick={simulateSync} disabled={syncing} className="bg-primary/10 text-primary h-10 px-4 font-black text-[10px] uppercase">
                   {syncing ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />} Синхронизация
                 </Button>
