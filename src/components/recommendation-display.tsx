@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -43,7 +42,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
 
   const getMealImage = (imageId: string) => {
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    return found?.imageUrl || `https://picsum.photos/seed/${imageId || 'fallback'}/400/300`;
+    return found?.imageUrl || `https://picsum.photos/seed/${imageId || 'meal'}/600/400`;
   };
 
   const macroData = [
@@ -59,15 +58,12 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     return (
       <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000">
         
-        {/* SECTION 1: THE ULTIMATE BIO-HUB */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
-          {/* MAIN BIO-SCORE CARD */}
           <div className="lg:col-span-8">
             <Card className="premium-card border-none bg-gradient-to-br from-[#1A3C26] via-[#2D5A3C] to-[#142F1C] text-white p-12 md:p-20 relative overflow-hidden h-full flex flex-col justify-center shadow-[0_50px_100px_-20px_rgba(45,122,77,0.4)]">
               <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-16">
                 
-                {/* THE RING */}
                 <div className="relative w-72 h-72 md:w-[400px] md:h-[400px] shrink-0 group">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[100px] animate-pulse group-hover:bg-primary/40 transition-all" />
                   <svg className="w-full h-full -rotate-90 bio-ring-glow">
@@ -85,7 +81,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                   </div>
                 </div>
                 
-                {/* CONTENT */}
                 <div className="flex-1 space-y-10 text-center xl:text-left">
                   <div className="space-y-6">
                     <div className="flex flex-wrap justify-center xl:justify-start gap-4">
@@ -94,7 +89,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </div>
                     <h3 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.8] drop-shadow-2xl">Ваш Пик</h3>
                     <p className="text-white/70 text-xl md:text-3xl font-medium max-w-xl leading-relaxed mx-auto xl:mx-0">
-                      Ваш метаболизм работает на 94% эффективнее. ИИ зафиксировал идеальный баланс нутриентов.
+                      Ваш метаболизм работает на пике эффективности. ИИ зафиксировал идеальный баланс нутриентов.
                     </p>
                   </div>
                   
@@ -110,7 +105,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
             </Card>
           </div>
 
-          {/* FASTING WIDGET */}
           <div className="lg:col-span-4 h-full">
             <Card className="premium-card p-14 md:p-16 border-none bg-[#EFF0FF] flex flex-col justify-between h-full group hover:shadow-indigo-500/20 transition-all shadow-[0_40px_80px_-20px_rgba(79,70,229,0.1)]">
               <div className="flex items-center justify-between mb-16">
@@ -150,9 +144,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
           </div>
         </div>
 
-        {/* SECTION 2: MACRO VISUALIZATION */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-           {/* MACRO BREAKDOWN */}
            <Card className="lg:col-span-5 premium-card p-14 md:p-16 border-none bg-white">
               <h3 className="text-4xl font-black tracking-tighter mb-12">Баланс КБЖУ</h3>
               <div className="h-[350px] w-full flex items-center justify-center relative">
@@ -189,8 +181,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               </div>
            </Card>
 
-           {/* ENERGY LIMIT CARD */}
-           <Card className="lg:col-span-7 p-14 md:p-16 border-none bg-primary rounded-[3.5rem] text-white relative overflow-hidden flex flex-col justify-between shadow-[0_40px_80px_-20px_rgba(26,60,38,0.3)] transition-all hover:scale-[1.01]">
+           <Card className="lg:col-span-7 p-14 md:p-16 border-none bg-[#1A3C26] rounded-[3.5rem] text-white relative overflow-hidden flex flex-col justify-between shadow-[0_40px_80px_-20px_rgba(26,60,38,0.3)] transition-all hover:scale-[1.01]">
               <div className="relative z-10">
                  <p className="text-[14px] font-black uppercase tracking-[0.5em] opacity-60 mb-8">ЭНЕРГЕТИЧЕСКИЙ ЛИМИТ</p>
                  <div className="space-y-4">
@@ -209,8 +200,8 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </div>
                  </div>
                  <UnifiedDataEntry>
-                   <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl">
-                      <Plus className="h-10 w-10" />
+                   <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl flex items-center justify-center">
+                      <Plus className="h-10 w-10 text-primary" />
                    </Button>
                  </UnifiedDataEntry>
               </div>
@@ -218,7 +209,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
            </Card>
         </div>
 
-        {/* SECTION 3: LIVE METRICS HUB */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
            {[
              { label: 'Активность', val: '9,215', goal: '12k', icon: Footprints, color: 'text-orange-500', bg: 'bg-orange-50/50' },
@@ -238,9 +228,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
            ))}
         </div>
 
-        {/* SECTION 4: PROGRESS & MICRONUTRIENTS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-           {/* PROGRESS CHART */}
            <Card className="lg:col-span-12 premium-card p-14 md:p-20 border-none bg-white">
               <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-20">
                  <div className="flex items-center gap-10">
@@ -302,12 +290,10 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     );
   }
 
-  // MEALS MODE: ULTIMATE FOOD HUB
   if (mode === 'meals') {
     return (
       <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12 pb-32">
         
-        {/* DAILY FOOD SUMMARY */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
            <Card className="premium-card p-10 border-none bg-white flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mb-6">
@@ -332,13 +318,11 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
            </Card>
         </div>
 
-        {/* FOOD TIMELINE */}
         <div className="space-y-12 relative">
           <div className="absolute left-8 top-10 bottom-10 w-1 bg-gradient-to-b from-primary/5 via-primary/20 to-primary/5 rounded-full hidden md:block" />
           
           {mealPlan[0].meals.map((meal, idx) => (
             <div key={idx} className="relative md:pl-24 group">
-              {/* TIMELINE INDICATOR */}
               <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-4 border-primary shadow-lg z-10 hidden md:block group-hover:scale-150 transition-transform" />
               
               <Card className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_60px_120px_-30px_rgba(0,0,0,0.12)] transition-all">
@@ -372,7 +356,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                        </div>
                     </div>
                     
-                    {/* AI ANALYTICS BLOCK */}
                     <div className="bg-muted/30 p-8 rounded-[2rem] border-l-8 border-accent relative overflow-hidden">
                        <Sparkles className="absolute -right-8 -top-8 h-32 w-32 text-accent/10 rotate-12" />
                        <p className="text-lg md:text-xl font-medium text-foreground/80 leading-relaxed italic relative z-10">
@@ -381,7 +364,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </div>
                   </div>
                   
-                  {/* NUTRIENT BADGES */}
                   <div className="flex flex-wrap gap-8 pt-8 border-t">
                      <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Белки</span>
@@ -411,7 +393,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
           ))}
         </div>
 
-        {/* BOTTOM TIP */}
         <Card className="premium-card p-12 md:p-16 border-none bg-gradient-to-r from-primary to-[#2D5A3C] text-white flex flex-col md:flex-row items-center gap-12 shadow-2xl shadow-primary/30">
            <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
               <Brain className="h-12 w-12 text-white" />
@@ -419,7 +400,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
            <div className="space-y-4 text-center md:text-left flex-1">
               <h4 className="text-3xl font-black tracking-tight">Био-хак дня</h4>
               <p className="text-xl font-medium text-white/80 leading-relaxed">
-                Попробуйте добавить больше клетчатки в ужин, чтобы стабилизировать уровень сахара в крови перед сном и улучшить качество восстановления.
+                Попробуйте добавить больше клетчатки в ужин, чтобы стабилизировать уровень сахара в крови перед сном.
               </p>
            </div>
            <Button className="rounded-[2rem] h-20 px-12 bg-white text-primary font-black text-lg hover:scale-105 transition-all shadow-xl">Подробнее</Button>

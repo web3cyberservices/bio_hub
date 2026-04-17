@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
- * Обновлен для поддержки Bio-Score, микронутриентов и интервального голодания.
+ * Добавлена логика повторных попыток (retry) для обхода временных перегрузок API (Error 503).
  */
 
 import {ai} from '@/ai/genkit';
@@ -109,6 +108,8 @@ const recommendationPrompt = ai.definePrompt({
 - Ужин: dinner-steak, dinner-white-fish, dinner-tofu
 - Перекусы: snack-nuts, snack-yogurt, snack-avocado, snack-fruit
 
+ВАЖНО: Поле imageId должно строго соответствовать одному из указанных выше ID. Не используйте другие значения.
+
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
 - Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
@@ -124,8 +125,22 @@ const generateRecommendationsFlow = ai.defineFlow(
     outputSchema: GenerateRecommendationsOutputSchema,
   },
   async (input) => {
-    const {output} = await recommendationPrompt(input);
-    if (!output) throw new Error('Model failed to generate valid output');
-    return output;
+    let lastError;
+    for (let i = 0; i < 3; i++) {
+      try {
+        const {output} = await recommendationPrompt(input);
+        if (!output) throw new Error('Model failed to generate valid output');
+        return output;
+      } catch (err: any) {
+        lastError = err;
+        // Если ошибка 503 (Unavailable), ждем и пробуем снова
+        if (err.message?.includes('503') || err.status === 503) {
+          await new Promise(resolve => setTimeout(resolve, 1500 * (i + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError;
   }
 );
