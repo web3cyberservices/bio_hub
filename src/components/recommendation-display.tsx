@@ -50,6 +50,10 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     { name: 'Углеводы', value: macros.carbs, color: 'hsl(var(--muted-foreground))' },
   ];
 
+  // Динамический расчет оставшихся калорий
+  const calorieLimit = 2450;
+  const remainingCalories = Math.max(0, calorieLimit - macros.calories);
+
   if (mode === 'dashboard') {
     return (
       <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000">
@@ -189,7 +193,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               <div className="relative z-10">
                  <p className="text-[14px] font-black uppercase tracking-[0.5em] opacity-60 mb-8">ЭНЕРГЕТИЧЕСКИЙ ЛИМИТ</p>
                  <div className="space-y-4">
-                    <h3 className="text-8xl md:text-[140px] font-black tracking-tighter leading-none">{1528}</h3>
+                    <h3 className="text-8xl md:text-[140px] font-black tracking-tighter leading-none">{remainingCalories}</h3>
                     <p className="text-2xl md:text-4xl font-medium opacity-80">ккал осталось на сегодня</p>
                  </div>
               </div>
@@ -197,10 +201,10 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                  <div className="flex-1 space-y-4">
                     <div className="flex justify-between text-[11px] font-black uppercase tracking-widest opacity-60">
                        <span>Питание</span>
-                       <span>{macros.calories} / 2450</span>
+                       <span>{macros.calories} / {calorieLimit}</span>
                     </div>
                     <div className="h-4 bg-white/10 rounded-full overflow-hidden p-1">
-                       <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${(macros.calories / 2450) * 100}%` }} />
+                       <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (macros.calories / calorieLimit) * 100)}%` }} />
                     </div>
                  </div>
                  <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl">
