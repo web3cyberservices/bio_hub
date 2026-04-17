@@ -10,13 +10,14 @@ import {
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  Droplet, Scale, Utensils, Brain
+  Droplet, Scale, Utensils, Brain, Coffee, Clock
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;

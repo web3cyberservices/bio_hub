@@ -9,7 +9,7 @@ import {
   Activity, Zap, Footprints, Moon, Heart, Droplet, 
   TrendingDown, Timer, ShieldCheck, Star, Brain, Apple, Flame, Utensils,
   Trophy, ArrowUpRight, Scale, Info, ChevronRight, LayoutGrid, CheckCircle2,
-  Plus
+  Plus, Coffee, Clock, ChefHat, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -299,45 +299,128 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     );
   }
 
-  // MEALS MODE
+  // MEALS MODE: ULTIMATE FOOD HUB
   if (mode === 'meals') {
     return (
-      <div className="grid grid-cols-1 gap-14 animate-in fade-in duration-1000 max-w-6xl mx-auto py-12 pb-32 md:pb-12">
-         {mealPlan[0].meals.map((meal, idx) => (
-           <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row group hover:shadow-3xl transition-all">
-              <div className="relative w-full xl:w-[500px] h-[400px] shrink-0 overflow-hidden">
-                 <Image src={getMealImage(meal.imageId)} alt={meal.name} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
-                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all" />
-                 <Badge className="absolute top-10 left-10 bg-white/20 backdrop-blur-3xl text-white border-none font-black text-[12px] uppercase tracking-[0.4em] px-10 py-5 rounded-[2rem]">{meal.time}</Badge>
+      <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12 pb-32">
+        
+        {/* DAILY FOOD SUMMARY */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           <Card className="premium-card p-10 border-none bg-white flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-blue-50 rounded-[1.5rem] flex items-center justify-center mb-6">
+                 <Droplet className="h-8 w-8 text-blue-500" />
               </div>
-              <div className="p-12 md:p-16 flex-1 flex flex-col justify-between">
-                 <div className="space-y-8">
+              <h4 className="text-4xl font-black">1.8 <span className="text-sm uppercase opacity-40">литра</span></h4>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Гидратация</p>
+           </Card>
+           <Card className="premium-card p-10 border-none bg-white flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-amber-50 rounded-[1.5rem] flex items-center justify-center mb-6">
+                 <Coffee className="h-8 w-8 text-amber-700" />
+              </div>
+              <h4 className="text-4xl font-black">2 <span className="text-sm uppercase opacity-40">чашки</span></h4>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Кофеин</p>
+           </Card>
+           <Card className="premium-card p-10 border-none bg-primary/5 border-primary/10 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mb-6">
+                 <ChefHat className="h-8 w-8 text-primary" />
+              </div>
+              <h4 className="text-4xl font-black">{mealPlan[0].meals.length}</h4>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Приемов пищи</p>
+           </Card>
+        </div>
+
+        {/* FOOD TIMELINE */}
+        <div className="space-y-12 relative">
+          <div className="absolute left-8 top-10 bottom-10 w-1 bg-gradient-to-b from-primary/5 via-primary/20 to-primary/5 rounded-full hidden md:block" />
+          
+          {mealPlan[0].meals.map((meal, idx) => (
+            <div key={idx} className="relative md:pl-24 group">
+              {/* TIMELINE INDICATOR */}
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-4 border-primary shadow-lg z-10 hidden md:block group-hover:scale-150 transition-transform" />
+              
+              <Card className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_60px_120px_-30px_rgba(0,0,0,0.12)] transition-all">
+                <div className="relative w-full xl:w-[450px] h-[350px] xl:h-auto shrink-0 overflow-hidden">
+                  <Image 
+                    src={getMealImage(meal.imageId)} 
+                    alt={meal.name} 
+                    fill 
+                    className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-8 left-8 flex items-center gap-3">
+                     <Clock className="h-5 w-5 text-white" />
+                     <span className="text-xl font-black text-white">{meal.time}</span>
+                  </div>
+                </div>
+
+                <div className="p-12 md:p-14 flex-1 flex flex-col justify-between space-y-10">
+                  <div className="space-y-6">
                     <div className="flex justify-between items-start gap-6">
-                       <h3 className="text-5xl md:text-7xl font-black tracking-tighter leading-none text-foreground">{meal.name}</h3>
-                       <div className="text-right shrink-0">
-                          <p className="text-5xl md:text-7xl font-black text-primary leading-none tracking-tighter">{meal.calories} <span className="text-sm uppercase tracking-[0.5em] font-black opacity-30">ккал</span></p>
+                       <div>
+                          <Badge variant="outline" className="border-primary/20 text-primary mb-4 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary/5">
+                            {idx === 0 ? 'Завтрак' : idx === 1 ? 'Обед' : idx === 2 ? 'Ужин' : 'Перекус'}
+                          </Badge>
+                          <h3 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-foreground">{meal.name}</h3>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-4xl md:text-5xl font-black text-primary leading-none tracking-tighter">
+                            {meal.calories} <span className="text-[10px] uppercase tracking-[0.4em] font-black opacity-30">ккал</span>
+                          </p>
                        </div>
                     </div>
-                    <p className="text-muted-foreground font-medium text-xl md:text-3xl leading-relaxed italic">«{meal.description}»</p>
-                 </div>
-                 
-                 <div className="grid grid-cols-3 gap-16 pt-12 border-t mt-12">
-                    <div className="space-y-3">
-                       <p className="text-4xl md:text-6xl font-black text-primary leading-none tracking-tighter">{meal.protein || 0}г</p>
-                       <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-40">Протеины</p>
+                    
+                    {/* AI ANALYTICS BLOCK */}
+                    <div className="bg-muted/30 p-8 rounded-[2rem] border-l-8 border-accent relative overflow-hidden">
+                       <Sparkles className="absolute -right-8 -top-8 h-32 w-32 text-accent/10 rotate-12" />
+                       <p className="text-lg md:text-xl font-medium text-foreground/80 leading-relaxed italic relative z-10">
+                         «{meal.description}»
+                       </p>
                     </div>
-                    <div className="space-y-3">
-                       <p className="text-4xl md:text-6xl font-black text-secondary leading-none tracking-tighter">{meal.fat || 0}г</p>
-                       <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-40">Липиды</p>
-                    </div>
-                    <div className="space-y-3">
-                       <p className="text-4xl md:text-6xl font-black text-accent-foreground leading-none tracking-tighter">{meal.carbs || 0}г</p>
-                       <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] opacity-40">Карбо</p>
-                    </div>
-                 </div>
-              </div>
-           </Card>
-         ))}
+                  </div>
+                  
+                  {/* NUTRIENT BADGES */}
+                  <div className="flex flex-wrap gap-8 pt-8 border-t">
+                     <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Белки</span>
+                        <div className="flex items-center gap-3">
+                           <div className="w-2 h-8 bg-secondary rounded-full" />
+                           <span className="text-3xl font-black">{meal.protein || 0}г</span>
+                        </div>
+                     </div>
+                     <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Жиры</span>
+                        <div className="flex items-center gap-3">
+                           <div className="w-2 h-8 bg-accent rounded-full" />
+                           <span className="text-3xl font-black">{meal.fat || 0}г</span>
+                        </div>
+                     </div>
+                     <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Углеводы</span>
+                        <div className="flex items-center gap-3">
+                           <div className="w-2 h-8 bg-muted-foreground rounded-full" />
+                           <span className="text-3xl font-black">{meal.carbs || 0}г</span>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          ))}
+        </div>
+
+        {/* BOTTOM TIP */}
+        <Card className="premium-card p-12 md:p-16 border-none bg-gradient-to-r from-primary to-[#2D5A3C] text-white flex flex-col md:flex-row items-center gap-12 shadow-2xl shadow-primary/30">
+           <div className="w-24 h-24 bg-white/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
+              <Brain className="h-12 w-12 text-white" />
+           </div>
+           <div className="space-y-4 text-center md:text-left flex-1">
+              <h4 className="text-3xl font-black tracking-tight">Био-хак дня</h4>
+              <p className="text-xl font-medium text-white/80 leading-relaxed">
+                Попробуйте добавить больше клетчатки в ужин, чтобы стабилизировать уровень сахара в крови перед сном и улучшить качество восстановления.
+              </p>
+           </div>
+           <Button className="rounded-[2rem] h-20 px-12 bg-white text-primary font-black text-lg hover:scale-105 transition-all shadow-xl">Подробнее</Button>
+        </Card>
       </div>
     );
   }
