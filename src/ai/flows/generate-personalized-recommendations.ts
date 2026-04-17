@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
- * Добавлена логика повторных попыток (retry) для обхода временных перегрузок API (Error 503).
+ * Добавлена логика повторных попыток (retry) и строгая фильтрация изображений еды.
  */
 
 import {ai} from '@/ai/genkit';
@@ -77,7 +78,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string(),
+      imageId: z.string().describe('ID изображения СТРОГО из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
     }))
   })),
   activityAnalysis: z.string().optional(),
@@ -98,17 +99,23 @@ const recommendationPrompt = ai.definePrompt({
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
-ИНСТРУКЦИИ:
-1. Рассчитайте Bio-Score (0-100) на основе веса, активности, сна и вредных привычек.
-2. Подберите оптимальное окно интервального голодания (например, 16:8) исходя из целей.
-3. Оцените микронутриенты (Железо, Магний, Омега-3, Вит D), которые критичны для этого пользователя.
-4. Сформируйте Meal Plan минимум на один день. Используйте ТОЛЬКО следующие ID изображений для соответствующих блюд: 
-- Завтрак: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie
-- Обед: lunch-salmon, lunch-salad-chicken, lunch-soup
-- Ужин: dinner-steak, dinner-white-fish, dinner-tofu
-- Перекусы: snack-nuts, snack-yogurt, snack-avocado, snack-fruit
+ИНСТРУКЦИИ ПО ИЗОБРАЖЕНИЯМ ЕДЫ (КРИТИЧЕСКИ ВАЖНО):
+Для каждого приема пищи вы ДОЛЖНЫ выбрать наиболее подходящий imageId ТОЛЬКО из этого списка:
+- Для каш, овсянки: breakfast-oatmeal
+- Для яиц, омлетов: breakfast-omelette
+- Для смузи, ягодных чаш: breakfast-smoothie
+- Для лосося, семги, морепродуктов: lunch-salmon
+- Для салатов с курицей или мясом: lunch-salad-chicken
+- Для супов: lunch-soup
+- Для говядины, стейков: dinner-steak
+- Для белой рыбы (треска, минтай): dinner-white-fish
+- Для вегетарианских блюд с тофу: dinner-tofu
+- Для орехов: snack-nuts
+- Для йогуртов: snack-yogurt
+- Для авокадо-тостов: snack-avocado
+- Для фруктовых нарезок: snack-fruit
 
-ВАЖНО: Поле imageId должно строго соответствовать одному из указанных выше ID. Не используйте другие значения.
+ЗАПРЕЩЕНО использовать любые другие ID. Если подходящего ID нет, выберите максимально близкий по смыслу из списка.
 
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
@@ -133,7 +140,6 @@ const generateRecommendationsFlow = ai.defineFlow(
         return output;
       } catch (err: any) {
         lastError = err;
-        // Если ошибка 503 (Unavailable), ждем и пробуем снова
         if (err.message?.includes('503') || err.status === 503) {
           await new Promise(resolve => setTimeout(resolve, 1500 * (i + 1)));
           continue;

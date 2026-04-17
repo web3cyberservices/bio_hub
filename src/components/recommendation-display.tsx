@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -41,8 +42,13 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
   }, []);
 
   const getMealImage = (imageId: string) => {
+    // Ищем в нашем списке плейсхолдеров
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    return found?.imageUrl || `https://picsum.photos/seed/${imageId || 'meal'}/600/400`;
+    if (found) return found.imageUrl;
+
+    // Если ID не найден, пробуем создать специфичный Picsum URL с ключевым словом food, чтобы избежать гор/лесов
+    const safeSeed = imageId ? `food-${imageId}` : 'healthy-meal';
+    return `https://picsum.photos/seed/${safeSeed}/600/400`;
   };
 
   const macroData = [
