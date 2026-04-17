@@ -16,6 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { cn } from '@/lib/utils';
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
@@ -188,8 +189,8 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               </div>
            </Card>
 
-           {/* ENERGY LIMIT CARD */}
-           <Card className="lg:col-span-7 premium-card p-14 md:p-16 border-none bg-primary text-white relative overflow-hidden flex flex-col justify-between">
+           {/* ENERGY LIMIT CARD - FIXED VISIBILITY */}
+           <Card className="lg:col-span-7 p-14 md:p-16 border-none bg-[#1A3C26] rounded-[3.5rem] text-white relative overflow-hidden flex flex-col justify-between shadow-[0_40px_80px_-20px_rgba(26,60,38,0.3)] transition-all hover:scale-[1.01]">
               <div className="relative z-10">
                  <p className="text-[14px] font-black uppercase tracking-[0.5em] opacity-60 mb-8">ЭНЕРГЕТИЧЕСКИЙ ЛИМИТ</p>
                  <div className="space-y-4">
@@ -207,9 +208,11 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                        <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (macros.calories / calorieLimit) * 100)}%` }} />
                     </div>
                  </div>
-                 <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl">
-                    <Plus className="h-10 w-10" />
-                 </Button>
+                 <UnifiedDataEntry>
+                   <Button className="rounded-full w-24 h-24 bg-white text-[#1A3C26] hover:scale-110 transition-all shadow-2xl">
+                      <Plus className="h-10 w-10" />
+                   </Button>
+                 </UnifiedDataEntry>
               </div>
               <Flame className="absolute -right-20 -top-20 h-96 w-96 text-white/5 opacity-40 rotate-12" />
            </Card>
