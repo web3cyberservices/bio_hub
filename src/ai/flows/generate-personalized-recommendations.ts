@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
@@ -102,7 +103,11 @@ const recommendationPrompt = ai.definePrompt({
 1. Рассчитайте Bio-Score (0-100) на основе веса, активности, сна и вредных привычек.
 2. Подберите оптимальное окно интервального голодания (например, 16:8) исходя из целей.
 3. Оцените микронутриенты (Железо, Магний, Омега-3, Вит D), которые критичны для этого пользователя.
-4. Сформируйте Meal Plan минимум на один день. Используйте ТОЛЬКО следующие ID изображений: breakfast-omelette, breakfast-oatmeal, lunch-salmon, dinner-steak, snack-nuts.
+4. Сформируйте Meal Plan минимум на один день. Используйте ТОЛЬКО следующие ID изображений для соответствующих блюд: 
+- Завтрак: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie
+- Обед: lunch-salmon, lunch-salad-chicken, lunch-soup
+- Ужин: dinner-steak, dinner-white-fish, dinner-tofu
+- Перекусы: snack-nuts, snack-yogurt, snack-avocado, snack-fruit
 
 Контекст пользователя:
 - Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.

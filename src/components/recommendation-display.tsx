@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -42,7 +43,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
 
   const getMealImage = (imageId: string) => {
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    return found?.imageUrl || 'https://picsum.photos/seed/fallback/400/300';
+    return found?.imageUrl || `https://picsum.photos/seed/${imageId || 'fallback'}/400/300`;
   };
 
   const macroData = [
@@ -51,7 +52,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
     { name: 'Углеводы', value: macros.carbs, color: 'hsl(var(--muted-foreground))' },
   ];
 
-  // Динамический расчет оставшихся калорий
   const calorieLimit = 2450;
   const remainingCalories = Math.max(0, calorieLimit - macros.calories);
 
@@ -98,7 +98,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </p>
                   </div>
                   
-                  <div className="flex flex-wrap justify-center xl:justify-start gap-6 pt-4">
+                  <div className="flex wrap justify-center xl:justify-start gap-6 pt-4">
                      <div className="flex items-center gap-5 bg-white/5 px-10 py-6 rounded-[2.5rem] backdrop-blur-3xl border border-white/10 group hover:bg-white/10 transition-all cursor-default shadow-lg">
                         <Trophy className="h-8 w-8 text-accent animate-bounce" />
                         <span className="text-[12px] font-black uppercase tracking-[0.3em]">Личный рекорд</span>
@@ -189,8 +189,8 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               </div>
            </Card>
 
-           {/* ENERGY LIMIT CARD - FIXED VISIBILITY */}
-           <Card className="lg:col-span-7 p-14 md:p-16 border-none bg-[#1A3C26] rounded-[3.5rem] text-white relative overflow-hidden flex flex-col justify-between shadow-[0_40px_80px_-20px_rgba(26,60,38,0.3)] transition-all hover:scale-[1.01]">
+           {/* ENERGY LIMIT CARD */}
+           <Card className="lg:col-span-7 p-14 md:p-16 border-none bg-primary rounded-[3.5rem] text-white relative overflow-hidden flex flex-col justify-between shadow-[0_40px_80px_-20px_rgba(26,60,38,0.3)] transition-all hover:scale-[1.01]">
               <div className="relative z-10">
                  <p className="text-[14px] font-black uppercase tracking-[0.5em] opacity-60 mb-8">ЭНЕРГЕТИЧЕСКИЙ ЛИМИТ</p>
                  <div className="space-y-4">
@@ -209,7 +209,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </div>
                  </div>
                  <UnifiedDataEntry>
-                   <Button className="rounded-full w-24 h-24 bg-white text-[#1A3C26] hover:scale-110 transition-all shadow-2xl">
+                   <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl">
                       <Plus className="h-10 w-10" />
                    </Button>
                  </UnifiedDataEntry>

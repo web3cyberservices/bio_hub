@@ -3,91 +3,91 @@
     {
       "id": "hero-healthy-food",
       "description": "Healthy balanced meal on a table",
-      "imageUrl": "https://picsum.photos/seed/nutri1/1200/800",
+      "imageUrl": "https://picsum.photos/seed/food-hero/1200/800",
       "imageHint": "healthy meal"
     },
     {
       "id": "dashboard-stats",
       "description": "Abstract health and data visualization",
-      "imageUrl": "https://picsum.photos/seed/nutri2/600/400",
+      "imageUrl": "https://picsum.photos/seed/medical-chart/600/400",
       "imageHint": "health analysis"
     },
     {
       "id": "breakfast-omelette",
       "description": "Eggs and omelette with greens",
-      "imageUrl": "https://picsum.photos/seed/omelette/400/300",
+      "imageUrl": "https://picsum.photos/seed/eggs-omelette/400/300",
       "imageHint": "omelette breakfast"
     },
     {
       "id": "breakfast-oatmeal",
       "description": "Oatmeal porridge with fruits",
-      "imageUrl": "https://picsum.photos/seed/oatmeal/400/300",
+      "imageUrl": "https://picsum.photos/seed/oatmeal-bowl/400/300",
       "imageHint": "oatmeal porridge"
     },
     {
       "id": "breakfast-smoothie",
       "description": "Green smoothie or fruit bowl",
-      "imageUrl": "https://picsum.photos/seed/smoothie/400/300",
+      "imageUrl": "https://picsum.photos/seed/smoothie-bowl/400/300",
       "imageHint": "healthy smoothie"
     },
     {
       "id": "lunch-salad-chicken",
       "description": "Fresh salad with chicken breast",
-      "imageUrl": "https://picsum.photos/seed/chickensalad/400/300",
+      "imageUrl": "https://picsum.photos/seed/chicken-salad/400/300",
       "imageHint": "chicken salad"
     },
     {
       "id": "lunch-salmon",
       "description": "Grilled salmon with vegetables",
-      "imageUrl": "https://picsum.photos/seed/salmon/400/300",
+      "imageUrl": "https://picsum.photos/seed/salmon-plate/400/300",
       "imageHint": "grilled salmon"
     },
     {
       "id": "lunch-soup",
       "description": "Vegetable or cream soup",
-      "imageUrl": "https://picsum.photos/seed/soup/400/300",
+      "imageUrl": "https://picsum.photos/seed/vegetable-soup/400/300",
       "imageHint": "vegetable soup"
     },
     {
       "id": "dinner-steak",
       "description": "Beef steak with broccoli",
-      "imageUrl": "https://picsum.photos/seed/steak/400/300",
+      "imageUrl": "https://picsum.photos/seed/beef-steak/400/300",
       "imageHint": "beef steak"
     },
     {
       "id": "dinner-white-fish",
       "description": "Baked white fish with herbs",
-      "imageUrl": "https://picsum.photos/seed/whitefish/400/300",
+      "imageUrl": "https://picsum.photos/seed/white-fish/400/300",
       "imageHint": "baked fish"
     },
     {
       "id": "dinner-tofu",
       "description": "Tofu stir fry with vegetables",
-      "imageUrl": "https://picsum.photos/seed/tofu/400/300",
+      "imageUrl": "https://picsum.photos/seed/tofu-stirfry/400/300",
       "imageHint": "tofu stirfry"
     },
     {
       "id": "snack-nuts",
       "description": "Mix of nuts and dried fruits",
-      "imageUrl": "https://picsum.photos/seed/nuts/400/300",
+      "imageUrl": "https://picsum.photos/seed/nuts-mix/400/300",
       "imageHint": "nuts snack"
     },
     {
       "id": "snack-yogurt",
       "description": "Greek yogurt with berries",
-      "imageUrl": "https://picsum.photos/seed/yogurt/400/300",
+      "imageUrl": "https://picsum.photos/seed/yogurt-berries/400/300",
       "imageHint": "yogurt berries"
     },
     {
       "id": "snack-avocado",
       "description": "Avocado toast on whole grain bread",
-      "imageUrl": "https://picsum.photos/seed/avotoast/400/300",
+      "imageUrl": "https://picsum.photos/seed/avocado-toast/400/300",
       "imageHint": "avocado toast"
     },
     {
       "id": "snack-fruit",
       "description": "Fresh sliced fruits platter",
-      "imageUrl": "https://picsum.photos/seed/fruitplatter/400/300",
+      "imageUrl": "https://picsum.photos/seed/fruit-platter/400/300",
       "imageHint": "fruit platter"
     }
   ]
