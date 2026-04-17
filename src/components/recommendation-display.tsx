@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Activity, Zap, Footprints, Moon, Heart, Droplet, 
   TrendingDown, Timer, ShieldCheck, Star, Brain, Apple, Flame, Utensils,
-  Trophy, ArrowUpRight, Scale, Info, ChevronRight, LayoutGrid, CheckCircle2
+  Trophy, ArrowUpRight, Scale, Info, ChevronRight, LayoutGrid, CheckCircle2,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
