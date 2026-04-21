@@ -135,10 +135,15 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       return;
     }
 
+    if (!description && !image && !refinement) {
+      toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await analyzeMeal({
-        description,
+        description: description || undefined,
         photoDataUri: image || undefined,
         refinement: isRefinement ? refinement : undefined,
       });
@@ -146,7 +151,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       setEditedMeal(result);
       if (isRefinement) setRefinement('');
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка анализа', description: error.message || 'Не удалось обработать.' });
+      console.error("AI Error:", error);
+      toast({ variant: 'destructive', title: 'Ошибка анализа ИИ', description: error.message || 'Не удалось обработать.' });
     } finally {
       setLoading(false);
     }
@@ -242,8 +248,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   )}
 
                   {image && !showCamera && (
-                    <div className="relative rounded-2xl overflow-hidden aspect-video w-full max-w-md shadow-2xl border-4 border-white">
-                      <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="relative rounded-2xl overflow-hidden aspect-video w-full max-w-md shadow-2xl border-4 border-white flex items-center justify-center bg-black/5">
+                      <img src={image} alt="Preview" className="max-w-full max-h-full object-contain" />
                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
                     </div>
                   )}

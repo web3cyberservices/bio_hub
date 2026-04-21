@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -190,7 +189,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     return (
       <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
         <div className="space-y-12 relative">
-          {mealPlan[0].meals.map((meal, idx) => {
+          {mealPlan && mealPlan.length > 0 && mealPlan[0].meals.map((meal, idx) => {
             return (
               <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
                 <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group bg-muted/20">
