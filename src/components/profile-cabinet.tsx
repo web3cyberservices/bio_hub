@@ -142,7 +142,6 @@ export function ProfileCabinet() {
   }, [currentYear, currentMonth]);
 
   const updateBirthDate = (y: string, m: string, d: string) => {
-    // Validate day doesn't exceed new month's days
     const maxDays = new Date(parseInt(y), parseInt(m), 0).getDate();
     let validDay = d;
     if (parseInt(d) > maxDays) {
@@ -163,11 +162,12 @@ export function ProfileCabinet() {
 
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), {
+      const userRef = doc(firestore, 'users', user.uid);
+      await setDoc(userRef, {
         ...values,
         id: user.uid,
-        email: user.email,
-        profileType: 'RegularUser',
+        email: (user as any).email || null,
+        profileType: 'user',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
@@ -180,12 +180,21 @@ export function ProfileCabinet() {
       toast({
         variant: 'destructive',
         title: 'Ошибка сохранения',
-        description: error.message || 'Проверьте соединение с интернетом.',
+        description: 'Не удалось обновить профиль. Проверьте права доступа.',
       });
     } finally {
       setLoading(false);
     }
   }
+
+  const onInvalid = (errors: any) => {
+    console.error('Validation Errors:', errors);
+    toast({
+      variant: 'destructive',
+      title: 'Ошибка заполнения',
+      description: 'Пожалуйста, проверьте обязательные поля (Имя, Возраст, Вес, Рост).',
+    });
+  };
 
   if (docLoading && user && user.uid !== 'public-user') {
     return (
@@ -223,7 +232,7 @@ export function ProfileCabinet() {
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</label>
               <div className="flex items-center gap-3 h-14 bg-muted/30 rounded-2xl px-6 font-bold text-muted-foreground border">
                 <Mail className="h-4 w-4 opacity-40" />
-                {user?.email || 'Не указан (Анонимный вход)'}
+                {(user as any)?.email || 'Не указан (Тестовый вход)'}
               </div>
             </div>
             <div className="space-y-2">
@@ -239,7 +248,7 @@ export function ProfileCabinet() {
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-12">
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
@@ -249,7 +258,7 @@ export function ProfileCabinet() {
                   <div className="grid grid-cols-2 gap-4">
                     <FormField control={form.control} name="firstName" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя *</FormLabel>
                         <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -287,7 +296,6 @@ export function ProfileCabinet() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <FormMessage />
                   </FormItem>
                 </div>
               </div>
@@ -303,7 +311,7 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
                       </FormLabel>
-                      <FormControl><Textarea placeholder="Что вы любите? (например: авокадо, лосось, орехи)" {...field} className={textareaClasses} /></FormControl>
+                      <FormControl><Textarea placeholder="Что вы любите? (авокадо, лосось...)" {...field} className={textareaClasses} /></FormControl>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
@@ -311,11 +319,10 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                         <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
                       </FormLabel>
-                      <FormControl><Textarea placeholder="Что исключить? (например: кинза, лук, жирная свинина)" {...field} className={textareaClasses} /></FormControl>
+                      <FormControl><Textarea placeholder="Что исключить? (кинза, лук...)" {...field} className={textareaClasses} /></FormControl>
                     </FormItem>
                   )} />
                 </div>
-                <p className="text-[9px] text-muted-foreground italic px-2">Эти данные будут использоваться ИИ при составлении вашего рациона.</p>
               </div>
 
               <div className="space-y-6">
@@ -375,20 +382,23 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="age" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Возраст</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Возраст *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Вес (кг)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Вес (кг) *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Рост (см)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Рост (см) *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
                     </FormItem>
                   )} />
                 </div>

@@ -8,26 +8,18 @@ service cloud.firestore {
      * Core Philosophy: 
      * This ruleset enforces a strict hierarchical user-ownership model. Every piece of data 
      * in the system is logically and physically nested under a specific user's document path.
-     * 
-     * Data Structure:
-     * All data is organized under the root `/users/{userId}` collection. Sub-entities like 
-     * health metrics, dietary logs, lab results, and AI recommendations are stored in 
-     * subcollections of the specific user they belong to.
      */
 
     // --- Helper Functions ---
 
-    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Combines ownership check with a check for document existence for write operations. */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
@@ -37,57 +29,41 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false; 
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
 
-      /**
-       * @description Rules for dailyLogs subcollection.
-       * @path /users/{userId}/dailyLogs/{dailyLogId}
-       */
       match /dailyLogs/{dailyLogId} {
         allow get, list: if isOwner(userId);
         allow create, update: if isOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
 
-      /**
-       * @description Rules for HealthDataInput subcollection.
-       */
       match /healthDataInputs/{healthDataInputId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
 
-      /**
-       * @description Rules for DietaryLog subcollection.
-       */
       match /dietaryLogs/{dietaryLogId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
 
-      /**
-       * @description Rules for LabResult subcollection.
-       */
       match /labResults/{labResultId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
 
-      /**
-       * @description Rules for Recommendation subcollection.
-       */
       match /recommendations/{recommendationId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
         allow delete: if isExistingOwner(userId);
       }
     }

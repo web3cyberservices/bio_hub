@@ -49,7 +49,9 @@ export default function RegisterPage() {
 
       await setDoc(doc(firestore, 'users', newUser.uid), {
         uid: newUser.uid,
+        id: newUser.uid,
         displayName: name,
+        firstName: name,
         email: email,
         profileType: 'user',
         createdAt: new Date().toISOString(),
@@ -91,6 +93,7 @@ export default function RegisterPage() {
           id: googleUser.uid,
           email: googleUser.email,
           displayName: googleUser.displayName,
+          firstName: googleUser.displayName,
           profileType: 'user',
           createdAt: new Date().toISOString(),
         }, { merge: true });
@@ -128,9 +131,11 @@ export default function RegisterPage() {
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: testUser.uid,
+          id: testUser.uid,
           profileType: 'user',
           createdAt: new Date().toISOString(),
           displayName: 'Тестовый Пользователь',
+          firstName: 'Тестовый',
         }, { merge: true });
       }
 
