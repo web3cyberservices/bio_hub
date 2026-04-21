@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -33,16 +32,15 @@ import {
   Mail,
   Fingerprint,
   Heart,
-  Ban,
   CalendarDays,
   Smartphone,
   RefreshCw,
-  CheckCircle2,
   Send,
   MessageCircle,
   BellRing,
   Stethoscope,
-  ShieldCheck
+  ShieldCheck,
+  Briefcase
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -64,23 +62,17 @@ const profileSchema = z.object({
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
   profileType: z.enum(['user', 'specialist']).default('user'),
+  specialization: z.string().optional(),
+  bio: z.string().optional(),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
 
 const months = [
-  { value: "01", label: "Январь" },
-  { value: "02", label: "Февраль" },
-  { value: "03", label: "Март" },
-  { value: "04", label: "Апрель" },
-  { value: "05", label: "Май" },
-  { value: "06", label: "Июнь" },
-  { value: "07", label: "Июль" },
-  { value: "08", label: "Август" },
-  { value: "09", label: "Сентябрь" },
-  { value: "10", label: "Октябрь" },
-  { value: "11", label: "Ноябрь" },
-  { value: "12", label: "Декабрь" },
+  { value: "01", label: "Январь" }, { value: "02", label: "Февраль" }, { value: "03", label: "Март" },
+  { value: "04", label: "Апрель" }, { value: "05", label: "Май" }, { value: "06", label: "Июнь" },
+  { value: "07", label: "Июль" }, { value: "08", label: "Август" }, { value: "09", label: "Сентябрь" },
+  { value: "10", label: "Октябрь" }, { value: "11", label: "Ноябрь" }, { value: "12", label: "Декабрь" },
 ];
 
 export function ProfileCabinet() {
@@ -95,7 +87,7 @@ export function ProfileCabinet() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userData, isLoading: docLoading } = useDoc<any>(userDocRef);
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -113,6 +105,8 @@ export function ProfileCabinet() {
       favoriteFoods: '',
       dislikedFoods: '',
       profileType: 'user',
+      specialization: '',
+      bio: '',
     },
   });
 
@@ -132,12 +126,14 @@ export function ProfileCabinet() {
         favoriteFoods: userData.favoriteFoods || '',
         dislikedFoods: userData.dislikedFoods || '',
         profileType: userData.profileType || 'user',
+        specialization: userData.specialization || '',
+        bio: userData.bio || '',
       });
     }
   }, [userData, form]);
 
-  const birthDateValue = form.watch('birthDate') || '1990-01-01';
   const profileTypeValue = form.watch('profileType');
+  const birthDateValue = form.watch('birthDate') || '1990-01-01';
   const [currentYear, currentMonth, currentDay] = birthDateValue.split('-');
 
   const years = useMemo(() => {
@@ -156,9 +152,7 @@ export function ProfileCabinet() {
   const updateBirthDate = (y: string, m: string, d: string) => {
     const maxDays = new Date(parseInt(y), parseInt(m), 0).getDate();
     let validDay = d;
-    if (parseInt(d) > maxDays) {
-      validDay = maxDays.toString().padStart(2, '0');
-    }
+    if (parseInt(d) > maxDays) validDay = maxDays.toString().padStart(2, '0');
     form.setValue('birthDate', `${y}-${m}-${validDay}`);
   };
 
@@ -169,41 +163,12 @@ export function ProfileCabinet() {
     if (isNaN(birthDate.getTime())) return 0;
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     return age;
   };
 
-  const handleDeviceSync = async () => {
-    setSyncing(true);
-    await new Promise(r => setTimeout(r, 2000));
-    form.setValue('weight', 74.5);
-    form.setValue('height', 178);
-    setSyncing(false);
-    toast({
-      title: 'Био-синхронизация завершена',
-      description: 'Данные с ваших устройств (браслет, весы) успешно импортированы.',
-    });
-  };
-
-  const handleSocialLink = (platform: 'Telegram' | 'WhatsApp') => {
-    toast({
-      title: `Синхронизация с ${platform}`,
-      description: `Перенаправляем в ${platform} для подтверждения...`,
-    });
-  };
-
   async function onSubmit(values: ProfileValues) {
-    if (!user || !firestore || user.uid === 'public-user') {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Войдите в аккаунт, чтобы сохранить изменения.',
-      });
-      return;
-    }
-
+    if (!user || !firestore || user.uid === 'public-user') return;
     setLoading(true);
     try {
       const age = calculateAge(values.birthDate || '1990-01-01');
@@ -215,24 +180,16 @@ export function ProfileCabinet() {
         email: (user as any).email || null,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-
-      toast({
-        title: 'Данные сохранены',
-        description: 'Ваш био-профиль успешно обновлен.',
-      });
+      toast({ title: 'Данные сохранены', description: 'Ваш био-профиль успешно обновлен.' });
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка сохранения',
-        description: 'Не удалось обновить профиль.',
-      });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
     }
   }
 
-  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
-  const textareaClasses = "min-h-[100px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
+  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all";
+  const textareaClasses = "min-h-[120px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
   const selectClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 transition-all";
 
   return (
@@ -243,7 +200,7 @@ export function ProfileCabinet() {
         </div>
         <div>
           <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground leading-none">Личный кабинет</h2>
-          <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши биометрические данные и настройки аккаунта.</p>
+          <p className="text-muted-foreground text-xs md:text-base font-medium">Управление вашим био-аккаунтом.</p>
         </div>
       </div>
 
@@ -253,89 +210,39 @@ export function ProfileCabinet() {
             <div className="flex items-center justify-between border-b pb-4">
               <div className="flex items-center gap-2">
                 <Fingerprint className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
+                <h3 className="text-lg font-black uppercase tracking-tight">Тип аккаунта</h3>
               </div>
             </div>
-
-            <div className="space-y-4">
-               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 px-4">Тип аккаунта</label>
-               <div className="grid grid-cols-2 gap-4">
-                  <Button 
-                    type="button"
-                    onClick={() => form.setValue('profileType', 'user')}
-                    className={cn(
-                      "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
-                      profileTypeValue === 'user' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
-                    )}
-                  >
-                    <User className="h-5 w-5" />
-                    Я — Пользователь
-                  </Button>
-                  <Button 
-                    type="button"
-                    onClick={() => form.setValue('profileType', 'specialist')}
-                    className={cn(
-                      "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
-                      profileTypeValue === 'specialist' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
-                    )}
-                  >
-                    <Stethoscope className="h-5 w-5" />
-                    Я — Специалист
-                  </Button>
-               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
-                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
-                  <Mail className="h-4 w-4 opacity-40" />
-                  <span className="truncate">{(user as any)?.email || 'Не указан'}</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Статус проверки</label>
-                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-primary border-none">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>Верифицирован</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4 pt-2">
-               <div className="flex items-center gap-2 px-4">
-                  <BellRing className="h-3 w-3 text-primary" />
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Уведомления</label>
-               </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button variant="outline" onClick={() => handleSocialLink('Telegram')} className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary">
-                    <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
-                    <Badge variant="outline" className="text-[7px]">OFF</Badge>
-                  </Button>
-                  <Button variant="outline" onClick={() => handleSocialLink('WhatsApp')} className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary">
-                    <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
-                    <Badge variant="outline" className="text-[7px]">OFF</Badge>
-                  </Button>
-               </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                type="button"
+                onClick={() => form.setValue('profileType', 'user')}
+                className={cn(
+                  "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
+                  profileTypeValue === 'user' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                )}
+              >
+                <User className="h-5 w-5" /> Пользователь
+              </Button>
+              <Button 
+                type="button"
+                onClick={() => form.setValue('profileType', 'specialist')}
+                className={cn(
+                  "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
+                  profileTypeValue === 'specialist' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                )}
+              >
+                <Stethoscope className="h-5 w-5" /> Специалист
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
           <CardContent className="p-8 text-center space-y-4">
-             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Smartphone className="h-8 w-8 text-primary" />
-             </div>
-             <div className="space-y-1">
-                <h3 className="font-black text-lg tracking-tight">Bio-Синхронизация</h3>
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
-                   Импорт данных из Google Health, Apple Health и браслетов.
-                </p>
-             </div>
-             <Button onClick={handleDeviceSync} disabled={syncing} className="w-full h-12 rounded-xl bg-primary font-black gap-2">
-                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                Синхронизировать
-             </Button>
+             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
+             <h3 className="font-black text-lg tracking-tight">Bio-Sync</h3>
+             <Button onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
           </CardContent>
         </Card>
       </div>
@@ -344,6 +251,29 @@ export function ProfileCabinet() {
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+              {profileTypeValue === 'specialist' && (
+                <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center gap-2 border-b pb-4">
+                    <Briefcase className="h-5 w-5 text-primary" />
+                    <h3 className="text-lg font-black uppercase tracking-tight">Профессиональные данные</h3>
+                  </div>
+                  <div className="grid gap-6">
+                    <FormField control={form.control} name="specialization" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация (например: Спортивный врач)</FormLabel>
+                        <FormControl><Input placeholder="Ваша роль..." {...field} className={inputClasses} /></FormControl>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="bio" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel>
+                        <FormControl><Textarea placeholder="Расскажите о своем опыте..." {...field} className={textareaClasses} /></FormControl>
+                      </FormItem>
+                    )} />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
@@ -351,106 +281,45 @@ export function ProfileCabinet() {
                 </div>
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Имя *</FormLabel>
-                      <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="lastName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Фамилия</FormLabel>
-                      <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                 </div>
-                <div className="grid gap-6 grid-cols-1">
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
-                      <CalendarDays className="h-3 w-3" /> Дата рождения
-                    </FormLabel>
-                    <div className="grid grid-cols-3 gap-1.5 pt-1.5">
-                      <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                          {daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                          {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">
-                          {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </FormItem>
-                </div>
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
+                  <div className="grid grid-cols-3 gap-3 pt-1.5">
+                    <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">{daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectContent className="rounded-2xl">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </FormItem>
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Target className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Цели и Активность</h3>
-                </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl">
-                          <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
-                          <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
-                          <SelectItem value="набор массы">Набор массы</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Активность</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl">
-                          <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
-                          <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
-                          <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
-                          <SelectItem value="high">Высокий (Активный)</SelectItem>
-                          <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Activity className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3>
-                </div>
-                <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
+                <div className="flex items-center gap-2 border-b pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3></div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
                   <FormField control={form.control} name="gender" render={({ field }) => (
-                    <FormItem className="col-span-2 lg:col-span-1">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Пол</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
-                      </Select>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Пол</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                 </div>
               </div>
@@ -461,6 +330,20 @@ export function ProfileCabinet() {
             </form>
           </Form>
         </CardContent>
+      </Card>
+      
+      <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
+        <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary">
+            <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
+            <Badge variant="outline" className="text-[7px]">OFF</Badge>
+          </Button>
+          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary">
+            <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
+            <Badge variant="outline" className="text-[7px]">OFF</Badge>
+          </Button>
+        </div>
       </Card>
     </div>
   );
