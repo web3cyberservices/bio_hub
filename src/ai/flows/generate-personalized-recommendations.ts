@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
+ * Добавлена логика повторных попыток для обработки перегрузки ИИ-модели (Error 503).
  */
 
 import {ai} from '@/ai/genkit';
@@ -112,6 +113,30 @@ const IMAGE_ID_PROMPT = `
 - Авокадо-тост: 1525351484163-7529414344d8
 `;
 
+/**
+ * Вспомогательная функция для повторных попыток при временных ошибках ИИ (503/429).
+ */
+async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isTransient = error.message?.includes('503') || 
+                          error.message?.includes('UNAVAILABLE') || 
+                          error.message?.includes('429') ||
+                          error.message?.includes('overloaded');
+      
+      if (isTransient && i < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, i); // Экспоненциальная задержка
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('ИИ временно недоступен из-за высокой нагрузки. Попробуйте еще раз через минуту.');
+}
+
 const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
@@ -154,11 +179,13 @@ const generateRecommendationsFlow = ai.defineFlow(
     outputSchema: GenerateRecommendationsOutputSchema,
   },
   async (input) => {
-    const {output} = await recommendationPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash'),
+    return runWithRetry(async () => {
+      const {output} = await recommendationPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Ошибка генерации био-отчета');
+      return output;
     });
-    if (!output) throw new Error('Ошибка генерации био-отчета');
-    return output;
   }
 );
 
@@ -169,11 +196,13 @@ const replaceMealFlow = ai.defineFlow(
     outputSchema: MealSchema,
   },
   async (input) => {
-    const {output} = await replaceMealPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash'),
+    return runWithRetry(async () => {
+      const {output} = await replaceMealPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Ошибка замены блюда');
+      return output;
     });
-    if (!output) throw new Error('Ошибка замены блюда');
-    return output;
   }
 );
 
