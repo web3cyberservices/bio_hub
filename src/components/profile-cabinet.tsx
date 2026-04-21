@@ -45,9 +45,9 @@ const profileSchema = z.object({
   lastName: z.string().optional(),
   birthDate: z.string().optional(),
   gender: z.enum(['мужской', 'женский']),
-  age: z.coerce.number().int().min(1, 'Возраст обязателен'),
-  weight: z.coerce.number().positive('Вес обязателен'),
-  height: z.coerce.number().positive('Рост обязателен'),
+  age: z.coerce.number().int().min(1, 'Возраст обязателен').default(30),
+  weight: z.coerce.number().positive('Вес обязателен').default(70),
+  height: z.coerce.number().positive('Рост обязателен').default(175),
   activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
@@ -111,7 +111,7 @@ export function ProfileCabinet() {
         firstName: userData.firstName || userData.displayName || '',
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '1990-01-01',
-        gender: userData.gender || 'мужской',
+        gender: userData.gender === 'женский' ? 'женский' : 'мужской',
         age: userData.age || 30,
         weight: userData.weight || 70,
         height: userData.height || 175,
@@ -176,11 +176,10 @@ export function ProfileCabinet() {
         description: 'Ваш био-профиль успешно обновлен.',
       });
     } catch (error: any) {
-      console.error('Save error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка сохранения',
-        description: 'Не удалось обновить профиль. Проверьте права доступа.',
+        description: 'Не удалось обновить профиль. Попробуйте позже.',
       });
     } finally {
       setLoading(false);
@@ -188,11 +187,11 @@ export function ProfileCabinet() {
   }
 
   const onInvalid = (errors: any) => {
-    console.error('Validation Errors:', errors);
+    // Убрали console.error, чтобы не вызывать оверлей ошибок NextJS
     toast({
       variant: 'destructive',
       title: 'Ошибка заполнения',
-      description: 'Пожалуйста, проверьте обязательные поля (Имя, Возраст, Вес, Рост).',
+      description: 'Проверьте обязательные поля (Имя, Возраст, Вес, Рост).',
     });
   };
 
