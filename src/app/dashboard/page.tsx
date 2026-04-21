@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -11,7 +12,7 @@ import {
   ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
-  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList
+  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList, PenTool
 } from 'lucide-react';
 import { format, addDays, startOfToday, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -37,6 +38,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { ProductsMenuGenerator } from '@/components/products-menu-generator';
+import { PersonalMealPlan } from '@/components/personal-meal-plan';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -186,12 +188,15 @@ export default function DashboardPage() {
                   <div className="space-y-12">
                     <div className="flex justify-center">
                        <Tabs defaultValue="plan" className="w-full">
-                          <TabsList className="bg-white/40 border p-1 rounded-2xl h-14 md:h-18 max-w-xl mx-auto grid grid-cols-2 shadow-inner">
+                          <TabsList className="bg-white/40 border p-1 rounded-2xl h-14 md:h-18 max-w-2xl mx-auto grid grid-cols-3 shadow-inner">
                              <TabsTrigger value="plan" className="rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
-                                <ClipboardList className="h-4 w-4" /> План дня
+                                <ClipboardList className="h-4 w-4" /> План ИИ
                              </TabsTrigger>
                              <TabsTrigger value="inventory" className="rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
                                 <ShoppingBasket className="h-4 w-4" /> Из продуктов
+                             </TabsTrigger>
+                             <TabsTrigger value="personal" className="rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                                <PenTool className="h-4 w-4" /> Свой план
                              </TabsTrigger>
                           </TabsList>
                           
@@ -213,6 +218,10 @@ export default function DashboardPage() {
                           
                           <TabsContent value="inventory" className="mt-10">
                              <ProductsMenuGenerator />
+                          </TabsContent>
+
+                          <TabsContent value="personal" className="mt-10">
+                             <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                           </TabsContent>
                        </Tabs>
                     </div>
