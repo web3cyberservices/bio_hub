@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { ChatInterface } from '@/components/chat-interface';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -128,8 +129,6 @@ export default function DashboardPage() {
   const openSpecialistProfile = async (authorId: string) => {
     if (!firestore) return;
     try {
-      // В реальном приложении здесь был бы запрос к конкретному документу автора
-      // Для прототипа мы можем найти информацию в посте или имитировать загрузку
       const authorPost = posts?.find(p => p.authorId === authorId);
       if (authorPost) {
         setViewingSpecialist({
@@ -137,7 +136,6 @@ export default function DashboardPage() {
           name: authorPost.authorName,
           role: authorPost.authorRole,
           photo: authorPost.authorPhoto,
-          // Имитируем дополнительные данные, которые обычно приходят из профиля
           bio: "Эксперт платформы PRO Себя. Специализируется на функциональном подходе к здоровью и долголетию.",
           rating: 4.9,
           reviews: 124
@@ -145,6 +143,30 @@ export default function DashboardPage() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!firestore || !user || !viewingSpecialist) return;
+    const chatId = [user.uid, viewingSpecialist.id].sort().join('_');
+    const chatRef = doc(firestore, 'chats', chatId);
+    
+    try {
+      await setDoc(chatRef, {
+        id: chatId,
+        participants: [user.uid, viewingSpecialist.id],
+        participantDetails: {
+          [user.uid]: { name: userData?.firstName || 'Пользователь', photo: userData?.photoUrl || '' },
+          [viewingSpecialist.id]: { name: viewingSpecialist.name, photo: viewingSpecialist.photo || '' }
+        },
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+
+      setViewingSpecialist(null);
+      setActiveTab('chats');
+    } catch (e) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Ошибка чата' });
     }
   };
 
@@ -185,7 +207,7 @@ export default function DashboardPage() {
                 <Calendar mode="single" selected={selectedDate || undefined} onSelect={(date) => date && setSelectedDate(date)} locale={ru} />
               </PopoverContent>
             </Popover>
-            <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, -1) : null)}>
+            <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}>
               <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </Button>
           </div>
@@ -199,7 +221,7 @@ export default function DashboardPage() {
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
           <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-5xl w-full">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full">
               <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                 <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
               </TabsTrigger>
@@ -221,11 +243,11 @@ export default function DashboardPage() {
                   <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                     <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
                   </TabsTrigger>
-                  <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                    <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
-                  </TabsTrigger>
                 </>
               )}
+              <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
+              </TabsTrigger>
               <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                 <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
               </TabsTrigger>
@@ -399,10 +421,7 @@ export default function DashboardPage() {
               </TabsContent>
 
               <TabsContent value="chats" className="mt-0 outline-none">
-                 <div className="max-w-4xl mx-auto space-y-10">
-                   <h2 className="text-3xl font-black tracking-tighter">Чаты с клиентами</h2>
-                   <Card className="premium-card p-20 text-center"><MessageSquare className="h-12 w-12 text-primary/20 mx-auto mb-4" /><p className="font-black text-muted-foreground">Все чаты активны. Новых сообщений нет.</p></Card>
-                 </div>
+                 <ChatInterface />
               </TabsContent>
 
               <TabsContent value="profile" className="mt-0 outline-none">
@@ -416,7 +435,6 @@ export default function DashboardPage() {
       {/* Specialist Profile Modal */}
       <Dialog open={!!viewingSpecialist} onOpenChange={(open) => !open && setViewingSpecialist(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl z-[1001]">
-          {/* Accessible Title and Description (visually hidden) */}
           <div className="sr-only">
              <DialogTitle>Профиль специалиста {viewingSpecialist?.name}</DialogTitle>
              <DialogDescription>Информация об опыте, рейтинге и специализации эксперта платформы PRO Себя.</DialogDescription>
@@ -450,7 +468,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                      <Button className="h-16 rounded-2xl bg-primary font-black shadow-xl">Записаться</Button>
-                     <Button variant="outline" className="h-16 rounded-2xl border-2 border-primary/10 text-primary font-black">Чат</Button>
+                     <Button variant="outline" className="h-16 rounded-2xl border-2 border-primary/10 text-primary font-black" onClick={handleStartChat}>Чат</Button>
                   </div>
                </div>
             </div>

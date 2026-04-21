@@ -17,8 +17,8 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isParticipant(participants) {
+      return isSignedIn() && request.auth.uid in participants;
     }
 
     function isSpecialist() {
@@ -28,7 +28,7 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     match /users/{userId} {
-      allow get: if isSignedIn(); // Allow reading other profiles for feed
+      allow get: if isSignedIn(); // Allow reading other profiles for chat/feed
       allow list: if false; 
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
@@ -56,8 +56,19 @@ service cloud.firestore {
     match /posts/{postId} {
       allow read: if isSignedIn();
       allow create: if isSpecialist();
-      allow update: if isSignedIn(); // Allow liking (updating likedBy and likes count)
+      allow update: if isSignedIn(); // Allow liking
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    match /chats/{chatId} {
+      allow read: if isParticipant(resource.data.participants);
+      allow create: if isParticipant(request.resource.data.participants);
+      allow update: if isParticipant(resource.data.participants);
+
+      match /messages/{messageId} {
+        allow read: if isParticipant(get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+        allow create: if isParticipant(get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+      }
     }
   }
 }

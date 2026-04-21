@@ -47,6 +47,29 @@
       },
       "required": ["id", "authorId", "content", "createdAt"]
     },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "participantDetails": { "type": "object" },
+        "lastMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "participants"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "senderId", "text", "createdAt"]
+    },
     "DailyLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "DailyLog",
@@ -113,6 +136,20 @@
         "definition": {
           "entityName": "SpecialistPost",
           "schema": { "$ref": "#/backend/entities/SpecialistPost" }
+        }
+      },
+      {
+        "path": "/chats/{chatId}",
+        "definition": {
+          "entityName": "ChatRoom",
+          "schema": { "$ref": "#/backend/entities/ChatRoom" }
+        }
+      },
+      {
+        "path": "/chats/{chatId}/messages/{messageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": { "$ref": "#/backend/entities/ChatMessage" }
         }
       },
       {
