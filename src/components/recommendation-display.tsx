@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -34,10 +35,13 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (!mounted) return null;
 
-  const getMealImage = (imageId: string) => {
+  const getMealImageData = (imageId: string) => {
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    if (found) return found.imageUrl;
-    return `https://picsum.photos/seed/food-${imageId}/600/400`;
+    if (found) return { url: found.imageUrl, hint: found.imageHint };
+    return { 
+      url: `https://picsum.photos/seed/food-${imageId}/600/400`, 
+      hint: "healthy food" 
+    };
   };
 
   // Целевые значения из расчета ИИ
@@ -196,35 +200,49 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     return (
       <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
         <div className="space-y-12 relative">
-          {mealPlan[0].meals.map((meal, idx) => (
-            <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
-              <div className="relative w-full xl:w-[350px] h-[250px] xl:h-auto shrink-0 overflow-hidden">
-                <Image src={getMealImage(meal.imageId)} alt={meal.name} fill className="object-cover" />
-                <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl">
-                   <span className="text-lg font-black text-white">{meal.time}</span>
-                </div>
-              </div>
-              <div className="p-10 flex-1 space-y-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-3xl font-black tracking-tighter leading-none">{meal.name}</h3>
-                    <p className="text-muted-foreground mt-2 text-sm italic">{meal.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-black text-primary">{meal.calories} <span className="text-[10px] uppercase opacity-30">ккал</span></p>
+          {mealPlan[0].meals.map((meal, idx) => {
+            const imageData = getMealImageData(meal.imageId);
+            return (
+              <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
+                <div className="relative w-full xl:w-[350px] h-[250px] xl:h-auto shrink-0 overflow-hidden">
+                  <Image 
+                    src={imageData.url} 
+                    alt={meal.name} 
+                    fill 
+                    className="object-cover" 
+                    data-ai-hint={imageData.hint}
+                  />
+                  <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl">
+                     <span className="text-lg font-black text-white">{meal.time}</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
-                  {meal.components?.map((comp, ci) => (
-                    <div key={ci} className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/5">
-                      <span className="text-sm font-bold text-foreground/80">{comp.ingredient}</span>
-                      <Badge variant="secondary" className="bg-white font-black px-2 py-0.5">{comp.weight}</Badge>
+                <div className="p-10 flex-1 space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-3xl font-black tracking-tighter leading-none">{meal.name}</h3>
+                      <p className="text-muted-foreground mt-2 text-sm italic">{meal.description}</p>
                     </div>
-                  ))}
+                    <div className="text-right">
+                      <p className="text-4xl font-black text-primary">{meal.calories} <span className="text-[12px] uppercase opacity-30">ккал</span></p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                    {meal.components?.map((comp, ci) => (
+                      <div key={ci} className="flex items-center justify-between p-5 bg-primary/5 rounded-[1.5rem] border border-primary/10 transition-colors hover:bg-primary/10">
+                        <span className="text-base font-bold text-foreground/90">{comp.ingredient}</span>
+                        <Badge 
+                          variant="default" 
+                          className="bg-foreground text-background font-black px-3 py-1.5 rounded-xl shadow-md text-xs"
+                        >
+                          {comp.weight}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </div>
     );

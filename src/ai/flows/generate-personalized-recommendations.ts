@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
@@ -53,7 +54,7 @@ const GenerateRecommendationsOutputSchema = z.object({
     calories: z.number().describe('Целевая калорийность на день.'),
     protein: z.number().describe('Целевое количество белков (г) на день.'),
     fat: z.number().describe('Целевое количество жиров (г) на день.'),
-    carbs: z.number().describe('Целевое количество углеводов (г) на день.'),
+    carbs: z.number().describe('Целевое количество углевод на день.'),
   }),
   micronutrients: z.array(z.object({
     name: z.string(),
@@ -76,7 +77,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string().describe('ID из списка изображений (например: lunch-salmon).'),
+      imageId: z.string().describe('ID из списка доступных изображений. СТРОГО СООТВЕТСТВУЙТЕ ТИПУ ЕДЫ.'),
       components: z.array(z.object({
         ingredient: z.string().describe('Название ингредиента'),
         weight: z.string().describe('Вес с единицами измерения, например "200г"')
@@ -101,11 +102,17 @@ const recommendationPrompt = ai.definePrompt({
 ВАША ЗАДАЧА:
 Создать глубокий аналитический отчет на основе биометрических данных.
 
-ПРАВИЛА ДЕТАЛИЗАЦИИ БЛЮД:
-Для каждого приема пищи в mealPlan вы ОБЯЗАНЫ предоставить массив components с граммами.
+ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId):
+Выберите наиболее подходящий ID из списка ниже. Если это фруктовый перекус, используйте snack-fruit, если только яблоко — snack-apple.
 
-ИСПОЛЬЗУЙТЕ ТОЛЬКО ЭТИ ИЗОБРАЖЕНИЯ:
-breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
+СПИСОК ДОСТУПНЫХ ID:
+- breakfast-oatmeal, breakfast-omelette, breakfast-smoothie
+- lunch-salmon, lunch-salad-chicken, lunch-soup
+- dinner-steak, dinner-white-fish, dinner-tofu
+- snack-nuts, snack-yogurt, snack-avocado, snack-fruit, snack-apple, snack-pear
+
+ДЕТАЛИЗАЦИЯ:
+Для каждого приема пищи в mealPlan предоставьте массив components с точным указанием веса (граммы/мл).
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
