@@ -11,6 +11,7 @@
         "email": { "type": "string", "format": "email" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
+        "displayName": { "type": "string" },
         "birthDate": { "type": "string", "format": "date", "description": "User's date of birth." },
         "gender": { "type": "string" },
         "age": { "type": "number" },
@@ -18,12 +19,29 @@
         "height": { "type": "number" },
         "activityLevel": { "type": "string" },
         "healthGoal": { "type": "string" },
-        "profileType": { "type": "string" },
-        "favoriteFoods": { "type": "string", "description": "Preferred ingredients or meals." },
-        "dislikedFoods": { "type": "string", "description": "Foods to avoid." },
+        "profileType": { "type": "string", "enum": ["user", "specialist"] },
+        "specialization": { "type": "string" },
+        "bio": { "type": "string" },
+        "rating": { "type": "number" },
+        "favoriteFoods": { "type": "string" },
+        "dislikedFoods": { "type": "string" },
         "dateJoined": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "firstName", "profileType"]
+    },
+    "SpecialistPost": {
+      "title": "SpecialistPost",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorRole": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "likes": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     },
     "DailyLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -84,6 +102,13 @@
         "definition": {
           "entityName": "UserProfile",
           "schema": { "$ref": "#/backend/entities/UserProfile" }
+        }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+          "entityName": "SpecialistPost",
+          "schema": { "$ref": "#/backend/entities/SpecialistPost" }
         }
       },
       {

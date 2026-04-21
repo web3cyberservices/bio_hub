@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -40,7 +41,9 @@ import {
   CheckCircle2,
   Send,
   MessageCircle,
-  BellRing
+  BellRing,
+  Stethoscope,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -61,6 +64,7 @@ const profileSchema = z.object({
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
+  profileType: z.enum(['user', 'specialist']).default('user'),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -109,6 +113,7 @@ export function ProfileCabinet() {
       alcohol: 'не употребляю',
       favoriteFoods: '',
       dislikedFoods: '',
+      profileType: 'user',
     },
   });
 
@@ -127,11 +132,13 @@ export function ProfileCabinet() {
         alcohol: userData.alcohol || 'не употребляю',
         favoriteFoods: userData.favoriteFoods || '',
         dislikedFoods: userData.dislikedFoods || '',
+        profileType: userData.profileType || 'user',
       });
     }
   }, [userData, form]);
 
   const birthDateValue = form.watch('birthDate') || '1990-01-01';
+  const profileTypeValue = form.watch('profileType');
   const [currentYear, currentMonth, currentDay] = birthDateValue.split('-');
 
   const years = useMemo(() => {
@@ -184,7 +191,6 @@ export function ProfileCabinet() {
       title: `Синхронизация с ${platform}`,
       description: `Перенаправляем в ${platform} для подтверждения...`,
     });
-    // Логика интеграции с ботом будет здесь
   };
 
   async function onSubmit(values: ProfileValues) {
@@ -206,7 +212,6 @@ export function ProfileCabinet() {
         age,
         id: user.uid,
         email: (user as any).email || null,
-        profileType: 'user',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
@@ -218,28 +223,11 @@ export function ProfileCabinet() {
       toast({
         variant: 'destructive',
         title: 'Ошибка сохранения',
-        description: 'Не удалось обновить профиль. Попробуйте позже.',
+        description: 'Не удалось обновить профиль.',
       });
     } finally {
       setLoading(false);
     }
-  }
-
-  const onInvalid = () => {
-    toast({
-      variant: 'destructive',
-      title: 'Ошибка заполнения',
-      description: 'Проверьте обязательные поля (Имя, Вес, Рост).',
-    });
-  };
-
-  if (docLoading && user && user.uid !== 'public-user') {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка данных...</p>
-      </div>
-    );
   }
 
   const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
@@ -267,19 +255,48 @@ export function ProfileCabinet() {
                 <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
               </div>
             </div>
+
+            <div className="space-y-4">
+               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 px-4">Тип аккаунта</label>
+               <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    type="button"
+                    onClick={() => form.setValue('profileType', 'user')}
+                    className={cn(
+                      "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
+                      profileTypeValue === 'user' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                    )}
+                  >
+                    <User className="h-5 w-5" />
+                    Я — Пользователь
+                  </Button>
+                  <Button 
+                    type="button"
+                    onClick={() => form.setValue('profileType', 'specialist')}
+                    className={cn(
+                      "h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]",
+                      profileTypeValue === 'specialist' ? "bg-primary text-white border-primary shadow-lg" : "bg-white text-primary border-primary/10 hover:bg-primary/5"
+                    )}
+                  >
+                    <Stethoscope className="h-5 w-5" />
+                    Я — Специалист
+                  </Button>
+               </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
                 <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
                   <Mail className="h-4 w-4 opacity-40" />
-                  <span className="truncate">{(user as any)?.email || 'Не указан (Тестовый вход)'}</span>
+                  <span className="truncate">{(user as any)?.email || 'Не указан'}</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">User ID</label>
-                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
-                  {user?.uid}
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Статус проверки</label>
+                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-primary border-none">
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Верифицирован</span>
                 </div>
               </div>
             </div>
@@ -287,36 +304,18 @@ export function ProfileCabinet() {
             <div className="space-y-4 pt-2">
                <div className="flex items-center gap-2 px-4">
                   <BellRing className="h-3 w-3 text-primary" />
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Уведомления и отчеты</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Уведомления</label>
                </div>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialLink('Telegram')}
-                    className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Send className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="text-xs uppercase tracking-tight">Привязать Telegram</span>
-                    </div>
-                    <Badge variant="outline" className="text-[7px] border-primary/20 opacity-50">OFF</Badge>
+                  <Button variant="outline" onClick={() => handleSocialLink('Telegram')} className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary">
+                    <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
+                    <Badge variant="outline" className="text-[7px]">OFF</Badge>
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialLink('WhatsApp')}
-                    className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <MessageCircle className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-                      <span className="text-xs uppercase tracking-tight">Привязать WhatsApp</span>
-                    </div>
-                    <Badge variant="outline" className="text-[7px] border-primary/20 opacity-50">OFF</Badge>
+                  <Button variant="outline" onClick={() => handleSocialLink('WhatsApp')} className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary">
+                    <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
+                    <Badge variant="outline" className="text-[7px]">OFF</Badge>
                   </Button>
                </div>
-               <p className="text-[8px] text-muted-foreground/60 px-4 uppercase tracking-widest font-bold">
-                  Подключите мессенджеры, чтобы получать утренние сводки и напоминания от ИИ.
-               </p>
             </div>
           </CardContent>
         </Card>
@@ -329,21 +328,13 @@ export function ProfileCabinet() {
              <div className="space-y-1">
                 <h3 className="font-black text-lg tracking-tight">Bio-Синхронизация</h3>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
-                   Импорт веса, пульса и шагов из Google Fit, Apple Health, браслетов и колец.
+                   Импорт данных из Google Health, Apple Health и браслетов.
                 </p>
              </div>
-             <Button 
-                onClick={handleDeviceSync} 
-                disabled={syncing}
-                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-black gap-2 shadow-lg shadow-primary/20"
-             >
+             <Button onClick={handleDeviceSync} disabled={syncing} className="w-full h-12 rounded-xl bg-primary font-black gap-2">
                 {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                {syncing ? "Синхронизация..." : "Синхронизировать данные"}
+                Синхронизировать
              </Button>
-             <div className="flex items-center justify-center gap-2 opacity-50">
-                <CheckCircle2 className="h-3 w-3 text-primary" />
-                <span className="text-[8px] font-black uppercase tracking-widest">Безопасное соединение</span>
-             </div>
           </CardContent>
         </Card>
       </div>
@@ -351,7 +342,7 @@ export function ProfileCabinet() {
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-12">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
@@ -380,19 +371,19 @@ export function ProfileCabinet() {
                     </FormLabel>
                     <div className="grid grid-cols-3 gap-1.5 pt-1.5">
                       <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="Д" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="М" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="Г" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
@@ -410,12 +401,12 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="healthGoal" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель здоровья</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectContent className="rounded-2xl">
                           <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
-                          <SelectItem value="поддержать текущее состояние">Поддержание веса</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
                           <SelectItem value="набор массы">Набор массы</SelectItem>
                         </SelectContent>
                       </Select>
@@ -423,15 +414,15 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="activityLevel" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Уровень активности</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Активность</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="minimal">Минимальный (Сидячий) — Перемещение только по дому/офису</SelectItem>
-                          <SelectItem value="low">Низкий (Малоподвижный) — Редкие прогулки, легкая активность</SelectItem>
-                          <SelectItem value="moderate">Умеренный (Средний) — Регулярная ходьба и упражнения</SelectItem>
-                          <SelectItem value="high">Высокий (Активный) — Постоянные тренировки</SelectItem>
-                          <SelectItem value="athlete">Очень высокий (Спортсмен) — Ежедневные нагрузки</SelectItem>
+                        <SelectContent className="rounded-2xl">
+                          <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
+                          <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
+                          <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
+                          <SelectItem value="high">Высокий (Активный)</SelectItem>
+                          <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -450,96 +441,21 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Пол</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="мужской">Мужской</SelectItem>
-                          <SelectItem value="женский">Женский</SelectItem>
-                        </SelectContent>
+                        <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
                       </Select>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Вес (кг) *</FormLabel>
-                      <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Рост (см) *</FormLabel>
-                      <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                   )} />
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Гастро-предпочтения</h3>
-                </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
-                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимые продукты
-                      </FormLabel>
-                      <FormControl><Textarea placeholder="Что вы любите? (например: авокадо, лосось, грецкие орехи)" {...field} className={textareaClasses} /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
-                        <Ban className="h-3 w-3 text-gray-400" /> Исключить из рациона
-                      </FormLabel>
-                      <FormControl><Textarea placeholder="На что у вас аллергия или что вы не любите? (например: кинза, лук, лактоза)" {...field} className={textareaClasses} /></FormControl>
-                    </FormItem>
-                  )} />
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Settings className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Образ жизни</h3>
-                </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField control={form.control} name="smoking" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Курение</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="да">Да</SelectItem>
-                          <SelectItem value="нет">Нет</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="alcohol" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Употребление алкоголя</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                          <SelectItem value="редко">Редко (по праздникам)</SelectItem>
-                          <SelectItem value="умеренно">Умеренно (1-2 раза в неделю)</SelectItem>
-                          <SelectItem value="часто">Часто</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                disabled={loading} 
-                className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 transition-all hover:scale-[1.01]"
-              >
-                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
+              <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl">
+                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить данные</>}
               </Button>
             </form>
           </Form>
