@@ -11,10 +11,10 @@ const MealSchema = z.object({
   time: z.string().describe('Время приема пищи (например, "Завтрак", "08:00")'),
   name: z.string().describe('Короткое аппетитное название блюда'),
   description: z.string().describe('Краткое описание пользы и состава'),
-  calories: z.number(),
-  protein: z.number().optional(),
-  fat: z.number().optional(),
-  carbs: z.number().optional(),
+  calories: z.number().describe('Калорийность (целое число)'),
+  protein: z.number().describe('Белки в граммах'),
+  fat: z.number().describe('Жиры в граммах'),
+  carbs: z.number().describe('Углеводы в граммах'),
   imageUrl: z.string().describe('ОБЯЗАТЕЛЬНОЕ ПОЛЕ. ПОЛНАЯ прямая ссылка на фото Unsplash.'),
   components: z.array(z.object({
     ingredient: z.string().describe('Название ингредиента'),
@@ -54,7 +54,16 @@ const GenerateRecommendationsInputSchema = z.object({
     sleepDurationHours: z.number().optional(),
   }).optional(),
 });
-export type GenerateRecommendationsInput = z.infer<typeof GenerateRecommendationsInputSchema>;
+
+const ReplaceMealInputSchema = z.object({
+  previousMealName: z.string().describe('Название блюда, которое нужно заменить.'),
+  mealTime: z.string().describe('Тип приема пищи (Завтрак/Обед/Ужин).'),
+  userContext: z.object({
+    healthGoal: z.string(),
+    favoriteFoods: z.string().optional(),
+    dislikedFoods: z.string().optional(),
+  })
+});
 
 const GenerateRecommendationsOutputSchema = z.object({
   bioScore: z.number().min(0).max(100).describe('Общий индекс здоровья (0-100).'),
@@ -79,33 +88,15 @@ const GenerateRecommendationsOutputSchema = z.object({
     meals: z.array(MealSchema)
   })).default([]),
 });
+
+export type GenerateRecommendationsInput = z.infer<typeof GenerateRecommendationsInputSchema>;
 export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendationsOutputSchema>;
-
-const ReplaceMealInputSchema = z.object({
-  previousMealName: z.string().describe('Название блюда, которое нужно заменить.'),
-  mealTime: z.string().describe('Тип приема пищи (Завтрак/Обед/Ужин).'),
-  userContext: z.object({
-    healthGoal: z.string(),
-    favoriteFoods: z.string().optional(),
-    dislikedFoods: z.string().optional(),
-  })
-});
 export type ReplaceMealInput = z.infer<typeof ReplaceMealInputSchema>;
-
-export async function generatePersonalizedRecommendations(
-  input: GenerateRecommendationsInput
-): Promise<GenerateRecommendationsOutput> {
-  return generateRecommendationsFlow(input);
-}
-
-export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<typeof MealSchema>> {
-  return replaceMealFlow(input);
-}
 
 const IMAGE_ID_PROMPT = `
 ПРАВИЛА ДЛЯ imageUrl:
-Для блюда верните ПОЛНУЮ ссылку Unsplash: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
-Используйте один из этих ID в зависимости от типа блюда:
+Для каждого блюда ОБЯЗАТЕЛЬНО верните ПОЛНУЮ валидную ссылку Unsplash: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
+Используйте ОДИН из этих ID в зависимости от типа блюда (выбирайте наиболее подходящий):
 - Салат/Зелень: 1512621776951-a57141f2eefd
 - Каша/Овсянка: 1517673400267-0251440c45dc
 - Рыба/Семга: 1467003909585-2f8a72700288
@@ -126,6 +117,7 @@ const recommendationPrompt = ai.definePrompt({
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
   prompt: `Вы — эксперт-нутрициолог. Ваша задача — создать глубокий аналитический отчет и план питания.
+ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
 УЧЕТ ПРЕДПОЧТЕНИЙ:
 {{#if favoriteFoods}}Любимая еда: {{{favoriteFoods}}}.{{/if}}
@@ -133,7 +125,7 @@ const recommendationPrompt = ai.definePrompt({
 
 ${IMAGE_ID_PROMPT}
 
-ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ. Выдавайте результат СТРОГО в формате JSON.
+Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.
 
 Контекст:
 Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}. Активность: {{activityLevel}}.`,
@@ -143,16 +135,16 @@ const replaceMealPrompt = ai.definePrompt({
   name: 'replaceMealPrompt',
   input: {schema: ReplaceMealInputSchema},
   output: {schema: MealSchema},
-  prompt: `Вы — нутрициолог. Пользователь хочет заменить блюдо "{{previousMealName}}" на другое (прием пищи: {{mealTime}}).
+  prompt: `Вы — эксперт-нутрициолог. Пользователь хочет заменить блюдо "{{previousMealName}}" на другое альтернативное (прием пищи: {{mealTime}}).
 
-Цель: {{userContext.healthGoal}}.
-Любит: {{userContext.favoriteFoods}}.
-Не любит: {{userContext.dislikedFoods}}.
+Цель пользователя: {{userContext.healthGoal}}.
+{{#if userContext.favoriteFoods}}Любит: {{userContext.favoriteFoods}}.{{/if}}
+{{#if userContext.dislikedFoods}}Не любит: {{userContext.dislikedFoods}}.{{/if}}
 
 ${IMAGE_ID_PROMPT}
 
-Предложите новое альтернативное блюдо, отличное от {{previousMealName}}.
-Отвечайте на русском языке в JSON.`,
+Предложите НОВОЕ вкусное блюдо, которое отличается от {{previousMealName}}, но подходит по КБЖУ и времени приема пищи.
+Отвечайте на русском языке. Результат должен быть валидным JSON.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
@@ -162,8 +154,10 @@ const generateRecommendationsFlow = ai.defineFlow(
     outputSchema: GenerateRecommendationsOutputSchema,
   },
   async (input) => {
-    const {output} = await recommendationPrompt(input);
-    if (!output) throw new Error('Ошибка генерации');
+    const {output} = await recommendationPrompt(input, {
+      model: googleAI.model('gemini-2.5-flash'),
+    });
+    if (!output) throw new Error('Ошибка генерации био-отчета');
     return output;
   }
 );
@@ -175,8 +169,20 @@ const replaceMealFlow = ai.defineFlow(
     outputSchema: MealSchema,
   },
   async (input) => {
-    const {output} = await replaceMealPrompt(input);
+    const {output} = await replaceMealPrompt(input, {
+      model: googleAI.model('gemini-2.5-flash'),
+    });
     if (!output) throw new Error('Ошибка замены блюда');
     return output;
   }
 );
+
+export async function generatePersonalizedRecommendations(
+  input: GenerateRecommendationsInput
+): Promise<GenerateRecommendationsOutput> {
+  return generateRecommendationsFlow(input);
+}
+
+export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<typeof MealSchema>> {
+  return replaceMealFlow(input);
+}

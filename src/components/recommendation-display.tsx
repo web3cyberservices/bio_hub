@@ -37,7 +37,9 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   }, []);
 
   useEffect(() => {
-    setMealPlan(data.mealPlan);
+    if (data.mealPlan) {
+      setMealPlan(data.mealPlan);
+    }
   }, [data.mealPlan]);
 
   if (!mounted) return null;
@@ -45,10 +47,10 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   const { bioScore, recommendations, macros, fastingWindow } = data;
 
   const targetGoals = {
-    calories: macros.calories || 2400,
-    protein: macros.protein || 160,
-    fat: macros.fat || 80,
-    carbs: macros.carbs || 250,
+    calories: macros?.calories || 2400,
+    protein: macros?.protein || 160,
+    fat: macros?.fat || 80,
+    carbs: macros?.carbs || 250,
   };
 
   const currentFact = actualMacros || {
@@ -74,9 +76,11 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
         previousMealName: currentMeal.name,
         mealTime: currentMeal.time,
         userContext: {
-          healthGoal: data.recommendations.diet || 'Баланс',
+          healthGoal: data.recommendations?.diet || 'Баланс',
         }
       });
+
+      if (!newMeal) throw new Error('Empty response');
 
       const updatedPlan = [...mealPlan];
       updatedPlan[0].meals[idx] = newMeal;
@@ -84,7 +88,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
       
       toast({ title: 'Блюдо заменено', description: `Новый вариант: ${newMeal.name}` });
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка замены', description: 'Не удалось сгенерировать новое блюдо.' });
+      console.error('Replacement failed:', error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка замены', 
+        description: 'ИИ не смог предложить новое блюдо. Попробуйте еще раз.' 
+      });
     } finally {
       setReplacingIdx(null);
     }
@@ -92,9 +101,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   const getFallbackImage = (mealName: string) => {
     const name = mealName.toLowerCase();
-    if (name.includes('завтрак') || name.includes('омлет')) return PlaceHolderImages.find(p => p.id === 'breakfast-omelette')?.imageUrl;
-    if (name.includes('обед') || name.includes('суп')) return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
-    if (name.includes('ужин') || name.includes('стейк')) return PlaceHolderImages.find(p => p.id === 'dinner-steak')?.imageUrl;
+    if (name.includes('завтрак') || name.includes('омлет') || name.includes('каша') || name.includes('яйц')) 
+      return PlaceHolderImages.find(p => p.id === 'breakfast-omelette')?.imageUrl;
+    if (name.includes('обед') || name.includes('суп') || name.includes('салат')) 
+      return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
+    if (name.includes('ужин') || name.includes('стейк') || name.includes('рыба') || name.includes('мясо')) 
+      return PlaceHolderImages.find(p => p.id === 'dinner-steak')?.imageUrl;
     return PlaceHolderImages[0].imageUrl;
   };
 
@@ -203,7 +215,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'meals') {
     return (
-      <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
+      <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12 px-4">
         <div className="space-y-12 relative">
           {mealPlan && mealPlan.length > 0 && mealPlan[0].meals.map((meal, idx) => {
             const isReplacing = replacingIdx === idx;
@@ -257,6 +269,11 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                         </Badge>
                       </div>
                     ))}
+                  </div>
+                  <div className="flex items-center gap-6 pt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-t">
+                    <div className="flex items-center gap-1.5"><Flame className="h-3 w-3 text-orange-500" /> Б: {meal.protein}г</div>
+                    <div className="flex items-center gap-1.5"><Droplet className="h-3 w-3 text-yellow-500" /> Ж: {meal.fat}г</div>
+                    <div className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-primary" /> У: {meal.carbs}г</div>
                   </div>
                 </div>
               </Card>
