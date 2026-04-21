@@ -21,15 +21,6 @@ interface RecommendationDisplayProps {
   mode?: 'dashboard' | 'meals';
 }
 
-const weightTrendData = [
-  { date: '01.04', weight: 78.5 },
-  { date: '05.04', weight: 77.8 },
-  { date: '10.04', weight: 77.2 },
-  { date: '15.04', weight: 77.4 },
-  { date: '20.04', weight: 76.8 },
-  { date: 'Сегодня', weight: 76.2 },
-];
-
 export function RecommendationDisplay({ data, mode = 'dashboard' }: RecommendationDisplayProps) {
   const { bioScore, recommendations, macros, micronutrients, fastingWindow, mealPlan } = data;
   const [mounted, setMounted] = useState(false);
@@ -58,7 +49,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
       <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <Card className="premium-card bg-gradient-to-br from-[#1A3C26] via-[#2D5A3C] to-[#142F1C] text-white p-12 md:p-20 relative overflow-hidden h-full flex flex-col justify-center border-none shadow-2xl">
+            <Card className="bg-gradient-to-br from-[#1A3C26] via-[#2D5A3C] to-[#142F1C] text-white p-12 md:p-20 relative overflow-hidden h-full flex flex-col justify-center border-none shadow-2xl rounded-[3.5rem]">
               <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-16">
                 <div className="relative w-72 h-72 md:w-[400px] md:h-[400px] shrink-0">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
@@ -145,7 +136,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               </div>
            </Card>
 
-           <Card className="lg:col-span-7 premium-card p-14 border-none bg-[#1A3C26] text-white relative overflow-hidden flex flex-col justify-between">
+           <Card className="lg:col-span-7 p-14 border-none bg-[#1A3C26] text-white relative overflow-hidden flex flex-col justify-between rounded-[3.5rem] shadow-2xl">
               <div className="relative z-10">
                  <p className="text-[14px] font-black uppercase tracking-[0.5em] opacity-60 mb-8">ЛИМИТ ЭНЕРГИИ</p>
                  <div className="space-y-4">
@@ -164,7 +155,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                     </div>
                  </div>
                  <UnifiedDataEntry>
-                   <Button className="rounded-full w-24 h-24 bg-white text-primary shadow-2xl flex items-center justify-center">
+                   <Button className="rounded-full w-24 h-24 bg-white text-primary hover:scale-110 transition-all shadow-2xl">
                       <Plus className="h-10 w-10 text-primary" />
                    </Button>
                  </UnifiedDataEntry>
