@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, User } from 'lucide-react';
+import { Sparkles, Loader2, User, UserPlus } from 'lucide-react';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { QuickTestButton } from '@/components/quick-test-button';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -110,47 +112,6 @@ export default function RegisterPage() {
     }
   };
 
-  const handleQuickLogin = async () => {
-    if (!auth || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Подключите проект в Studio.',
-      });
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const userCredential = await signInAnonymously(auth);
-      const testUser = userCredential.user;
-
-      const userDocRef = doc(firestore, 'users', testUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: testUser.uid,
-          id: testUser.uid,
-          profileType: 'user',
-          createdAt: new Date().toISOString(),
-          displayName: 'Тестовый Пользователь',
-          firstName: 'Тестовый',
-        }, { merge: true });
-      }
-
-      toast({ title: 'Вход выполнен' });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Включите Anonymous Auth в консоли Firebase.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (userLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
@@ -170,31 +131,36 @@ export default function RegisterPage() {
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter">Регистрация</CardTitle>
+            <CardTitle className="text-3xl font-black tracking-tighter text-white">Регистрация</CardTitle>
             <CardDescription className="text-white/70 font-medium text-xs">
               Присоединяйтесь к Bio-хабу PRO Себя
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <Button 
-                className="h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 md:gap-3"
-                onClick={handleQuickLogin}
-                disabled={loading}
-              >
-                <User className="h-4 w-4" /> 
-                Тест
-              </Button>
+            {/* Quick Test Option First */}
+            <div className="space-y-4">
+               <div className="flex justify-center">
+                  <QuickTestButton />
+               </div>
+               <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
+                  <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
+                    <span className="bg-white px-4 text-muted-foreground/40">Или регистрация</span>
+                  </div>
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
               <Button 
                 variant="outline"
-                className="h-16 rounded-2xl border-2 border-muted font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 md:gap-3 hover:bg-muted/50"
+                className="h-14 rounded-xl border-2 border-muted font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-muted/50"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -213,17 +179,8 @@ export default function RegisterPage() {
                     />
                   </svg>
                 )}
-                Google
+                Через Google
               </Button>
-            </div>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-muted" />
-              </div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                <span className="bg-white px-4 text-muted-foreground/60">Или регистрация</span>
-              </div>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4">
@@ -232,7 +189,7 @@ export default function RegisterPage() {
                   <Label htmlFor="name">Имя</Label>
                   <Input 
                     id="name" 
-                    placeholder="Имя" 
+                    placeholder="Ваше имя" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="h-12 rounded-xl"
@@ -268,7 +225,7 @@ export default function RegisterPage() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><Sparkles className="h-5 w-5 mr-2" /> Создать аккаунт</div>}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><UserPlus className="h-5 w-5 mr-2" /> Создать аккаунт</div>}
               </Button>
             </form>
 
