@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -122,12 +123,23 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !firestore || user.uid === 'public-user') {
+      toast({
+        variant: 'destructive',
+        title: 'Вход не выполнен',
+        description: 'Пожалуйста, авторизуйтесь для использования ИИ-анализа.',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Сохраняем профиль
+      // Сохраняем профиль (с обязательным ID)
       if (firestore && user) {
         await setDoc(doc(firestore, 'users', user.uid), {
           ...values,
+          id: user.uid,
+          profileType: 'RegularUser',
           updatedAt: new Date().toISOString()
         }, { merge: true });
       }
@@ -147,10 +159,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       
       onResult(result);
     } catch (error: any) {
+      console.error('Analysis error:', error);
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа ИИ',
-        description: error.message || 'Попробуйте позже.'
+        description: error.message || 'Проверьте соединение с интернетом.'
       });
     } finally {
       setLoading(false);

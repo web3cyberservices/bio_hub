@@ -73,7 +73,7 @@ export function ProfileCabinet() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
-  const { data: userData, loading: docLoading } = useDoc<any>(userDocRef);
+  const { data: userData, isLoading: docLoading } = useDoc<any>(userDocRef);
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -172,11 +172,11 @@ export function ProfileCabinet() {
   };
 
   async function onSubmit(values: ProfileValues) {
-    if (!user || !firestore) {
+    if (!user || !firestore || user.uid === 'public-user') {
       toast({
         variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Firebase не подключен.',
+        title: 'Авторизация обязательна',
+        description: 'Пожалуйста, войдите в аккаунт, чтобы сохранить данные.',
       });
       return;
     }
@@ -185,18 +185,21 @@ export function ProfileCabinet() {
     try {
       await setDoc(doc(firestore, 'users', user.uid), {
         ...values,
+        id: user.uid, // ОБЯЗАТЕЛЬНО для соответствия правилам безопасности
+        profileType: 'RegularUser',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
       toast({
         title: 'Профиль обновлен',
-        description: 'Ваши биометрические данные синхронизированы.',
+        description: 'Ваши биометрические данные синхронизированы с облаком.',
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка сохранения',
-        description: 'Не удалось обновить данные.',
+        description: 'Убедитесь, что вы вошли в систему и у вас есть права на запись.',
       });
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+
 export const firebaseConfig = {
   apiKey: "AIzaSyDiEz34LESJ9pOybZl1XoYiKcVjdNk1uXs",
   authDomain: "webcybersecurity.firebaseapp.com",
