@@ -88,11 +88,13 @@ export default function DashboardPage() {
   const { data: dailyLogDoc, isLoading: loadingLogs } = useDoc<any>(dailyLogRef);
   const { data: posts } = useCollection<any>(postsQuery);
 
-  // Стабильное определение типа профиля
+  // Стабильное определение типа профиля с учетом загрузки
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
   // Эффект для предотвращения "зависания" на несуществующей вкладке при смене роли
   useEffect(() => {
+    if (profileLoading) return;
+
     const userTabs = ["feed", "dashboard", "meals", "chats", "profile"];
     const specialistTabs = ["feed", "my-feed", "appointments", "chats", "profile"];
     
@@ -101,7 +103,7 @@ export default function DashboardPage() {
     } else if (profileType === 'specialist' && !specialistTabs.includes(activeTab)) {
       setActiveTab("feed");
     }
-  }, [profileType, activeTab]);
+  }, [profileType, activeTab, profileLoading]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -241,39 +243,42 @@ export default function DashboardPage() {
 
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
-          <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
-              <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
-              </TabsTrigger>
-              
-              {profileType === 'user' ? (
-                <>
-                  <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                    <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
-                  </TabsTrigger>
-                  <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                    <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
-                  </TabsTrigger>
-                </>
-              ) : (
-                <>
-                  <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                    <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
-                  </TabsTrigger>
-                  <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                    <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
-                  </TabsTrigger>
-                </>
-              )}
-              <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {/* Скрываем список табов во время загрузки профиля, чтобы избежать прыжков меню */}
+          {!profileLoading && (
+            <div className="flex justify-center">
+              <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
+                <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                  <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
+                </TabsTrigger>
+                
+                {profileType === 'user' ? (
+                  <>
+                    <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                      <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
+                    </TabsTrigger>
+                    <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                      <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
+                    </TabsTrigger>
+                  </>
+                ) : (
+                  <>
+                    <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                      <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
+                    </TabsTrigger>
+                    <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                      <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
+                    </TabsTrigger>
+                  </>
+                )}
+                <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                  <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
+                </TabsTrigger>
+                <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                  <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          )}
 
           {(loadingRec || loadingLogs || profileLoading) ? (
             <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-4">
@@ -282,7 +287,6 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* Common Bio-Feed */}
               <TabsContent value="feed" className="mt-0 outline-none">
                 <div className="space-y-12">
                    <div className="flex items-center justify-between gap-4">
@@ -381,7 +385,6 @@ export default function DashboardPage() {
                 </div>
               </TabsContent>
 
-              {/* User Dashboard */}
               <TabsContent value="dashboard" className="mt-0 outline-none">
                 {recommendationDoc?.data ? (
                   <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} />
@@ -400,7 +403,6 @@ export default function DashboardPage() {
                 {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют. Заполните анкету в Дашборде.</div>}
               </TabsContent>
 
-              {/* Specialist Management */}
               <TabsContent value="my-feed" className="mt-0 outline-none">
                 <div className="max-w-4xl mx-auto space-y-10">
                    <div className="flex items-center justify-between">
@@ -452,50 +454,6 @@ export default function DashboardPage() {
           )}
         </Tabs>
       </main>
-
-      {/* Specialist Profile Modal */}
-      <Dialog open={!!viewingSpecialist} onOpenChange={(open) => !open && setViewingSpecialist(null)}>
-        <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl z-[1001]">
-          <div className="sr-only">
-             <DialogTitle>Профиль специалиста {viewingSpecialist?.name}</DialogTitle>
-             <DialogDescription>Информация об опыте, рейтинге и специализации эксперта платформы PRO Себя.</DialogDescription>
-          </div>
-          {viewingSpecialist && (
-            <div className="flex flex-col">
-               <div className="bg-primary p-12 text-white relative overflow-hidden">
-                  <div className="relative z-10 flex flex-col items-center text-center gap-6">
-                     <div className="w-32 h-32 rounded-[2.5rem] bg-white/20 border-4 border-white/30 shadow-2xl flex items-center justify-center overflow-hidden">
-                        {viewingSpecialist.photo ? (
-                          <Image src={viewingSpecialist.photo} alt={viewingSpecialist.name} width={128} height={128} className="object-cover w-full h-full" />
-                        ) : (
-                          <User className="h-16 w-16" />
-                        )}
-                     </div>
-                     <div className="space-y-1">
-                        <h3 className="text-3xl font-black tracking-tighter leading-none">{viewingSpecialist.name}</h3>
-                        <Badge variant="secondary" className="bg-white text-primary border-none text-[10px] uppercase font-black tracking-widest">{viewingSpecialist.role}</Badge>
-                     </div>
-                     <div className="flex gap-8 pt-4">
-                        <div className="text-center"><p className="text-2xl font-black leading-none">{viewingSpecialist.rating}</p><p className="text-[8px] uppercase tracking-widest opacity-60">Рейтинг</p></div>
-                        <div className="text-center"><p className="text-2xl font-black leading-none">{viewingSpecialist.reviews}</p><p className="text-[8px] uppercase tracking-widest opacity-60">Отзывы</p></div>
-                     </div>
-                  </div>
-                  <Sparkles className="absolute -right-10 -bottom-10 h-40 w-40 text-white/5 rotate-12" />
-               </div>
-               <div className="p-10 space-y-8 bg-white">
-                  <div className="space-y-4">
-                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2 flex items-center gap-2"><Info className="h-3 w-3" /> О специалисте</label>
-                     <p className="text-lg font-medium leading-relaxed text-foreground/80">{viewingSpecialist.bio}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <Button className="h-16 rounded-2xl bg-primary font-black shadow-xl">Записаться</Button>
-                     <Button variant="outline" className="h-16 rounded-2xl border-2 border-primary/10 text-primary font-black" onClick={handleStartChat}>Чат</Button>
-                  </div>
-               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       <AISpecialistChat />
       <footer className="mt-10 md:mt-20 border-t py-8 md:py-12 bg-white/50 backdrop-blur-md">

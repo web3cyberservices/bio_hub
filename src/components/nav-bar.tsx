@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, ShieldCheck, Zap, LogIn, UserPlus } from 'lucide-react';
+import { Activity, ShieldCheck, Zap, LogIn, UserPlus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
 
 export function NavBar() {
-  const { user } = useUser();
-  // Считаем гостем ТОЛЬКО если пользователя нет или это public-user. 
-  // Анонимные (тестовые) пользователи теперь считаются авторизованными в UI.
-  const isGuest = !user || user.uid === 'public-user';
+  const { user, loading } = useUser();
+  
+  // Считаем гостем ТОЛЬКО если загрузка завершена и пользователя нет или это public-user.
+  const isGuest = !loading && (!user || user.uid === 'public-user');
+  const isAuthenticated = !loading && user && user.uid !== 'public-user';
 
   return (
     <nav className="sticky top-0 z-[100] w-full bg-primary border-b border-white/10 shadow-xl">
@@ -29,7 +30,11 @@ export function NavBar() {
         </Link>
         
         <div className="flex items-center gap-1.5 md:gap-4">
-           {isGuest ? (
+           {loading ? (
+             <div className="w-10 h-10 flex items-center justify-center opacity-20">
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+             </div>
+           ) : isGuest ? (
              <div className="flex items-center gap-1.5 md:gap-2">
                 <Button asChild variant="ghost" className="rounded-xl font-black uppercase tracking-widest text-[7px] md:text-[10px] h-8 md:h-10 px-2 md:px-4 text-white hover:text-white hover:bg-white/10 border-none">
                   <Link href="/login" className="flex items-center gap-1">
@@ -42,12 +47,12 @@ export function NavBar() {
                   </Link>
                 </Button>
              </div>
-           ) : (
+           ) : isAuthenticated ? (
              <Link href="/dashboard" className="flex items-center gap-2 bg-white/10 px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
                 <Zap className="h-3.5 w-3.5 text-white animate-pulse" />
                 <span className="text-[8px] md:text-[10px] font-black text-white uppercase tracking-widest">Дашборд</span>
              </Link>
-           )}
+           ) : null}
            
            <div className="hidden lg:flex w-10 h-10 rounded-full bg-white/10 border border-white/10 items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5 text-white/40" />

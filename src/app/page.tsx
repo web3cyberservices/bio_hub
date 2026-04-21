@@ -22,7 +22,10 @@ import { AISpecialistChat } from '@/components/ai-specialist-chat';
 
 export default function LandingPage() {
   const { user, loading: userLoading } = useUser();
-  const isGuest = !user || user.uid === 'public-user';
+  
+  // Учитываем загрузку, чтобы не показывать кнопки гостя преждевременно
+  const isGuest = !userLoading && (!user || user.uid === 'public-user');
+  const isAuthenticated = !userLoading && user && user.uid !== 'public-user';
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2] overflow-x-hidden">
@@ -64,13 +67,13 @@ export default function LandingPage() {
                       </Link>
                     </Button>
                   </div>
-                ) : (
+                ) : isAuthenticated ? (
                   <Button asChild className="w-full sm:w-auto rounded-[2.5rem] h-20 md:h-24 px-12 md:px-20 text-xl md:text-2xl font-black bg-primary shadow-2xl transition-all hover:scale-105 gap-4">
                     <Link href="/dashboard">
                       Перейти в Bio-Хаб <Activity className="h-8 w-8" />
                     </Link>
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
