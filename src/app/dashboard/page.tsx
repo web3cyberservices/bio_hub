@@ -23,6 +23,7 @@ import { useAuth } from '@/firebase/provider';
 import { ProfileCabinet } from '@/components/profile-cabinet';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
