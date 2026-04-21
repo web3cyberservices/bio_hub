@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUser, useFirestore, useDoc } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
 interface Message {
@@ -39,7 +39,11 @@ export function AISpecialistChat() {
     { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист PRO Себя. Чем я могу помочь вам в оптимизации вашего здоровья сегодня?' }
   ]);
   
-  const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
   const { data: userData } = useDoc<any>(userDocRef);
 
   const scrollRef = useRef<HTMLDivElement>(null);

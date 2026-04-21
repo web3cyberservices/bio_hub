@@ -91,7 +91,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 export const useFirebase = () => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
-    // Возвращаем пустой объект вместо ошибки во время SSR или инициализации
     return {
       areServicesAvailable: false,
       firebaseApp: null,
