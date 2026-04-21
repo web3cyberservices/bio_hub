@@ -26,15 +26,15 @@ export function ChatInterface() {
   const [message, setMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Список чатов пользователя - СТРОГАЯ ПРОВЕРКА НА АВТОРИЗАЦИЮ
+  // Список чатов пользователя
+  // УДАЛЕН orderBy('updatedAt') для исключения ошибки 'Missing Index' которая часто маскируется под Permission Error
   const chatsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     
     return query(
       collection(firestore, 'chats'),
       where('participants', 'array-contains', user.uid),
-      orderBy('updatedAt', 'desc'),
-      limit(20)
+      limit(50)
     );
   }, [firestore, user?.uid]);
 
@@ -46,7 +46,7 @@ export function ChatInterface() {
     return query(
       collection(firestore, 'chats', activeChatId, 'messages'),
       orderBy('createdAt', 'asc'),
-      limit(50)
+      limit(100)
     );
   }, [firestore, activeChatId, user?.uid]);
 
@@ -101,10 +101,20 @@ export function ChatInterface() {
   if (chatsLoading) {
     return (
       <div className="flex h-[600px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
+        <div className="text-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка диалогов...</p>
+        </div>
       </div>
     );
   }
+
+  // Сортируем чаты по времени на клиенте, чтобы не требовать сложный индекс в Firestore
+  const sortedChats = chats ? [...chats].sort((a, b) => {
+    const timeA = new Date(a.updatedAt || 0).getTime();
+    const timeB = new Date(b.updatedAt || 0).getTime();
+    return timeB - timeA;
+  }) : [];
 
   return (
     <div className="flex h-[70vh] md:h-[750px] bg-white/40 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl overflow-hidden">
@@ -122,7 +132,7 @@ export function ChatInterface() {
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
-            {chats?.map((chat) => {
+            {sortedChats.map((chat) => {
               const oId = chat.participants.find((id: string) => id !== user?.uid);
               const oDetails = chat.participantDetails?.[oId];
               return (
@@ -148,7 +158,7 @@ export function ChatInterface() {
                 </button>
               );
             })}
-            {(!chats || chats.length === 0) && (
+            {(!sortedChats || sortedChats.length === 0) && (
               <div className="p-10 text-center space-y-2 opacity-30">
                  <MessageSquare className="h-10 w-10 mx-auto" />
                  <p className="text-[10px] font-black uppercase tracking-widest">Нет активных чатов</p>

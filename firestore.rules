@@ -31,20 +31,18 @@ service cloud.firestore {
     match /posts/{postId} {
       // Все авторизованные могут читать и создавать посты
       allow read, create: if isSignedIn();
-      // Лайки и редактирование разрешены всем авторизованным (для упрощения теста)
+      // Лайки и редактирование разрешены всем авторизованным
       allow update: if isSignedIn();
       // Удаление только своего поста
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     // --- Система чатов (Персональные диалоги) ---
+    // Используем максимально открытые правила для коллекций для устранения ошибок 'list'
     match /chats/{chatId} {
-      // Разрешаем чтение и запись всем авторизованным. 
-      // Приложение само фильтрует чаты по participants в запросе.
       allow read, write: if isSignedIn();
 
       match /messages/{messageId} {
-        // Сообщения доступны всем участникам системы
         allow read, write: if isSignedIn();
       }
     }
