@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -136,7 +137,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     setLoading(true);
     try {
-      // Сохраняем профиль перед генерацией
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid,
         email: user.email,
@@ -149,6 +149,8 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
       const result = await generatePersonalizedRecommendations({
         ...biometrics,
+        favoriteFoods: userData?.favoriteFoods,
+        dislikedFoods: userData?.dislikedFoods,
         targetDate: selectedDate.toISOString(),
         deviceData: {
           steps: steps || 0,

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +15,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -30,7 +32,9 @@ import {
   Settings,
   Target,
   Mail,
-  Fingerprint
+  Fingerprint,
+  Heart,
+  Ban
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -47,6 +51,8 @@ const profileSchema = z.object({
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
+  favoriteFoods: z.string().optional(),
+  dislikedFoods: z.string().optional(),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -77,6 +83,8 @@ export function ProfileCabinet() {
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
       alcohol: 'не употребляю',
+      favoriteFoods: '',
+      dislikedFoods: '',
     },
   });
 
@@ -93,6 +101,8 @@ export function ProfileCabinet() {
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
+        favoriteFoods: userData.favoriteFoods || '',
+        dislikedFoods: userData.dislikedFoods || '',
       });
     }
   }, [userData, form]);
@@ -109,7 +119,6 @@ export function ProfileCabinet() {
 
     setLoading(true);
     try {
-      // Важно: передаем id: user.uid для соответствия правилам безопасности Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         ...values,
         id: user.uid,
@@ -144,6 +153,7 @@ export function ProfileCabinet() {
   }
 
   const inputClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
+  const textareaClasses = "min-h-[100px] rounded-2xl bg-white border-muted shadow-sm font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
   const selectClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 transition-all";
 
   return (
@@ -158,7 +168,6 @@ export function ProfileCabinet() {
         </div>
       </div>
 
-      {/* Account Info Card */}
       <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden mb-6">
         <CardContent className="p-8 space-y-6">
           <div className="flex items-center gap-2 border-b pb-4">
@@ -187,7 +196,6 @@ export function ProfileCabinet() {
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-              {/* Personal Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
@@ -211,7 +219,32 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Goals Section */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-4">
+                  <Heart className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-black uppercase tracking-tight">Гастро-предпочтения</h3>
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
+                      </FormLabel>
+                      <FormControl><Textarea placeholder="Что вы любите? (например: авокадо, лосось, орехи)" {...field} className={textareaClasses} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
+                      </FormLabel>
+                      <FormControl><Textarea placeholder="Что исключить? (например: кинза, лук, жирная свинина)" {...field} className={textareaClasses} /></FormControl>
+                    </FormItem>
+                  )} />
+                </div>
+                <p className="text-[9px] text-muted-foreground italic px-2">Эти данные будут использоваться ИИ при составлении вашего рациона.</p>
+              </div>
+
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Target className="h-5 w-5 text-primary" />
@@ -249,7 +282,6 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Biometrics Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Activity className="h-5 w-5 text-primary" />
@@ -289,7 +321,6 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Habits Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />

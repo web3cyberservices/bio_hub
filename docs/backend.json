@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -17,6 +18,8 @@
         "activityLevel": { "type": "string" },
         "healthGoal": { "type": "string" },
         "profileType": { "type": "string" },
+        "favoriteFoods": { "type": "string", "description": "Preferred ingredients or meals." },
+        "dislikedFoods": { "type": "string", "description": "Foods to avoid." },
         "dateJoined": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "firstName", "profileType"]

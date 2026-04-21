@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Обновлено: переход на модель gemini-2.5-flash.
+ * Обновлено: учет гастро-предпочтений пользователя.
  */
 
 import {ai} from '@/ai/genkit';
@@ -32,6 +33,8 @@ const GenerateRecommendationsInputSchema = z.object({
     .describe('Основная цель пользователя в области здоровья.'),
   smoking: z.enum(['да', 'нет']).describe('Курит ли пользователь.'),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).describe('Частота употребления алкоголя.'),
+  favoriteFoods: z.string().optional().describe('Любимые продукты пользователя.'),
+  dislikedFoods: z.string().optional().describe('Продукты, которые пользователь не любит.'),
   labResultsInput: z.string().optional(),
   deviceData: z.object({
     steps: z.number().optional(),
@@ -98,6 +101,10 @@ const recommendationPrompt = ai.definePrompt({
   output: {schema: GenerateRecommendationsOutputSchema},
   prompt: `Вы — эксперт-нутрициолог системы "PRO Себя". Ваша задача — создать глубокий аналитический отчет и план питания.
 
+УЧЕТ ПРЕДПОЧТЕНИЙ:
+{{#if favoriteFoods}}Любимая еда пользователя: {{{favoriteFoods}}}. Постарайтесь включить эти продукты в рацион.{{/if}}
+{{#if dislikedFoods}}Нелюбимая еда: {{{dislikedFoods}}}. СТРОГО ИСКЛЮЧИТЕ эти продукты из всех блюд.{{/if}}
+
 ПРАВИЛА ДЛЯ ПОЛЯ imageUrl:
 Вы ОБЯЗАНЫ для каждого блюда вернуть качественную ПОЛНУЮ ссылку на фото еды с Unsplash.
 1. Запрещено использовать заглушки с мостами, городами, людьми или абстракциями. Только ЕДА.
@@ -116,7 +123,7 @@ const recommendationPrompt = ai.definePrompt({
    - Паста/Углеводы: 1473093226724-4e24059a9742
    - Суп: 1547592166903-89826d2d82bb
 
-ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ. Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.imageUrl НЕ может быть пустой строкой.
+ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ. Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.
 
 Контекст:
 Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}.

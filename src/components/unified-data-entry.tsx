@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -5,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  Droplet, Scale, Utensils, Brain, Smile, Thermometer, Battery
+  Droplet, Scale, Utensils, Brain, Smile, Thermometer, Battery,
+  Save, Beef, Wheat, MessageSquare
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +22,7 @@ import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Card } from '@/components/ui/card';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -39,6 +42,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   
+  // Editable meal result state
+  const [editedMeal, setEditedMeal] = useState<AnalyzeMealOutput | null>(null);
+
   const [water, setWater] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [steps, setSteps] = useState<string>('');
@@ -96,28 +102,38 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
-  const saveMealLog = async (data: AnalyzeMealOutput) => {
+  const saveMealToFirestore = async (data: AnalyzeMealOutput) => {
     if (!firestore || !user || user.uid === 'public-user') return;
     
-    const dateKey = format(selectedDate, 'yyyy-MM-dd');
-    const logId = `${dateKey}_${Date.now()}`;
-    const logRef = doc(firestore, 'users', user.uid, 'dietaryLogs', logId);
-    
-    await setDoc(logRef, {
-      id: logId,
-      userId: user.uid,
-      logDate: selectedDate.toISOString(),
-      mealName: data.mealName,
-      calories: data.calories,
-      protein: data.protein,
-      fat: data.fat,
-      carbs: data.carbs,
-      analysis: data.analysis,
-      createdAt: serverTimestamp()
-    });
+    setLoading(true);
+    try {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const logId = `${dateKey}_${Date.now()}`;
+      const logRef = doc(firestore, 'users', user.uid, 'dietaryLogs', logId);
+      
+      await setDoc(logRef, {
+        id: logId,
+        userId: user.uid,
+        logDate: selectedDate.toISOString(),
+        mealName: data.mealName,
+        calories: data.calories,
+        protein: data.protein,
+        fat: data.fat,
+        carbs: data.carbs,
+        analysis: data.analysis,
+        createdAt: serverTimestamp()
+      });
+      
+      setIsSuccess(true);
+      toast({ title: 'Запись сохранена', description: `${data.mealName} добавлено в дневник.` });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = async (isRefinement = false) => {
+  const handleAnalyze = async (isRefinement = false) => {
     if (!firestore || !user || user.uid === 'public-user') {
       toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы не авторизованы.' });
       return;
@@ -125,45 +141,55 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
     setLoading(true);
     try {
-      if (activeTab === 'meal') {
-        const result = await analyzeMeal({
-          description,
-          photoDataUri: image || undefined,
-          refinement: isRefinement ? refinement : undefined,
-        });
-        setMealResult(result);
-        await saveMealLog(result);
-        toast({ title: 'Запись создана', description: `${result.mealName} добавлено в дневник.` });
-      } else {
-        const dateKey = format(selectedDate, 'yyyy-MM-dd');
-        const docRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
-        await setDoc(docRef, {
-          date: dateKey,
-          water: water ? Number(water) : undefined,
-          weight: weight ? Number(weight) : undefined,
-          steps: steps ? Number(steps) : undefined,
-          mood: mood || undefined,
-          energy: energy,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-        
-        setIsSuccess(true);
-        toast({ title: 'Биометрия обновлена' });
-      }
+      const result = await analyzeMeal({
+        description,
+        photoDataUri: image || undefined,
+        refinement: isRefinement ? refinement : undefined,
+      });
+      setMealResult(result);
+      setEditedMeal(result);
+      if (isRefinement) setRefinement('');
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: error.message || 'Не удалось обработать.' });
+      toast({ variant: 'destructive', title: 'Ошибка анализа', description: error.message || 'Не удалось обработать.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDailyLogSubmit = async () => {
+    if (!firestore || !user || user.uid === 'public-user') return;
+    
+    setLoading(true);
+    try {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const docRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+      await setDoc(docRef, {
+        date: dateKey,
+        water: water ? Number(water) : undefined,
+        weight: weight ? Number(weight) : undefined,
+        steps: steps ? Number(steps) : undefined,
+        mood: mood || undefined,
+        energy: energy,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      
+      setIsSuccess(true);
+      toast({ title: 'Биометрия обновлена' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: error.message });
     } finally {
       setLoading(false);
     }
   };
 
   const reset = () => {
-    setDescription(''); setRefinement(''); setImage(null); setMealResult(null);
+    setDescription(''); setRefinement(''); setImage(null); setMealResult(null); setEditedMeal(null);
     setIsSuccess(false); setWater(''); setWeight(''); setSteps(''); setMood(''); setEnergy(50);
     stopCamera();
   };
 
   const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-2xl placeholder:text-muted-foreground/20 focus:ring-4 focus:ring-primary/5 transition-all px-6 md:px-8 shadow-inner";
+  const editInputClasses = "h-12 rounded-xl bg-white border shadow-sm font-bold px-4 focus:ring-2 focus:ring-primary/20";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
@@ -207,8 +233,26 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   </label>
                 </div>
-                <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary shadow-xl" onClick={() => handleSubmit(false)} disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5 md:h-6 md:u-6 text-accent" /> РАСПОЗНАТЬ</>}
+
+                {showCamera && (
+                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
+                    <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                      <Button onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                      <Button onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                    </div>
+                  </div>
+                )}
+
+                {image && !showCamera && (
+                  <div className="relative rounded-2xl overflow-hidden aspect-video">
+                    <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
+                  </div>
+                )}
+
+                <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary shadow-xl" onClick={() => handleAnalyze(false)} disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5 md:h-6 text-accent" /> РАСПОЗНАТЬ</>}
                 </Button>
               </TabsContent>
 
@@ -242,7 +286,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                        </div>
                     </div>
                  </div>
-                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-6" onClick={() => handleSubmit(false)}>СОХРАНИТЬ</Button>
+                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-6" onClick={handleDailyLogSubmit} disabled={loading}>
+                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ"}
+                 </Button>
               </TabsContent>
 
               <TabsContent value="metrics" className="space-y-6 outline-none">
@@ -260,15 +306,104 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                       <Input placeholder="10,000" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
                    </div>
                 </div>
-                <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2" onClick={() => handleSubmit(false)}>ОБНОВИТЬ ТЕЛО</Button>
+                <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2" onClick={handleDailyLogSubmit} disabled={loading}>
+                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ОБНОВИТЬ ТЕЛО"}
+                </Button>
               </TabsContent>
             </Tabs>
+          ) : mealResult && editedMeal && !isSuccess ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="text-center space-y-2">
+                  <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">AI BioScan Result</Badge>
+                  <Input 
+                    value={editedMeal.mealName} 
+                    onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
+                    className="text-2xl md:text-3xl font-black text-center border-none bg-transparent h-auto focus-visible:ring-0"
+                  />
+               </div>
+
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Ккал</label>
+                     <Input 
+                        type="number" 
+                        value={editedMeal.calories} 
+                        onChange={e => setEditedMeal({...editedMeal, calories: Number(e.target.value)})}
+                        className="h-14 rounded-2xl bg-primary/5 border-none text-center font-black text-xl"
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Белки (г)</label>
+                     <Input 
+                        type="number" 
+                        value={editedMeal.protein} 
+                        onChange={e => setEditedMeal({...editedMeal, protein: Number(e.target.value)})}
+                        className="h-14 rounded-2xl bg-secondary/10 border-none text-center font-black text-xl"
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Жиры (г)</label>
+                     <Input 
+                        type="number" 
+                        value={editedMeal.fat} 
+                        onChange={e => setEditedMeal({...editedMeal, fat: Number(e.target.value)})}
+                        className="h-14 rounded-2xl bg-accent/20 border-none text-center font-black text-xl"
+                     />
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Углеводы (г)</label>
+                     <Input 
+                        type="number" 
+                        value={editedMeal.carbs} 
+                        onChange={e => setEditedMeal({...editedMeal, carbs: Number(e.target.value)})}
+                        className="h-14 rounded-2xl bg-muted border-none text-center font-black text-xl"
+                     />
+                  </div>
+               </div>
+
+               <div className="bg-muted/30 p-5 rounded-[1.75rem]">
+                  <p className="text-sm font-medium leading-relaxed italic text-foreground/80">"{editedMeal.analysis}"</p>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="flex gap-4">
+                     <Button 
+                        variant="outline" 
+                        className="flex-1 h-16 rounded-[1.2rem] font-bold" 
+                        onClick={() => { setMealResult(null); setEditedMeal(null); }}
+                     >
+                        Переснять
+                     </Button>
+                     <Button 
+                        className="flex-[2] h-16 rounded-[1.2rem] font-black text-lg bg-primary shadow-xl"
+                        onClick={() => saveMealToFirestore(editedMeal)}
+                        disabled={loading}
+                     >
+                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-5 w-5" /> ПОДТВЕРДИТЬ И ЗАПИСАТЬ</>}
+                     </Button>
+                  </div>
+                  
+                  <div className="flex gap-2 items-center px-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <Input 
+                      placeholder="Уточнить (например: 'порция была больше')"
+                      value={refinement}
+                      onChange={e => setRefinement(e.target.value)}
+                      className="h-10 border-none bg-primary/5 rounded-xl font-bold placeholder:font-normal"
+                    />
+                    <Button size="sm" variant="ghost" className="h-10 text-primary font-black" onClick={() => handleAnalyze(true)} disabled={loading}>
+                      ПЕРЕСЧИТАТЬ ИИ
+                    </Button>
+                  </div>
+               </div>
+            </div>
           ) : (
             <div className="py-8 flex flex-col items-center text-center space-y-6">
                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-xl animate-in zoom-in">
                   <CheckCircle2 className="h-12 w-12 text-white" />
                </div>
                <h3 className="text-2xl font-black tracking-tighter">Bio-Синхронизация завершена!</h3>
+               <p className="text-muted-foreground font-medium">Ваши данные успешно записаны в облако.</p>
                <Button className="w-56 h-14 rounded-[1.2rem] font-black text-lg bg-primary" onClick={reset}>ОТЛИЧНО</Button>
             </div>
           )}
