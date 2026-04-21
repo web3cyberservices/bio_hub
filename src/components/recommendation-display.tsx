@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Activity, Footprints, Moon, Heart, Droplet, 
-  Timer, Flame, Zap
+  Timer, Flame, Zap, Utensils
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -193,14 +193,21 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
           {mealPlan[0].meals.map((meal, idx) => {
             return (
               <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
-                <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group">
-                  <Image 
-                    src={meal.imageUrl} 
-                    alt={meal.name} 
-                    fill 
-                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                    unoptimized={true}
-                  />
+                <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group bg-muted/20">
+                  {meal.imageUrl ? (
+                    <Image 
+                      src={meal.imageUrl} 
+                      alt={meal.name} 
+                      fill 
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-primary/20">
+                      <Utensils className="h-16 w-16 mb-2" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Image Loading...</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-20" />
                   <div className="absolute bottom-6 left-6 right-6">
                      <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
