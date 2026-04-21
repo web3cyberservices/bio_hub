@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sparkles, Loader2, User, UserPlus } from 'lucide-react';
 import { useAuth, useFirestore, useUser } from '@/firebase';
-import { createUserWithEmailAndPassword, signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { QuickTestButton } from '@/components/quick-test-button';
@@ -95,7 +94,8 @@ export default function RegisterPage() {
           id: googleUser.uid,
           email: googleUser.email,
           displayName: googleUser.displayName,
-          firstName: googleUser.displayName,
+          firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
+          lastName: googleUser.displayName?.split(' ')[1] || '',
           profileType: 'user',
           createdAt: new Date().toISOString(),
         }, { merge: true });
@@ -137,30 +137,17 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
-            {/* Quick Test Option First */}
-            <div className="space-y-4">
-               <div className="flex justify-center">
-                  <QuickTestButton />
-               </div>
-               <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
-                  <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
-                    <span className="bg-white px-4 text-muted-foreground/40">Или регистрация</span>
-                  </div>
-               </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline"
-                className="h-14 rounded-xl border-2 border-muted font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-muted/50"
+                className="h-14 rounded-xl border-2 border-muted font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-muted/50"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -179,8 +166,16 @@ export default function RegisterPage() {
                     />
                   </svg>
                 )}
-                Через Google
+                Google
               </Button>
+              <QuickTestButton />
+            </div>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
+              <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
+                <span className="bg-white px-4 text-muted-foreground/40">Или регистрация</span>
+              </div>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4">

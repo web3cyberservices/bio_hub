@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -20,11 +19,9 @@ import {
 import { useUser } from '@/firebase';
 import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
-import { QuickTestButton } from '@/components/quick-test-button';
 
 export default function LandingPage() {
   const { user, loading: userLoading } = useUser();
-  // Анонимные (тестовые) пользователи НЕ считаются гостями
   const isGuest = !user || user.uid === 'public-user';
 
   return (
@@ -55,32 +52,17 @@ export default function LandingPage() {
                     <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
                   </div>
                 ) : isGuest ? (
-                  <div className="flex flex-col w-full max-w-2xl gap-6">
-                    {/* Primary Actions Row */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                      <Button asChild className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black bg-primary shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
-                        <Link href="/register">
-                          Начать бесплатно <ArrowRight className="h-6 w-6" />
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black border-2 border-primary/10 hover:bg-primary/5 transition-all bg-white/50 backdrop-blur-sm gap-3">
-                        <Link href="/login">
-                          Войти <LogIn className="h-6 w-6" />
-                        </Link>
-                      </Button>
-                    </div>
-                    
-                    {/* Quick Test Option */}
-                    <div className="relative py-4">
-                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-primary/10" /></div>
-                      <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                        <span className="bg-[#F0F7F2] px-6 text-muted-foreground/40">Или мгновенный тест</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center">
-                      <QuickTestButton />
-                    </div>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-2xl">
+                    <Button asChild className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black bg-primary shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                      <Link href="/register">
+                        Начать бесплатно <ArrowRight className="h-6 w-6" />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black border-2 border-primary/10 hover:bg-primary/5 transition-all bg-white/50 backdrop-blur-sm gap-3">
+                      <Link href="/login">
+                        Войти <LogIn className="h-6 w-6" />
+                      </Link>
+                    </Button>
                   </div>
                 ) : (
                   <Button asChild className="w-full sm:w-auto rounded-[2.5rem] h-20 md:h-24 px-12 md:px-20 text-xl md:text-2xl font-black bg-primary shadow-2xl transition-all hover:scale-105 gap-4">

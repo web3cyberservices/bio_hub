@@ -17,7 +17,6 @@ export function QuickTestButton() {
   const { toast } = useToast();
 
   const handleQuickTest = async () => {
-    // Проверка на наличие инициализированного Auth
     if (!auth) {
       toast({
         variant: 'destructive',
@@ -42,6 +41,8 @@ export function QuickTestButton() {
             profileType: 'user',
             createdAt: new Date().toISOString(),
             displayName: 'Тестовый Пользователь',
+            firstName: 'Тестовый',
+            lastName: 'Пользователь'
           }, { merge: true });
         }
       }
@@ -62,13 +63,13 @@ export function QuickTestButton() {
 
   return (
     <Button 
-      size="lg" 
+      variant="outline"
       onClick={handleQuickTest}
       disabled={loading}
-      className="h-16 px-10 text-xl font-black rounded-3xl bg-secondary hover:bg-secondary/90 shadow-[0_20px_50px_rgba(249,115,22,0.3)] transition-all hover:scale-105 active:scale-95 group gap-3"
+      className="h-14 w-full rounded-xl border-2 border-secondary/20 bg-secondary/5 text-secondary hover:bg-secondary/10 font-black uppercase tracking-widest text-[10px] gap-2 transition-all shadow-sm"
     >
-      {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Sparkles className="h-6 w-6" />}
-      Тестовый доступ
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+      Тест
     </Button>
   );
 }
