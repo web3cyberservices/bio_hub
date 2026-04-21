@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -48,7 +47,7 @@ const formSchema = z.object({
   height: z.coerce.number().positive('Рост обязателен'),
   age: z.coerce.number().int().min(1, 'Возраст обязателен'),
   gender: z.enum(['мужской', 'женский']),
-  activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
+  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
@@ -84,7 +83,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       weight: 70,
       height: 175,
       age: 30,
-      activityLevel: 'средний',
+      activityLevel: 'moderate',
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
       alcohol: 'не употребляю',
@@ -102,7 +101,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         weight: userData.weight || 70,
         height: userData.height || 175,
         age: userData.age || 30,
-        activityLevel: userData.activityLevel || 'средний',
+        activityLevel: userData.activityLevel || 'moderate',
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
@@ -173,8 +172,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }
 
-  const inputClasses = "h-14 rounded-2xl bg-primary/90 border-none font-black text-white px-6";
-  const selectTriggerClasses = "h-14 rounded-2xl bg-primary/90 border-none font-black text-white px-6";
+  // Мятный цвет для формы в дашборде
+  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
+  const selectTriggerClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
 
   return (
     <Card className="premium-card overflow-hidden">
@@ -187,7 +187,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пол</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
                   </Select>
                 </FormItem>
               )} />
@@ -207,7 +207,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Цель</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl">
                       <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
                       <SelectItem value="поддержать текущее состояние">Баланс</SelectItem>
                       <SelectItem value="набор массы">Набор массы</SelectItem>
@@ -220,12 +220,12 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Активность</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      <SelectItem value="малоактивный">Малая</SelectItem>
-                      <SelectItem value="среднеактивный">Среднеактивная</SelectItem>
-                      <SelectItem value="средний">Средняя</SelectItem>
-                      <SelectItem value="активный">Высокая</SelectItem>
-                      <SelectItem value="перенагрузка">Интенсивная</SelectItem>
+                    <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
+                      <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
+                      <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
+                      <SelectItem value="high">Высокий (Активный)</SelectItem>
+                      <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

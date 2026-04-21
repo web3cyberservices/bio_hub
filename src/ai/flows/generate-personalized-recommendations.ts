@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Обновлено: использование Gemini 2.5 Flash и строгие правила для изображений Unsplash.
+ * Обновлено: использование Gemini 2.5 Flash и новые уровни активности.
  */
 
 import {ai} from '@/ai/genkit';
@@ -16,13 +16,13 @@ const GenerateRecommendationsInputSchema = z.object({
   gender: z.enum(['мужской', 'женский']).describe('Пол пользователя.'),
   activityLevel:
     z.enum([
-      'малоактивный',
-      'среднеактивный',
-      'средний',
-      'активный',
-      'перенагрузка',
+      'minimal',
+      'low',
+      'moderate',
+      'high',
+      'athlete',
     ])
-    .describe('Общий уровень активности пользователя.'),
+    .describe('Уровень активности: minimal (сидячий), low (редкие прогулки), moderate (регулярная ходьба), high (постоянные тренировки), athlete (ежедневные нагрузки).'),
   healthGoal:
     z.enum([
       'снизить массу тела',
@@ -125,7 +125,7 @@ const recommendationPrompt = ai.definePrompt({
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ. Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.
 
 Контекст:
-Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}.
+Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}. Активность: {{activityLevel}}.
 {{#if deviceData}}Шаги: {{deviceData.steps}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}`,
 });
 

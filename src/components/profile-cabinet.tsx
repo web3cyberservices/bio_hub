@@ -48,7 +48,7 @@ const profileSchema = z.object({
   age: z.coerce.number().int().min(1, 'Возраст обязателен').default(30),
   weight: z.coerce.number().positive('Вес обязателен').default(70),
   height: z.coerce.number().positive('Рост обязателен').default(175),
-  activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
+  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
@@ -96,7 +96,7 @@ export function ProfileCabinet() {
       age: 30,
       weight: 70,
       height: 175,
-      activityLevel: 'средний',
+      activityLevel: 'moderate',
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
       alcohol: 'не употребляю',
@@ -115,7 +115,7 @@ export function ProfileCabinet() {
         age: userData.age || 30,
         weight: userData.weight || 70,
         height: userData.height || 175,
-        activityLevel: userData.activityLevel || 'средний',
+        activityLevel: userData.activityLevel || 'moderate',
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
@@ -186,8 +186,7 @@ export function ProfileCabinet() {
     }
   }
 
-  const onInvalid = (errors: any) => {
-    // Убрали console.error, чтобы не вызывать оверлей ошибок NextJS
+  const onInvalid = () => {
     toast({
       variant: 'destructive',
       title: 'Ошибка заполнения',
@@ -204,12 +203,13 @@ export function ProfileCabinet() {
     );
   }
 
-  const inputClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
-  const textareaClasses = "min-h-[100px] rounded-2xl bg-white border-muted shadow-sm font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
-  const selectClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 transition-all";
+  // Светло-мятный цвет для инпутов
+  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
+  const textareaClasses = "min-h-[100px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
+  const selectClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 transition-all";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
           <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
@@ -229,14 +229,14 @@ export function ProfileCabinet() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</label>
-              <div className="flex items-center gap-3 h-14 bg-muted/30 rounded-2xl px-6 font-bold text-muted-foreground border">
+              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE]/50 rounded-2xl px-6 font-bold text-muted-foreground border-none">
                 <Mail className="h-4 w-4 opacity-40" />
                 {(user as any)?.email || 'Не указан (Тестовый вход)'}
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">User ID</label>
-              <div className="flex items-center gap-3 h-14 bg-muted/30 rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border overflow-hidden">
+              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE]/50 rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
                 {user?.uid}
               </div>
             </div>
@@ -253,74 +253,47 @@ export function ProfileCabinet() {
                   <User className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
                 </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="firstName" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя *</FormLabel>
-                        <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="lastName" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
-                        <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-                  
+                {/* Выравнивание имя, фамилия и дата рождения в одну сетку */}
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                  <FormField control={form.control} name="firstName" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя *</FormLabel>
+                      <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="lastName" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
+                      <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
                       <CalendarDays className="h-3 w-3" /> Дата рождения
                     </FormLabel>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5">
                       <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                        <SelectTrigger className={selectClasses}><SelectValue placeholder="День" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="Д" /></SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
                           {daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                        <SelectTrigger className={selectClasses}><SelectValue placeholder="Месяц" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="М" /></SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
                           {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                        <SelectTrigger className={selectClasses}><SelectValue placeholder="Год" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="Г" /></SelectTrigger>
+                        <SelectContent className="rounded-xl border-none shadow-2xl">
                           {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                   </FormItem>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Гастро-предпочтения</h3>
-                </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
-                      </FormLabel>
-                      <FormControl><Textarea placeholder="Что вы любите? (авокадо, лосось...)" {...field} className={textareaClasses} /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
-                      </FormLabel>
-                      <FormControl><Textarea placeholder="Что исключить? (кинза, лук...)" {...field} className={textareaClasses} /></FormControl>
-                    </FormItem>
-                  )} />
                 </div>
               </div>
 
@@ -335,7 +308,7 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Цель</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">
                           <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
                           <SelectItem value="поддержать текущее состояние">Поддержание веса</SelectItem>
                           <SelectItem value="набор массы">Набор массы</SelectItem>
@@ -345,15 +318,15 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="activityLevel" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Активность</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Уровень активности</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          <SelectItem value="малоактивный">Малоактивный</SelectItem>
-                          <SelectItem value="среднеактивный">Среднеактивный</SelectItem>
-                          <SelectItem value="средний">Средний (3-5 тренировок)</SelectItem>
-                          <SelectItem value="активный">Активный (Ежедневно)</SelectItem>
-                          <SelectItem value="перенагрузка">Интенсивная</SelectItem>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                          <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
+                          <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
+                          <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
+                          <SelectItem value="high">Высокий (Активный)</SelectItem>
+                          <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -372,7 +345,7 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пол</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">
                           <SelectItem value="мужской">Мужской</SelectItem>
                           <SelectItem value="женский">Женский</SelectItem>
                         </SelectContent>
@@ -405,6 +378,31 @@ export function ProfileCabinet() {
 
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
+                  <Heart className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-black uppercase tracking-tight">Гастро-предпочтения</h3>
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
+                      </FormLabel>
+                      <FormControl><Textarea placeholder="Что вы любите? (авокадо, лосось...)" {...field} className={textareaClasses} /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
+                      </FormLabel>
+                      <FormControl><Textarea placeholder="Что исключить? (кинза, лук...)" {...field} className={textareaClasses} /></FormControl>
+                    </FormItem>
+                  )} />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Привычки</h3>
                 </div>
@@ -414,7 +412,7 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Курение</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">
                           <SelectItem value="да">Да</SelectItem>
                           <SelectItem value="нет">Нет</SelectItem>
                         </SelectContent>
@@ -426,7 +424,7 @@ export function ProfileCabinet() {
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Алкоголь</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">
                           <SelectItem value="не употребляю">Не употребляю</SelectItem>
                           <SelectItem value="редко">Редко</SelectItem>
                           <SelectItem value="умеренно">Умеренно</SelectItem>
