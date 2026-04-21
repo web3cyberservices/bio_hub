@@ -32,7 +32,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -416,6 +416,11 @@ export default function DashboardPage() {
       {/* Specialist Profile Modal */}
       <Dialog open={!!viewingSpecialist} onOpenChange={(open) => !open && setViewingSpecialist(null)}>
         <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl z-[1001]">
+          {/* Accessible Title and Description (visually hidden) */}
+          <div className="sr-only">
+             <DialogTitle>Профиль специалиста {viewingSpecialist?.name}</DialogTitle>
+             <DialogDescription>Информация об опыте, рейтинге и специализации эксперта платформы PRO Себя.</DialogDescription>
+          </div>
           {viewingSpecialist && (
             <div className="flex flex-col">
                <div className="bg-primary p-12 text-white relative overflow-hidden">
