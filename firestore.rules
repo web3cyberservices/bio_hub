@@ -17,6 +17,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Проверка роли специалиста (используется для создания постов)
+    function isSpecialist() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
+    }
+
     // --- Правила для коллекций ---
 
     // Профили пользователей
@@ -50,20 +55,20 @@ service cloud.firestore {
     // Публикации специалистов
     match /posts/{postId} {
       allow read: if isSignedIn();
-      // Проверяем тип профиля автора для создания постов
-      allow create: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
+      // Только специалисты могут создавать посты
+      allow create: if isSpecialist();
+      // Обновлять (лайки) могут все авторизованные, удалять только автор
       allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     // Система чатов
     match /chats/{chatId} {
-      // Разрешаем перечисление (list) и чтение (get) только если пользователь в списке участников
-      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
-      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      // Объединяем get и list в read для корректной работы запросов с фильтрацией
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.participants);
       allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
       
-      // Создание чата (участник должен быть в списке)
+      // Создание чата (текущий пользователь должен быть в списке участников)
       allow create: if isSignedIn() && (request.auth.uid in request.resource.data.participants);
 
       // Сообщения внутри чата
