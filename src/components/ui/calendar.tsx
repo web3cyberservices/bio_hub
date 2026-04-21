@@ -23,7 +23,7 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-6",
         month_caption: "flex justify-center pt-2 relative items-center mb-8",
-        caption_label: "text-xl font-bold tracking-tight text-foreground",
+        caption_label: "text-xl font-bold tracking-tight text-foreground flex items-center gap-2",
         nav: "flex items-center gap-1",
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
@@ -52,6 +52,11 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
+        // Стили для выпадающих списков (Month/Year selection)
+        dropdowns: "flex gap-2 items-center font-headline font-bold",
+        dropdown_month: "relative",
+        dropdown_year: "relative",
+        dropdown: "bg-transparent font-bold cursor-pointer hover:text-primary transition-colors outline-none appearance-none",
         ...classNames,
       }}
       components={{

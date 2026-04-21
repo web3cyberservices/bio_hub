@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -253,6 +252,9 @@ export function ProfileCabinet() {
                         <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-none" align="start">
                           <Calendar
                             mode="single"
+                            captionLayout="dropdown"
+                            fromYear={1900}
+                            toYear={new Date().getFullYear()}
                             selected={field.value ? parseISO(field.value) : undefined}
                             onSelect={(date) => {
                               if (date) {
