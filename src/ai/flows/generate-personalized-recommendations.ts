@@ -123,22 +123,24 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, init
     try {
       return await fn();
     } catch (error: any) {
-      const errorMsg = error.message || '';
+      const errorMsg = (error.message || '').toUpperCase();
+      const status = error.status || '';
       
       // Если общее время выполнения превысило 10 секунд, прекращаем попытки
-      if (Date.now() - actionStartTime > 10000) throw error;
+      if (Date.now() - actionStartTime > 10000) throw new Error('Превышено время ожидания. Пожалуйста, попробуйте позже.');
 
       const isTransient = errorMsg.includes('503') || 
                           errorMsg.includes('UNAVAILABLE') || 
                           errorMsg.includes('429') ||
                           errorMsg.includes('RESOURCE_EXHAUSTED') ||
-                          errorMsg.includes('overloaded');
+                          status === 'RESOURCE_EXHAUSTED' ||
+                          errorMsg.includes('OVERLOADED');
       
       if (isTransient && i < maxRetries - 1) {
         // Если ошибка 429 требует долгого ожидания (> 5 сек), бросаем ошибку сразу
-        const match = errorMsg.match(/retry in ([\d.]+)s/);
+        const match = errorMsg.match(/RETRY IN ([\d.]+)S/);
         if (match && parseFloat(match[1]) > 5) {
-          throw new Error('Лимит запросов исчерпан. Пожалуйста, подождите минуту перед следующей попыткой.');
+          throw new Error('Лимит запросов ИИ временно исчерпан. Пожалуйста, подождите минуту перед следующей попыткой.');
         }
 
         let delay = initialDelay * Math.pow(2, i);
@@ -229,7 +231,7 @@ export async function generatePersonalizedRecommendations(
 export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<typeof MealSchema> | null> {
   try {
     return await replaceMealFlow(input);
-  } catch (e) {
+  } catch (e: any) {
     console.error('AI Replace Meal Error:', e);
     return null;
   }

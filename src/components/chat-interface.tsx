@@ -10,7 +10,7 @@ import {
   Search, Phone, Video, MoreVertical, CheckCheck, Activity, Bot
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, doc, updateDoc, where, limit } from 'firebase/firestore';
+import { collection, query, addDoc, doc, updateDoc, where, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -44,7 +44,6 @@ export function ChatInterface() {
     if (!firestore || !activeChatId) return null;
     return query(
       collection(firestore, 'chats', activeChatId, 'messages'),
-      orderBy('createdAt', 'asc'),
       limit(100)
     );
   }, [firestore, activeChatId]);
@@ -108,11 +107,15 @@ export function ChatInterface() {
     );
   }
 
-  // Сортировка на клиенте для избежания ошибок индексации
+  // Сортировка на клиенте для избежания ошибок индексации и упрощения правил
   const sortedChats = chats ? [...chats].sort((a, b) => {
     const timeA = new Date(a.updatedAt || 0).getTime();
     const timeB = new Date(b.updatedAt || 0).getTime();
     return timeB - timeA;
+  }) : [];
+
+  const sortedMessages = messages ? [...messages].sort((a, b) => {
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
   }) : [];
 
   return (
@@ -198,7 +201,7 @@ export function ChatInterface() {
 
             <ScrollArea className="flex-1 p-6 md:p-10">
               <div className="space-y-6 md:space-y-8">
-                {messages?.map((m) => (
+                {sortedMessages.map((m) => (
                   <div key={m.id} className={cn("flex flex-col gap-1.5", m.senderId === user?.uid ? "items-end" : "items-start")}>
                     <div className={cn(
                       "max-w-[85%] md:max-w-[70%] p-4 md:p-5 rounded-[1.8rem] text-sm font-medium shadow-sm transition-all",
