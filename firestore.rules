@@ -1,49 +1,42 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - УЛЬТРА-ГИБКИЕ ПРАВИЛА
-     * Разрешаем активность всем авторизованным пользователям (включая анонимных тестеров)
-     * для полноценного взаимодействия внутри Bio-хаба.
+     * PRO СЕБЯ - ФИНАЛЬНЫЕ ПРАВИЛА БЕЗОПАСНОСТИ
+     * Обеспечиваем гарантированный доступ для всех авторизованных пользователей,
+     * включая анонимные (тестовые) сессии.
      */
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
 
     // --- Профили пользователей ---
     match /users/{userId} {
-      // Все могут видеть базовые профили для работы чатов и отображения авторов в ленте
-      allow read: if isSignedIn();
+      // Все авторизованные могут видеть базовые профили (для чатов и ленты)
+      allow read: if request.auth != null;
       // Свой профиль можно редактировать полностью
-      allow write: if isSignedIn() && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
 
       // Личные данные (логи, рекомендации, анализы) доступны только владельцу
-      match /dailyLogs/{id} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
-      match /dietaryLogs/{id} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
-      match /recommendations/{id} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
-      match /labResults/{id} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
+      match /dailyLogs/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+      match /dietaryLogs/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+      match /recommendations/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+      match /labResults/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
-      // Все авторизованные могут читать и создавать посты
-      allow read, create: if isSignedIn();
-      // Лайки и редактирование разрешены всем авторизованным
-      allow update: if isSignedIn();
-      // Удаление только своего поста
-      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow read, create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
     }
 
     // --- Система чатов (Персональные диалоги) ---
-    // Используем максимально открытые правила для коллекций для устранения ошибок 'list'
+    // Усиленные правила для 'list' и 'get' для устранения Permission Error
     match /chats/{chatId} {
-      allow read, write: if isSignedIn();
+      allow get, list, create, update: if request.auth != null;
+      allow delete: if false;
 
       match /messages/{messageId} {
-        allow read, write: if isSignedIn();
+        allow get, list, create: if request.auth != null;
       }
     }
   }

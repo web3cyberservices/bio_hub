@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -27,14 +26,14 @@ export function ChatInterface() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Список чатов пользователя
-  // УДАЛЕН orderBy('updatedAt') для исключения ошибки 'Missing Index' которая часто маскируется под Permission Error
+  // Ограничиваем запрос, чтобы он гарантированно проходил по правилам безопасности
   const chatsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     
     return query(
       collection(firestore, 'chats'),
       where('participants', 'array-contains', user.uid),
-      limit(50)
+      limit(20)
     );
   }, [firestore, user?.uid]);
 
@@ -42,13 +41,13 @@ export function ChatInterface() {
 
   // Сообщения активного чата
   const messagesQuery = useMemoFirebase(() => {
-    if (!firestore || !activeChatId || !user?.uid || user.uid === 'public-user') return null;
+    if (!firestore || !activeChatId) return null;
     return query(
       collection(firestore, 'chats', activeChatId, 'messages'),
       orderBy('createdAt', 'asc'),
       limit(100)
     );
-  }, [firestore, activeChatId, user?.uid]);
+  }, [firestore, activeChatId]);
 
   const { data: messages } = useCollection<any>(messagesQuery);
 
@@ -64,7 +63,7 @@ export function ChatInterface() {
 
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!message.trim() || !activeChatId || !user?.uid || user.uid === 'public-user' || !firestore) return;
+    if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
 
     const chatRef = doc(firestore, 'chats', activeChatId);
     const messagesRef = collection(chatRef, 'messages');
@@ -75,7 +74,7 @@ export function ChatInterface() {
       createdAt: new Date().toISOString(),
     };
 
-    // Оптимистичная отправка (неблокирующая)
+    // Оптимистичная отправка
     addDoc(messagesRef, newMessage).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `${chatRef.path}/messages`,
@@ -109,7 +108,7 @@ export function ChatInterface() {
     );
   }
 
-  // Сортируем чаты по времени на клиенте, чтобы не требовать сложный индекс в Firestore
+  // Сортировка на клиенте для избежания ошибок индексации
   const sortedChats = chats ? [...chats].sort((a, b) => {
     const timeA = new Date(a.updatedAt || 0).getTime();
     const timeB = new Date(b.updatedAt || 0).getTime();
@@ -118,7 +117,6 @@ export function ChatInterface() {
 
   return (
     <div className="flex h-[70vh] md:h-[750px] bg-white/40 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl overflow-hidden">
-      {/* Список чатов */}
       <div className={cn(
         "w-full md:w-80 border-r bg-white/60 flex flex-col transition-all",
         activeChatId ? "hidden md:flex" : "flex"
@@ -168,7 +166,6 @@ export function ChatInterface() {
         </ScrollArea>
       </div>
 
-      {/* Окно чата */}
       <div className={cn(
         "flex-1 flex flex-col bg-white/20",
         !activeChatId ? "hidden md:flex items-center justify-center" : "flex"

@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
- * Улучшена логика повторных попыток для обработки лимитов (Error 429/503).
+ * Оптимизирована логика повторных попыток для предотвращения тайм-аутов Server Actions.
  */
 
 import {ai} from '@/ai/genkit';
@@ -114,39 +114,41 @@ const IMAGE_ID_PROMPT = `
 `;
 
 /**
- * Вспомогательная функция для повторных попыток при временных ошибках ИИ (503/429/UNAVAILABLE).
+ * Вспомогательная функция для повторных попыток.
+ * Ограничена временем, чтобы не вызывать тайм-аут Server Action (10-15 сек).
  */
-export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 6, initialDelay = 3000): Promise<T> {
+export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
+  const actionStartTime = Date.now();
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error: any) {
       const errorMsg = error.message || '';
+      
+      // Если общее время выполнения превысило 10 секунд, прекращаем попытки
+      if (Date.now() - actionStartTime > 10000) throw error;
+
       const isTransient = errorMsg.includes('503') || 
                           errorMsg.includes('UNAVAILABLE') || 
                           errorMsg.includes('429') ||
                           errorMsg.includes('RESOURCE_EXHAUSTED') ||
-                          errorMsg.includes('overloaded') ||
-                          errorMsg.includes('demand');
+                          errorMsg.includes('overloaded');
       
       if (isTransient && i < maxRetries - 1) {
-        let delay = initialDelay * Math.pow(2, i) + (Math.random() * 1000);
-        
-        // Пытаемся вытащить время ожидания из ошибки (например, "Please retry in 47s")
+        // Если ошибка 429 требует долгого ожидания (> 5 сек), бросаем ошибку сразу
         const match = errorMsg.match(/retry in ([\d.]+)s/);
-        if (match && match[1]) {
-          const serverSuggestedDelay = parseFloat(match[1]) * 1000 + 2000; // +2с запаса
-          delay = Math.max(delay, serverSuggestedDelay);
+        if (match && parseFloat(match[1]) > 5) {
+          throw new Error('Лимит запросов исчерпан. Пожалуйста, подождите минуту перед следующей попыткой.');
         }
 
-        console.warn(`[BioTech AI] Лимит или перегрузка (попытка ${i + 1}/${maxRetries}). Ожидание ${Math.round(delay)}ms...`);
+        let delay = initialDelay * Math.pow(2, i);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
       throw error;
     }
   }
-  throw new Error('ИИ временно недоступен из-за ограничений Google API. Пожалуйста, подождите минуту и попробуйте снова.');
+  throw new Error('ИИ временно недоступен. Попробуйте еще раз через минуту.');
 }
 
 const recommendationPrompt = ai.definePrompt({
@@ -224,6 +226,11 @@ export async function generatePersonalizedRecommendations(
   return generateRecommendationsFlow(input);
 }
 
-export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<typeof MealSchema>> {
-  return replaceMealFlow(input);
+export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<typeof MealSchema> | null> {
+  try {
+    return await replaceMealFlow(input);
+  } catch (e) {
+    console.error('AI Replace Meal Error:', e);
+    return null;
+  }
 }
