@@ -7,7 +7,7 @@ service cloud.firestore {
      * PRO СЕБЯ - SECURITY RULES
      */
 
-    // --- Базовые проверки ---
+    // --- Базовые функции ---
 
     function isSignedIn() {
       return request.auth != null;
@@ -22,11 +22,11 @@ service cloud.firestore {
     // Профили пользователей
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if false; // Запрещаем массовое перечисление всех пользователей
+      allow list: if false; 
       allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
 
-      // Ежедневные логи (шаги, вода и т.д.)
+      // Ежедневные логи
       match /dailyLogs/{dailyLogId} {
         allow read, write: if isOwner(userId);
       }
@@ -47,27 +47,30 @@ service cloud.firestore {
       }
     }
 
-    // Публикации специалистов в ленте
+    // Публикации специалистов
     match /posts/{postId} {
       allow read: if isSignedIn();
-      // Создавать посты может только специалист (проверяем тип в документе пользователя)
+      // Проверяем тип профиля автора для создания постов
       allow create: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
-      allow update: if isSignedIn(); // Для лайков
+      allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     // Система чатов
     match /chats/{chatId} {
-      // Доступ к чату имеют только его участники
-      allow read, update: if isSignedIn() && request.auth.uid in resource.data.participants;
+      // Разрешаем перечисление (list) и чтение (get) только если пользователь в списке участников
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
       
-      // Создание чата разрешено, если текущий пользователь является одним из участников
-      allow create: if isSignedIn() && request.auth.uid in request.resource.data.participants;
+      // Создание чата (участник должен быть в списке)
+      allow create: if isSignedIn() && (request.auth.uid in request.resource.data.participants);
 
       // Сообщения внутри чата
       match /messages/{messageId} {
-        // Читать и писать сообщения могут только участники родительского чата
-        allow read, create: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        // Доступ к сообщениям через проверку участников родительского чата
+        allow read: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+        allow create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
       }
     }
   }
