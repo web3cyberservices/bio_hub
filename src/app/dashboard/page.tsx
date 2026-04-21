@@ -241,7 +241,7 @@ export default function DashboardPage() {
                     <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
                   </TabsTrigger>
                   <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                    <Utensils className="h-3 w-3 md:h-4 md:u-4" /> Питание
+                    <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
                   </TabsTrigger>
                 </>
               ) : (

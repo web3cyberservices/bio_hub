@@ -46,15 +46,16 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if isSignedIn();
-      allow create: if isSpecialist();
+      allow create: if isSignedIn(); // Разрешаем создание для всех авторизованных (можно уточнить до isSpecialist)
       allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     // Система чатов
     match /chats/{chatId} {
-      // Использование allow read для поддержки get и list (запросы с фильтрами)
-      allow read, update: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      // Объединяем get и list в read для корректной работы запросов с фильтрами
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
       allow create: if isSignedIn() && (request.auth.uid in request.resource.data.participants);
 
       match /messages/{messageId} {

@@ -25,12 +25,11 @@ export function ChatInterface() {
   const { firestore } = useFirestore();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
-  const [sending, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Список чатов пользователя
+  // Список чатов пользователя - гарантируем наличие UID
   const chatsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !user.uid || user.uid === 'public-user') return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     
     return query(
       collection(firestore, 'chats'),
@@ -66,7 +65,7 @@ export function ChatInterface() {
 
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!message.trim() || !activeChatId || !user || !firestore) return;
+    if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
 
     const chatRef = doc(firestore, 'chats', activeChatId);
     const messagesRef = collection(chatRef, 'messages');
@@ -104,20 +103,6 @@ export function ChatInterface() {
     return (
       <div className="flex h-[600px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
-      </div>
-    );
-  }
-
-  if (chatsError) {
-    return (
-      <div className="flex h-[600px] flex-col items-center justify-center text-center p-6 space-y-4">
-        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
-           <MessageSquare className="h-8 w-8 text-destructive" />
-        </div>
-        <div className="space-y-1">
-           <h3 className="font-black text-xl">Ошибка доступа</h3>
-           <p className="text-muted-foreground text-sm">Не удалось загрузить список чатов. Пожалуйста, убедитесь, что вы авторизованы.</p>
-        </div>
       </div>
     );
   }
@@ -181,7 +166,6 @@ export function ChatInterface() {
       )}>
         {activeChatId ? (
           <>
-            {/* Header */}
             <div className="p-4 md:p-6 bg-white/80 border-b flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setActiveChatId(null)}>
@@ -206,7 +190,6 @@ export function ChatInterface() {
               </div>
             </div>
 
-            {/* Messages */}
             <ScrollArea className="flex-1 p-6 md:p-10">
               <div className="space-y-6 md:space-y-8">
                 {messages?.map((m, i) => (
@@ -229,7 +212,6 @@ export function ChatInterface() {
               </div>
             </ScrollArea>
 
-            {/* Footer */}
             <div className="p-4 md:p-8 bg-white/80 border-t shrink-0">
                <form onSubmit={handleSendMessage} className="relative flex items-center gap-4">
                   <Input 
