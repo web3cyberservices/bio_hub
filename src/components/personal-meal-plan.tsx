@@ -22,7 +22,7 @@ interface PersonalMealPlanProps {
 }
 
 export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
@@ -38,7 +38,9 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
   const mealsQuery = useMemoFirebase(() => {
+    // Важно: не запускаем запрос, пока пользователь не загружен или если это гость
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    
     return query(
       collection(firestore, 'users', user.uid, 'personalMeals'),
       where('date', '==', dateKey),
@@ -50,7 +52,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !firestore || !name) return;
+    if (!user || !firestore || !name || user.uid === 'public-user') return;
 
     setLoading(true);
     try {
@@ -76,7 +78,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleDeleteMeal = async (id: string) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || user.uid === 'public-user') return;
     try {
       await deleteDoc(doc(firestore, 'users', user.uid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
@@ -86,6 +88,15 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const totalCalories = meals?.reduce((acc, m) => acc + (m.calories || 0), 0) || 0;
+
+  if (userLoading) {
+    return (
+      <div className="py-20 text-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка профиля...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
