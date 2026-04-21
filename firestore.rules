@@ -4,18 +4,14 @@ service cloud.firestore {
 
     /**
      * PRO СЕБЯ - ФИНАЛЬНЫЕ ПРАВИЛА БЕЗОПАСНОСТИ
-     * Обеспечиваем гарантированный доступ для всех авторизованных пользователей,
-     * включая анонимные (тестовые) сессии.
+     * Обеспечиваем гарантированный доступ для всех авторизованных пользователей.
      */
 
     // --- Профили пользователей ---
     match /users/{userId} {
-      // Все авторизованные могут видеть базовые профили (для чатов и ленты)
       allow read: if request.auth != null;
-      // Свой профиль можно редактировать полностью
       allow write: if request.auth != null && request.auth.uid == userId;
 
-      // Личные данные (логи, рекомендации, анализы) доступны только владельцу
       match /dailyLogs/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
       match /dietaryLogs/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
       match /recommendations/{id} { allow read, write: if request.auth != null && request.auth.uid == userId; }
@@ -28,13 +24,15 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
     }
 
-    // --- Система чатов (Персональные диалоги) ---
-    // Максимально открытые правила для всех авторизованных пользователей
+    // --- Система чатов ---
     match /chats/{chatId} {
+      // Разрешаем чтение и создание чатов всем авторизованным
       allow read, write: if request.auth != null;
 
       match /messages/{messageId} {
-        allow read, write: if request.auth != null;
+        allow read, create: if request.auth != null;
+        // Редактировать и удалять может только автор сообщения
+        allow update, delete: if request.auth != null && resource.data.senderId == request.auth.uid;
       }
     }
   }
