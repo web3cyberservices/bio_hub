@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа состава еды по фото.
- * Обновлено для использования Gemini 2.5 Flash.
+ * Добавлена детальная разбивка на компоненты с указанием веса.
  */
 
 import {ai} from '@/ai/genkit';
@@ -26,6 +26,10 @@ const AnalyzeMealOutputSchema = z.object({
   protein: z.number().describe('Белки (г).'),
   fat: z.number().describe('Жиры (г).'),
   carbs: z.number().describe('Углеводы (г).'),
+  components: z.array(z.object({
+    ingredient: z.string().describe('Название ингредиента'),
+    weight: z.string().describe('Приблизительный вес (например, "150г")')
+  })).describe('Разбивка блюда на составляющие ингредиенты с весом.'),
   analysis: z.string().describe('Комментарий ИИ о составе и коррекции.'),
 });
 export type AnalyzeMealOutput = z.infer<typeof AnalyzeMealOutputSchema>;
@@ -38,12 +42,13 @@ const mealPrompt = ai.definePrompt({
   name: 'analyzeMealPrompt',
   input: {schema: AnalyzeMealInputSchema},
   output: {schema: AnalyzeMealOutputSchema},
-  prompt: `Вы — эксперт-нутрициолог. Ваша задача — максимально точно определить КБЖУ блюда.
+  prompt: `Вы — эксперт-нутрициолог. Ваша задача — максимально точно определить КБЖУ блюда и его детальный состав.
 
 ПРАВИЛА:
 1. Если предоставлено уточнение (refinement), оно является приоритетным и исправляет визуальное распознавание.
 2. Оценивайте размер порции по фото.
-3. Отвечайте СТРОГО на русском языке.
+3. ОБЯЗАТЕЛЬНО выделите основные компоненты блюда и их примерный вес в граммах (поле components).
+4. Отвечайте СТРОГО на русском языке.
 
 Контекст:
 Описание: {{{description}}}

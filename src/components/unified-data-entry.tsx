@@ -120,6 +120,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         fat: data.fat,
         carbs: data.carbs,
         analysis: data.analysis,
+        components: data.components,
         createdAt: serverTimestamp()
       });
       
@@ -356,6 +357,21 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         onChange={e => setEditedMeal({...editedMeal, carbs: Number(e.target.value)})}
                         className="h-14 rounded-2xl bg-muted border-none text-center font-black text-xl"
                      />
+                  </div>
+               </div>
+
+               {/* Ingredients Breakdown Section */}
+               <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-2">Приблизительный состав</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                     {editedMeal.components?.map((comp, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                           <span className="text-sm font-bold text-foreground/80">{comp.ingredient}</span>
+                           <Badge className="bg-primary text-white font-black px-3 py-1 rounded-xl shadow-md">
+                              {comp.weight}
+                           </Badge>
+                        </div>
+                     ))}
                   </div>
                </div>
 
