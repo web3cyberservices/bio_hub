@@ -38,12 +38,15 @@ import {
   Smartphone,
   RefreshCw,
   CheckCircle2,
-  Zap
+  Send,
+  MessageCircle,
+  BellRing
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -166,18 +169,22 @@ export function ProfileCabinet() {
 
   const handleDeviceSync = async () => {
     setSyncing(true);
-    // Имитация подключения к Google Health Connect / Apple Health
     await new Promise(r => setTimeout(r, 2000));
-    
-    // Имитация полученных данных
     form.setValue('weight', 74.5);
     form.setValue('height', 178);
-    
     setSyncing(false);
     toast({
       title: 'Био-синхронизация завершена',
       description: 'Данные с ваших устройств (браслет, весы) успешно импортированы.',
     });
+  };
+
+  const handleSocialLink = (platform: 'Telegram' | 'WhatsApp') => {
+    toast({
+      title: `Синхронизация с ${platform}`,
+      description: `Перенаправляем в ${platform} для подтверждения...`,
+    });
+    // Логика интеграции с ботом будет здесь
   };
 
   async function onSubmit(values: ProfileValues) {
@@ -253,17 +260,20 @@ export function ProfileCabinet() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden lg:col-span-2">
-          <CardContent className="p-8 space-y-6">
-            <div className="flex items-center gap-2 border-b pb-4">
-              <Fingerprint className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
+          <CardContent className="p-8 space-y-8">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div className="flex items-center gap-2">
+                <Fingerprint className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
+              </div>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
                 <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
                   <Mail className="h-4 w-4 opacity-40" />
-                  {(user as any)?.email || 'Не указан (Тестовый вход)'}
+                  <span className="truncate">{(user as any)?.email || 'Не указан (Тестовый вход)'}</span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -272,6 +282,41 @@ export function ProfileCabinet() {
                   {user?.uid}
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-4 pt-2">
+               <div className="flex items-center gap-2 px-4">
+                  <BellRing className="h-3 w-3 text-primary" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Уведомления и отчеты</label>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleSocialLink('Telegram')}
+                    className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Send className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="text-xs uppercase tracking-tight">Привязать Telegram</span>
+                    </div>
+                    <Badge variant="outline" className="text-[7px] border-primary/20 opacity-50">OFF</Badge>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleSocialLink('WhatsApp')}
+                    className="h-16 rounded-2xl bg-[#E8F5EE] border-none hover:bg-[#D4E9DF] flex justify-between px-6 font-black text-primary transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <MessageCircle className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                      <span className="text-xs uppercase tracking-tight">Привязать WhatsApp</span>
+                    </div>
+                    <Badge variant="outline" className="text-[7px] border-primary/20 opacity-50">OFF</Badge>
+                  </Button>
+               </div>
+               <p className="text-[8px] text-muted-foreground/60 px-4 uppercase tracking-widest font-bold">
+                  Подключите мессенджеры, чтобы получать утренние сводки и напоминания от ИИ.
+               </p>
             </div>
           </CardContent>
         </Card>
@@ -293,7 +338,7 @@ export function ProfileCabinet() {
                 className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-black gap-2 shadow-lg shadow-primary/20"
              >
                 {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                {syncing ? "Синхронизация..." : "Синхронизировать Google Fit"}
+                {syncing ? "Синхронизация..." : "Синхронизировать данные"}
              </Button>
              <div className="flex items-center justify-center gap-2 opacity-50">
                 <CheckCircle2 className="h-3 w-3 text-primary" />
@@ -310,7 +355,7 @@ export function ProfileCabinet() {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3>
                 </div>
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
@@ -335,19 +380,19 @@ export function ProfileCabinet() {
                     </FormLabel>
                     <div className="grid grid-cols-3 gap-1.5 pt-1.5">
                       <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="Д" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="Д" /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="М" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="М" /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="Г" /></SelectTrigger>
+                        <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs focus:ring-0"><SelectValue placeholder="Г" /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
                           {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                         </SelectContent>
@@ -365,7 +410,7 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="healthGoal" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель здоровья</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -382,11 +427,11 @@ export function ProfileCabinet() {
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
-                          <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
-                          <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
-                          <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
-                          <SelectItem value="high">Высокий (Активный)</SelectItem>
-                          <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
+                          <SelectItem value="minimal">Минимальный (Сидячий) — Перемещение только по дому/офису</SelectItem>
+                          <SelectItem value="low">Низкий (Малоподвижный) — Редкие прогулки, легкая активность</SelectItem>
+                          <SelectItem value="moderate">Умеренный (Средний) — Регулярная ходьба и упражнения</SelectItem>
+                          <SelectItem value="high">Высокий (Активный) — Постоянные тренировки</SelectItem>
+                          <SelectItem value="athlete">Очень высокий (Спортсмен) — Ежедневные нагрузки</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -438,17 +483,17 @@ export function ProfileCabinet() {
                   <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
-                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
+                        <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимые продукты
                       </FormLabel>
-                      <FormControl><Textarea placeholder="Что вы любите? (авокадо, лосось...)" {...field} className={textareaClasses} /></FormControl>
+                      <FormControl><Textarea placeholder="Что вы любите? (например: авокадо, лосось, грецкие орехи)" {...field} className={textareaClasses} /></FormControl>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
-                        <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
+                        <Ban className="h-3 w-3 text-gray-400" /> Исключить из рациона
                       </FormLabel>
-                      <FormControl><Textarea placeholder="Что исключить? (кинза, лук...)" {...field} className={textareaClasses} /></FormControl>
+                      <FormControl><Textarea placeholder="На что у вас аллергия или что вы не любите? (например: кинза, лук, лактоза)" {...field} className={textareaClasses} /></FormControl>
                     </FormItem>
                   )} />
                 </div>
@@ -457,7 +502,7 @@ export function ProfileCabinet() {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Привычки</h3>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Образ жизни</h3>
                 </div>
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="smoking" render={({ field }) => (
@@ -474,13 +519,13 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="alcohol" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Алкоголь</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Употребление алкоголя</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
                           <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                          <SelectItem value="редко">Редко</SelectItem>
-                          <SelectItem value="умеренно">Умеренно</SelectItem>
+                          <SelectItem value="редко">Редко (по праздникам)</SelectItem>
+                          <SelectItem value="умеренно">Умеренно (1-2 раза в неделю)</SelectItem>
                           <SelectItem value="часто">Часто</SelectItem>
                         </SelectContent>
                       </Select>
@@ -494,7 +539,7 @@ export function ProfileCabinet() {
                 disabled={loading} 
                 className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 transition-all hover:scale-[1.01]"
               >
-                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить данные</>}
+                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
               </Button>
             </form>
           </Form>
