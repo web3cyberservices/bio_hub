@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
@@ -189,7 +188,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-2xl placeholder:text-muted-foreground/20 focus:ring-4 focus:ring-primary/5 transition-all px-6 md:px-8 shadow-inner";
-  const editInputClasses = "h-12 rounded-xl bg-white border shadow-sm font-bold px-4 focus:ring-2 focus:ring-primary/20";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
