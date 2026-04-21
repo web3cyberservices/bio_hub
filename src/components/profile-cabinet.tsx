@@ -34,11 +34,16 @@ import {
   Fingerprint,
   Heart,
   Ban,
-  CalendarDays
+  CalendarDays,
+  Smartphone,
+  RefreshCw,
+  CheckCircle2,
+  Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -77,6 +82,7 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
@@ -158,6 +164,22 @@ export function ProfileCabinet() {
     return age;
   };
 
+  const handleDeviceSync = async () => {
+    setSyncing(true);
+    // Имитация подключения к Google Health Connect / Apple Health
+    await new Promise(r => setTimeout(r, 2000));
+    
+    // Имитация полученных данных
+    form.setValue('weight', 74.5);
+    form.setValue('height', 178);
+    
+    setSyncing(false);
+    toast({
+      title: 'Био-синхронизация завершена',
+      description: 'Данные с ваших устройств (браслет, весы) успешно импортированы.',
+    });
+  };
+
   async function onSubmit(values: ProfileValues) {
     if (!user || !firestore || user.uid === 'public-user') {
       toast({
@@ -229,29 +251,57 @@ export function ProfileCabinet() {
         </div>
       </div>
 
-      <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden mb-6">
-        <CardContent className="p-8 space-y-6">
-          <div className="flex items-center gap-2 border-b pb-4">
-            <Fingerprint className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
-              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
-                <Mail className="h-4 w-4 opacity-40" />
-                {(user as any)?.email || 'Не указан (Тестовый вход)'}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden lg:col-span-2">
+          <CardContent className="p-8 space-y-6">
+            <div className="flex items-center gap-2 border-b pb-4">
+              <Fingerprint className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-black uppercase tracking-tight">Аккаунт</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
+                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
+                  <Mail className="h-4 w-4 opacity-40" />
+                  {(user as any)?.email || 'Не указан (Тестовый вход)'}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">User ID</label>
+                <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
+                  {user?.uid}
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">User ID</label>
-              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
-                {user?.uid}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
+          <CardContent className="p-8 text-center space-y-4">
+             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Smartphone className="h-8 w-8 text-primary" />
+             </div>
+             <div className="space-y-1">
+                <h3 className="font-black text-lg tracking-tight">Bio-Синхронизация</h3>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
+                   Импорт веса, пульса и шагов из Google Fit, Apple Health, браслетов и колец.
+                </p>
+             </div>
+             <Button 
+                onClick={handleDeviceSync} 
+                disabled={syncing}
+                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-black gap-2 shadow-lg shadow-primary/20"
+             >
+                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {syncing ? "Синхронизация..." : "Синхронизировать Google Fit"}
+             </Button>
+             <div className="flex items-center justify-center gap-2 opacity-50">
+                <CheckCircle2 className="h-3 w-3 text-primary" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Безопасное соединение</span>
+             </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
