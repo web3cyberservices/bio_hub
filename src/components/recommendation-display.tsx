@@ -10,7 +10,6 @@ import {
   Activity, Footprints, Moon, Heart, Droplet, 
   Timer, Flame, Zap
 } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 
 interface RecommendationDisplayProps {
@@ -34,15 +33,6 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   }, []);
 
   if (!mounted) return null;
-
-  const getMealImageData = (imageId: string) => {
-    const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
-    if (found) return { url: found.imageUrl, hint: found.imageHint };
-    return { 
-      url: `https://picsum.photos/seed/${imageId}-food/600/400`, 
-      hint: "healthy food" 
-    };
-  };
 
   // Целевые значения из расчета ИИ
   const targetGoals = {
@@ -201,18 +191,17 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
       <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
         <div className="space-y-12 relative">
           {mealPlan[0].meals.map((meal, idx) => {
-            const imageData = getMealImageData(meal.imageId);
             return (
               <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
                 <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group">
                   <Image 
-                    src={imageData.url} 
+                    src={meal.imageUrl} 
                     alt={meal.name} 
                     fill 
                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                    data-ai-hint={imageData.hint}
+                    unoptimized={true}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-40" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-20" />
                   <div className="absolute bottom-6 left-6 right-6">
                      <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
                         {meal.time}

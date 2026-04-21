@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Скорректирован список доступных изображений для точного соответствия блюдам.
+ * Обновлено: теперь ИИ возвращает прямые ссылки на качественные фото еды из Unsplash.
  */
 
 import {ai} from '@/ai/genkit';
@@ -77,7 +77,7 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string().describe('ID из списка доступных изображений. СТРОГО СООТВЕТСТВУЙТЕ ТИПУ ЕДЫ.'),
+      imageUrl: z.string().describe('Прямая ссылка на качественное фото еды из Unsplash. СТРОГО ПО ПРАВИЛАМ.'),
       components: z.array(z.object({
         ingredient: z.string().describe('Название ингредиента'),
         weight: z.string().describe('Вес с единицами измерения, например "200г"')
@@ -97,19 +97,23 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `Вы — ИИ-биохакер и нутрициолог системы "PRO Себя".
+  prompt: `Вы — эксперт-нутрициолог системы "PRO Себя". Ваша задача — создать глубокий аналитический отчет и план питания.
 
-ВАША ЗАДАЧА:
-Создать глубокий аналитический отчет и план питания на основе биометрии.
-
-ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId):
-Выберите наиболее подходящий ID из списка ниже. СТРОГО СООТВЕТСТВУЙТЕ ТИПУ ЕДЫ. Если рекомендуете яблоко, используйте snack-apple. Если овсянку — breakfast-oatmeal.
-
-СПИСОК ДОСТУПНЫХ ID:
-- breakfast-oatmeal (овсянка), breakfast-omelette (омлет), breakfast-smoothie (смузи)
-- lunch-salmon (лосось), lunch-salad-chicken (салат с курицей), lunch-soup (суп)
-- dinner-steak (стейк), dinner-white-fish (белая рыба), dinner-tofu (тофу)
-- snack-apple (яблоко), snack-pear (груша), snack-nuts (орехи), snack-yogurt (йогурт)
+ПРАВИЛА ДЛЯ ПОЛЯ imageUrl:
+Вы ОБЯЗАНЫ для каждого блюда вернуть качественную ссылку на фото еды с Unsplash.
+1. Запрещено использовать заглушки с мостами, городами, людьми или абстракциями. Только ЕДА.
+2. Формат ссылки СТРОГО: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=600&q=80
+3. Подбирайте [ID] из примеров ниже или используйте известные вам ID качественных фуд-фото:
+   - Салат: 1512621776951-a57141f2eefd
+   - Каша/Овсянка: 1517673400267-0251440c45dc
+   - Рыба: 1467003909585-2f8a72700288
+   - Стейк/Мясо: 1600891964092-4316c2850dbc
+   - Курица: 1632778149955-e80f8ceca23b
+   - Смузи: 1505252585461-04db1eb84625
+   - Яблоко/Фрукты: 1567306226416-28f0efdc88ce
+   - Омлет/Яйца: 1525351484163-7529414344d8
+   - Орехи: 1536592248-b0a688680074
+   - Творог/Йогурт: 1481931098708-28308112ef81
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
