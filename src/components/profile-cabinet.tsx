@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,7 +38,9 @@ import {
   Stethoscope,
   Briefcase,
   Camera,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -80,6 +82,7 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
@@ -137,6 +140,32 @@ export function ProfileCabinet() {
   const photoUrlValue = form.watch('photoUrl');
   const birthDateValue = form.watch('birthDate') || '1990-01-01';
   const [currentYear, currentMonth, currentDay] = birthDateValue.split('-');
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for document storage in MVP
+        toast({
+          variant: 'destructive',
+          title: 'Файл слишком большой',
+          description: 'Пожалуйста, выберите фото до 1 МБ для корректного сохранения.',
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue('photoUrl', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removePhoto = () => {
+    form.setValue('photoUrl', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const years = useMemo(() => {
     const endYear = new Date().getFullYear();
@@ -199,7 +228,9 @@ export function ProfileCabinet() {
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
           {photoUrlValue ? (
-            <Image src={photoUrlValue} alt="Profile" width={64} height={64} className="object-cover w-full h-full" />
+            <div className="relative w-full h-full">
+              <Image src={photoUrlValue} alt="Profile" fill className="object-cover" unoptimized />
+            </div>
           ) : (
             <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
           )}
@@ -264,22 +295,49 @@ export function ProfileCabinet() {
                    <ImageIcon className="h-5 w-5 text-primary" />
                    <h3 className="text-lg font-black uppercase tracking-tight">Фото профиля</h3>
                 </div>
-                <div className="flex flex-col md:flex-row gap-6 items-center">
-                   <div className="w-32 h-32 rounded-[2rem] bg-primary/5 border-2 border-dashed border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-primary/5 border-4 border-white shadow-xl flex items-center justify-center shrink-0 overflow-hidden group">
                       {photoUrlValue ? (
-                        <Image src={photoUrlValue} alt="Preview" width={128} height={128} className="object-cover w-full h-full" />
+                        <>
+                          <Image src={photoUrlValue} alt="Preview" fill className="object-cover" unoptimized />
+                          <Button 
+                            type="button"
+                            variant="destructive" 
+                            size="icon" 
+                            className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10" 
+                            onClick={removePhoto}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
                       ) : (
-                        <Camera className="h-10 w-10 text-primary/20" />
+                        <div className="flex flex-col items-center gap-2 text-primary/30">
+                          <Camera className="h-10 w-10" />
+                          <span className="text-[8px] font-black uppercase">Нет фото</span>
+                        </div>
                       )}
                    </div>
-                   <div className="flex-1 w-full space-y-2">
-                      <FormField control={form.control} name="photoUrl" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Ссылка на фото (URL)</FormLabel>
-                          <FormControl><Input placeholder="https://..." {...field} className={inputClasses} /></FormControl>
-                          <p className="text-[9px] text-muted-foreground px-4 italic">Загрузите фото на любой хостинг и вставьте ссылку сюда.</p>
-                        </FormItem>
-                      )} />
+                   <div className="flex-1 w-full space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="h-14 rounded-2xl border-dashed border-2 border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-primary/10 transition-all"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" /> Выбрать файл
+                        </Button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={handleImageUpload} 
+                        />
+                        <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic md:col-span-2">
+                          Рекомендуется квадратное фото до 1 МБ. Оно будет отображаться в ленте советов и вашем профиле.
+                        </p>
+                      </div>
                    </div>
                 </div>
               </div>
@@ -342,19 +400,21 @@ export function ProfileCabinet() {
               {profileTypeValue === 'user' && (
                 <div className="space-y-6">
                   <div className="flex items-center gap-2 border-b pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3></div>
-                  <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                     <FormField control={form.control} name="gender" render={({ field }) => (
                       <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Пол</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
                       </FormItem>
                     )} />
-                    <FormField control={form.control} name="weight" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                    )} />
-                    <FormField control={form.control} name="height" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                    )} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={form.control} name="weight" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name="height" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                      )} />
+                    </div>
                   </div>
                 </div>
               )}
