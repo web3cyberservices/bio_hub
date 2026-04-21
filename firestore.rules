@@ -46,7 +46,7 @@ service cloud.firestore {
 
     match /posts/{postId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn(); // Разрешаем создание для всех авторизованных (можно уточнить до isSpecialist)
+      allow create: if isSignedIn(); 
       allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }

@@ -35,7 +35,7 @@ import { CreatePostDialog } from '@/components/create-post-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ChatInterface } from '@/components/chat-interface';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
