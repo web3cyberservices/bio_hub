@@ -12,7 +12,7 @@ import {
   ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
-  ThumbsUp, Share2
+  ThumbsUp, Share2, Info, Briefcase
 } from 'lucide-react';
 import { format, addDays, startOfToday, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -32,6 +32,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -40,8 +41,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("feed");
   const [isMounted, setIsMounted] = useState(false);
+  const [viewingSpecialist, setViewingSpecialist] = useState<any>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -87,16 +89,6 @@ export default function DashboardPage() {
 
   const profileType = userData?.profileType || 'user';
 
-  useEffect(() => {
-    if (isMounted) {
-      if (profileType === 'specialist' && (activeTab === 'dashboard' || activeTab === 'meals' || activeTab === 'specialists')) {
-        setActiveTab('my-feed');
-      } else if (profileType === 'user' && (activeTab === 'my-feed' || activeTab === 'appointments' || activeTab === 'chats')) {
-        setActiveTab('specialists');
-      }
-    }
-  }, [profileType, isMounted]);
-
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
@@ -128,6 +120,29 @@ export default function DashboardPage() {
         likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
         likes: isLiked ? (likedBy.length - 1) : (likedBy.length + 1)
       });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const openSpecialistProfile = async (authorId: string) => {
+    if (!firestore) return;
+    try {
+      // В реальном приложении здесь был бы запрос к конкретному документу автора
+      // Для прототипа мы можем найти информацию в посте или имитировать загрузку
+      const authorPost = posts?.find(p => p.authorId === authorId);
+      if (authorPost) {
+        setViewingSpecialist({
+          id: authorId,
+          name: authorPost.authorName,
+          role: authorPost.authorRole,
+          photo: authorPost.authorPhoto,
+          // Имитируем дополнительные данные, которые обычно приходят из профиля
+          bio: "Эксперт платформы PRO Себя. Специализируется на функциональном подходе к здоровью и долголетию.",
+          rating: 4.9,
+          reviews: 124
+        });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -170,7 +185,7 @@ export default function DashboardPage() {
                 <Calendar mode="single" selected={selectedDate || undefined} onSelect={(date) => date && setSelectedDate(date)} locale={ru} />
               </PopoverContent>
             </Popover>
-            <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}>
+            <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, -1) : null)}>
               <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </Button>
           </div>
@@ -184,12 +199,13 @@ export default function DashboardPage() {
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
           <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-4xl w-full">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-5xl w-full">
+              <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
+              </TabsTrigger>
+              
               {profileType === 'user' ? (
                 <>
-                  <TabsTrigger value="specialists" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                    <Stethoscope className="h-3 w-3 md:h-4 md:w-4" /> Советы
-                  </TabsTrigger>
                   <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                     <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
                   </TabsTrigger>
@@ -200,7 +216,7 @@ export default function DashboardPage() {
               ) : (
                 <>
                   <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                    <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Моя лента
+                    <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
                   </TabsTrigger>
                   <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                     <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
@@ -223,20 +239,21 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* User Content */}
-              <TabsContent value="specialists" className="mt-0 outline-none">
+              {/* Common Bio-Feed */}
+              <TabsContent value="feed" className="mt-0 outline-none">
                 <div className="space-y-12">
                    <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div>
-                        <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Советы и Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Ваш ИИ-консилиум и экспертные знания.</p></div>
+                        <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Bio-Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Знания экспертов и ИИ-аналитика в одном месте.</p></div>
                       </div>
+                      {profileType === 'specialist' && <CreatePostDialog />}
                    </div>
 
                    <Tabs defaultValue="knowledge" className="w-full">
                       <TabsList className="bg-transparent border-b rounded-none h-auto p-0 gap-8 mb-8">
-                         <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>
                          <TabsTrigger value="knowledge" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">Лента знаний</TabsTrigger>
+                         {profileType === 'user' && <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>}
                       </TabsList>
                       
                       <TabsContent value="ai" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
@@ -268,7 +285,10 @@ export default function DashboardPage() {
                            <Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl">
                               <div className="p-6 md:p-8 space-y-6">
                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
+                                    <button 
+                                      className="flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
+                                      onClick={() => openSpecialistProfile(post.authorId)}
+                                    >
                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/10">
                                           {post.authorPhoto ? (
                                             <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover w-full h-full" />
@@ -280,8 +300,11 @@ export default function DashboardPage() {
                                           <h4 className="font-black text-base">{post.authorName}</h4>
                                           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{post.authorRole}</p>
                                        </div>
+                                    </button>
+                                    <div className="text-right">
+                                      <p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openSpecialistProfile(post.authorId)}><Info className="h-3 w-3 text-primary/40" /></Button>
                                     </div>
-                                    <p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p>
                                  </div>
                                  <div className="space-y-4">
                                     <p className="text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
@@ -315,21 +338,26 @@ export default function DashboardPage() {
                 </div>
               </TabsContent>
 
+              {/* User Dashboard */}
               <TabsContent value="dashboard" className="mt-0 outline-none">
-                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} /> : <div className="text-center py-20 flex flex-col items-center gap-8">
-                  <div className="space-y-2">
-                    <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
-                    <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                {recommendationDoc?.data ? (
+                  <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} />
+                ) : (
+                  <div className="text-center py-20 flex flex-col items-center gap-8">
+                    <div className="space-y-2">
+                      <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
+                      <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                    </div>
+                    <RecommendationForm onResult={handleResult} selectedDate={selectedDate!} />
                   </div>
-                  <RecommendationForm onResult={handleResult} selectedDate={selectedDate!} />
-                </div>}
+                )}
               </TabsContent>
 
               <TabsContent value="meals" className="mt-0 outline-none">
                 {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют. Заполните анкету в Дашборде.</div>}
               </TabsContent>
 
-              {/* Specialist Content */}
+              {/* Specialist Management */}
               <TabsContent value="my-feed" className="mt-0 outline-none">
                 <div className="max-w-4xl mx-auto space-y-10">
                    <div className="flex items-center justify-between">
@@ -384,6 +412,46 @@ export default function DashboardPage() {
           )}
         </Tabs>
       </main>
+
+      {/* Specialist Profile Modal */}
+      <Dialog open={!!viewingSpecialist} onOpenChange={(open) => !open && setViewingSpecialist(null)}>
+        <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-3xl z-[1001]">
+          {viewingSpecialist && (
+            <div className="flex flex-col">
+               <div className="bg-primary p-12 text-white relative overflow-hidden">
+                  <div className="relative z-10 flex flex-col items-center text-center gap-6">
+                     <div className="w-32 h-32 rounded-[2.5rem] bg-white/20 border-4 border-white/30 shadow-2xl flex items-center justify-center overflow-hidden">
+                        {viewingSpecialist.photo ? (
+                          <Image src={viewingSpecialist.photo} alt={viewingSpecialist.name} width={128} height={128} className="object-cover w-full h-full" />
+                        ) : (
+                          <User className="h-16 w-16" />
+                        )}
+                     </div>
+                     <div className="space-y-1">
+                        <h3 className="text-3xl font-black tracking-tighter leading-none">{viewingSpecialist.name}</h3>
+                        <Badge variant="secondary" className="bg-white text-primary border-none text-[10px] uppercase font-black tracking-widest">{viewingSpecialist.role}</Badge>
+                     </div>
+                     <div className="flex gap-8 pt-4">
+                        <div className="text-center"><p className="text-2xl font-black leading-none">{viewingSpecialist.rating}</p><p className="text-[8px] uppercase tracking-widest opacity-60">Рейтинг</p></div>
+                        <div className="text-center"><p className="text-2xl font-black leading-none">{viewingSpecialist.reviews}</p><p className="text-[8px] uppercase tracking-widest opacity-60">Отзывы</p></div>
+                     </div>
+                  </div>
+                  <Sparkles className="absolute -right-10 -bottom-10 h-40 w-40 text-white/5 rotate-12" />
+               </div>
+               <div className="p-10 space-y-8 bg-white">
+                  <div className="space-y-4">
+                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2 flex items-center gap-2"><Info className="h-3 w-3" /> О специалисте</label>
+                     <p className="text-lg font-medium leading-relaxed text-foreground/80">{viewingSpecialist.bio}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                     <Button className="h-16 rounded-2xl bg-primary font-black shadow-xl">Записаться</Button>
+                     <Button variant="outline" className="h-16 rounded-2xl border-2 border-primary/10 text-primary font-black">Чат</Button>
+                  </div>
+               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AISpecialistChat />
       <footer className="mt-10 md:mt-20 border-t py-8 md:py-12 bg-white/50 backdrop-blur-md">
