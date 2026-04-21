@@ -24,6 +24,7 @@
         "specialization": { "type": "string" },
         "bio": { "type": "string" },
         "rating": { "type": "number" },
+        "followers": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who follow this specialist." },
         "favoriteFoods": { "type": "string" },
         "dislikedFoods": { "type": "string" },
         "dateJoined": { "type": "string", "format": "date-time" }
@@ -42,10 +43,23 @@
         "content": { "type": "string" },
         "imageUrl": { "type": "string" },
         "likes": { "type": "number" },
-        "likedBy": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who liked the post." },
+        "likedBy": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "authorId", "content", "createdAt"]
+    },
+    "SpecialistReview": {
+      "title": "SpecialistReview",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "authorId", "rating", "comment", "createdAt"]
     },
     "ChatRoom": {
       "title": "ChatRoom",
@@ -129,6 +143,13 @@
         "definition": {
           "entityName": "UserProfile",
           "schema": { "$ref": "#/backend/entities/UserProfile" }
+        }
+      },
+      {
+        "path": "/users/{userId}/reviews/{reviewId}",
+        "definition": {
+          "entityName": "SpecialistReview",
+          "schema": { "$ref": "#/backend/entities/SpecialistReview" }
         }
       },
       {

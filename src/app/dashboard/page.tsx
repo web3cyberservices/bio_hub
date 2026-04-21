@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -35,6 +36,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ChatInterface } from '@/components/chat-interface';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -45,7 +47,7 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("feed");
   const [isMounted, setIsMounted] = useState(false);
-  const [viewingSpecialist, setViewingSpecialist] = useState<any>(null);
+  const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -150,33 +152,17 @@ export default function DashboardPage() {
     });
   };
 
-  const openSpecialistProfile = (authorId: string) => {
-    if (!firestore) return;
-    const authorPost = posts?.find(p => p.authorId === authorId);
-    if (authorPost) {
-      setViewingSpecialist({
-        id: authorId,
-        name: authorPost.authorName,
-        role: authorPost.authorRole,
-        photo: authorPost.authorPhoto,
-        bio: "Эксперт платформы PRO Себя. Специализируется на функциональном подходе к здоровью и долголетию.",
-        rating: 4.9,
-        reviews: 124
-      });
-    }
-  };
-
-  const handleStartChat = () => {
-    if (!firestore || !user || !viewingSpecialist) return;
-    const chatId = [user.uid, viewingSpecialist.id].sort().join('_');
+  const handleStartChat = (targetId: string, name: string, photo: string) => {
+    if (!firestore || !user) return;
+    const chatId = [user.uid, targetId].sort().join('_');
     const chatRef = doc(firestore, 'chats', chatId);
     
     const data = {
       id: chatId,
-      participants: [user.uid, viewingSpecialist.id],
+      participants: [user.uid, targetId],
       participantDetails: {
         [user.uid]: { name: userData?.firstName || 'Пользователь', photo: userData?.photoUrl || '' },
-        [viewingSpecialist.id]: { name: viewingSpecialist.name, photo: viewingSpecialist.photo || '' }
+        [targetId]: { name: name, photo: photo || '' }
       },
       updatedAt: new Date().toISOString()
     };
@@ -189,7 +175,7 @@ export default function DashboardPage() {
       }));
     });
 
-    setViewingSpecialist(null);
+    setViewingSpecialistId(null);
     setActiveTab('chats');
   };
 
@@ -242,217 +228,224 @@ export default function DashboardPage() {
       </div>
 
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
-          {/* Скрываем список табов во время загрузки профиля, чтобы избежать прыжков меню */}
-          {!profileLoading && (
-            <div className="flex justify-center">
-              <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
-                <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                  <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
-                </TabsTrigger>
-                
-                {profileType === 'user' ? (
-                  <>
-                    <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                      <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
-                    </TabsTrigger>
-                    <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                      <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
-                    </TabsTrigger>
-                  </>
-                ) : (
-                  <>
-                    <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                      <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
-                    </TabsTrigger>
-                    <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                      <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
-                    </TabsTrigger>
-                  </>
-                )}
-                <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                  <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
-                </TabsTrigger>
-                <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
-                  <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          )}
+        {viewingSpecialistId ? (
+          <SpecialistPublicProfile 
+            specialistId={viewingSpecialistId} 
+            onBack={() => setViewingSpecialistId(null)}
+            onStartChat={handleStartChat}
+          />
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
+            {!profileLoading && (
+              <div className="flex justify-center">
+                <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
+                  <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                    <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
+                  </TabsTrigger>
+                  
+                  {profileType === 'user' ? (
+                    <>
+                      <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                        <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
+                      </TabsTrigger>
+                      <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                        <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
+                      </TabsTrigger>
+                    </>
+                  ) : (
+                    <>
+                      <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                        <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
+                      </TabsTrigger>
+                      <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                        <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
+                      </TabsTrigger>
+                    </>
+                  )}
+                  <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                    <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
+                  </TabsTrigger>
+                  <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
+                    <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            )}
 
-          {(loadingRec || loadingLogs || profileLoading) ? (
-            <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-4">
-              <Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary opacity-20" />
-              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Синхронизация профиля...</p>
-            </div>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <TabsContent value="feed" className="mt-0 outline-none">
-                <div className="space-y-12">
-                   <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div>
-                        <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Bio-Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Знания экспертов и ИИ-аналитика в одном месте.</p></div>
-                      </div>
-                      {profileType === 'specialist' && <CreatePostDialog />}
-                   </div>
+            {(loadingRec || loadingLogs || profileLoading) ? (
+              <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-4">
+                <Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary opacity-20" />
+                <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Синхронизация профиля...</p>
+              </div>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <TabsContent value="feed" className="mt-0 outline-none">
+                  <div className="space-y-12">
+                     <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div>
+                          <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Bio-Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Знания экспертов и ИИ-аналитика в одном месте.</p></div>
+                        </div>
+                        {profileType === 'specialist' && <CreatePostDialog />}
+                     </div>
 
-                   <Tabs defaultValue="knowledge" className="w-full">
-                      <TabsList className="bg-transparent border-b rounded-none h-auto p-0 gap-8 mb-8">
-                         <TabsTrigger value="knowledge" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">Лента знаний</TabsTrigger>
-                         {profileType === 'user' && <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>}
-                      </TabsList>
-                      
-                      <TabsContent value="ai" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-                        {[
-                          { name: 'Др. Ария', role: 'Нутрициолог', icon: Utensils, bg: 'bg-orange-50', color: 'text-orange-500' },
-                          { name: 'Др. Кай', role: 'Биохакер', icon: Brain, bg: 'bg-emerald-50', color: 'text-emerald-500' },
-                          { name: 'Др. Сола', role: 'Сомнолог', icon: HeartPulse, bg: 'bg-indigo-50', color: 'text-indigo-500' }
-                        ].map((spec, i) => (
-                          <Card key={i} className="premium-card overflow-hidden">
-                            <CardContent className="p-8 space-y-6">
-                               <div className="flex items-center gap-4">
-                                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", spec.bg)}>
-                                     <spec.icon className={cn("h-7 w-7", spec.color)} />
-                                  </div>
-                                  <div>
-                                     <h4 className="font-black text-lg">{spec.name}</h4>
-                                     <Badge variant="outline" className="text-[7px] md:text-[8px] uppercase tracking-widest border-primary/20 text-primary/60">{spec.role}</Badge>
-                                  </div>
-                               </div>
-                               <p className="text-sm italic text-muted-foreground leading-relaxed">"На основе ваших данных по шагам и сну, я рекомендую увеличить потребление магния вечером."</p>
-                               <Button variant="ghost" className="w-full rounded-xl bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Подробнее</Button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </TabsContent>
-
-                      <TabsContent value="knowledge" className="max-w-3xl mx-auto space-y-8 pt-4">
-                         {posts?.map((post) => (
-                           <Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl">
-                              <div className="p-6 md:p-8 space-y-6">
-                                 <div className="flex items-center justify-between">
-                                    <button 
-                                      className="flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
-                                      onClick={() => openSpecialistProfile(post.authorId)}
-                                    >
-                                       <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/10">
-                                          {post.authorPhoto ? (
-                                            <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover w-full h-full" />
-                                          ) : (
-                                            <User className="h-6 w-6 text-primary" />
-                                          )}
-                                       </div>
-                                       <div>
-                                          <h4 className="font-black text-base">{post.authorName}</h4>
-                                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{post.authorRole}</p>
-                                       </div>
-                                    </button>
-                                    <div className="text-right">
-                                      <p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openSpecialistProfile(post.authorId)}><Info className="h-3 w-3 text-primary/40" /></Button>
+                     <Tabs defaultValue="knowledge" className="w-full">
+                        <TabsList className="bg-transparent border-b rounded-none h-auto p-0 gap-8 mb-8">
+                           <TabsTrigger value="knowledge" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">Лента знаний</TabsTrigger>
+                           {profileType === 'user' && <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>}
+                        </TabsList>
+                        
+                        <TabsContent value="ai" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                          {[
+                            { name: 'Др. Ария', role: 'Нутрициолог', icon: Utensils, bg: 'bg-orange-50', color: 'text-orange-500' },
+                            { name: 'Др. Кай', role: 'Биохакер', icon: Brain, bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                            { name: 'Др. Сола', role: 'Сомнолог', icon: HeartPulse, bg: 'bg-indigo-50', color: 'text-indigo-500' }
+                          ].map((spec, i) => (
+                            <Card key={i} className="premium-card overflow-hidden">
+                              <CardContent className="p-8 space-y-6">
+                                 <div className="flex items-center gap-4">
+                                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", spec.bg)}>
+                                       <spec.icon className={cn("h-7 w-7", spec.color)} />
+                                    </div>
+                                    <div>
+                                       <h4 className="font-black text-lg">{spec.name}</h4>
+                                       <Badge variant="outline" className="text-[7px] md:text-[8px] uppercase tracking-widest border-primary/20 text-primary/60">{spec.role}</Badge>
                                     </div>
                                  </div>
-                                 <div className="space-y-4">
-                                    <p className="text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                                    {post.imageUrl && (
-                                       <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
-                                          <Image src={post.imageUrl} alt="Post" fill className="object-cover" />
-                                       </div>
-                                    )}
-                                 </div>
-                                 <div className="flex items-center gap-6 pt-4 border-t">
-                                    <Button 
-                                      variant="ghost" 
-                                      className={cn("rounded-full px-6 gap-2 transition-all", post.likedBy?.includes(user.uid) ? "text-primary bg-primary/10" : "text-muted-foreground")}
-                                      onClick={() => handleLike(post.id, post.likedBy || [])}
-                                    >
-                                       <ThumbsUp className={cn("h-4 w-4", post.likedBy?.includes(user.uid) && "fill-primary")} /> 
-                                       <span className="font-black text-xs">{post.likes || 0}</span>
-                                    </Button>
-                                    <Button variant="ghost" className="rounded-full px-6 gap-2 text-muted-foreground"><Share2 className="h-4 w-4" /></Button>
-                                 </div>
-                              </div>
-                           </Card>
-                         ))}
-                         {(!posts || posts.length === 0) && (
-                           <Card className="premium-card p-20 text-center border-dashed border-2">
-                             <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Лента пока пуста</p>
-                           </Card>
-                         )}
-                      </TabsContent>
-                   </Tabs>
-                </div>
-              </TabsContent>
+                                 <p className="text-sm italic text-muted-foreground leading-relaxed">"На основе ваших данных по шагам и сну, я рекомендую увеличить потребление магния вечером."</p>
+                                 <Button variant="ghost" className="w-full rounded-xl bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Подробнее</Button>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </TabsContent>
 
-              <TabsContent value="dashboard" className="mt-0 outline-none">
-                {recommendationDoc?.data ? (
-                  <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} />
-                ) : (
-                  <div className="text-center py-20 flex flex-col items-center gap-8">
-                    <div className="space-y-2">
-                      <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
-                      <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}.</p>
-                    </div>
-                    <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
+                        <TabsContent value="knowledge" className="max-w-3xl mx-auto space-y-8 pt-4">
+                           {posts?.map((post) => (
+                             <Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl">
+                                <div className="p-6 md:p-8 space-y-6">
+                                   <div className="flex items-center justify-between">
+                                      <button 
+                                        className="flex items-center gap-4 text-left hover:opacity-80 transition-opacity"
+                                        onClick={() => setViewingSpecialistId(post.authorId)}
+                                      >
+                                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/10">
+                                            {post.authorPhoto ? (
+                                              <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover w-full h-full" />
+                                            ) : (
+                                              <User className="h-6 w-6 text-primary" />
+                                            )}
+                                         </div>
+                                         <div>
+                                            <h4 className="font-black text-base">{post.authorName}</h4>
+                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{post.authorRole}</p>
+                                         </div>
+                                      </button>
+                                      <div className="text-right">
+                                        <p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewingSpecialistId(post.authorId)}><Info className="h-3 w-3 text-primary/40" /></Button>
+                                      </div>
+                                   </div>
+                                   <div className="space-y-4">
+                                      <p className="text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                                      {post.imageUrl && (
+                                         <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
+                                            <Image src={post.imageUrl} alt="Post" fill className="object-cover" />
+                                         </div>
+                                      )}
+                                   </div>
+                                   <div className="flex items-center gap-6 pt-4 border-t">
+                                      <Button 
+                                        variant="ghost" 
+                                        className={cn("rounded-full px-6 gap-2 transition-all", post.likedBy?.includes(user.uid) ? "text-primary bg-primary/10" : "text-muted-foreground")}
+                                        onClick={() => handleLike(post.id, post.likedBy || [])}
+                                      >
+                                         <ThumbsUp className={cn("h-4 w-4", post.likedBy?.includes(user.uid) && "fill-primary")} /> 
+                                         <span className="font-black text-xs">{post.likes || 0}</span>
+                                      </Button>
+                                      <Button variant="ghost" className="rounded-full px-6 gap-2 text-muted-foreground"><Share2 className="h-4 w-4" /></Button>
+                                   </div>
+                                </div>
+                             </Card>
+                           ))}
+                           {(!posts || posts.length === 0) && (
+                             <Card className="premium-card p-20 text-center border-dashed border-2">
+                               <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Лента пока пуста</p>
+                             </Card>
+                           )}
+                        </TabsContent>
+                     </Tabs>
                   </div>
-                )}
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="meals" className="mt-0 outline-none">
-                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют. Заполните анкету в Дашборде.</div>}
-              </TabsContent>
+                <TabsContent value="dashboard" className="mt-0 outline-none">
+                  {recommendationDoc?.data ? (
+                    <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} />
+                  ) : (
+                    <div className="text-center py-20 flex flex-col items-center gap-8">
+                      <div className="space-y-2">
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
+                        <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}.</p>
+                      </div>
+                      <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
+                    </div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="my-feed" className="mt-0 outline-none">
-                <div className="max-w-4xl mx-auto space-y-10">
-                   <div className="flex items-center justify-between">
-                      <h2 className="text-3xl font-black tracking-tighter">Мои публикации</h2>
-                      <CreatePostDialog />
-                   </div>
-                   <div className="space-y-6">
-                      {posts?.filter(p => p.authorId === user.uid).map(post => (
-                        <Card key={post.id} className="premium-card overflow-hidden">
-                           <div className="p-8 space-y-6">
-                              <div className="flex justify-between items-start">
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(new Date(post.createdAt), 'd MMMM yyyy, HH:mm', { locale: ru })}</p>
-                                <Badge variant="outline" className="text-[9px] border-primary/20 text-primary">{post.likes || 0} Лайков</Badge>
-                              </div>
-                              <p className="text-lg font-medium leading-relaxed">{post.content}</p>
-                              {post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden"><Image src={post.imageUrl} alt="Post image" fill className="object-cover" /></div>}
-                           </div>
-                        </Card>
-                      ))}
-                      {(!posts || posts.filter(p => p.authorId === user.uid).length === 0) && (
-                        <Card className="premium-card p-20 text-center text-muted-foreground border-dashed border-2">У вас пока нет активных публикаций. Начните делиться знаниями!</Card>
-                      )}
-                   </div>
-                </div>
-              </TabsContent>
+                <TabsContent value="meals" className="mt-0 outline-none">
+                  {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют. Заполните анкету в Дашборде.</div>}
+                </TabsContent>
 
-              <TabsContent value="appointments" className="mt-0 outline-none">
-                <div className="max-w-4xl mx-auto space-y-10">
-                   <h2 className="text-3xl font-black tracking-tighter">Записи на прием</h2>
-                   <div className="grid grid-cols-1 gap-4">
-                      {[1,2].map(i => (
-                        <Card key={i} className="premium-card p-6 flex items-center justify-between">
-                           <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black">П</div><div><p className="font-black">Пациент #{i}</p><p className="text-xs text-muted-foreground">Сегодня, 14:00</p></div></div>
-                           <Button variant="outline" className="rounded-xl">Подтвердить</Button>
-                        </Card>
-                      ))}
-                   </div>
-                </div>
-              </TabsContent>
+                <TabsContent value="my-feed" className="mt-0 outline-none">
+                  <div className="max-w-4xl mx-auto space-y-10">
+                     <div className="flex items-center justify-between">
+                        <h2 className="text-3xl font-black tracking-tighter">Мои публикации</h2>
+                        <CreatePostDialog />
+                     </div>
+                     <div className="space-y-6">
+                        {posts?.filter(p => p.authorId === user.uid).map(post => (
+                          <Card key={post.id} className="premium-card overflow-hidden">
+                             <div className="p-8 space-y-6">
+                                <div className="flex justify-between items-start">
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(new Date(post.createdAt), 'd MMMM yyyy, HH:mm', { locale: ru })}</p>
+                                  <Badge variant="outline" className="text-[9px] border-primary/20 text-primary">{post.likes || 0} Лайков</Badge>
+                                </div>
+                                <p className="text-lg font-medium leading-relaxed">{post.content}</p>
+                                {post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden"><Image src={post.imageUrl} alt="Post image" fill className="object-cover" /></div>}
+                             </div>
+                          </Card>
+                        ))}
+                        {(!posts || posts.filter(p => p.authorId === user.uid).length === 0) && (
+                          <Card className="premium-card p-20 text-center text-muted-foreground border-dashed border-2">У вас пока нет активных публикаций. Начните делиться знаниями!</Card>
+                        )}
+                     </div>
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="chats" className="mt-0 outline-none">
-                 <ChatInterface />
-              </TabsContent>
+                <TabsContent value="appointments" className="mt-0 outline-none">
+                  <div className="max-w-4xl mx-auto space-y-10">
+                     <h2 className="text-3xl font-black tracking-tighter">Записи на прием</h2>
+                     <div className="grid grid-cols-1 gap-4">
+                        {[1,2].map(i => (
+                          <Card key={i} className="premium-card p-6 flex items-center justify-between">
+                             <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black">П</div><div><p className="font-black">Пациент #{i}</p><p className="text-xs text-muted-foreground">Сегодня, 14:00</p></div></div>
+                             <Button variant="outline" className="rounded-xl">Подтвердить</Button>
+                          </Card>
+                        ))}
+                     </div>
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="profile" className="mt-0 outline-none">
-                <ProfileCabinet />
-              </TabsContent>
-            </div>
-          )}
-        </Tabs>
+                <TabsContent value="chats" className="mt-0 outline-none">
+                   <ChatInterface />
+                </TabsContent>
+
+                <TabsContent value="profile" className="mt-0 outline-none">
+                  <ProfileCabinet />
+                </TabsContent>
+              </div>
+            )}
+          </Tabs>
+        )}
       </main>
 
       <AISpecialistChat />
