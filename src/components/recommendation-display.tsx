@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,11 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Activity, Footprints, Moon, Heart, Droplet, 
-  Timer, Flame, Zap, Utensils, RefreshCw, Loader2
+  Timer, Flame, Zap, Utensils, RefreshCw, Loader2,
+  ScanBarcode, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import { BarcodeScannerDialog } from './barcode-scanner-dialog';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
@@ -30,6 +33,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   const [mounted, setMounted] = useState(false);
   const [mealPlan, setMealPlan] = useState(data.mealPlan);
   const [replacingIdx, setReplacingIdx] = useState<number | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [activeReplaceIdx, setActiveReplaceIdx] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,14 +71,14 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     { name: 'Углеводы', current: currentFact.carbs, goal: targetGoals.carbs, color: '#2D7A4D', icon: Zap },
   ];
 
-  const handleReplaceMeal = async (idx: number) => {
+  const handleReplaceMeal = async (idx: number, specificProduct?: string) => {
     if (replacingIdx !== null) return;
     
     setReplacingIdx(idx);
     try {
       const currentMeal = mealPlan[0].meals[idx];
       const newMeal = await replaceMeal({
-        previousMealName: currentMeal.name,
+        previousMealName: specificProduct || currentMeal.name,
         mealTime: currentMeal.time,
         userContext: {
           healthGoal: data.recommendations?.diet || 'Баланс',
@@ -86,16 +91,28 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
       updatedPlan[0].meals[idx] = newMeal;
       setMealPlan(updatedPlan);
       
-      toast({ title: 'Блюдо заменено', description: `Новый вариант: ${newMeal.name}` });
+      toast({ title: 'Блюдо обновлено', description: specificProduct ? `Составлено на основе скана: ${newMeal.name}` : `Новый вариант: ${newMeal.name}` });
     } catch (error) {
       console.error('Replacement failed:', error);
       toast({ 
         variant: 'destructive', 
-        title: 'Ошибка замены', 
-        description: 'ИИ не смог предложить новое блюдо. Попробуйте еще раз.' 
+        title: 'Ошибка обновления', 
+        description: 'ИИ не смог обработать запрос. Попробуйте еще раз.' 
       });
     } finally {
       setReplacingIdx(null);
+      setActiveReplaceIdx(null);
+    }
+  };
+
+  const handleBarcodeReplace = (idx: number) => {
+    setActiveReplaceIdx(idx);
+    setIsScannerOpen(true);
+  };
+
+  const onBarcodeScanResult = (product: any) => {
+    if (activeReplaceIdx !== null) {
+      handleReplaceMeal(activeReplaceIdx, product.name);
     }
   };
 
@@ -233,19 +250,30 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                     unoptimized={true}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between gap-2">
                      <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
                         {meal.time}
                      </Badge>
-                     <Button 
-                       variant="ghost" 
-                       size="icon" 
-                       onClick={() => handleReplaceMeal(idx)}
-                       className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 h-10 w-10 border border-white/20"
-                       disabled={isReplacing}
-                     >
-                       {isReplacing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                     </Button>
+                     <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleBarcodeReplace(idx)}
+                          className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 h-10 w-10 border border-white/20"
+                          disabled={isReplacing}
+                        >
+                          <ScanBarcode className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleReplaceMeal(idx)}
+                          className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 h-10 w-10 border border-white/20"
+                          disabled={isReplacing}
+                        >
+                          {isReplacing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                        </Button>
+                     </div>
                   </div>
                 </div>
                 <div className="p-10 flex-1 space-y-8">
@@ -280,6 +308,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
             );
           })}
         </div>
+
+        <BarcodeScannerDialog 
+          open={isScannerOpen} 
+          onOpenChange={setIsScannerOpen} 
+          onScan={onBarcodeScanResult}
+        />
       </div>
     );
   }
