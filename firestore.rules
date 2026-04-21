@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - SECURITY RULES
+     * PRO СЕБЯ - SECURITY RULES (OPEN ACCESS FOR ALL AUTH USERS)
      */
 
     function isSignedIn() {
@@ -15,15 +15,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isSpecialist() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
-    }
-
-    // --- Правила для коллекций ---
+    // --- Правила для пользователей ---
 
     match /users/{userId} {
+      // Разрешаем всем вошедшим видеть базовые профили (для чатов и ленты)
       allow get: if isSignedIn();
-      allow list: if false; 
+      allow list: if isSignedIn(); 
       allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
 
@@ -44,26 +41,27 @@ service cloud.firestore {
       }
     }
 
+    // Посты в ленте - писать могут все авторизованные (даже анонимы)
     match /posts/{postId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn(); 
       allow update: if isSignedIn(); 
-      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid);
     }
 
     // Система чатов
     match /chats/{chatId} {
-      // Разрешаем чтение (get и list) если пользователь в списке участников
+      // Разрешаем чтение только участникам
       allow read: if isSignedIn() && (request.auth.uid in resource.data.participants);
       
-      // Разрешаем создание, если текущий пользователь включен в список участников
-      allow create: if isSignedIn() && (request.auth.uid in request.resource.data.participants);
+      // Создавать чат может любой вошедший
+      allow create: if isSignedIn();
       
-      // Разрешаем обновление метаданных чата участникам
+      // Обновлять (lastMessage и т.д.) могут участники
       allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
-        // Доступ к сообщениям через проверку участников в родительском документе чата
+        // Доступ к сообщениям через проверку в родительском документе
         allow read, create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
       }
     }

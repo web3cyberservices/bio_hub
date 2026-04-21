@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -21,8 +22,8 @@ import { AISpecialistChat } from '@/components/ai-specialist-chat';
 
 export default function LandingPage() {
   const { user, loading: userLoading } = useUser();
-  // Показываем кнопки входа, если пользователь гость или аноним
-  const isGuest = !user || user.uid === 'public-user' || (user as any).isAnonymous;
+  // Теперь анонимные (тестовые) пользователи НЕ считаются гостями
+  const isGuest = !user || user.uid === 'public-user';
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2] overflow-x-hidden">
