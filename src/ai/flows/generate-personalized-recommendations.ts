@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Использует Gemini 1.5 Flash для стабильности.
+ * Использует Gemini 1.5 Flash со встроенной логикой повторных попыток (retry).
  */
 
 import {ai} from '@/ai/genkit';
@@ -102,23 +102,23 @@ const recommendationPrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `Вы — ИИ-биохакер и нутрициолог. Создайте глубокий аналитический отчет.
+  prompt: `Вы — ИИ-биохакер и нутрициолог системы "PRO Себя".
+
+ВАША ЗАДАЧА:
+Создать глубокий аналитический отчет на основе биометрических данных.
+
+ПРАВИЛА ДЕТАЛИЗАЦИИ БЛЮД:
+Для каждого приема пищи в mealPlan вы ОБЯЗАНЫ предоставить массив components. 
+Разбивайте блюдо на логические части. Пример: "Стейк с брокколи" -> [{ingredient: "Говядина", weight: "200г"}, {ingredient: "Брокколи", weight: "150г"}].
+
+ИСПОЛЬЗУЙТЕ ТОЛЬКО ЭТИ ИЗОБРАЖЕНИЯ:
+breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
-ИНСТРУКЦИИ ПО КОМПОНЕНТАМ БЛЮД:
-Для каждого блюда в mealPlan вы ДОЛЖНЫ предоставить массив components. 
-Например, если блюдо "Овсяная каша с орехами (300г)", в components должно быть: 
-- { ingredient: "Овсяная каша", weight: "250г" }
-- { ingredient: "Грецкие орехи", weight: "50г" }
-
-ИНСТРУКЦИИ ПО ИЗОБРАЖЕНИЯМ:
-Используйте ТОЛЬКО: breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
-
-Контекст пользователя:
-- Вес: {{{weight}}} кг, Рост: {{{height}}} см, Возраст: {{{age}}} лет.
-- Цель: {{{healthGoal}}}, Активность: {{{activityLevel}}}.
-{{#if deviceData}}Данные устройств: Шаги: {{deviceData.steps}}, Пульс: {{deviceData.avgHeartRate}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}`,
+Контекст:
+{{{weight}}}кг, {{{height}}}см, {{{age}}} лет. Цель: {{{healthGoal}}}.
+{{#if deviceData}}Шаги: {{deviceData.steps}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(
@@ -129,17 +129,19 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     let lastError;
+    // Цикл повторных попыток для обхода ошибки 503 (Service Unavailable)
     for (let i = 0; i < 3; i++) {
       try {
         const {output} = await recommendationPrompt(input, {
-          model: googleAI.model('gemini-1.5-flash'), // Принудительно 1.5 Flash
+          model: googleAI.model('gemini-1.5-flash'),
         });
-        if (!output) throw new Error('Model failed to generate valid output');
+        if (!output) throw new Error('Модель вернула пустой результат');
         return output;
       } catch (err: any) {
         lastError = err;
-        console.error(`Attempt ${i + 1} failed:`, err.message);
-        if (err.message?.includes('503') || err.status === 503 || err.message?.includes('thought_signature')) {
+        console.error(`Попытка ${i + 1} не удалась:`, err.message);
+        // Если ошибка 503 или связана с загрузкой, ждем и пробуем снова
+        if (err.status === 503 || err.message?.includes('503') || err.message?.includes('thought_signature')) {
           await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
           continue;
         }
