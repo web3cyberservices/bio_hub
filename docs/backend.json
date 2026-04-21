@@ -4,232 +4,74 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Stores core information about a user or a specialist within the NutriPath AI application, including their personal details and role.",
+      "description": "Stores core information about a user, including biometrics and habits.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address, used for login and communication.",
-          "format": "email"
-        },
-        "firstName": {
-          "type": "string",
-          "description": "The first name of the user."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "The last name of the user."
-        },
-        "profileType": {
-          "type": "string",
-          "description": "Indicates whether the user is a 'RegularUser' or a 'Specialist'.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "dateJoined": {
-          "type": "string",
-          "description": "The timestamp when the user registered their profile.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "gender": { "type": "string" },
+        "age": { "type": "number" },
+        "weight": { "type": "number" },
+        "height": { "type": "number" },
+        "activityLevel": { "type": "string" },
+        "healthGoal": { "type": "string" },
+        "profileType": { "type": "string" },
+        "dateJoined": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "email",
-        "firstName",
-        "lastName",
-        "profileType",
-        "dateJoined"
-      ]
+      "required": ["id", "email", "firstName", "profileType"]
     },
-    "HealthDataInput": {
+    "DailyLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "HealthDataInput",
+      "title": "DailyLog",
       "type": "object",
-      "description": "Records a user's essential health metrics and personal goals at a specific point in time, serving as primary input for AI recommendations.",
+      "description": "Daily biometric and lifestyle metrics tracked by the user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the HealthDataInput entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile this health data belongs to. (Relationship: UserProfile 1:N HealthDataInput)"
-        },
-        "weightKg": {
-          "type": "number",
-          "description": "The user's current weight in kilograms."
-        },
-        "heightCm": {
-          "type": "number",
-          "description": "The user's current height in centimeters."
-        },
-        "ageYears": {
-          "type": "number",
-          "description": "The user's current age in years."
-        },
-        "activityLevel": {
-          "type": "string",
-          "description": "The user's self-reported physical activity level.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "healthGoal": {
-          "type": "string",
-          "description": "The user's primary health objective.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "submissionDate": {
-          "type": "string",
-          "description": "The timestamp when this specific health data record was submitted.",
-          "format": "date-time"
-        }
+        "date": { "type": "string" },
+        "water": { "type": "number" },
+        "weight": { "type": "number" },
+        "steps": { "type": "number" },
+        "mood": { "type": "string" },
+        "energy": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "weightKg",
-        "heightCm",
-        "ageYears",
-        "activityLevel",
-        "healthGoal",
-        "submissionDate"
-      ]
+      "required": ["date"]
     },
     "DietaryLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "DietaryLog",
       "type": "object",
-      "description": "Stores optional, free-form text input from a user detailing their daily food intake for AI analysis.",
+      "description": "Records of specific meals with AI analysis.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the DietaryLog entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile this dietary log belongs to. (Relationship: UserProfile 1:N DietaryLog)"
-        },
-        "logDate": {
-          "type": "string",
-          "description": "The timestamp when this dietary log entry was created or pertains to.",
-          "format": "date-time"
-        },
-        "foodIntakeText": {
-          "type": "string",
-          "description": "Free-form text provided by the user describing their food intake."
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "logDate": { "type": "string", "format": "date-time" },
+        "mealName": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "fat": { "type": "number" },
+        "carbs": { "type": "number" },
+        "analysis": { "type": "string" }
       },
-      "required": [
-        "id",
-        "userId",
-        "logDate",
-        "foodIntakeText"
-      ]
-    },
-    "LabResult": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LabResult",
-      "type": "object",
-      "description": "Stores optional, free-form text input from a user regarding their recent lab analysis results for AI consideration.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LabResult entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile this lab result belongs to. (Relationship: UserProfile 1:N LabResult)"
-        },
-        "resultDate": {
-          "type": "string",
-          "description": "The timestamp when these lab results were submitted or pertain to.",
-          "format": "date-time"
-        },
-        "labResultText": {
-          "type": "string",
-          "description": "Free-form text containing the user's lab analysis results."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "resultDate",
-        "labResultText"
-      ]
+      "required": ["id", "userId", "logDate", "mealName"]
     },
     "Recommendation": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Recommendation",
       "type": "object",
-      "description": "Stores the AI-generated personalized health recommendations for a user, based on their provided data.",
+      "description": "AI-generated personalized health recommendations.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Recommendation entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the UserProfile for whom this recommendation was generated. (Relationship: UserProfile 1:N Recommendation)"
-        },
-        "healthDataInputId": {
-          "type": "string",
-          "description": "Reference to the specific HealthDataInput that was used as the primary basis for this recommendation. (Relationship: HealthDataInput 1:N Recommendation)"
-        },
-        "generationDate": {
-          "type": "string",
-          "description": "The timestamp when this recommendation was generated by the AI.",
-          "format": "date-time"
-        },
-        "lifestyleRecommendations": {
-          "type": "string",
-          "description": "AI-generated recommendations regarding lifestyle adjustments, such as exercise and sleep."
-        },
-        "dietaryRecommendations": {
-          "type": "string",
-          "description": "AI-generated recommendations regarding diet plans and food choices."
-        },
-        "supplementRecommendations": {
-          "type": "string",
-          "description": "AI-generated recommendations regarding suitable vitamin and supplement intake."
-        },
-        "relevantDietaryLogIds": {
-          "type": "array",
-          "description": "References to DietaryLog entries that were considered by the AI when generating this recommendation. (Relationship: DietaryLog N:N Recommendation)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "relevantLabResultIds": {
-          "type": "array",
-          "description": "References to LabResult entries that were considered by the AI when generating this recommendation. (Relationship: LabResult N:N Recommendation)",
-          "items": {
-            "type": "string"
-          }
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "healthDataInputId",
-        "generationDate",
-        "lifestyleRecommendations",
-        "dietaryRecommendations",
-        "supplementRecommendations"
-      ]
+      "required": ["id", "userId", "date", "data"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
@@ -237,99 +79,30 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores core information about a user or specialist. The document ID `{userId}` must match `UserProfile.id` and `request.auth.uid`. Authorization is self-owned.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, corresponding to `request.auth.uid`."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/UserProfile" }
         }
       },
       {
-        "path": "/users/{userId}/healthDataInputs/{healthDataInputId}",
+        "path": "/users/{userId}/dailyLogs/{date}",
         "definition": {
-          "entityName": "HealthDataInput",
-          "schema": {
-            "$ref": "#/backend/entities/HealthDataInput"
-          },
-          "description": "Records a user's health metrics and goals. Owned by the user specified in the path. Authorization relies on `userId` in the path matching `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this health data input."
-            },
-            {
-              "name": "healthDataInputId",
-              "description": "The unique identifier for a specific health data input record."
-            }
-          ]
+          "entityName": "DailyLog",
+          "schema": { "$ref": "#/backend/entities/DailyLog" }
         }
       },
       {
         "path": "/users/{userId}/dietaryLogs/{dietaryLogId}",
         "definition": {
           "entityName": "DietaryLog",
-          "schema": {
-            "$ref": "#/backend/entities/DietaryLog"
-          },
-          "description": "Stores a user's free-form dietary log entries. Owned by the user specified in the path. Authorization relies on `userId` in the path matching `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this dietary log."
-            },
-            {
-              "name": "dietaryLogId",
-              "description": "The unique identifier for a specific dietary log entry."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/DietaryLog" }
         }
       },
       {
-        "path": "/users/{userId}/labResults/{labResultId}",
-        "definition": {
-          "entityName": "LabResult",
-          "schema": {
-            "$ref": "#/backend/entities/LabResult"
-          },
-          "description": "Stores a user's free-form lab analysis results. Owned by the user specified in the path. Authorization relies on `userId` in the path matching `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this lab result."
-            },
-            {
-              "name": "labResultId",
-              "description": "The unique identifier for a specific lab result entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/recommendations/{recommendationId}",
+        "path": "/users/{userId}/recommendations/{date}",
         "definition": {
           "entityName": "Recommendation",
-          "schema": {
-            "$ref": "#/backend/entities/Recommendation"
-          },
-          "description": "Stores AI-generated health recommendations for a user. Owned by the user specified in the path. Authorization relies on `userId` in the path matching `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user for whom this recommendation was generated."
-            },
-            {
-              "name": "recommendationId",
-              "description": "The unique identifier for a specific recommendation."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Recommendation" }
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed following a strict hierarchical, user-centric model, prioritizing Authorization Independence and secure List operations (QAPs). \n\n1.  **User Profiles (`/users/{userId}`):** UserProfile documents are stored in the top-level `users` collection. The document ID (`{userId}`) for each UserProfile directly corresponds to the authenticated user's UID (`request.auth.uid`). This establishes clear, path-based ownership for each user's root profile data.\n\n2.  **User-Specific Subcollections:** All other entities (`HealthDataInput`, `DietaryLog`, `LabResult`, `Recommendation`) are stored as subcollections under the respective user's profile: `/users/{userId}/<subcollectionName>/{docId}`.\n\n    *   `/users/{userId}/healthDataInputs/{healthDataInputId}`\n    *   `/users/{userId}/dietaryLogs/{dietaryLogId}`\n    *   `/users/{userId}/labResults/{labResultId}`\n    *   `/users/{userId}/recommendations/{recommendationId}`\n\n**Authorization Independence:** This design achieves Authorization Independence by incorporating the `userId` directly into the path of every user-owned document. For example, to access a `HealthDataInput`, the security rule can directly compare `request.auth.uid` with the `{userId}` wildcard in the path (`/users/{userId}/healthDataInputs/{healthDataInputId}`). This eliminates the need for `get()` calls to parent documents (e.g., `UserProfile` or other subcollection documents) to verify ownership or relationships, making security rules atomic, simpler, and more performant. Each document inherently carries its authorization context through its path.\n\n**QAPs (Rules are not Filters):** This structure inherently supports secure `list` operations. Because all user-specific data resides under `/users/{userId}/...`, any `list` query initiated by an authenticated user (`request.auth.uid`) on their own subcollections (e.g., `db.collection('users').doc(request.auth.uid).collection('healthDataInputs').get()`) will automatically be restricted by rules like `allow read, write: if request.auth.uid == userId;`. The Firestore security rules enforce that the `userId` wildcard in the path must match `request.auth.uid`, guaranteeing that `list` operations only return documents owned by the authenticated user. This prevents rules from acting as filters and ensures all returned data is explicitly authorized. The `profileType` field within `UserProfile` allows for role-based access control to the user's *own* profile, but no cross-user access is enabled by default with this structure, aligning with the principle of homogeneous security posture per collection."
+    ]
   }
 }

@@ -13,18 +13,6 @@ service cloud.firestore {
      * All data is organized under the root `/users/{userId}` collection. Sub-entities like 
      * health metrics, dietary logs, lab results, and AI recommendations are stored in 
      * subcollections of the specific user they belong to.
-     * 
-     * Key Security Decisions:
-     * 1. Path-Based Authorization: By embedding the owner's UID directly in the document path, 
-     *    we achieve highly performant authorization without the need for expensive cross-document 
-     *    get() lookups.
-     * 2. No User Listing: Users cannot list the top-level /users collection, preventing 
-     *    discovery of other users.
-     * 3. Prototyping Flexibility: While authorization (WHO can access) is strictly enforced 
-     *    based on the path, data schema validation (WHAT the data looks like) is kept 
-     *    minimal to allow for rapid frontend iteration.
-     * 4. Relational Integrity: On document creation, the rules enforce that internal 
-     *    foreign keys (like userId) match the path parameters.
      */
 
     // --- Helper Functions ---
@@ -46,27 +34,25 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for the core UserProfile entity. 
-     * @path /users/{userId}
-     * @allow get: (read) if user is the profile owner.
-     * @deny list: (read) prevents listing all registered users.
-     * @allow create: (write) if auth UID matches the new document ID.
-     * @principle Enforces path-based ownership and self-creation for user profiles.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false; // Strict privacy: users cannot list other users.
+      allow list: if false; 
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
 
       /**
+       * @description Rules for dailyLogs subcollection.
+       * @path /users/{userId}/dailyLogs/{dailyLogId}
+       */
+      match /dailyLogs/{dailyLogId} {
+        allow get, list: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
        * @description Rules for HealthDataInput subcollection.
-       * @path /users/{userId}/healthDataInputs/{healthDataInputId}
-       * @allow create: (write) if the internal userId field matches the path UID.
-       * @deny update: (write) if attempting to change the document's userId.
-       * @principle Ensures health data remains linked to the correct user via path consistency.
        */
       match /healthDataInputs/{healthDataInputId} {
         allow get, list: if isOwner(userId);
@@ -77,9 +63,6 @@ service cloud.firestore {
 
       /**
        * @description Rules for DietaryLog subcollection.
-       * @path /users/{userId}/dietaryLogs/{dietaryLogId}
-       * @allow list: (read) if user is viewing their own food logs.
-       * @principle Private subcollection access restricted to the parent user.
        */
       match /dietaryLogs/{dietaryLogId} {
         allow get, list: if isOwner(userId);
@@ -90,9 +73,6 @@ service cloud.firestore {
 
       /**
        * @description Rules for LabResult subcollection.
-       * @path /users/{userId}/labResults/{labResultId}
-       * @allow update: (write) only for the owner; prevents changing the owner ID.
-       * @principle Resource-level ownership via path parameters.
        */
       match /labResults/{labResultId} {
         allow get, list: if isOwner(userId);
@@ -102,10 +82,7 @@ service cloud.firestore {
       }
 
       /**
-       * @description Rules for Recommendation subcollection (AI-generated data).
-       * @path /users/{userId}/recommendations/{recommendationId}
-       * @allow get: (read) allows user to view their personalized advice.
-       * @principle Restricts AI recommendations to the specific intended recipient.
+       * @description Rules for Recommendation subcollection.
        */
       match /recommendations/{recommendationId} {
         allow get, list: if isOwner(userId);
