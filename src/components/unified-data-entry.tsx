@@ -10,15 +10,18 @@ import {
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Footprints, Moon, RefreshCw, 
-  Droplet, Scale, Utensils, Smile, Save, MessageSquare
+  Droplet, Scale, Utensils, Smile, Save, MessageSquare,
+  AlertCircle, TrendingUp, TrendingDown
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
+import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -36,6 +39,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [image, setImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
+  const [labResult, setLabResult] = useState<AnalyzeLabOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   
   const [editedMeal, setEditedMeal] = useState<AnalyzeMealOutput | null>(null);
@@ -135,26 +139,45 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       return;
     }
 
-    if (!description && !image && !refinement) {
-      toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
-      return;
-    }
+    if (activeTab === 'meal') {
+      if (!description && !image && !refinement) {
+        toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
+        return;
+      }
 
-    setLoading(true);
-    try {
-      const result = await analyzeMeal({
-        description: description || undefined,
-        photoDataUri: image || undefined,
-        refinement: isRefinement ? refinement : undefined,
-      });
-      setMealResult(result);
-      setEditedMeal(result);
-      if (isRefinement) setRefinement('');
-    } catch (error: any) {
-      console.error("AI Error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка анализа ИИ', description: error.message || 'Не удалось обработать.' });
-    } finally {
-      setLoading(false);
+      setLoading(true);
+      try {
+        const result = await analyzeMeal({
+          description: description || undefined,
+          photoDataUri: image || undefined,
+          refinement: isRefinement ? refinement : undefined,
+        });
+        setMealResult(result);
+        setEditedMeal(result);
+        if (isRefinement) setRefinement('');
+      } catch (error: any) {
+        console.error("AI Error:", error);
+        toast({ variant: 'destructive', title: 'Ошибка анализа ИИ', description: error.message || 'Не удалось обработать.' });
+      } finally {
+        setLoading(false);
+      }
+    } else if (activeTab === 'labs') {
+      if (!image) {
+        toast({ variant: 'destructive', title: 'Нет фото', description: 'Сфотографируйте или загрузите результат анализов.' });
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const result = await analyzeLabResults({
+          photoDataUri: image,
+        });
+        setLabResult(result);
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Ошибка ИИ-анализа', description: 'Не удалось распознать документ.' });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -184,8 +207,31 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
+  const saveLabResultToFirestore = async () => {
+    if (!firestore || !user || !labResult || user.uid === 'public-user') return;
+    
+    setLoading(true);
+    try {
+      const labId = `lab_${Date.now()}`;
+      const docRef = doc(firestore, 'users', user.uid, 'labResults', labId);
+      await setDoc(docRef, {
+        id: labId,
+        userId: user.uid,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        ...labResult,
+        createdAt: serverTimestamp()
+      });
+      setIsSuccess(true);
+      toast({ title: 'Анализы сохранены' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const reset = () => {
-    setDescription(''); setRefinement(''); setImage(null); setMealResult(null); setEditedMeal(null);
+    setDescription(''); setRefinement(''); setImage(null); setMealResult(null); setEditedMeal(null); setLabResult(null);
     setIsSuccess(false); setWater(''); setWeight(''); setSteps(''); setMood(''); setEnergy(50);
     stopCamera();
   };
@@ -206,7 +252,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar">
-          {!mealResult && !isSuccess ? (
+          {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-muted/60 p-1.5 mb-6 md:mb-10 shadow-inner">
                 <TabsTrigger value="meal" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full"><Utensils className="h-3 w-3" /> ЕДА</TabsTrigger>
@@ -314,6 +360,41 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ОБНОВИТЬ ТЕЛО"}
                 </Button>
               </TabsContent>
+
+              <TabsContent value="labs" className="space-y-6 outline-none">
+                <div className="space-y-4">
+                  <div className="bg-primary/5 p-6 rounded-2xl border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-4">
+                    <FlaskConical className="h-10 w-10 text-primary opacity-40" />
+                    <div>
+                      <p className="font-bold">Анализ документов</p>
+                      <p className="text-[10px] text-muted-foreground">Загрузите фото бланка с результатами анализов</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button variant="outline" className="h-16 rounded-xl flex items-center gap-2" onClick={startCamera}>
+                      <Camera className="h-5 w-5" /> Камера
+                    </Button>
+                    <label className="cursor-pointer">
+                      <div className="h-16 rounded-xl border border-input flex items-center justify-center gap-2 hover:bg-accent transition-colors">
+                        <Upload className="h-5 w-5" /> Файл
+                      </div>
+                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                  </div>
+
+                  {image && (
+                    <div className="relative rounded-2xl overflow-hidden aspect-video border-4 border-white shadow-lg bg-black/5 flex items-center justify-center">
+                      <img src={image} alt="Lab Preview" className="max-w-full max-h-full object-contain" />
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full h-8 w-8" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
+                    </div>
+                  )}
+
+                  <Button className="w-full h-16 rounded-xl bg-primary font-black" onClick={() => handleAnalyze()} disabled={loading || !image}>
+                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-2 h-5 w-5" /> АНАЛИЗИРОВАТЬ ИИ</>}
+                  </Button>
+                </div>
+              </TabsContent>
             </Tabs>
           ) : mealResult && editedMeal && !isSuccess ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -400,20 +481,70 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-5 w-5" /> ПОДТВЕРДИТЬ И ЗАПИСАТЬ</>}
                      </Button>
                   </div>
-                  
-                  <div className="flex gap-2 items-center px-2">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                    <Input 
-                      placeholder="Уточнить (например: 'порция была больше')"
-                      value={refinement}
-                      onChange={e => setRefinement(e.target.value)}
-                      className="h-10 border-none bg-primary/5 rounded-xl font-bold placeholder:font-normal"
-                    />
-                    <Button size="sm" variant="ghost" className="h-10 text-primary font-black" onClick={() => handleAnalyze(true)} disabled={loading}>
-                      ПЕРЕСЧИТАТЬ ИИ
-                    </Button>
-                  </div>
                </div>
+            </div>
+          ) : labResult && !isSuccess ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+              <div className="text-center space-y-2">
+                <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">LabScan AI 1.0</Badge>
+                <h3 className="text-2xl font-black tracking-tighter">Результаты анализа</h3>
+              </div>
+
+              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
+                <p className="text-sm font-medium leading-relaxed text-foreground/80">{labResult.summary}</p>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Обнаруженные маркеры</label>
+                <div className="space-y-3">
+                  {labResult.markers.map((marker, i) => (
+                    <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm">{marker.name}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[8px] h-4 px-1 border-none",
+                              marker.status === 'high' ? "bg-red-100 text-red-600" : 
+                              marker.status === 'low' ? "bg-yellow-100 text-yellow-700" : 
+                              "bg-green-100 text-green-600"
+                            )}
+                          >
+                            {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
+                          </Badge>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">{marker.interpretation}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-lg">{marker.value}</p>
+                        {marker.status !== 'normal' && (
+                          marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500 ml-auto" /> : <TrendingDown className="h-4 w-4 text-yellow-500 ml-auto" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Рекомендации</label>
+                <div className="grid gap-3">
+                  {labResult.recommendations.map((rec, i) => (
+                    <div key={i} className="flex gap-3 items-start p-4 bg-muted/30 rounded-2xl">
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <p className="text-xs font-medium">{rec}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button variant="outline" className="flex-1 h-14 rounded-xl" onClick={() => setLabResult(null)}>Переснять</Button>
+                <Button className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl" onClick={saveLabResultToFirestore} disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ В ПРОФИЛЬ"}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="py-8 flex flex-col items-center text-center space-y-6">
