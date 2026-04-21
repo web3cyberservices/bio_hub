@@ -115,6 +115,25 @@ export function ProfileCabinet() {
     },
   });
 
+  // Функция для нормализации уровня активности (исправление ошибки "малоактивный")
+  const normalizeActivity = (val: string): any => {
+    const map: Record<string, string> = {
+      'минимальный': 'minimal',
+      'сидячий': 'minimal',
+      'низкий': 'low',
+      'малоактивный': 'low',
+      'умеренный': 'moderate',
+      'средний': 'moderate',
+      'высокий': 'high',
+      'активный': 'high',
+      'атлет': 'athlete',
+      'спортсмен': 'athlete'
+    };
+    if (!val) return 'moderate';
+    const lower = val.toLowerCase();
+    return map[lower] || (['minimal', 'low', 'moderate', 'high', 'athlete'].includes(lower) ? lower : 'moderate');
+  };
+
   useEffect(() => {
     if (userData) {
       form.reset({
@@ -125,7 +144,7 @@ export function ProfileCabinet() {
         gender: userData.gender || 'мужской',
         weight: userData.weight || 0,
         height: userData.height || 0,
-        activityLevel: userData.activityLevel || 'moderate',
+        activityLevel: normalizeActivity(userData.activityLevel),
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
@@ -295,12 +314,13 @@ export function ProfileCabinet() {
           </CardContent>
         </Card>
 
+        {/* Bio-Sync виден только для пользователей */}
         {profileTypeValue === 'user' && (
           <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
             <CardContent className="p-8 text-center space-y-4">
                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
                <h3 className="font-black text-lg tracking-tight">Bio-Sync</h3>
-               <Button type="button" onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
+               <Button type="button" onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать данные Google Fit</Button>
             </CardContent>
           </Card>
         )}
@@ -372,13 +392,13 @@ export function ProfileCabinet() {
                     <FormField control={form.control} name="specialization" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация</FormLabel>
-                        <FormControl><Input placeholder="Ваша роль..." {...field} className={inputClasses} /></FormControl>
+                        <FormControl><Input placeholder="Например: Нутрициолог, Фитнес-тренер..." {...field} className={inputClasses} /></FormControl>
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="bio" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel>
-                        <FormControl><Textarea placeholder="Расскажите о своем опыте..." {...field} className={textareaClasses} /></FormControl>
+                        <FormControl><Textarea placeholder="Расскажите о своем опыте и подходе к работе..." {...field} className={textareaClasses} /></FormControl>
                       </FormItem>
                     )} />
                   </div>
@@ -402,15 +422,15 @@ export function ProfileCabinet() {
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
                   <div className="grid grid-cols-3 gap-3 pt-1.5">
                     <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">{daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                     </Select>
                     <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
                     </Select>
                     <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
                       <SelectContent className="rounded-2xl">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
@@ -450,13 +470,13 @@ export function ProfileCabinet() {
       <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
         <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button variant="outline" type="button" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
+          <Button variant="outline" type="button" onClick={() => toast({ title: 'Привязка аккаунта', description: 'Следуйте инструкциям в открывшемся боте.' })} className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
-            <Badge variant="outline" className="text-[7px]">Привязать</Badge>
+            <Badge variant="outline" className="text-[7px] border-primary/20">Привязать</Badge>
           </Button>
-          <Button variant="outline" type="button" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
+          <Button variant="outline" type="button" onClick={() => toast({ title: 'Привязка аккаунта', description: 'Запрос на привязку отправлен на ваш номер.' })} className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
-            <Badge variant="outline" className="text-[7px]">Привязать</Badge>
+            <Badge variant="outline" className="text-[7px] border-primary/20">Привязать</Badge>
           </Button>
         </div>
       </Card>
