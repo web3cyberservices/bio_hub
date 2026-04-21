@@ -4,66 +4,58 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 7.0
-     * Оптимизированный доступ к личным планам и биометрии.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 8.0
+     * Оптимизированный доступ к личным данным и системе чатов.
      */
+
+    // Вспомогательные функции
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
 
     // --- Профили пользователей ---
     match /users/{userId} {
-      // Любой авторизованный пользователь может видеть профили (нужно для чатов и ленты)
-      allow read: if request.auth != null;
+      // Любой авторизованный пользователь может видеть основные данные профиля
+      allow read: if isAuthenticated();
       
-      // Только владелец может создать свой профиль
-      allow create: if request.auth != null && request.auth.uid == userId;
-      
-      // Владелец может редактировать всё, другие - только followers и rating
-      allow update: if request.auth != null && (
-        request.auth.uid == userId || 
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers', 'rating'])
-      );
+      // Создание и полное редактирование только владельцем
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers', 'rating']));
 
-      // Личные коллекции пользователя (доступ только владельцу)
-      match /dailyLogs/{id} { 
-        allow read, write: if request.auth != null && request.auth.uid == userId; 
-      }
-      match /dietaryLogs/{id} { 
-        allow read, write: if request.auth != null && request.auth.uid == userId; 
-      }
-      match /recommendations/{id} { 
-        allow read, write: if request.auth != null && request.auth.uid == userId; 
-      }
-      match /labResults/{id} { 
-        allow read, write: if request.auth != null && request.auth.uid == userId; 
-      }
-      match /personalMeals/{id} { 
-        allow read, write: if request.auth != null && request.auth.uid == userId; 
-      }
+      // Личные коллекции (доступ СТРОГО владельцу)
+      match /dailyLogs/{id} { allow read, write: if isOwner(userId); }
+      match /dietaryLogs/{id} { allow read, write: if isOwner(userId); }
+      match /recommendations/{id} { allow read, write: if isOwner(userId); }
+      match /labResults/{id} { allow read, write: if isOwner(userId); }
+      match /personalMeals/{id} { allow read, write: if isOwner(userId); }
       
       // Отзывы о специалисте
       match /reviews/{id} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null;
-        allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow delete: if isAuthenticated() && (isOwner(userId) || resource.data.authorId == request.auth.uid);
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
-      allow read, list: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && resource.data.authorId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+      allow read, list: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
     }
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      // Участники чата могут читать и обновлять (например, lastMessage)
-      allow read, get, list, update: if request.auth != null && request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null;
+      allow read, get, list, update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated();
 
       match /messages/{messageId} {
-        allow read, list, create: if request.auth != null;
-        allow update, delete: if request.auth != null && resource.data.senderId == request.auth.uid;
+        allow read, list, create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
       }
     }
   }

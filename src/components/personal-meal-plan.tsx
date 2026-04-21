@@ -38,21 +38,30 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
   const mealsQuery = useMemoFirebase(() => {
-    // Важно: не запускаем запрос, пока пользователь не загружен или если это гость
-    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    // Критически важно: не запускаем запрос, пока идет загрузка пользователя
+    // или если UID отсутствует/является гостевым
+    if (!firestore || userLoading || !user?.uid || user.uid === 'public-user') return null;
     
-    return query(
-      collection(firestore, 'users', user.uid, 'personalMeals'),
-      where('date', '==', dateKey),
-      orderBy('createdAt', 'asc')
-    );
-  }, [firestore, user?.uid, dateKey]);
+    try {
+      return query(
+        collection(firestore, 'users', user.uid, 'personalMeals'),
+        where('date', '==', dateKey),
+        orderBy('createdAt', 'asc')
+      );
+    } catch (e) {
+      console.error("Query creation error:", e);
+      return null;
+    }
+  }, [firestore, user?.uid, userLoading, dateKey]);
 
   const { data: meals, isLoading: mealsLoading } = useCollection<any>(mealsQuery);
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !firestore || !name || user.uid === 'public-user') return;
+    if (!user || !firestore || !name || user.uid === 'public-user') {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Необходима авторизация' });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -91,9 +100,23 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   if (userLoading) {
     return (
-      <div className="py-20 text-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка профиля...</p>
+      <div className="py-24 text-center space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Авторизация в Bio-облаке...</p>
+      </div>
+    );
+  }
+
+  const isGuest = !user || user.uid === 'public-user';
+
+  if (isGuest) {
+    return (
+      <div className="py-24 text-center border-2 border-dashed border-primary/10 rounded-[2.5rem] bg-white/40 space-y-4 px-10">
+         <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
+            <Utensils className="h-8 w-8 text-primary/20" />
+         </div>
+         <p className="text-xl font-black text-foreground/40">Войдите в профиль</p>
+         <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Свой план доступен только для зарегистрированных пользователей.</p>
       </div>
     );
   }
