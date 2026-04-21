@@ -28,15 +28,18 @@ export function ChatInterface() {
 
   // Список чатов пользователя
   const chatsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || user.uid === 'public-user') return null;
+    // Проверяем, что пользователь авторизован и это не гостевой UID
+    if (!firestore || !user || !user.uid || user.uid === 'public-user') return null;
+    
+    // Запрос только тех чатов, где текущий пользователь является участником
     return query(
       collection(firestore, 'chats'),
       where('participants', 'array-contains', user.uid),
       orderBy('updatedAt', 'desc')
     );
-  }, [firestore, user]);
+  }, [firestore, user?.uid]); // Стабилизируем зависимость по UID
 
-  const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
+  const { data: chats, isLoading: chatsLoading, error: chatsError } = useCollection<any>(chatsQuery);
 
   // Сообщения активного чата
   const messagesQuery = useMemoFirebase(() => {
@@ -83,7 +86,7 @@ export function ChatInterface() {
 
       setMessage('');
     } catch (e) {
-      console.error(e);
+      console.error('SendMessage error:', e);
     } finally {
       setLoading(false);
     }
@@ -93,6 +96,20 @@ export function ChatInterface() {
     return (
       <div className="flex h-[600px] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
+
+  if (chatsError) {
+    return (
+      <div className="flex h-[600px] flex-col items-center justify-center text-center p-6 space-y-4">
+        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+           <MessageSquare className="h-8 w-8 text-destructive" />
+        </div>
+        <div className="space-y-1">
+           <h3 className="font-black text-xl">Ошибка доступа</h3>
+           <p className="text-muted-foreground text-sm">Не удалось загрузить список чатов. Пожалуйста, убедитесь, что вы авторизованы.</p>
+        </div>
       </div>
     );
   }

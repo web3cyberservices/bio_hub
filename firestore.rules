@@ -64,8 +64,11 @@ service cloud.firestore {
 
     // Система чатов
     match /chats/{chatId} {
-      // Объединяем get и list в read для корректной работы запросов с фильтрацией
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      // Явно разделяем get и list для корректной работы фильтров в запросах
+      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      
+      // Обновление чата (последнее сообщение) доступно участникам
       allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
       
       // Создание чата (текущий пользователь должен быть в списке участников)
@@ -74,8 +77,7 @@ service cloud.firestore {
       // Сообщения внутри чата
       match /messages/{messageId} {
         // Доступ к сообщениям через проверку участников родительского чата
-        allow read: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
-        allow create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+        allow read, create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
       }
     }
   }
