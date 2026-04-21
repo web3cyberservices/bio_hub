@@ -5,6 +5,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/google-genai';
+import { runWithRetry } from './generate-personalized-recommendations';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -69,8 +71,12 @@ const aiSpecialistChatFlow = ai.defineFlow(
     outputSchema: AISpecialistChatOutputSchema,
   },
   async (input) => {
-    const {output} = await specialistPrompt(input);
-    if (!output) throw new Error('Не удалось получить ответ от специалиста');
-    return output;
+    return runWithRetry(async () => {
+      const {output} = await specialistPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Не удалось получить ответ от специалиста');
+      return output;
+    });
   }
 );

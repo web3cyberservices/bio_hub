@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
- * Улучшена логика повторных попыток для обработки высокой нагрузки на Gemini (Error 503).
+ * Улучшена логика повторных попыток для обработки лимитов (Error 429/503).
  */
 
 import {ai} from '@/ai/genkit';
@@ -115,9 +115,8 @@ const IMAGE_ID_PROMPT = `
 
 /**
  * Вспомогательная функция для повторных попыток при временных ошибках ИИ (503/429/UNAVAILABLE).
- * Усилена для работы в условиях высокой нагрузки.
  */
-async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDelay = 2000): Promise<T> {
+export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 6, initialDelay = 3000): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
@@ -126,20 +125,28 @@ async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDela
       const isTransient = errorMsg.includes('503') || 
                           errorMsg.includes('UNAVAILABLE') || 
                           errorMsg.includes('429') ||
+                          errorMsg.includes('RESOURCE_EXHAUSTED') ||
                           errorMsg.includes('overloaded') ||
                           errorMsg.includes('demand');
       
       if (isTransient && i < maxRetries - 1) {
-        // Экспоненциальная задержка с небольшим "дребезгом" (jitter)
-        const delay = initialDelay * Math.pow(2, i) + (Math.random() * 500); 
-        console.warn(`[BioTech AI] Временная ошибка (попытка ${i + 1}/${maxRetries}). Ожидание ${Math.round(delay)}ms...`);
+        let delay = initialDelay * Math.pow(2, i) + (Math.random() * 1000);
+        
+        // Пытаемся вытащить время ожидания из ошибки (например, "Please retry in 47s")
+        const match = errorMsg.match(/retry in ([\d.]+)s/);
+        if (match && match[1]) {
+          const serverSuggestedDelay = parseFloat(match[1]) * 1000 + 2000; // +2с запаса
+          delay = Math.max(delay, serverSuggestedDelay);
+        }
+
+        console.warn(`[BioTech AI] Лимит или перегрузка (попытка ${i + 1}/${maxRetries}). Ожидание ${Math.round(delay)}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
       throw error;
     }
   }
-  throw new Error('ИИ временно недоступен из-за экстремальной нагрузки на серверы Google. Пожалуйста, попробуйте еще раз через 30-60 секунд.');
+  throw new Error('ИИ временно недоступен из-за ограничений Google API. Пожалуйста, подождите минуту и попробуйте снова.');
 }
 
 const recommendationPrompt = ai.definePrompt({

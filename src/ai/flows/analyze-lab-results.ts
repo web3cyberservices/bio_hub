@@ -6,6 +6,7 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
+import { runWithRetry } from './generate-personalized-recommendations';
 
 const AnalyzeLabInputSchema = z.object({
   photoDataUri: z
@@ -57,10 +58,12 @@ const analyzeLabResultsFlow = ai.defineFlow(
     outputSchema: AnalyzeLabOutputSchema,
   },
   async (input) => {
-    const {output} = await labPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash'),
+    return runWithRetry(async () => {
+      const {output} = await labPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Не удалось проанализировать документ');
+      return output;
     });
-    if (!output) throw new Error('Не удалось проанализировать документ');
-    return output;
   }
 );

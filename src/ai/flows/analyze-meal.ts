@@ -1,12 +1,12 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа состава еды по фото.
- * Обновлено: использование актуальной модели Gemini 2.5 Flash.
  */
 
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
+import { runWithRetry } from './generate-personalized-recommendations';
 
 const AnalyzeMealInputSchema = z.object({
   description: z.string().optional().describe('Текстовое описание приема пищи.'),
@@ -63,10 +63,12 @@ const analyzeMealFlow = ai.defineFlow(
     outputSchema: AnalyzeMealOutputSchema,
   },
   async (input) => {
-    const {output} = await mealPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash'),
+    return runWithRetry(async () => {
+      const {output} = await mealPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Не удалось проанализировать блюдо');
+      return output;
     });
-    if (!output) throw new Error('Не удалось проанализировать блюдо');
-    return output;
   }
 );
