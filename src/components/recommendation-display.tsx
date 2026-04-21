@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
+import { GenerateRecommendationsOutput, replaceMeal } from '@/ai/flows/generate-personalized-recommendations';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Activity, Footprints, Moon, Heart, Droplet, 
-  Timer, Flame, Zap, Utensils
+  Timer, Flame, Zap, Utensils, RefreshCw, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useToast } from '@/hooks/use-toast';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
@@ -24,16 +27,23 @@ interface RecommendationDisplayProps {
 }
 
 export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
-  const { bioScore, recommendations, macros, fastingWindow, mealPlan } = data;
   const [mounted, setMounted] = useState(false);
+  const [mealPlan, setMealPlan] = useState(data.mealPlan);
+  const [replacingIdx, setReplacingIdx] = useState<number | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    setMealPlan(data.mealPlan);
+  }, [data.mealPlan]);
+
   if (!mounted) return null;
 
-  // Целевые значения из расчета ИИ
+  const { bioScore, recommendations, macros, fastingWindow } = data;
+
   const targetGoals = {
     calories: macros.calories || 2400,
     protein: macros.protein || 160,
@@ -41,7 +51,6 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     carbs: macros.carbs || 250,
   };
 
-  // Фактические значения (из логов)
   const currentFact = actualMacros || {
     calories: 0,
     protein: 0,
@@ -55,6 +64,40 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     { name: 'Углеводы', current: currentFact.carbs, goal: targetGoals.carbs, color: '#2D7A4D', icon: Zap },
   ];
 
+  const handleReplaceMeal = async (idx: number) => {
+    if (replacingIdx !== null) return;
+    
+    setReplacingIdx(idx);
+    try {
+      const currentMeal = mealPlan[0].meals[idx];
+      const newMeal = await replaceMeal({
+        previousMealName: currentMeal.name,
+        mealTime: currentMeal.time,
+        userContext: {
+          healthGoal: data.recommendations.diet || 'Баланс',
+        }
+      });
+
+      const updatedPlan = [...mealPlan];
+      updatedPlan[0].meals[idx] = newMeal;
+      setMealPlan(updatedPlan);
+      
+      toast({ title: 'Блюдо заменено', description: `Новый вариант: ${newMeal.name}` });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Ошибка замены', description: 'Не удалось сгенерировать новое блюдо.' });
+    } finally {
+      setReplacingIdx(null);
+    }
+  };
+
+  const getFallbackImage = (mealName: string) => {
+    const name = mealName.toLowerCase();
+    if (name.includes('завтрак') || name.includes('омлет')) return PlaceHolderImages.find(p => p.id === 'breakfast-omelette')?.imageUrl;
+    if (name.includes('обед') || name.includes('суп')) return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
+    if (name.includes('ужин') || name.includes('стейк')) return PlaceHolderImages.find(p => p.id === 'dinner-steak')?.imageUrl;
+    return PlaceHolderImages[0].imageUrl;
+  };
+
   if (mode === 'dashboard') {
     return (
       <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000">
@@ -62,23 +105,14 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
           <div className="lg:col-span-8">
             <Card className="bg-gradient-to-br from-[#1A3C26] via-[#2D5A3C] to-[#142F1C] text-white p-12 md:p-16 relative overflow-hidden h-full flex flex-col justify-center border-none shadow-3xl rounded-[4rem]">
               <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-16">
-                {/* Главное кольцо Bio-Score */}
                 <div className="relative w-72 h-72 md:w-[380px] md:h-[380px] shrink-0">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[80px] animate-pulse" />
                   <svg className="w-full h-full -rotate-90 bio-ring-glow">
                     <circle cx="50%" cy="50%" r="42%" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="20" />
                     <circle 
-                      cx="50%" 
-                      cy="50%" 
-                      r="42%" 
-                      fill="none" 
-                      stroke="white" 
-                      strokeWidth="20" 
-                      strokeDasharray="100 100" 
-                      strokeDashoffset={100 - bioScore} 
-                      pathLength="100" 
-                      strokeLinecap="round" 
-                      className="transition-all duration-1000 ease-out" 
+                      cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeWidth="20" 
+                      strokeDasharray="100 100" strokeDashoffset={100 - bioScore} 
+                      pathLength="100" strokeLinecap="round" className="transition-all duration-1000 ease-out" 
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -86,8 +120,6 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                     <span className="text-[14px] font-black uppercase tracking-[0.5em] opacity-40 -mt-2">Bio-Score</span>
                   </div>
                 </div>
-
-                {/* Кольца БЖУ */}
                 <div className="flex-1 grid grid-cols-3 gap-6 w-full">
                   {macroRings.map((m, i) => (
                     <div key={i} className="flex flex-col items-center gap-4 group">
@@ -95,17 +127,9 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                         <svg className="w-full h-full -rotate-90">
                           <circle cx="50%" cy="50%" r="40%" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
                           <circle 
-                            cx="50%" 
-                            cy="50%" 
-                            r="40%" 
-                            fill="none" 
-                            stroke={m.color} 
-                            strokeWidth="8" 
-                            strokeDasharray="100 100" 
-                            strokeDashoffset={100 - Math.min(100, (m.current / m.goal) * 100)} 
-                            pathLength="100" 
-                            strokeLinecap="round" 
-                            className="transition-all duration-1000 delay-300" 
+                            cx="50%" cy="50%" r="40%" fill="none" stroke={m.color} strokeWidth="8" 
+                            strokeDasharray="100 100" strokeDashoffset={100 - Math.min(100, (m.current / m.goal) * 100)} 
+                            pathLength="100" strokeLinecap="round" className="transition-all duration-1000 delay-300" 
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -124,7 +148,6 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
               <Activity className="absolute -bottom-40 -left-40 h-[50rem] w-[50rem] text-white/5 pointer-events-none rotate-12" />
             </Card>
           </div>
-
           <div className="lg:col-span-4 space-y-8">
             <Card className="premium-card p-12 border-none bg-white flex flex-col justify-between h-[calc(50%-16px)]">
               <div>
@@ -133,16 +156,11 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                   <h3 className="text-7xl font-black tracking-tighter text-foreground leading-none">{Math.round(currentFact.calories)}</h3>
                   <span className="text-xl font-bold opacity-20">/ {Math.round(targetGoals.calories)}</span>
                 </div>
-                <p className="text-muted-foreground mt-4 font-medium">ккал съедено за сегодня</p>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden mt-8">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all duration-1000" 
-                  style={{ width: `${Math.min(100, (currentFact.calories / targetGoals.calories) * 100)}%` }} 
-                />
+                <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (currentFact.calories / targetGoals.calories) * 100)}%` }} />
               </div>
             </Card>
-
             <Card className="premium-card p-12 border-none bg-[#EFF0FF] flex flex-col justify-between h-[calc(50%-16px)]">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
@@ -155,12 +173,10 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
               </div>
               <div className="space-y-4">
                 <p className="text-5xl font-black text-indigo-600">{fastingWindow?.remainingTime || '05:24'}</p>
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">До приема пищи</p>
               </div>
             </Card>
           </div>
         </div>
-
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
            {[
              { label: 'Шаги', val: deviceData?.steps?.toLocaleString() || '0', goal: '10,000', icon: Footprints, color: 'text-orange-500', bg: 'bg-orange-50' },
@@ -190,28 +206,34 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
       <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
         <div className="space-y-12 relative">
           {mealPlan && mealPlan.length > 0 && mealPlan[0].meals.map((meal, idx) => {
+            const isReplacing = replacingIdx === idx;
             return (
-              <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
+              <Card key={idx} className={cn(
+                "premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all relative",
+                isReplacing && "opacity-50 grayscale"
+              )}>
                 <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group bg-muted/20">
-                  {meal.imageUrl ? (
-                    <Image 
-                      src={meal.imageUrl} 
-                      alt={meal.name} 
-                      fill 
-                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                      unoptimized={true}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-primary/20">
-                      <Utensils className="h-16 w-16 mb-2" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Image Loading...</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-20" />
-                  <div className="absolute bottom-6 left-6 right-6">
+                  <Image 
+                    src={meal.imageUrl || getFallbackImage(meal.name)!} 
+                    alt={meal.name} 
+                    fill 
+                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                    unoptimized={true}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
                      <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
                         {meal.time}
                      </Badge>
+                     <Button 
+                       variant="ghost" 
+                       size="icon" 
+                       onClick={() => handleReplaceMeal(idx)}
+                       className="rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/40 h-10 w-10 border border-white/20"
+                       disabled={isReplacing}
+                     >
+                       {isReplacing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                     </Button>
                   </div>
                 </div>
                 <div className="p-10 flex-1 space-y-8">
@@ -230,10 +252,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                     {meal.components?.map((comp, ci) => (
                       <div key={ci} className="flex items-center justify-between p-6 bg-primary/5 rounded-[2rem] border border-primary/10 transition-all hover:bg-primary/10 group/item">
                         <span className="text-base font-bold text-foreground/80 group-hover/item:text-foreground transition-colors">{comp.ingredient}</span>
-                        <Badge 
-                          variant="default" 
-                          className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm transition-transform group-hover/item:scale-110"
-                        >
+                        <Badge variant="default" className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm transition-transform group-hover/item:scale-110">
                           {comp.weight}
                         </Badge>
                       </div>
