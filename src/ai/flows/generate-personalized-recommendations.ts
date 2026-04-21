@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Использует Gemini 1.5 Flash для стабильности.
+ * Использует Gemini 1.5 Flash для стабильности и корректного отображения КБЖУ.
  */
 
 import {ai} from '@/ai/genkit';
@@ -50,10 +50,10 @@ const GenerateRecommendationsOutputSchema = z.object({
     supplements: z.string(),
   }),
   macros: z.object({
-    calories: z.number(),
-    protein: z.number(),
-    fat: z.number(),
-    carbs: z.number(),
+    calories: z.number().describe('Целевая калорийность на день.'),
+    protein: z.number().describe('Целевое количество белков (г) на день.'),
+    fat: z.number().describe('Целевое количество жиров (г) на день.'),
+    carbs: z.number().describe('Целевое количество углеводов (г) на день.'),
   }),
   micronutrients: z.array(z.object({
     name: z.string(),
@@ -76,11 +76,11 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string().describe('ID из списка: breakfast-omelette, breakfast-oatmeal, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.'),
+      imageId: z.string().describe('ID из списка изображений (например: breakfast-omelette).'),
       components: z.array(z.object({
         ingredient: z.string().describe('Название ингредиента'),
         weight: z.string().describe('Вес с единицами измерения, например "250г"')
-      })).describe('Разбивка блюда на составляющие компоненты с указанием веса.')
+      })).describe('Разбивка блюда на компоненты.')
     }))
   })),
 });
@@ -102,7 +102,7 @@ const recommendationPrompt = ai.definePrompt({
 Создать глубокий аналитический отчет на основе биометрических данных.
 
 ПРАВИЛА ДЕТАЛИЗАЦИИ БЛЮД:
-Для каждого приема пищи в mealPlan вы ОБЯЗАНЫ предоставить массив components. 
+Для каждого приема пищи в mealPlan вы ОБЯЗАНЫ предоставить массив components с граммами.
 
 ИСПОЛЬЗУЙТЕ ТОЛЬКО ЭТИ ИЗОБРАЖЕНИЯ:
 breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
@@ -121,24 +121,10 @@ const generateRecommendationsFlow = ai.defineFlow(
     outputSchema: GenerateRecommendationsOutputSchema,
   },
   async (input) => {
-    let lastError;
-    for (let i = 0; i < 3; i++) {
-      try {
-        const {output} = await recommendationPrompt(input, {
-          model: googleAI.model('gemini-1.5-flash'),
-        });
-        if (!output) throw new Error('Модель вернула пустой результат');
-        return output;
-      } catch (err: any) {
-        lastError = err;
-        console.error(`Попытка ${i + 1} не удалась:`, err.message);
-        if (err.status === 503 || err.message?.includes('503') || err.message?.includes('thought_signature')) {
-          await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
-          continue;
-        }
-        throw err;
-      }
-    }
-    throw lastError;
+    const {output} = await recommendationPrompt(input, {
+      model: googleAI.model('gemini-1.5-flash'),
+    });
+    if (!output) throw new Error('Модель вернула пустой результат');
+    return output;
   }
 );

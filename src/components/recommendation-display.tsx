@@ -48,7 +48,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     carbs: macros.carbs || 250,
   };
 
-  // Фактические значения (из логов или дефолт)
+  // Фактические значения (из логов)
   const currentFact = actualMacros || {
     calories: 0,
     protein: 0,
