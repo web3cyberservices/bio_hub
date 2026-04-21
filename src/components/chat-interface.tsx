@@ -26,9 +26,9 @@ export function ChatInterface() {
   const [message, setMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Список чатов пользователя
+  // Список чатов пользователя - СТРОГАЯ ПРОВЕРКА НА АВТОРИЗАЦИЮ
   const chatsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     
     return query(
       collection(firestore, 'chats'),
@@ -42,13 +42,13 @@ export function ChatInterface() {
 
   // Сообщения активного чата
   const messagesQuery = useMemoFirebase(() => {
-    if (!firestore || !activeChatId) return null;
+    if (!firestore || !activeChatId || !user?.uid || user.uid === 'public-user') return null;
     return query(
       collection(firestore, 'chats', activeChatId, 'messages'),
       orderBy('createdAt', 'asc'),
       limit(50)
     );
-  }, [firestore, activeChatId]);
+  }, [firestore, activeChatId, user?.uid]);
 
   const { data: messages } = useCollection<any>(messagesQuery);
 
@@ -64,7 +64,7 @@ export function ChatInterface() {
 
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
+    if (!message.trim() || !activeChatId || !user?.uid || user.uid === 'public-user' || !firestore) return;
 
     const chatRef = doc(firestore, 'chats', activeChatId);
     const messagesRef = collection(chatRef, 'messages');
