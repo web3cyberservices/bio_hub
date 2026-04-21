@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -36,6 +37,7 @@ export default function DashboardPage() {
     setSelectedDate(startOfToday());
   }, []);
 
+  // Редирект только если загрузка завершена и пользователя реально нет
   useEffect(() => {
     if (isMounted && !userLoading && (!user || user.uid === 'public-user')) {
       router.replace('/login');
@@ -47,12 +49,20 @@ export default function DashboardPage() {
     return format(selectedDate, 'yyyy-MM-dd');
   }, [selectedDate]);
   
+  // Ссылка на рекомендации ИИ
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
+  // Ссылка на ежедневные логи пользователя (шаги, вода и т.д.)
+  const dailyLogRef = useMemoFirebase(() => {
+    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+  }, [firestore, user, dateKey]);
+
   const { data: recommendationDoc, isLoading: loadingRec } = useDoc<any>(recommendationRef);
+  const { data: dailyLogDoc, isLoading: loadingLogs } = useDoc<any>(dailyLogRef);
 
   const handleLogout = async () => {
     if (auth) {
@@ -66,7 +76,7 @@ export default function DashboardPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Синхронизация био-хаба...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Био-синхронизация...</p>
         </div>
       </div>
     );
@@ -100,6 +110,7 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
+      {/* Date Navigation Bar */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-16 md:top-20 z-40 py-2 md:py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between gap-2 md:gap-4">
           <div className="flex items-center gap-1 md:gap-2 mx-auto">
@@ -178,10 +189,10 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          {(loadingRec) ? (
+          {(loadingRec || loadingLogs) ? (
             <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-4">
               <Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary opacity-20" />
-              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка данных...</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка биометрии...</p>
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -197,7 +208,11 @@ export default function DashboardPage() {
                           <p className="text-muted-foreground text-[10px] md:text-base font-medium">Анализ на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}</p>
                        </div>
                     </div>
-                    <RecommendationDisplay data={currentResult} mode="dashboard" />
+                    <RecommendationDisplay 
+                      data={currentResult} 
+                      mode="dashboard" 
+                      deviceData={dailyLogDoc}
+                    />
                   </div>
                 ) : (
                   selectedDate && <NoDataView onResult={handleResult} selectedDate={selectedDate} />
@@ -216,7 +231,10 @@ export default function DashboardPage() {
                           <p className="text-muted-foreground text-[10px] md:text-base font-medium">Персонализированное меню от ИИ.</p>
                        </div>
                     </div>
-                    <RecommendationDisplay data={currentResult} mode="meals" />
+                    <RecommendationDisplay 
+                      data={currentResult} 
+                      mode="meals" 
+                    />
                   </div>
                 ) : (
                   selectedDate && <NoDataView onResult={handleResult} selectedDate={selectedDate} />

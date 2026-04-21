@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, DependencyList } from 'react';
@@ -31,6 +32,7 @@ export interface FirebaseContextState {
 
 const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
+// Технический пользователь для неавторизованных сессий
 const GUEST_USER = { uid: 'public-user', displayName: 'Гость' };
 
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -47,7 +49,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   useEffect(() => {
     if (!auth) {
-      setUserAuthState(prev => ({ ...prev, isUserLoading: false }));
+      setUserAuthState({ user: null, isUserLoading: false, userError: null });
       return;
     }
 
@@ -112,11 +114,11 @@ export const useFirestore = () => {
 export const useUser = () => {
   const { user, isUserLoading, userError } = useFirebase();
   
-  // Важно: возвращаем GUEST_USER только если загрузка завершена и пользователя реально нет
+  // Возвращаем GUEST_USER только если загрузка завершена и реального пользователя нет
   const finalUser = isUserLoading ? null : (user || GUEST_USER);
   
   return { 
-    user: finalUser, 
+    user: finalUser as (User | { uid: string; displayName: string }) | null, 
     loading: isUserLoading, 
     isUserLoading, 
     userError 
