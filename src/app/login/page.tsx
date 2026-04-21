@@ -24,9 +24,10 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  // Единая точка правды для редиректа после входа
   useEffect(() => {
-    if (!userLoading && user) {
-      router.push('/dashboard');
+    if (!userLoading && user && user.uid !== 'public-user') {
+      router.replace('/dashboard');
     }
   }, [user, userLoading, router]);
 
@@ -36,31 +37,30 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации не настроен. Нажмите "Connect to Firebase" в Studio.',
+        description: 'Сервис авторизации не настроен.',
       });
       return;
     }
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: 'Успешный вход' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка входа',
         description: 'Неверный email или пароль.',
       });
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickLogin = async () => {
+  const handleQuickLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
     if (!auth || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Подключите проект через кнопку "Connect to Firebase" в Studio.',
+        description: 'Сервисы Firebase не инициализированы.',
       });
       return;
     }
@@ -76,6 +76,7 @@ export default function LoginPage() {
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           uid: testUser.uid,
+          id: testUser.uid,
           profileType: 'user',
           createdAt: new Date().toISOString(),
           displayName: 'Тестовый Пользователь',
@@ -83,14 +84,12 @@ export default function LoginPage() {
       }
 
       toast({ title: 'Вход выполнен' });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Убедитесь, что анонимная авторизация включена в консоли Firebase.',
+        description: 'Не удалось выполнить быстрый вход.',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -124,6 +123,7 @@ export default function LoginPage() {
               className="w-full h-16 rounded-2xl bg-foreground text-white font-black uppercase tracking-widest text-[11px] gap-3"
               onClick={handleQuickLogin}
               disabled={loading}
+              type="button"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5 text-accent" />}
               Тестовый вход (Быстрый)

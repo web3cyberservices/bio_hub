@@ -111,7 +111,10 @@ export const useFirestore = () => {
 
 export const useUser = () => {
   const { user, isUserLoading, userError } = useFirebase();
-  const finalUser = user || GUEST_USER;
+  
+  // Важно: возвращаем GUEST_USER только если загрузка завершена и пользователя реально нет
+  const finalUser = isUserLoading ? null : (user || GUEST_USER);
+  
   return { 
     user: finalUser, 
     loading: isUserLoading, 

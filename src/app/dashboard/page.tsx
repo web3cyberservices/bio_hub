@@ -37,7 +37,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isMounted && !userLoading && (!user || user.uid === 'public-user')) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [user, userLoading, router, isMounted]);
 
@@ -56,11 +56,11 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
-      router.push('/');
+      router.replace('/');
     }
   };
 
-  if (!isMounted || !selectedDate || userLoading) {
+  if (!isMounted || userLoading || !user || user.uid === 'public-user') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
         <div className="text-center space-y-4">
@@ -115,11 +115,11 @@ export default function DashboardPage() {
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="px-2 md:px-4 h-10 md:h-14 rounded-xl md:rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 transition-all min-w-[120px] md:min-w-[200px]">
                   <span className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.3em] text-primary/60 leading-none">
-                    {getStatusLabel(selectedDate)}
+                    {selectedDate ? getStatusLabel(selectedDate) : ''}
                   </span>
                   <div className="flex items-center gap-1 md:gap-2">
                     <span className="text-xs md:text-xl font-bold tracking-tight">
-                      {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+                      {selectedDate ? format(selectedDate, 'd MMMM yyyy', { locale: ru }) : ''}
                     </span>
                     <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 text-primary opacity-30" />
                   </div>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl border-none mt-2 md:mt-4" align="center">
                 <Calendar
                   mode="single"
-                  selected={selectedDate}
+                  selected={selectedDate || undefined}
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   locale={ru}
@@ -147,11 +147,13 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <UnifiedDataEntry selectedDate={selectedDate}>
-              <Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20">
-                <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Добавить данные</span>
-              </Button>
-            </UnifiedDataEntry>
+            {selectedDate && (
+              <UnifiedDataEntry selectedDate={selectedDate}>
+                <Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20">
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Добавить данные</span>
+                </Button>
+              </UnifiedDataEntry>
+            )}
             <Button variant="outline" size="icon" onClick={handleLogout} className="rounded-xl md:rounded-2xl h-10 md:h-12 w-10 md:w-12 border-primary/20 text-primary hover:bg-primary/5">
               <LogOut className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
@@ -175,7 +177,7 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          {(loadingRec && user && user.uid !== 'public-user') ? (
+          {(loadingRec) ? (
             <div className="flex flex-col items-center justify-center py-16 md:py-24 space-y-4">
               <Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary opacity-20" />
               <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка данных...</p>
@@ -191,13 +193,13 @@ export default function DashboardPage() {
                        </div>
                        <div>
                           <h2 className="text-xl md:text-5xl font-black tracking-tighter text-foreground">Обзор здоровья</h2>
-                          <p className="text-muted-foreground text-[10px] md:text-base font-medium">Анализ на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
+                          <p className="text-muted-foreground text-[10px] md:text-base font-medium">Анализ на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}</p>
                        </div>
                     </div>
                     <RecommendationDisplay data={currentResult} mode="dashboard" />
                   </div>
                 ) : (
-                  <NoDataView onResult={handleResult} selectedDate={selectedDate} />
+                  selectedDate && <NoDataView onResult={handleResult} selectedDate={selectedDate} />
                 )}
               </TabsContent>
 
@@ -216,7 +218,7 @@ export default function DashboardPage() {
                     <RecommendationDisplay data={currentResult} mode="meals" />
                   </div>
                 ) : (
-                  <NoDataView onResult={handleResult} selectedDate={selectedDate} />
+                  selectedDate && <NoDataView onResult={handleResult} selectedDate={selectedDate} />
                 )}
               </TabsContent>
 
@@ -231,7 +233,7 @@ export default function DashboardPage() {
                         <p className="text-muted-foreground text-[10px] md:text-base font-medium">Управление биометрическим профилем и целями.</p>
                      </div>
                   </div>
-                  <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
+                  {selectedDate && <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />}
                 </div>
               </TabsContent>
             </div>
