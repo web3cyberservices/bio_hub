@@ -11,7 +11,7 @@ export const ai = genkit({
       apiKey: process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_API_KEY,
     }),
   ],
-  // Указываем модель по умолчанию 1.5 Flash для стабильности в текущем окружении
+  // Используем Gemini 1.5 Flash для максимальной стабильности в Studio
   model: 'googleai/gemini-1.5-flash',
 });
 
