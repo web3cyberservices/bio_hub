@@ -1,6 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации меню на основе имеющихся у пользователя продуктов.
+ * Поддерживает анализ нескольких фотографий.
  */
 
 import {ai} from '@/ai/genkit';
@@ -25,7 +27,7 @@ const MealSchema = z.object({
 
 const GenerateMenuInputSchema = z.object({
   products: z.string().optional().describe('Список продуктов текстом.'),
-  photoDataUri: z.string().optional().describe('Фото продуктов (холодильника) в формате data URI.'),
+  photoDataUris: z.array(z.string()).optional().describe('Список фото продуктов в формате data URI.'),
   userContext: z.object({
     healthGoal: z.string().optional(),
     dislikedFoods: z.string().optional(),
@@ -47,6 +49,8 @@ const IMAGE_ID_PROMPT = `
 - Яйца: 1525351484163-7529414344d8
 - Паста: 1473093226724-4e24059a9742
 - Суп: 1547592166903-89826d2d82bb
+- Творог: 1481931098708-28308112ef81
+- Овощи: 1566190063405-7c74468d62ad
 `;
 
 const menuPrompt = ai.definePrompt({
@@ -58,7 +62,9 @@ const menuPrompt = ai.definePrompt({
 
 СПИСОК ПРОДУКТОВ:
 {{#if products}}Текст: {{{products}}}{{/if}}
-{{#if photoDataUri}}Фото: {{media url=photoDataUri}}{{/if}}
+{{#each photoDataUris}}
+Фото продуктов №{{@index}}: {{media url=this}}
+{{/each}}
 
 КОНТЕКСТ:
 Цель: {{userContext.healthGoal}}.

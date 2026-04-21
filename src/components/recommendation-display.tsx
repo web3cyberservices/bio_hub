@@ -118,12 +118,39 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   const getFallbackImage = (mealName: string) => {
     const name = mealName.toLowerCase();
-    if (name.includes('завтрак') || name.includes('омлет') || name.includes('каша') || name.includes('яйц')) 
+    
+    // Каши и завтраки
+    if (name.includes('каша') || name.includes('овсян') || name.includes('греч')) 
+      return PlaceHolderImages.find(p => p.id === 'breakfast-oatmeal')?.imageUrl;
+    if (name.includes('яйц') || name.includes('омлет') || name.includes('глазунья')) 
       return PlaceHolderImages.find(p => p.id === 'breakfast-omelette')?.imageUrl;
-    if (name.includes('обед') || name.includes('суп') || name.includes('салат')) 
-      return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
-    if (name.includes('ужин') || name.includes('стейк') || name.includes('рыба') || name.includes('мясо')) 
+    if (name.includes('смузи') || name.includes('боул')) 
+      return PlaceHolderImages.find(p => p.id === 'breakfast-smoothie')?.imageUrl;
+    if (name.includes('творог') || name.includes('йогурт')) 
+      return PlaceHolderImages.find(p => p.id === 'snack-yogurt')?.imageUrl;
+
+    // Обеды и основные блюда
+    if (name.includes('рыб') || name.includes('лосось') || name.includes('семга') || name.includes('треска')) 
+      return PlaceHolderImages.find(p => p.id === 'lunch-salmon')?.imageUrl;
+    if (name.includes('стейк') || name.includes('говядин') || name.includes('мясо')) 
       return PlaceHolderImages.find(p => p.id === 'dinner-steak')?.imageUrl;
+    if (name.includes('куриц') || name.includes('индейк') || name.includes('птиц')) 
+      return PlaceHolderImages.find(p => p.id === 'lunch-salad-chicken')?.imageUrl;
+    if (name.includes('суп') || name.includes('борщ') || name.includes('щи')) 
+      return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
+    if (name.includes('салат') || name.includes('овощ')) 
+      return PlaceHolderImages.find(p => p.id === 'lunch-salad-chicken')?.imageUrl;
+    
+    // Перекусы
+    if (name.includes('орех') || name.includes('миндаль')) 
+      return PlaceHolderImages.find(p => p.id === 'snack-nuts')?.imageUrl;
+    if (name.includes('яблоко') || name.includes('фрукт')) 
+      return PlaceHolderImages.find(p => p.id === 'snack-apple')?.imageUrl;
+    if (name.includes('груша')) 
+      return PlaceHolderImages.find(p => p.id === 'snack-pear')?.imageUrl;
+    if (name.includes('авокадо') || name.includes('тост')) 
+      return PlaceHolderImages.find(p => p.id === 'snack-avocado')?.imageUrl;
+
     return PlaceHolderImages[0].imageUrl;
   };
 
@@ -289,8 +316,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {meal.components?.map((comp, ci) => (
-                      <div key={ci} className="flex items-center justify-between p-6 bg-primary/5 rounded-[2rem] border border-primary/10 transition-all hover:bg-primary/10 group/item">
+                    {meal.components?.map((comp, i) => (
+                      <div key={i} className="flex items-center justify-between p-6 bg-primary/5 rounded-[2rem] border border-primary/10 transition-all hover:bg-primary/10 group/item">
                         <span className="text-base font-bold text-foreground/80 group-hover/item:text-foreground transition-colors">{comp.ingredient}</span>
                         <Badge variant="default" className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm transition-transform group-hover/item:scale-110">
                           {comp.weight}

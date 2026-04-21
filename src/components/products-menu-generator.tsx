@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   Sparkles, Camera, Upload, Loader2, X, 
   ShoppingBasket, Utensils, Zap, Flame, Droplet,
-  ScanBarcode, Plus, Trash2, CookingPot
+  ScanBarcode, Plus, Trash2, CookingPot, Mic
 } from 'lucide-react';
 import { generateMenuFromProducts } from '@/ai/flows/generate-menu-from-products';
 import { useToast } from '@/hooks/use-toast';
@@ -26,9 +26,10 @@ export function ProductsMenuGenerator() {
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState('');
   const [scannedProducts, setScannedProducts] = useState<any[]>([]);
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [results, setResults] = useState<any[] | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -56,7 +57,8 @@ export function ProductsMenuGenerator() {
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-      setImage(canvas.toDataURL('image/jpeg'));
+      const dataUri = canvas.toDataURL('image/jpeg');
+      setImages(prev => [...prev, dataUri]);
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(t => t.stop());
       setShowCamera(false);
@@ -64,12 +66,31 @@ export function ProductsMenuGenerator() {
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
       const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
+      reader.onloadend = () => setImages(prev => [...prev, reader.result as string]);
       reader.readAsDataURL(file);
+    });
+  };
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Ваш браузер не поддерживает голосовой ввод.' });
+      return;
     }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setProducts(prev => prev + (prev ? ', ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
   };
 
   const handleBarcodeScan = (product: any) => {
@@ -81,13 +102,17 @@ export function ProductsMenuGenerator() {
     setScannedProducts(prev => prev.filter((_, i) => i !== index));
   };
 
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     const allProductsText = [
       products,
       ...scannedProducts.map(p => p.name)
     ].filter(Boolean).join(', ');
 
-    if (!allProductsText && !image) {
+    if (!allProductsText && images.length === 0) {
       toast({ variant: 'destructive', title: 'Данные не введены', description: 'Напишите список, отсканируйте штрих-код или добавьте фото.' });
       return;
     }
@@ -96,7 +121,7 @@ export function ProductsMenuGenerator() {
     try {
       const menu = await generateMenuFromProducts({
         products: allProductsText || undefined,
-        photoDataUri: image || undefined,
+        photoDataUris: images.length > 0 ? images : undefined,
         userContext: {
           healthGoal: userData?.healthGoal,
           dislikedFoods: userData?.dislikedFoods
@@ -163,20 +188,28 @@ export function ProductsMenuGenerator() {
               <ShoppingBasket className="h-8 w-8 text-primary" />
            </div>
            <h3 className="text-3xl font-black tracking-tight">Создать из продуктов</h3>
-           <p className="text-muted-foreground font-medium text-sm">Сканируйте штрих-коды, пишите список или сфотографируйте холодильник.</p>
+           <p className="text-muted-foreground font-medium text-sm">Впишите голосом, текстом или сфотографируйте холодильник.</p>
         </div>
 
         <div className="space-y-8">
            <div className="relative group">
               <Textarea 
-                placeholder="Впишите продукты здесь или используйте сканеры ниже..."
+                placeholder="Впишите продукты здесь..."
                 value={products}
                 onChange={e => setProducts(e.target.value)}
-                className="min-h-[120px] rounded-3xl bg-primary/5 border-none p-6 font-medium text-lg shadow-inner resize-none focus:ring-4 focus:ring-primary/5 transition-all"
+                className="min-h-[120px] rounded-3xl bg-primary/5 border-none p-6 font-medium text-lg shadow-inner resize-none focus:ring-4 focus:ring-primary/5 transition-all pr-16"
               />
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-white shadow-md text-primary" onClick={() => setIsScannerOpen(true)}>
-                    <ScanBarcode className="h-5 w-5" />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+                 <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn(
+                      "h-12 w-12 rounded-full shadow-lg transition-all",
+                      isListening ? "bg-red-500 text-white animate-pulse" : "bg-white text-primary"
+                    )} 
+                    onClick={startVoiceInput}
+                 >
+                    <Mic className="h-5 w-5" />
                  </Button>
               </div>
            </div>
@@ -212,9 +245,9 @@ export function ProductsMenuGenerator() {
               <label className="cursor-pointer col-span-2 md:col-span-1">
                 <div className="h-20 md:h-24 rounded-3xl border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all group">
                   <Upload className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">ФАЙЛ</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest">ФАЙЛЫ</span>
                 </div>
-                <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} />
               </label>
            </div>
 
@@ -228,10 +261,21 @@ export function ProductsMenuGenerator() {
              </div>
            )}
 
-           {image && !showCamera && (
-             <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white shadow-2xl">
-                <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                <Button variant="destructive" size="icon" className="absolute top-3 right-3 rounded-full h-10 w-10 shadow-lg" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button>
+           {images.length > 0 && !showCamera && (
+             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-in fade-in duration-500">
+                {images.map((img, i) => (
+                  <div key={i} className="relative rounded-2xl overflow-hidden aspect-square border-4 border-white shadow-lg group">
+                    <img src={img} alt={`Preview ${i}`} className="w-full h-full object-cover" />
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-2 right-2 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                      onClick={() => removeImage(i)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
              </div>
            )}
 
