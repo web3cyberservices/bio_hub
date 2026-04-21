@@ -34,7 +34,8 @@ import {
   Mail,
   Fingerprint,
   Heart,
-  Ban
+  Ban,
+  CalendarDays
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -43,6 +44,7 @@ import { doc, setDoc } from 'firebase/firestore';
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
   lastName: z.string().optional(),
+  birthDate: z.string().optional(),
   gender: z.enum(['мужской', 'женский']),
   age: z.coerce.number().int().min(1, 'Возраст обязателен'),
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -75,6 +77,7 @@ export function ProfileCabinet() {
     defaultValues: {
       firstName: '',
       lastName: '',
+      birthDate: '',
       gender: 'мужской',
       age: 30,
       weight: 70,
@@ -93,6 +96,7 @@ export function ProfileCabinet() {
       form.reset({
         firstName: userData.firstName || userData.displayName || '',
         lastName: userData.lastName || '',
+        birthDate: userData.birthDate || '',
         gender: userData.gender || 'мужской',
         age: userData.age || 30,
         weight: userData.weight || 70,
@@ -201,7 +205,7 @@ export function ProfileCabinet() {
                   <User className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
                 </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</FormLabel>
@@ -213,6 +217,17 @@ export function ProfileCabinet() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
                       <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="birthDate" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <CalendarDays className="h-3 w-3" /> Дата рождения
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} className={inputClasses} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
