@@ -39,7 +39,6 @@ export function AISpecialistChat() {
     { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист PRO Себя. Чем я могу помочь вам в оптимизации вашего здоровья сегодня?' }
   ]);
   
-  // Safe document reference only for authenticated users
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
@@ -105,10 +104,10 @@ export function AISpecialistChat() {
 
   return (
     <Card className={cn(
-      "fixed bottom-6 right-4 md:right-6 z-[120] overflow-hidden flex flex-col transition-all duration-500 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-none bg-white/95 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem]",
+      "fixed bottom-6 right-4 md:right-6 z-[120] overflow-hidden flex flex-col transition-all duration-500 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-4 border-white/50 bg-white/95 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem]",
       isMinimized 
         ? "h-16 md:h-20 w-64 md:w-80" 
-        : "h-[450px] md:h-[600px] max-h-[calc(100vh-100px)] w-[calc(100vw-32px)] md:w-[450px]"
+        : "h-[380px] md:h-[520px] max-h-[calc(100vh-160px)] w-[calc(100vw-32px)] md:w-[400px]"
     )}>
       <div className="bg-primary p-4 md:p-5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
