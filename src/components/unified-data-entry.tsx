@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -40,7 +39,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  // States for Quick Logs
   const [water, setWater] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [steps, setSteps] = useState<string>('');
@@ -137,7 +135,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         await saveMealLog(result);
         toast({ title: 'Запись создана', description: `${result.mealName} добавлено в дневник.` });
       } else {
-        // Логика сохранения других данных ( Flo Style )
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
         const docRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
         await setDoc(docRef, {
@@ -166,116 +163,113 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     stopCamera();
   };
 
-  const inputClasses = "h-20 rounded-[2.5rem] bg-primary/5 border-none font-black text-foreground text-3xl placeholder:text-muted-foreground/20 focus:ring-[12px] focus:ring-primary/5 transition-all px-10 shadow-inner";
+  const inputClasses = "h-14 md:h-20 rounded-[1.5rem] md:rounded-[2.5rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-3xl placeholder:text-muted-foreground/20 focus:ring-4 md:ring-[12px] focus:ring-primary/5 transition-all px-6 md:px-10 shadow-inner";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[850px] rounded-[5rem] p-0 overflow-hidden border-none shadow-[0_80px_200px_-40px_rgba(0,0,0,0.5)]">
-        <DialogHeader className="p-16 bg-primary text-white relative overflow-hidden">
+      <DialogContent className="w-[95vw] md:max-w-[750px] lg:max-w-[850px] rounded-[2rem] md:rounded-[4rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
+        <DialogHeader className="p-6 md:p-12 bg-primary text-white relative overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#163D25] opacity-95" />
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="space-y-3">
-              <DialogTitle className="text-6xl font-black tracking-tighter leading-none">Bio-Синхронизация</DialogTitle>
-              <p className="text-white/70 font-medium text-xl">Запишите показатели на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
-            </div>
+          <div className="relative z-10 space-y-2">
+            <DialogTitle className="text-3xl md:text-5xl font-black tracking-tighter leading-none">Bio-Синхронизация</DialogTitle>
+            <p className="text-white/70 font-medium text-sm md:text-lg">Запишите показатели на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
           </div>
-          <Zap className="absolute -right-24 -bottom-24 h-80 w-80 text-white/10 rotate-12" />
+          <Zap className="absolute -right-12 -bottom-12 h-40 w-40 text-white/10 rotate-12" />
         </DialogHeader>
         
-        <div className="p-16 space-y-16">
+        <div className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 md:space-y-12 no-scrollbar">
           {!mealResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 rounded-[3rem] h-24 bg-muted/60 p-3 mb-16 shadow-inner">
-                <TabsTrigger value="meal" className="rounded-[2.5rem] font-black gap-2 text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-primary flex-1 h-full"><Utensils className="h-4 w-4" /> ЕДА</TabsTrigger>
-                <TabsTrigger value="feeling" className="rounded-[2.5rem] font-black gap-2 text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-primary flex-1 h-full"><Smile className="h-4 w-4" /> ДУХ</TabsTrigger>
-                <TabsTrigger value="metrics" className="rounded-[2.5rem] font-black gap-2 text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-primary flex-1 h-full"><Scale className="h-4 w-4" /> ТЕЛО</TabsTrigger>
-                <TabsTrigger value="fasting" className="rounded-[2.5rem] font-black gap-2 text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-primary flex-1 h-full"><Timer className="h-4 w-4" /> ФАСТ</TabsTrigger>
-                <TabsTrigger value="labs" className="rounded-[2.5rem] font-black gap-2 text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-white data-[state=active]:text-primary flex-1 h-full"><FlaskConical className="h-4 w-4" /> ЛАБ</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 rounded-[2rem] h-16 md:h-20 bg-muted/60 p-2 mb-8 md:mb-12 shadow-inner">
+                <TabsTrigger value="meal" className="rounded-[1.5rem] font-black gap-1 text-[8px] md:text-[10px] uppercase tracking-widest flex-1 h-full"><Utensils className="h-3 w-3 md:h-4 md:w-4" /> ЕДА</TabsTrigger>
+                <TabsTrigger value="feeling" className="rounded-[1.5rem] font-black gap-1 text-[8px] md:text-[10px] uppercase tracking-widest flex-1 h-full"><Smile className="h-3 w-3 md:h-4 md:w-4" /> ДУХ</TabsTrigger>
+                <TabsTrigger value="metrics" className="rounded-[1.5rem] font-black gap-1 text-[8px] md:text-[10px] uppercase tracking-widest flex-1 h-full"><Scale className="h-3 w-3 md:h-4 md:w-4" /> ТЕЛО</TabsTrigger>
+                <TabsTrigger value="fasting" className="rounded-[1.5rem] font-black gap-1 text-[8px] md:text-[10px] uppercase tracking-widest flex-1 h-full"><Timer className="h-3 w-3 md:h-4 md:w-4" /> ФАСТ</TabsTrigger>
+                <TabsTrigger value="labs" className="rounded-[1.5rem] font-black gap-1 text-[8px] md:text-[10px] uppercase tracking-widest flex-1 h-full"><FlaskConical className="h-3 w-3 md:h-4 md:w-4" /> ЛАБ</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="meal" className="space-y-12 outline-none">
+              <TabsContent value="meal" className="space-y-6 md:space-y-8 outline-none">
                 <Textarea 
-                  placeholder="Опишите ваш прием пищи или добавьте фото..." 
+                  placeholder="Что вы съели?" 
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)} 
-                  className="min-h-[250px] rounded-[4rem] bg-primary/5 border-none p-14 text-3xl font-medium resize-none shadow-inner leading-relaxed" 
+                  className="min-h-[150px] md:min-h-[200px] rounded-[2rem] md:rounded-[3rem] bg-primary/5 border-none p-6 md:p-10 text-xl md:text-2xl font-medium resize-none shadow-inner" 
                 />
-                <div className="grid grid-cols-2 gap-10">
-                  <Button variant="outline" className="h-40 rounded-[3rem] border-dashed border-4 border-muted/50 flex flex-col gap-4 hover:bg-primary/5 transition-all" onClick={startCamera}>
-                    <Camera className="h-10 w-10 text-primary" /><span className="text-[12px] font-black">КАМЕРА</span>
+                <div className="grid grid-cols-2 gap-4 md:gap-8">
+                  <Button variant="outline" className="h-24 md:h-32 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all" onClick={startCamera}>
+                    <Camera className="h-6 w-6 md:h-8 md:w-8 text-primary" /><span className="text-[10px] font-black">КАМЕРА</span>
                   </Button>
                   <label className="cursor-pointer">
-                    <div className="h-40 rounded-[3rem] border-dashed border-4 border-muted/50 flex flex-col gap-4 items-center justify-center hover:bg-primary/5 transition-all">
-                      <Upload className="h-10 w-10 text-primary" /><span className="text-[12px] font-black">ФАЙЛ</span>
+                    <div className="h-24 md:h-32 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all">
+                      <Upload className="h-6 w-6 md:h-8 md:w-8 text-primary" /><span className="text-[10px] font-black">ФАЙЛ</span>
                     </div>
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   </label>
                 </div>
-                <Button className="w-full h-28 rounded-[3.5rem] text-3xl font-black bg-primary shadow-2xl transition-all hover:scale-[1.03]" onClick={() => handleSubmit(false)} disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-10 w-10" /> : <><Sparkles className="mr-6 h-10 w-10 text-accent" /> РАСПОЗНАТЬ ЕДУ</>}
+                <Button className="w-full h-16 md:h-24 rounded-[2rem] md:rounded-[3rem] text-xl md:text-2xl font-black bg-primary shadow-xl" onClick={() => handleSubmit(false)} disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Sparkles className="mr-4 h-6 w-6 md:h-8 md:w-8 text-accent" /> РАСПОЗНАТЬ</>}
                 </Button>
               </TabsContent>
 
-              <TabsContent value="feeling" className="space-y-16 outline-none">
-                 <div className="space-y-10">
-                    <label className="text-[14px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 px-6">Ваше настроение (Flo Style)</label>
-                    <div className="grid grid-cols-4 gap-6">
+              <TabsContent value="feeling" className="space-y-10 outline-none">
+                 <div className="space-y-8">
+                    <label className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-4">Настроение</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                        {['Счастлив', 'Спокоен', 'Устал', 'Раздражен'].map(m => (
                           <Button 
                              key={m} 
                              onClick={() => setMood(m)}
                              variant={mood === m ? "default" : "outline"}
-                             className="h-24 rounded-[2rem] font-black text-xl data-[state=active]:bg-primary"
+                             className="h-16 rounded-[1.5rem] font-black text-sm"
                           >
                              {m}
                           </Button>
                        ))}
                     </div>
-                    <div className="space-y-6 pt-10">
-                       <label className="text-[14px] font-black uppercase tracking-[0.5em] text-muted-foreground/40 px-6 flex justify-between">
-                          <span>Уровень энергии</span>
+                    <div className="space-y-4 pt-6">
+                       <label className="text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-4 flex justify-between">
+                          <span>Энергия</span>
                           <span className="text-primary">{energy}%</span>
                        </label>
-                       <div className="px-6">
+                       <div className="px-4">
                           <input 
                             type="range" 
-                            className="w-full h-4 bg-primary/10 rounded-full appearance-none accent-primary" 
+                            className="w-full h-2 bg-primary/10 rounded-full appearance-none accent-primary" 
                             value={energy} 
                             onChange={(e) => setEnergy(Number(e.target.value))}
                           />
                        </div>
                     </div>
                  </div>
-                 <Button className="w-full h-28 rounded-[3.5rem] text-3xl font-black bg-primary shadow-2xl transition-all" onClick={() => handleSubmit(false)}>СОХРАНИТЬ САМОЧУВСТВИЕ</Button>
+                 <Button className="w-full h-16 md:h-20 rounded-[2rem] text-xl font-black bg-primary mt-8" onClick={() => handleSubmit(false)}>СОХРАНИТЬ</Button>
               </TabsContent>
 
-              <TabsContent value="metrics" className="space-y-12 outline-none">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   <div className="space-y-4">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-muted-foreground/40 px-6">Вес (кг)</label>
+              <TabsContent value="metrics" className="space-y-8 outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="space-y-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 px-4">Вес (кг)</label>
                       <Input placeholder="76.2" value={weight} onChange={e => setWeight(e.target.value)} type="number" className={inputClasses} />
                    </div>
-                   <div className="space-y-4">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-muted-foreground/40 px-6">Вода (мл)</label>
+                   <div className="space-y-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 px-6">Вода (мл)</label>
                       <Input placeholder="500" value={water} onChange={e => setWater(e.target.value)} type="number" className={inputClasses} />
                    </div>
-                   <div className="space-y-4 col-span-full">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-muted-foreground/40 px-6">Шаги</label>
+                   <div className="space-y-2 col-span-full">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 px-6">Шаги</label>
                       <Input placeholder="10,000" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
                    </div>
                 </div>
-                <Button className="w-full h-28 rounded-[3.5rem] text-3xl font-black bg-primary shadow-2xl" onClick={() => handleSubmit(false)}>СИНХРОНИЗИРОВАТЬ</Button>
+                <Button className="w-full h-16 md:h-20 rounded-[2rem] text-xl font-black bg-primary" onClick={() => handleSubmit(false)}>ОБНОВИТЬ ТЕЛО</Button>
               </TabsContent>
-              {/* Другие вкладки остаются с аналогичным стилем... */}
             </Tabs>
           ) : (
-            <div className="py-20 flex flex-col items-center text-center space-y-12">
-               <div className="w-48 h-48 bg-primary rounded-full flex items-center justify-center shadow-2xl animate-in zoom-in">
-                  <CheckCircle2 className="h-24 w-24 text-white" />
+            <div className="py-12 flex flex-col items-center text-center space-y-8">
+               <div className="w-32 h-32 bg-primary rounded-full flex items-center justify-center shadow-xl animate-in zoom-in">
+                  <CheckCircle2 className="h-16 w-16 text-white" />
                </div>
-               <h3 className="text-5xl font-black tracking-tighter">Bio-Синхронизация завершена!</h3>
-               <Button className="w-72 h-20 rounded-[2rem] font-black text-2xl bg-primary shadow-2xl" onClick={reset}>ОТЛИЧНО</Button>
+               <h3 className="text-3xl font-black tracking-tighter">Bio-Синхронизация завершена!</h3>
+               <Button className="w-64 h-16 rounded-[1.5rem] font-black text-xl bg-primary" onClick={reset}>ОТЛИЧНО</Button>
             </div>
           )}
         </div>
