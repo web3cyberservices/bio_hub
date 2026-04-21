@@ -40,7 +40,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useDoc } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
@@ -70,7 +70,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
-  const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
   const { data: userData } = useDoc<any>(userDocRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -91,7 +95,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     },
   });
 
-  // Автозаполнение из профиля при загрузке
   useEffect(() => {
     if (userData) {
       form.reset({
@@ -134,7 +137,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     setLoading(true);
     try {
-      // Сохраняем профиль (с обязательным ID)
       if (firestore && user) {
         await setDoc(doc(firestore, 'users', user.uid), {
           ...values,

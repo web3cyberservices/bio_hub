@@ -12,7 +12,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,28 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, 
-  Scale, 
-  Ruler, 
-  Calendar, 
-  FlaskConical, 
   Save, 
   Loader2,
   Activity,
   Settings,
-  Camera,
-  Upload,
-  X,
-  FileText,
-  Image as ImageIcon,
-  Zap,
   Target
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useDoc } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 const profileSchema = z.object({
@@ -57,8 +45,6 @@ const profileSchema = z.object({
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
-  labResults: z.string().optional(),
-  labResultsFile: z.string().optional(),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -68,11 +54,12 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [labFile, setLabFile] = useState<string | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const userDocRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
   const { data: userData, isLoading: docLoading } = useDoc<any>(userDocRef);
 
   const form = useForm<ProfileValues>({
@@ -88,8 +75,6 @@ export function ProfileCabinet() {
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
       alcohol: 'не употребляю',
-      labResults: '',
-      labResultsFile: '',
     },
   });
 
@@ -106,70 +91,9 @@ export function ProfileCabinet() {
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
-        labResults: userData.labResults || '',
-        labResultsFile: userData.labResultsFile || '',
       });
-      if (userData.labResultsFile) {
-        setLabFile(userData.labResultsFile);
-      }
     }
   }, [userData, form]);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setLabFile(base64);
-        form.setValue('labResultsFile', base64);
-        setShowCamera(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const startCamera = async () => {
-    setShowCamera(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка камеры',
-        description: 'Не удалось получить доступ к камере.',
-      });
-      setShowCamera(false);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setShowCamera(false);
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        const base64 = canvas.toDataURL('image/jpeg');
-        setLabFile(base64);
-        form.setValue('labResultsFile', base64);
-        stopCamera();
-      }
-    }
-  };
 
   async function onSubmit(values: ProfileValues) {
     if (!user || !firestore || user.uid === 'public-user') {
@@ -185,7 +109,7 @@ export function ProfileCabinet() {
     try {
       await setDoc(doc(firestore, 'users', user.uid), {
         ...values,
-        id: user.uid, // ОБЯЗАТЕЛЬНО для соответствия правилам безопасности
+        id: user.uid,
         profileType: 'RegularUser',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
@@ -206,7 +130,7 @@ export function ProfileCabinet() {
     }
   }
 
-  if (docLoading) {
+  if (docLoading && user && user.uid !== 'public-user') {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
@@ -234,7 +158,6 @@ export function ProfileCabinet() {
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-              {/* Основные данные */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <User className="h-5 w-5 text-primary" />
@@ -256,7 +179,6 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Цели и Активность */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Target className="h-5 w-5 text-primary" />
@@ -294,7 +216,6 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Биометрия */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Activity className="h-5 w-5 text-primary" />
@@ -334,7 +255,6 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Привычки */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />

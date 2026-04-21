@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -33,39 +34,35 @@ export default function LandingDashboardPage() {
 
   const dateKey = useMemo(() => selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, [selectedDate]);
   
-  const recommendationRef = useMemo(() => {
-    if (!firestore || !user || !dateKey) return null;
+  const recommendationRef = useMemoFirebase(() => {
+    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
   const { data: recommendationDoc } = useDoc<any>(recommendationRef);
 
-  // Получаем логи еды за выбранный день
   const dietaryLogsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !dateKey) return null;
+    if (!firestore || !user || user.uid === 'public-user') return null;
     return query(
       collection(firestore, 'users', user.uid, 'dietaryLogs'),
       where('userId', '==', user.uid)
     );
-  }, [firestore, user, dateKey]);
+  }, [firestore, user]);
 
   const { data: logs } = useCollection<any>(dietaryLogsQuery);
 
-  // Получаем биометрические логи (Flo Style) за выбранный день
-  const dailyLogsRef = useMemo(() => {
-    if (!firestore || !user || !dateKey) return null;
+  const dailyLogsRef = useMemoFirebase(() => {
+    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user, dateKey]);
 
   const { data: dailyLogDoc } = useDoc<any>(dailyLogsRef);
 
-  // Фильтруем логи на стороне клиента для точности
   const todayLogs = useMemo(() => {
     if (!logs || !dateKey) return [];
-    return logs.filter(log => log.logDate.startsWith(dateKey));
+    return logs.filter(log => log.logDate && log.logDate.startsWith(dateKey));
   }, [logs, dateKey]);
 
-  // Агрегируем фактические данные
   const aggregatedActual = useMemo(() => {
     return todayLogs.reduce((acc, log) => ({
       calories: acc.calories + (log.calories || 0),
@@ -76,7 +73,7 @@ export default function LandingDashboardPage() {
   }, [todayLogs]);
 
   const handleDeleteLog = async (id: string) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || user.uid === 'public-user') return;
     await deleteDoc(doc(firestore, 'users', user.uid, 'dietaryLogs', id));
   };
 
@@ -98,9 +95,11 @@ export default function LandingDashboardPage() {
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
     setLocalResult(result);
-    if (firestore && user && dateKey) {
+    if (firestore && user && dateKey && user.uid !== 'public-user') {
       const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
       setDoc(docRef, {
+        id: dateKey,
+        userId: user.uid,
         date: dateKey,
         data: result,
         createdAt: new Date().toISOString()

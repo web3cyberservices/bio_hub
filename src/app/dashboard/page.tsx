@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -16,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
-import { useUser, useFirestore, useDoc, useAuth } from '@/firebase';
+import { useUser, useFirestore, useDoc, useAuth, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 
@@ -28,26 +29,24 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Определение даты на стороне клиента
   useEffect(() => {
     setSelectedDate(startOfToday());
   }, []);
 
-  // Перенаправление если не авторизован
   useEffect(() => {
-    if (!userLoading && !user) {
+    if (!userLoading && (!user || user.uid === 'public-user')) {
       router.push('/login');
     }
   }, [user, userLoading, router]);
 
   const dateKey = useMemo(() => selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null, [selectedDate]);
   
-  const recommendationRef = useMemo(() => {
-    if (!firestore || !user || !dateKey) return null;
+  const recommendationRef = useMemoFirebase(() => {
+    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
-  const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+  const { data: recommendationDoc, isLoading: loadingRec } = useDoc<any>(recommendationRef);
 
   const handleLogout = async () => {
     if (auth) {
@@ -75,10 +74,12 @@ export default function DashboardPage() {
   };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
-    if (!firestore || !user || !dateKey) return;
+    if (!firestore || !user || !dateKey || user.uid === 'public-user') return;
     
     const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
     setDoc(docRef, {
+      id: dateKey,
+      userId: user.uid,
       date: dateKey,
       data: result,
       createdAt: new Date().toISOString()
@@ -93,7 +94,6 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
-      {/* Липкий заголовок с Календарем */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-16 md:top-20 z-40 py-3 md:py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-1 md:gap-2 mx-auto">
@@ -156,7 +156,6 @@ export default function DashboardPage() {
 
       <main className="container mx-auto flex-1 px-4 py-8 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-10">
-          {/* Навигационные вкладки */}
           <div className="flex justify-center">
             <TabsList className="bg-white/60 backdrop-blur-md p-1.5 rounded-[2rem] h-16 md:h-20 border shadow-md max-w-2xl w-full">
               <TabsTrigger value="dashboard" className="rounded-[1.5rem] px-4 md:px-8 font-black uppercase tracking-widest text-[8px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
@@ -171,7 +170,7 @@ export default function DashboardPage() {
             </TabsList>
           </div>
 
-          {(loadingRec && user) ? (
+          {(loadingRec && user && user.uid !== 'public-user') ? (
             <div className="flex flex-col items-center justify-center py-24 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Загрузка данных...</p>
@@ -235,7 +234,6 @@ export default function DashboardPage() {
         </Tabs>
       </main>
 
-      {/* Чат с ИИ Специалистом */}
       <AISpecialistChat />
       
       <footer className="mt-20 border-t py-12 bg-white/50 backdrop-blur-md">

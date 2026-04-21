@@ -55,7 +55,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   useEffect(() => {
     if (!auth) {
-      // While auth is initializing, we can't determine the state.
       return;
     }
 
@@ -127,11 +126,7 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T & 
 
 export const useUser = (): UserHookResult => {
   const { user, isUserLoading, userError } = useFirebase();
-  
-  // Return the real user if logged in, otherwise return a guest object
-  // But components need to know if it's a real user to perform write operations.
   const finalUser = user || { uid: 'public-user', displayName: 'Гость' };
-  
   return { 
     user: finalUser, 
     loading: isUserLoading, 
