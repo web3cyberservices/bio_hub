@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -28,33 +29,32 @@ import {
   Save, 
   Loader2,
   Activity,
-  Target,
-  Mail,
   Fingerprint,
-  Heart,
   CalendarDays,
   Smartphone,
-  RefreshCw,
   Send,
   MessageCircle,
   BellRing,
   Stethoscope,
-  ShieldCheck,
-  Briefcase
+  Briefcase,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
   lastName: z.string().optional(),
   birthDate: z.string().optional(),
+  photoUrl: z.string().optional(),
   gender: z.enum(['мужской', 'женский']),
-  weight: z.coerce.number().positive('Вес обязателен').default(70),
-  height: z.coerce.number().positive('Рост обязателен').default(175),
+  weight: z.coerce.number().default(0),
+  height: z.coerce.number().default(0),
   activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
@@ -80,7 +80,6 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
@@ -95,9 +94,10 @@ export function ProfileCabinet() {
       firstName: '',
       lastName: '',
       birthDate: '1990-01-01',
+      photoUrl: '',
       gender: 'мужской',
-      weight: 70,
-      height: 175,
+      weight: 0,
+      height: 0,
       activityLevel: 'moderate',
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
@@ -116,9 +116,10 @@ export function ProfileCabinet() {
         firstName: userData.firstName || userData.displayName || '',
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '1990-01-01',
+        photoUrl: userData.photoUrl || '',
         gender: userData.gender === 'женский' ? 'женский' : 'мужской',
-        weight: userData.weight || 70,
-        height: userData.height || 175,
+        weight: userData.weight || 0,
+        height: userData.height || 0,
         activityLevel: userData.activityLevel || 'moderate',
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
@@ -133,6 +134,7 @@ export function ProfileCabinet() {
   }, [userData, form]);
 
   const profileTypeValue = form.watch('profileType');
+  const photoUrlValue = form.watch('photoUrl');
   const birthDateValue = form.watch('birthDate') || '1990-01-01';
   const [currentYear, currentMonth, currentDay] = birthDateValue.split('-');
 
@@ -195,8 +197,12 @@ export function ProfileCabinet() {
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
-          <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+        <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
+          {photoUrlValue ? (
+            <Image src={photoUrlValue} alt="Profile" width={64} height={64} className="object-cover w-full h-full" />
+          ) : (
+            <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          )}
         </div>
         <div>
           <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground leading-none">Личный кабинет</h2>
@@ -238,19 +244,46 @@ export function ProfileCabinet() {
           </CardContent>
         </Card>
 
-        <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
-          <CardContent className="p-8 text-center space-y-4">
-             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
-             <h3 className="font-black text-lg tracking-tight">Bio-Sync</h3>
-             <Button onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
-          </CardContent>
-        </Card>
+        {profileTypeValue === 'user' && (
+          <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
+            <CardContent className="p-8 text-center space-y-4">
+               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
+               <h3 className="font-black text-lg tracking-tight">Bio-Sync</h3>
+               <Button onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-4">
+                   <ImageIcon className="h-5 w-5 text-primary" />
+                   <h3 className="text-lg font-black uppercase tracking-tight">Фото профиля</h3>
+                </div>
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                   <div className="w-32 h-32 rounded-[2rem] bg-primary/5 border-2 border-dashed border-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
+                      {photoUrlValue ? (
+                        <Image src={photoUrlValue} alt="Preview" width={128} height={128} className="object-cover w-full h-full" />
+                      ) : (
+                        <Camera className="h-10 w-10 text-primary/20" />
+                      )}
+                   </div>
+                   <div className="flex-1 w-full space-y-2">
+                      <FormField control={form.control} name="photoUrl" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Ссылка на фото (URL)</FormLabel>
+                          <FormControl><Input placeholder="https://..." {...field} className={inputClasses} /></FormControl>
+                          <p className="text-[9px] text-muted-foreground px-4 italic">Загрузите фото на любой хостинг и вставьте ссылку сюда.</p>
+                        </FormItem>
+                      )} />
+                   </div>
+                </div>
+              </div>
+
               {profileTypeValue === 'specialist' && (
                 <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                   <div className="flex items-center gap-2 border-b pb-4">
@@ -306,23 +339,25 @@ export function ProfileCabinet() {
                 </FormItem>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3></div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-                  <FormField control={form.control} name="gender" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Пол</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="weight" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                  )} />
-                  <FormField control={form.control} name="height" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                  )} />
+              {profileTypeValue === 'user' && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3></div>
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                    <FormField control={form.control} name="gender" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Пол</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="weight" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name="height" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                    )} />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl">
                 {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить данные</>}
@@ -335,13 +370,13 @@ export function ProfileCabinet() {
       <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
         <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary">
+          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
-            <Badge variant="outline" className="text-[7px]">OFF</Badge>
+            <Badge variant="outline" className="text-[7px]">Привязать</Badge>
           </Button>
-          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary">
+          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
-            <Badge variant="outline" className="text-[7px]">OFF</Badge>
+            <Badge variant="outline" className="text-[7px]">Привязать</Badge>
           </Button>
         </div>
       </Card>

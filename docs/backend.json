@@ -12,6 +12,7 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "displayName": { "type": "string" },
+        "photoUrl": { "type": "string", "description": "URL of the professional profile photo." },
         "birthDate": { "type": "string", "format": "date", "description": "User's date of birth." },
         "gender": { "type": "string" },
         "age": { "type": "number" },
@@ -27,7 +28,7 @@
         "dislikedFoods": { "type": "string" },
         "dateJoined": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "email", "firstName", "profileType"]
+      "required": ["id", "firstName", "profileType"]
     },
     "SpecialistPost": {
       "title": "SpecialistPost",
@@ -37,11 +38,14 @@
         "authorId": { "type": "string" },
         "authorName": { "type": "string" },
         "authorRole": { "type": "string" },
+        "authorPhoto": { "type": "string" },
         "content": { "type": "string" },
         "imageUrl": { "type": "string" },
         "likes": { "type": "number" },
+        "likedBy": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who liked the post." },
         "createdAt": { "type": "string", "format": "date-time" }
-      }
+      },
+      "required": ["id", "authorId", "content", "createdAt"]
     },
     "DailyLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",

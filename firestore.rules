@@ -1,13 +1,10 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
      * NUTRIPATH AI SECURITY RULES
-     * 
-     * Core Philosophy: 
-     * This ruleset enforces a strict hierarchical user-ownership model. Every piece of data 
-     * in the system is logically and physically nested under a specific user's document path.
      */
 
     // --- Helper Functions ---
@@ -24,48 +21,43 @@ service cloud.firestore {
       return isOwner(userId) && resource != null;
     }
 
+    function isSpecialist() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
+    }
+
     // --- Collection Rules ---
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn(); // Allow reading other profiles for feed
       allow list: if false; 
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
 
       match /dailyLogs/{dailyLogId} {
         allow get, list: if isOwner(userId);
         allow create, update: if isOwner(userId);
-        allow delete: if isExistingOwner(userId);
-      }
-
-      match /healthDataInputs/{healthDataInputId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /dietaryLogs/{dietaryLogId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
-      }
-
-      match /labResults/{labResultId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
       }
 
       match /recommendations/{recommendationId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
       }
+    }
+
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSpecialist();
+      allow update: if isSignedIn(); // Allow liking (updating likedBy and likes count)
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
   }
 }

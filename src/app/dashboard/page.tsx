@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,9 +11,10 @@ import { Button } from '@/components/ui/button';
 import { 
   ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
-  HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck 
+  HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
+  ThumbsUp, Share2
 } from 'lucide-react';
-import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
+import { format, addDays, startOfToday, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,8 +22,8 @@ import { Badge } from '@/components/ui/badge';
 import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, setDoc, collection, query, orderBy, arrayUnion, arrayRemove, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
 import { ProfileCabinet } from '@/components/profile-cabinet';
@@ -29,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { CreatePostDialog } from '@/components/create-post-dialog';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -39,7 +42,6 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedSpecialist, setSelectedSpecialist] = useState<any>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -72,20 +74,28 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user, dateKey]);
 
+  // Feed Collection
+  const postsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
+
   const { data: userData, isLoading: profileLoading } = useDoc<any>(userDocRef);
   const { data: recommendationDoc, isLoading: loadingRec } = useDoc<any>(recommendationRef);
   const { data: dailyLogDoc, isLoading: loadingLogs } = useDoc<any>(dailyLogRef);
+  const { data: posts } = useCollection<any>(postsQuery);
 
   const profileType = userData?.profileType || 'user';
 
-  // Синхронизация активной вкладки при смене типа профиля
   useEffect(() => {
-    if (profileType === 'specialist' && (activeTab === 'dashboard' || activeTab === 'meals' || activeTab === 'specialists')) {
-      setActiveTab('my-feed');
-    } else if (profileType === 'user' && (activeTab === 'my-feed' || activeTab === 'appointments' || activeTab === 'chats')) {
-      setActiveTab('dashboard');
+    if (isMounted) {
+      if (profileType === 'specialist' && (activeTab === 'dashboard' || activeTab === 'meals' || activeTab === 'specialists')) {
+        setActiveTab('my-feed');
+      } else if (profileType === 'user' && (activeTab === 'my-feed' || activeTab === 'appointments' || activeTab === 'chats')) {
+        setActiveTab('specialists');
+      }
     }
-  }, [profileType]);
+  }, [profileType, isMounted]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -105,6 +115,21 @@ export default function DashboardPage() {
       setActiveTab("dashboard");
     } catch (error) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
+    }
+  };
+
+  const handleLike = async (postId: string, likedBy: string[]) => {
+    if (!firestore || !user || user.uid === 'public-user') return;
+    const isLiked = likedBy?.includes(user.uid);
+    const postRef = doc(firestore, 'posts', postId);
+    
+    try {
+      await updateDoc(postRef, {
+        likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
+        likes: isLiked ? (likedBy.length - 1) : (likedBy.length + 1)
+      });
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -201,34 +226,133 @@ export default function DashboardPage() {
               {/* User Content */}
               <TabsContent value="specialists" className="mt-0 outline-none">
                 <div className="space-y-12">
-                   <div className="flex items-center gap-3 md:gap-4">
-                      <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div>
-                      <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Советы специалистов</h2><p className="text-muted-foreground text-[10px] md:text-base">Ваш ИИ-консилиум.</p></div>
+                   <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div>
+                        <div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Советы и Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Ваш ИИ-консилиум и экспертные знания.</p></div>
+                      </div>
                    </div>
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {['Др. Ария', 'Др. Кай', 'Др. Сола'].map((name, i) => (
-                        <Card key={i} className="premium-card p-8 space-y-6">
-                           <div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center"><User className="h-6 w-6 text-primary" /></div><h4 className="font-black">{name}</h4></div>
-                           <p className="text-sm italic text-muted-foreground">"Ваши показатели в норме. Рекомендую продолжать в том же духе."</p>
-                        </Card>
-                      ))}
-                   </div>
+
+                   <Tabs defaultValue="knowledge" className="w-full">
+                      <TabsList className="bg-transparent border-b rounded-none h-auto p-0 gap-8 mb-8">
+                         <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>
+                         <TabsTrigger value="knowledge" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">Лента знаний</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="ai" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                        {[
+                          { name: 'Др. Ария', role: 'Нутрициолог', icon: Utensils, bg: 'bg-orange-50', color: 'text-orange-500' },
+                          { name: 'Др. Кай', role: 'Биохакер', icon: Brain, bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                          { name: 'Др. Сола', role: 'Сомнолог', icon: HeartPulse, bg: 'bg-indigo-50', color: 'text-indigo-500' }
+                        ].map((spec, i) => (
+                          <Card key={i} className="premium-card overflow-hidden">
+                            <CardContent className="p-8 space-y-6">
+                               <div className="flex items-center gap-4">
+                                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", spec.bg)}>
+                                     <spec.icon className={cn("h-7 w-7", spec.color)} />
+                                  </div>
+                                  <div>
+                                     <h4 className="font-black text-lg">{spec.name}</h4>
+                                     <Badge variant="outline" className="text-[7px] md:text-[8px] uppercase tracking-widest border-primary/20 text-primary/60">{spec.role}</Badge>
+                                  </div>
+                               </div>
+                               <p className="text-sm italic text-muted-foreground leading-relaxed">"На основе ваших данных по шагам и сну, я рекомендую увеличить потребление магния вечером."</p>
+                               <Button variant="ghost" className="w-full rounded-xl bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all">Подробнее</Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </TabsContent>
+
+                      <TabsContent value="knowledge" className="max-w-3xl mx-auto space-y-8 pt-4">
+                         {posts?.map((post) => (
+                           <Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl">
+                              <div className="p-6 md:p-8 space-y-6">
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                       <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/10">
+                                          {post.authorPhoto ? (
+                                            <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover w-full h-full" />
+                                          ) : (
+                                            <User className="h-6 w-6 text-primary" />
+                                          )}
+                                       </div>
+                                       <div>
+                                          <h4 className="font-black text-base">{post.authorName}</h4>
+                                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{post.authorRole}</p>
+                                       </div>
+                                    </div>
+                                    <p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p>
+                                 </div>
+                                 <div className="space-y-4">
+                                    <p className="text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                                    {post.imageUrl && (
+                                       <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl">
+                                          <Image src={post.imageUrl} alt="Post" fill className="object-cover" />
+                                       </div>
+                                    )}
+                                 </div>
+                                 <div className="flex items-center gap-6 pt-4 border-t">
+                                    <Button 
+                                      variant="ghost" 
+                                      className={cn("rounded-full px-6 gap-2 transition-all", post.likedBy?.includes(user.uid) ? "text-primary bg-primary/10" : "text-muted-foreground")}
+                                      onClick={() => handleLike(post.id, post.likedBy || [])}
+                                    >
+                                       <ThumbsUp className={cn("h-4 w-4", post.likedBy?.includes(user.uid) && "fill-primary")} /> 
+                                       <span className="font-black text-xs">{post.likes || 0}</span>
+                                    </Button>
+                                    <Button variant="ghost" className="rounded-full px-6 gap-2 text-muted-foreground"><Share2 className="h-4 w-4" /></Button>
+                                 </div>
+                              </div>
+                           </Card>
+                         ))}
+                         {(!posts || posts.length === 0) && (
+                           <Card className="premium-card p-20 text-center border-dashed border-2">
+                             <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Лента пока пуста</p>
+                           </Card>
+                         )}
+                      </TabsContent>
+                   </Tabs>
                 </div>
               </TabsContent>
 
               <TabsContent value="dashboard" className="mt-0 outline-none">
-                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} /> : <div className="text-center py-20"><RecommendationForm onResult={handleResult} selectedDate={selectedDate!} /></div>}
+                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} /> : <div className="text-center py-20 flex flex-col items-center gap-8">
+                  <div className="space-y-2">
+                    <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
+                    <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                  </div>
+                  <RecommendationForm onResult={handleResult} selectedDate={selectedDate!} />
+                </div>}
               </TabsContent>
 
               <TabsContent value="meals" className="mt-0 outline-none">
-                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют.</div>}
+                {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20">Данные отсутствуют. Заполните анкету в Дашборде.</div>}
               </TabsContent>
 
               {/* Specialist Content */}
               <TabsContent value="my-feed" className="mt-0 outline-none">
                 <div className="max-w-4xl mx-auto space-y-10">
-                   <div className="flex items-center justify-between"><h2 className="text-3xl font-black tracking-tighter">Мои публикации</h2><Button className="rounded-2xl bg-primary gap-2"><Plus className="h-4 w-4" /> Новый пост</Button></div>
-                   <Card className="premium-card p-12 text-center text-muted-foreground border-dashed border-2">У вас пока нет активных публикаций. Начните делиться знаниями!</Card>
+                   <div className="flex items-center justify-between">
+                      <h2 className="text-3xl font-black tracking-tighter">Мои публикации</h2>
+                      <CreatePostDialog />
+                   </div>
+                   <div className="space-y-6">
+                      {posts?.filter(p => p.authorId === user.uid).map(post => (
+                        <Card key={post.id} className="premium-card overflow-hidden">
+                           <div className="p-8 space-y-6">
+                              <div className="flex justify-between items-start">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(new Date(post.createdAt), 'd MMMM yyyy, HH:mm', { locale: ru })}</p>
+                                <Badge variant="outline" className="text-[9px] border-primary/20 text-primary">{post.likes || 0} Лайков</Badge>
+                              </div>
+                              <p className="text-lg font-medium leading-relaxed">{post.content}</p>
+                              {post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden"><Image src={post.imageUrl} alt="Post image" fill className="object-cover" /></div>}
+                           </div>
+                        </Card>
+                      ))}
+                      {(!posts || posts.filter(p => p.authorId === user.uid).length === 0) && (
+                        <Card className="premium-card p-20 text-center text-muted-foreground border-dashed border-2">У вас пока нет активных публикаций. Начните делиться знаниями!</Card>
+                      )}
+                   </div>
                 </div>
               </TabsContent>
 
