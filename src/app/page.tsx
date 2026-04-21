@@ -6,7 +6,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles, Settings, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -46,11 +46,18 @@ export default function LandingDashboardPage() {
     return query(
       collection(firestore, 'users', user.uid, 'dietaryLogs'),
       where('userId', '==', user.uid)
-      // Здесь можно добавить фильтр по дате, если структура позволяет
     );
   }, [firestore, user, dateKey]);
 
   const { data: logs } = useCollection<any>(dietaryLogsQuery);
+
+  // Получаем биометрические логи (Flo Style) за выбранный день
+  const dailyLogsRef = useMemo(() => {
+    if (!firestore || !user || !dateKey) return null;
+    return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+  }, [firestore, user, dateKey]);
+
+  const { data: dailyLogDoc } = useDoc<any>(dailyLogsRef);
 
   // Фильтруем логи на стороне клиента для точности
   const todayLogs = useMemo(() => {
@@ -58,7 +65,7 @@ export default function LandingDashboardPage() {
     return logs.filter(log => log.logDate.startsWith(dateKey));
   }, [logs, dateKey]);
 
-  // Агрегируем данные из логов
+  // Агрегируем данные из логов еды
   const aggregatedActual = useMemo(() => {
     return todayLogs.reduce((acc, log) => ({
       calories: acc.calories + (log.calories || 0),
@@ -181,12 +188,18 @@ export default function LandingDashboardPage() {
                         <p className="text-muted-foreground text-sm md:text-xl font-medium px-1">Биометрический анализ на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
                      </div>
                   </div>
-                  {/* Передаем агрегированные фактические данные в RecommendationDisplay */}
+                  {/* Передаем агрегированные фактические данные из еды и носимых устройств */}
                   <RecommendationDisplay 
                     data={{
                       ...currentResult,
-                      macros: aggregatedActual.calories > 0 ? aggregatedActual : currentResult.macros
+                      macros: {
+                        calories: aggregatedActual.calories || currentResult.macros.calories,
+                        protein: aggregatedActual.protein || currentResult.macros.protein,
+                        fat: aggregatedActual.fat || currentResult.macros.fat,
+                        carbs: aggregatedActual.carbs || currentResult.macros.carbs,
+                      }
                     }} 
+                    deviceData={dailyLogDoc}
                     mode="dashboard" 
                   />
                 </div>
