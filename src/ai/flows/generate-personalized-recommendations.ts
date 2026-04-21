@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Использует Gemini 1.5 Flash для стабильности и корректного отображения КБЖУ.
+ * Использует Gemini 2.5 Flash для глубокого анализа биометрии.
  */
 
 import {ai} from '@/ai/genkit';
@@ -76,10 +76,10 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageId: z.string().describe('ID из списка изображений (например: breakfast-omelette).'),
+      imageId: z.string().describe('ID из списка изображений (например: lunch-salmon).'),
       components: z.array(z.object({
         ingredient: z.string().describe('Название ингредиента'),
-        weight: z.string().describe('Вес с единицами измерения, например "250г"')
+        weight: z.string().describe('Вес с единицами измерения, например "200г"')
       })).describe('Разбивка блюда на компоненты.')
     }))
   })),
@@ -110,7 +110,7 @@ breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-s
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
 Контекст:
-{{{weight}}}кг, {{{height}}}см, {{{age}}} лет. Цель: {{{healthGoal}}}.
+Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}.
 {{#if deviceData}}Шаги: {{deviceData.steps}}, Сон: {{deviceData.sleepDurationHours}}ч.{{/if}}`,
 });
 
@@ -122,7 +122,7 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await recommendationPrompt(input, {
-      model: googleAI.model('gemini-1.5-flash'),
+      model: googleAI.model('gemini-2.5-flash'),
     });
     if (!output) throw new Error('Модель вернула пустой результат');
     return output;

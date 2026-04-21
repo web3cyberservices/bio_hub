@@ -2,31 +2,41 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 /**
- * Инициализация Firebase SDK.
- * Приоритет отдается локальному конфигу для стабильности в Studio.
+ * BioTech Hub Firebase SDK Initialization
+ * Обеспечивает надежное соединение с Google Cloud сервисами.
  */
-export function initializeFirebase() {
-  let firebaseApp: FirebaseApp;
 
-  if (!getApps().length) {
-    // В Studio всегда используем предоставленный конфиг для надежности соединения
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    firebaseApp = getApp();
+let app: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+
+export function initializeFirebase() {
+  if (typeof window !== 'undefined') {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
+    }
+
+    auth = getAuth(app);
+    firestore = getFirestore(app);
+
+    return {
+      firebaseApp: app,
+      auth,
+      firestore
+    };
   }
 
-  return getSdks(firebaseApp);
-}
-
-export function getSdks(firebaseApp: FirebaseApp) {
+  // Fallback для SSR
   return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firebaseApp: null as any,
+    auth: null as any,
+    firestore: null as any
   };
 }
 
