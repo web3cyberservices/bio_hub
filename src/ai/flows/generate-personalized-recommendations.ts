@@ -1,10 +1,11 @@
 'use server';
 /**
- * @fileOverview Поток Genkit для генерации персонализированных рекомендаций по питанию и образу жизни.
- * Добавлена логика повторных попыток (retry), строгая фильтрация изображений и детальная разбивка блюд.
+ * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
+ * Использует Gemini 1.5 Flash для стабильности.
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const GenerateRecommendationsInputSchema = z.object({
@@ -95,6 +96,12 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
+  config: {
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  },
   prompt: `Вы — ИИ-биохакер и нутрициолог. Создайте глубокий аналитический отчет.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
@@ -124,12 +131,15 @@ const generateRecommendationsFlow = ai.defineFlow(
     let lastError;
     for (let i = 0; i < 3; i++) {
       try {
-        const {output} = await recommendationPrompt(input);
+        const {output} = await recommendationPrompt(input, {
+          model: googleAI.model('gemini-1.5-flash'), // Принудительно 1.5 Flash
+        });
         if (!output) throw new Error('Model failed to generate valid output');
         return output;
       } catch (err: any) {
         lastError = err;
-        if (err.message?.includes('503') || err.status === 503) {
+        console.error(`Attempt ${i + 1} failed:`, err.message);
+        if (err.message?.includes('503') || err.status === 503 || err.message?.includes('thought_signature')) {
           await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
           continue;
         }

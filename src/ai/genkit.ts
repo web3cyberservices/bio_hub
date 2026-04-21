@@ -3,11 +3,11 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * Инициализация Genkit с использованием Google AI плагина.
- * Настроено на модель gemini-1.5-flash по запросу пользователя.
+ * Модель принудительно установлена на gemini-1.5-flash для предотвращения ошибок thought_signature.
  */
 export const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAI.model('gemini-1.5-flash'),
 });
 
 export {z} from 'genkit';
