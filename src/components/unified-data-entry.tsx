@@ -168,14 +168,14 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[95vw] md:max-w-[700px] lg:max-w-[800px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[95vh] flex flex-col">
-        <DialogHeader className="p-6 md:p-10 bg-primary text-white relative overflow-hidden shrink-0">
+      <DialogContent className="w-[95vw] md:max-w-[700px] lg:max-w-[800px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl max-h-[90vh] flex flex-col z-[1001]">
+        <DialogHeader className="p-5 md:p-8 bg-primary text-white relative overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#163D25] opacity-95" />
-          <div className="relative z-10 space-y-1">
-            <DialogTitle className="text-2xl md:text-4xl font-black tracking-tighter leading-none">Bio-Синхронизация</DialogTitle>
-            <p className="text-white/70 font-medium text-xs md:text-base">Запишите показатели на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
+          <div className="relative z-10 space-y-0.5">
+            <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter leading-none">Bio-Синхронизация</DialogTitle>
+            <p className="text-white/70 font-medium text-[10px] md:text-sm">Запишите показатели на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
           </div>
-          <Zap className="absolute -right-8 -bottom-8 h-32 w-32 text-white/10 rotate-12" />
+          <Zap className="absolute -right-6 -bottom-6 h-24 w-24 text-white/10 rotate-12" />
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar">
