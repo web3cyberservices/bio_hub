@@ -48,19 +48,21 @@ import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
   lastName: z.string().optional(),
   birthDate: z.string().optional(),
   photoUrl: z.string().optional(),
-  gender: z.enum(['мужской', 'женский']),
-  weight: z.coerce.number().default(0),
-  height: z.coerce.number().default(0),
-  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
-  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
-  smoking: z.enum(['да', 'нет']),
-  alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
+  gender: z.enum(['мужской', 'женский']).default('мужской'),
+  weight: z.coerce.number().optional().default(0),
+  height: z.coerce.number().optional().default(0),
+  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']).default('moderate'),
+  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']).default('поддержать текущее состояние'),
+  smoking: z.enum(['да', 'нет']).default('нет'),
+  alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).default('не употребляю'),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
   profileType: z.enum(['user', 'specialist']).default('user'),
@@ -120,7 +122,7 @@ export function ProfileCabinet() {
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '1990-01-01',
         photoUrl: userData.photoUrl || '',
-        gender: userData.gender === 'женский' ? 'женский' : 'мужской',
+        gender: userData.gender || 'мужской',
         weight: userData.weight || 0,
         height: userData.height || 0,
         activityLevel: userData.activityLevel || 'moderate',
@@ -144,11 +146,11 @@ export function ProfileCabinet() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit for document storage in MVP
+      if (file.size > 1024 * 1024) {
         toast({
           variant: 'destructive',
           title: 'Файл слишком большой',
-          description: 'Пожалуйста, выберите фото до 1 МБ для корректного сохранения.',
+          description: 'Пожалуйста, выберите фото до 1 МБ.',
         });
         return;
       }
@@ -198,26 +200,44 @@ export function ProfileCabinet() {
     return age;
   };
 
-  async function onSubmit(values: ProfileValues) {
+  const onSubmit = async (values: ProfileValues) => {
     if (!user || !firestore || user.uid === 'public-user') return;
+    
     setLoading(true);
-    try {
-      const age = calculateAge(values.birthDate || '1990-01-01');
-      const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(userRef, {
-        ...values,
-        age,
-        id: user.uid,
-        email: (user as any).email || null,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-      toast({ title: 'Данные сохранены', description: 'Ваш био-профиль успешно обновлен.' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
-    } finally {
-      setLoading(false);
-    }
-  }
+    const age = calculateAge(values.birthDate || '1990-01-01');
+    const userRef = doc(firestore, 'users', user.uid);
+    const dataToSave = {
+      ...values,
+      age,
+      id: user.uid,
+      email: (user as any).email || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setDoc(userRef, dataToSave, { merge: true })
+      .then(() => {
+        setLoading(false);
+        toast({ title: 'Данные сохранены', description: 'Ваш био-профиль успешно обновлен.' });
+      })
+      .catch(async (error) => {
+        setLoading(false);
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'update',
+          requestResourceData: dataToSave,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  };
+
+  const onInvalid = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    toast({
+      variant: 'destructive',
+      title: 'Ошибка заполнения',
+      description: firstError?.message || 'Проверьте правильность введенных данных.',
+    });
+  };
 
   const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all";
   const textareaClasses = "min-h-[120px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
@@ -280,7 +300,7 @@ export function ProfileCabinet() {
             <CardContent className="p-8 text-center space-y-4">
                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
                <h3 className="font-black text-lg tracking-tight">Bio-Sync</h3>
-               <Button onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
+               <Button type="button" onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
             </CardContent>
           </Card>
         )}
@@ -289,7 +309,7 @@ export function ProfileCabinet() {
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-12">
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                    <ImageIcon className="h-5 w-5 text-primary" />
@@ -335,7 +355,7 @@ export function ProfileCabinet() {
                           onChange={handleImageUpload} 
                         />
                         <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic md:col-span-2">
-                          Рекомендуется квадратное фото до 1 МБ. Оно будет отображаться в ленте советов и вашем профиле.
+                          Рекомендуется квадратное фото до 1 МБ.
                         </p>
                       </div>
                    </div>
@@ -351,7 +371,7 @@ export function ProfileCabinet() {
                   <div className="grid gap-6">
                     <FormField control={form.control} name="specialization" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация (например: Спортивный врач)</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация</FormLabel>
                         <FormControl><Input placeholder="Ваша роль..." {...field} className={inputClasses} /></FormControl>
                       </FormItem>
                     )} />
@@ -430,11 +450,11 @@ export function ProfileCabinet() {
       <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
         <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
+          <Button variant="outline" type="button" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
             <Badge variant="outline" className="text-[7px]">Привязать</Badge>
           </Button>
-          <Button variant="outline" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
+          <Button variant="outline" type="button" className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]">
             <div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div>
             <Badge variant="outline" className="text-[7px]">Привязать</Badge>
           </Button>
