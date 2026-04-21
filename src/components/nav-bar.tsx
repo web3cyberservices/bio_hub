@@ -7,7 +7,8 @@ import { useUser } from '@/firebase';
 
 export function NavBar() {
   const { user } = useUser();
-  const isGuest = !user || user.uid === 'public-user';
+  // Считаем гостем, если пользователя нет, если это public-user или если это анонимный вход (тестовый)
+  const isGuest = !user || user.uid === 'public-user' || (user as any).isAnonymous;
 
   return (
     <nav className="sticky top-0 z-[100] w-full bg-primary border-b border-white/10 shadow-xl">
@@ -17,26 +18,26 @@ export function NavBar() {
             <Activity className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="flex flex-col">
-            <span className="font-headline text-base md:text-xl font-black tracking-tighter leading-none text-white">
+            <span className="font-headline text-sm md:text-xl font-black tracking-tighter leading-none text-white">
               PRO <span className="text-white/80">Себя</span>
             </span>
-            <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.4em] text-white/50">
+            <span className="text-[5px] md:text-[8px] font-black uppercase tracking-[0.4em] text-white/50">
               BioTech
             </span>
           </div>
         </Link>
         
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-1.5 md:gap-4">
            {isGuest ? (
-             <div className="flex items-center gap-2">
-                <Button asChild variant="ghost" className="rounded-xl font-black uppercase tracking-widest text-[8px] md:text-[10px] h-9 px-2 md:px-4 text-white hover:text-white hover:bg-white/10 border-none">
-                  <Link href="/login" className="flex items-center gap-1.5">
-                    <LogIn className="h-3.5 w-3.5" /> <span className="hidden xs:inline">Войти</span>
+             <div className="flex items-center gap-1.5 md:gap-2">
+                <Button asChild variant="ghost" className="rounded-xl font-black uppercase tracking-widest text-[7px] md:text-[10px] h-8 md:h-10 px-2 md:px-4 text-white hover:text-white hover:bg-white/10 border-none">
+                  <Link href="/login" className="flex items-center gap-1">
+                    <LogIn className="h-3 w-3 md:h-4 md:w-4" /> <span>Войти</span>
                   </Link>
                 </Button>
-                <Button asChild className="rounded-xl font-black uppercase tracking-widest text-[8px] md:text-[10px] h-9 px-3 md:px-5 bg-white text-primary shadow-lg hover:bg-white/90 border-none">
-                  <Link href="/register" className="flex items-center gap-1.5">
-                    <UserPlus className="h-3.5 w-3.5" /> Регистрация
+                <Button asChild className="rounded-xl font-black uppercase tracking-widest text-[7px] md:text-[10px] h-8 md:h-10 px-2 md:px-5 bg-white text-primary shadow-lg hover:bg-white/90 border-none">
+                  <Link href="/register" className="flex items-center gap-1">
+                    <UserPlus className="h-3 w-3 md:h-4 md:w-4" /> <span>Регистрация</span>
                   </Link>
                 </Button>
              </div>
@@ -47,7 +48,7 @@ export function NavBar() {
              </Link>
            )}
            
-           <div className="hidden md:flex w-10 h-10 rounded-full bg-white/10 border border-white/10 items-center justify-center shrink-0">
+           <div className="hidden lg:flex w-10 h-10 rounded-full bg-white/10 border border-white/10 items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5 text-white/40" />
            </div>
         </div>
