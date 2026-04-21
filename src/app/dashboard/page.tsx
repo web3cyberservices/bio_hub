@@ -34,6 +34,8 @@ import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ChatInterface } from '@/components/chat-interface';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -77,7 +79,6 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user, dateKey]);
 
-  // Feed Collection
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -97,77 +98,85 @@ export default function DashboardPage() {
     }
   };
 
-  const handleResult = async (result: GenerateRecommendationsOutput) => {
+  const handleResult = (result: GenerateRecommendationsOutput) => {
     if (!firestore || !user || !dateKey || user.uid === 'public-user') return;
-    try {
-      const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
-      await setDoc(docRef, {
-        id: dateKey, userId: user.uid, date: dateKey, data: result, createdAt: new Date().toISOString()
-      }, { merge: true });
-      toast({ title: 'Анализ готов', description: 'Ваш био-отчет успешно сформирован.' });
-      setActiveTab("dashboard");
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
-    }
+    const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+    const data = {
+      id: dateKey, userId: user.uid, date: dateKey, data: result, createdAt: new Date().toISOString()
+    };
+    
+    setDoc(docRef, data, { merge: true }).catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'write',
+        requestResourceData: data,
+      }));
+    });
+    
+    toast({ title: 'Анализ готов', description: 'Ваш био-отчет успешно сформирован.' });
+    setActiveTab("dashboard");
   };
 
-  const handleLike = async (postId: string, likedBy: string[]) => {
+  const handleLike = (postId: string, likedBy: string[]) => {
     if (!firestore || !user || user.uid === 'public-user') return;
     const isLiked = likedBy?.includes(user.uid);
     const postRef = doc(firestore, 'posts', postId);
     
-    try {
-      await updateDoc(postRef, {
-        likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
-        likes: isLiked ? (likedBy.length - 1) : (likedBy.length + 1)
-      });
-    } catch (e) {
-      console.error(e);
-    }
+    const data = {
+      likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
+      likes: isLiked ? Math.max(0, (likedBy?.length || 1) - 1) : ((likedBy?.length || 0) + 1)
+    };
+
+    updateDoc(postRef, data).catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: postRef.path,
+        operation: 'update',
+        requestResourceData: data,
+      }));
+    });
   };
 
-  const openSpecialistProfile = async (authorId: string) => {
+  const openSpecialistProfile = (authorId: string) => {
     if (!firestore) return;
-    try {
-      const authorPost = posts?.find(p => p.authorId === authorId);
-      if (authorPost) {
-        setViewingSpecialist({
-          id: authorId,
-          name: authorPost.authorName,
-          role: authorPost.authorRole,
-          photo: authorPost.authorPhoto,
-          bio: "Эксперт платформы PRO Себя. Специализируется на функциональном подходе к здоровью и долголетию.",
-          rating: 4.9,
-          reviews: 124
-        });
-      }
-    } catch (e) {
-      console.error(e);
+    const authorPost = posts?.find(p => p.authorId === authorId);
+    if (authorPost) {
+      setViewingSpecialist({
+        id: authorId,
+        name: authorPost.authorName,
+        role: authorPost.authorRole,
+        photo: authorPost.authorPhoto,
+        bio: "Эксперт платформы PRO Себя. Специализируется на функциональном подходе к здоровью и долголетию.",
+        rating: 4.9,
+        reviews: 124
+      });
     }
   };
 
-  const handleStartChat = async () => {
+  const handleStartChat = () => {
     if (!firestore || !user || !viewingSpecialist) return;
     const chatId = [user.uid, viewingSpecialist.id].sort().join('_');
     const chatRef = doc(firestore, 'chats', chatId);
     
-    try {
-      await setDoc(chatRef, {
-        id: chatId,
-        participants: [user.uid, viewingSpecialist.id],
-        participantDetails: {
-          [user.uid]: { name: userData?.firstName || 'Пользователь', photo: userData?.photoUrl || '' },
-          [viewingSpecialist.id]: { name: viewingSpecialist.name, photo: viewingSpecialist.photo || '' }
-        },
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
+    const data = {
+      id: chatId,
+      participants: [user.uid, viewingSpecialist.id],
+      participantDetails: {
+        [user.uid]: { name: userData?.firstName || 'Пользователь', photo: userData?.photoUrl || '' },
+        [viewingSpecialist.id]: { name: viewingSpecialist.name, photo: viewingSpecialist.photo || '' }
+      },
+      updatedAt: new Date().toISOString()
+    };
 
-      setViewingSpecialist(null);
-      setActiveTab('chats');
-    } catch (e) {
-      console.error(e);
-      toast({ variant: 'destructive', title: 'Ошибка чата' });
-    }
+    setDoc(chatRef, data, { merge: true }).catch(async (error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: chatRef.path,
+        operation: 'write',
+        requestResourceData: data,
+      }));
+    });
+
+    setViewingSpecialist(null);
+    setActiveTab('chats');
   };
 
   if (!isMounted || userLoading || !user || user.uid === 'public-user') {
@@ -232,7 +241,7 @@ export default function DashboardPage() {
                     <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
                   </TabsTrigger>
                   <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
-                    <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
+                    <Utensils className="h-3 w-3 md:h-4 md:u-4" /> Питание
                   </TabsTrigger>
                 </>
               ) : (
@@ -368,9 +377,9 @@ export default function DashboardPage() {
                   <div className="text-center py-20 flex flex-col items-center gap-8">
                     <div className="space-y-2">
                       <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2>
-                      <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                      <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}.</p>
                     </div>
-                    <RecommendationForm onResult={handleResult} selectedDate={selectedDate!} />
+                    <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
                   </div>
                 )}
               </TabsContent>

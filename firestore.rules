@@ -7,8 +7,6 @@ service cloud.firestore {
      * PRO СЕБЯ - SECURITY RULES
      */
 
-    // --- Базовые функции ---
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -17,66 +15,50 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Проверка роли специалиста (используется для создания постов)
     function isSpecialist() {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.profileType == 'specialist';
     }
 
     // --- Правила для коллекций ---
 
-    // Профили пользователей
     match /users/{userId} {
       allow get: if isSignedIn();
       allow list: if false; 
       allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
 
-      // Ежедневные логи
       match /dailyLogs/{dailyLogId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Логи питания
       match /dietaryLogs/{dietaryLogId} {
         allow read, write: if isOwner(userId);
       }
 
-      // Рекомендации ИИ
       match /recommendations/{recommendationId} {
         allow read, write: if isOwner(userId);
       }
       
-      // Результаты анализов
       match /labResults/{labId} {
         allow read, write: if isOwner(userId);
       }
     }
 
-    // Публикации специалистов
     match /posts/{postId} {
       allow read: if isSignedIn();
-      // Только специалисты могут создавать посты
       allow create: if isSpecialist();
-      // Обновлять (лайки) могут все авторизованные, удалять только автор
       allow update: if isSignedIn(); 
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     // Система чатов
     match /chats/{chatId} {
-      // Явно разделяем get и list для корректной работы фильтров в запросах
-      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants);
-      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
-      
-      // Обновление чата (последнее сообщение) доступно участникам
-      allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
-      
-      // Создание чата (текущий пользователь должен быть в списке участников)
+      // Использование allow read для поддержки get и list (запросы с фильтрами)
+      allow read, update: if isSignedIn() && (request.auth.uid in resource.data.participants);
       allow create: if isSignedIn() && (request.auth.uid in request.resource.data.participants);
 
-      // Сообщения внутри чата
       match /messages/{messageId} {
-        // Доступ к сообщениям через проверку участников родительского чата
+        // Проверка через родительский чат
         allow read, create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
       }
     }

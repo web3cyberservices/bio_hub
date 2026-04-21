@@ -17,6 +17,8 @@ import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export function ChatInterface() {
   const { user } = useUser();
@@ -28,16 +30,15 @@ export function ChatInterface() {
 
   // Список чатов пользователя
   const chatsQuery = useMemoFirebase(() => {
-    // Проверяем, что пользователь авторизован и это не гостевой UID
     if (!firestore || !user || !user.uid || user.uid === 'public-user') return null;
     
-    // Запрос только тех чатов, где текущий пользователь является участником
     return query(
       collection(firestore, 'chats'),
       where('participants', 'array-contains', user.uid),
-      orderBy('updatedAt', 'desc')
+      orderBy('updatedAt', 'desc'),
+      limit(20)
     );
-  }, [firestore, user?.uid]); // Стабилизируем зависимость по UID
+  }, [firestore, user?.uid]);
 
   const { data: chats, isLoading: chatsLoading, error: chatsError } = useCollection<any>(chatsQuery);
 
@@ -63,33 +64,40 @@ export function ChatInterface() {
     }
   }, [messages]);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
+  const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!message.trim() || !activeChatId || !user || sending) return;
+    if (!message.trim() || !activeChatId || !user || !firestore) return;
 
-    setLoading(true);
-    try {
-      const chatRef = doc(firestore!, 'chats', activeChatId);
-      const messagesRef = collection(chatRef, 'messages');
+    const chatRef = doc(firestore, 'chats', activeChatId);
+    const messagesRef = collection(chatRef, 'messages');
 
-      const newMessage = {
-        senderId: user.uid,
-        text: message.trim(),
-        createdAt: new Date().toISOString(),
-      };
+    const newMessage = {
+      senderId: user.uid,
+      text: message.trim(),
+      createdAt: new Date().toISOString(),
+    };
 
-      await addDoc(messagesRef, newMessage);
-      await updateDoc(chatRef, {
-        lastMessage: message.trim(),
-        updatedAt: new Date().toISOString()
-      });
+    // Оптимистичная отправка (неблокирующая)
+    addDoc(messagesRef, newMessage).catch(async (err) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: `${chatRef.path}/messages`,
+        operation: 'create',
+        requestResourceData: newMessage,
+      }));
+    });
 
-      setMessage('');
-    } catch (e) {
-      console.error('SendMessage error:', e);
-    } finally {
-      setLoading(false);
-    }
+    updateDoc(chatRef, {
+      lastMessage: message.trim(),
+      updatedAt: new Date().toISOString()
+    }).catch(async (err) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: chatRef.path,
+        operation: 'update',
+        requestResourceData: { lastMessage: message.trim() },
+      }));
+    });
+
+    setMessage('');
   };
 
   if (chatsLoading) {
@@ -232,10 +240,10 @@ export function ChatInterface() {
                   />
                   <Button 
                     type="submit" 
-                    disabled={!message.trim() || sending} 
+                    disabled={!message.trim()} 
                     className="absolute right-2 md:right-3 h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-primary shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
                   >
-                     {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-4 w-4 md:h-5 md:w-5" />}
+                     <Send className="h-4 w-4 md:h-5 md:w-5" />
                   </Button>
                </form>
             </div>
