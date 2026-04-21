@@ -212,14 +212,11 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     data-ai-hint={imageData.hint}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-40" />
+                  <div className="absolute bottom-6 left-6 right-6">
                      <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
                         {meal.time}
                      </Badge>
-                     <h4 className="text-white text-xl font-black leading-tight drop-shadow-lg line-clamp-2">
-                        {meal.name}
-                     </h4>
                   </div>
                 </div>
                 <div className="p-10 flex-1 space-y-8">

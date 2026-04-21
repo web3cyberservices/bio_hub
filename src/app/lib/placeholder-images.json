@@ -1,40 +1,83 @@
+
 {
   "placeholderImages": [
     {
-      "id": "hero-healthy-food",
-      "description": "Healthy balanced meal on a table",
-      "imageUrl": "https://picsum.photos/seed/nutri1/1200/800",
-      "imageHint": "healthy meal"
+      "id": "breakfast-oatmeal",
+      "description": "Овсяная каша с ягодами",
+      "imageUrl": "https://picsum.photos/seed/oatmeal-plate/600/400",
+      "imageHint": "oatmeal porridge"
     },
     {
-      "id": "dashboard-stats",
-      "description": "Abstract health and data visualization",
-      "imageUrl": "https://picsum.photos/seed/nutri2/600/400",
-      "imageHint": "health analysis"
+      "id": "breakfast-omelette",
+      "description": "Пышный омлет с зеленью",
+      "imageUrl": "https://picsum.photos/seed/omelette-dish/600/400",
+      "imageHint": "omelette breakfast"
     },
     {
-      "id": "breakfast-bowl",
-      "description": "Healthy breakfast bowl with fruits and nuts",
-      "imageUrl": "https://picsum.photos/seed/breakfast/400/300",
-      "imageHint": "breakfast bowl"
+      "id": "breakfast-smoothie",
+      "description": "Зеленый смузи боул",
+      "imageUrl": "https://picsum.photos/seed/smoothie-bowl/600/400",
+      "imageHint": "smoothie bowl"
     },
     {
-      "id": "lunch-salad",
-      "description": "Fresh garden salad with protein",
-      "imageUrl": "https://picsum.photos/seed/lunch/400/300",
-      "imageHint": "healthy salad"
+      "id": "lunch-salmon",
+      "description": "Лосось на гриле",
+      "imageUrl": "https://picsum.photos/seed/salmon-meal/600/400",
+      "imageHint": "grilled salmon"
     },
     {
-      "id": "dinner-protein",
-      "description": "Balanced dinner with protein and vegetables",
-      "imageUrl": "https://picsum.photos/seed/dinner/400/300",
-      "imageHint": "dinner plate"
+      "id": "lunch-soup",
+      "description": "Крем-суп из тыквы",
+      "imageUrl": "https://picsum.photos/seed/soup-bowl/600/400",
+      "imageHint": "vegetable soup"
     },
     {
-      "id": "healthy-snack",
-      "description": "Light and nutritious snack",
-      "imageUrl": "https://picsum.photos/seed/snack/400/300",
-      "imageHint": "healthy snack"
+      "id": "lunch-salad-chicken",
+      "description": "Салат с курицей и авокадо",
+      "imageUrl": "https://picsum.photos/seed/chicken-salad/600/400",
+      "imageHint": "chicken salad"
+    },
+    {
+      "id": "dinner-steak",
+      "description": "Сочный мясной стейк",
+      "imageUrl": "https://picsum.photos/seed/beef-steak/600/400",
+      "imageHint": "beef steak"
+    },
+    {
+      "id": "dinner-white-fish",
+      "description": "Треска с овощами",
+      "imageUrl": "https://picsum.photos/seed/white-fish/600/400",
+      "imageHint": "baked fish"
+    },
+    {
+      "id": "dinner-tofu",
+      "description": "Жареный тофу с брокколи",
+      "imageUrl": "https://picsum.photos/seed/tofu-dish/600/400",
+      "imageHint": "tofu stir-fry"
+    },
+    {
+      "id": "snack-apple",
+      "description": "Свежее зеленое яблоко",
+      "imageUrl": "https://picsum.photos/seed/fresh-apple/600/400",
+      "imageHint": "green apple"
+    },
+    {
+      "id": "snack-pear",
+      "description": "Сочная спелая груша",
+      "imageUrl": "https://picsum.photos/seed/ripe-pear/600/400",
+      "imageHint": "ripe pear"
+    },
+    {
+      "id": "snack-nuts",
+      "description": "Микс орехов",
+      "imageUrl": "https://picsum.photos/seed/mixed-nuts/600/400",
+      "imageHint": "mixed nuts"
+    },
+    {
+      "id": "snack-yogurt",
+      "description": "Натуральный йогурт",
+      "imageUrl": "https://picsum.photos/seed/natural-yogurt/600/400",
+      "imageHint": "plain yogurt"
     }
   ]
 }

@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Использует Gemini 2.5 Flash для глубокого анализа биометрии.
+ * Скорректирован список доступных изображений для точного соответствия блюдам.
  */
 
 import {ai} from '@/ai/genkit';
@@ -102,16 +102,14 @@ const recommendationPrompt = ai.definePrompt({
 ВАША ЗАДАЧА:
 Создать глубокий аналитический отчет и план питания на основе биометрии.
 
-ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId) - КРИТИЧЕСКИ ВАЖНО:
-Выберите наиболее подходящий ID из списка ниже. ОШИБКА В ВЫБОРЕ ID ПРИВЕДЕТ К НЕВЕРНОЙ КАРТИНКЕ (например, одуванчик вместо стейка).
+ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId):
+Выберите наиболее подходящий ID из списка ниже. СТРОГО СООТВЕТСТВУЙТЕ ТИПУ ЕДЫ. Если рекомендуете яблоко, используйте snack-apple. Если овсянку — breakfast-oatmeal.
 
 СПИСОК ДОСТУПНЫХ ID:
-- breakfast-oatmeal (каши), breakfast-omelette (яичница), breakfast-smoothie (напитки)
-- lunch-salmon (рыба), lunch-salad-chicken (салаты с птицей), lunch-soup (супы)
-- dinner-steak (мясо, стейки), dinner-white-fish (белая рыба), dinner-tofu (веган)
-- snack-nuts (орехи), snack-yogurt (молочка), snack-avocado (тосты), snack-fruit (фруктовая нарезка), snack-apple (яблоко), snack-pear (груша)
-
-ОБРАТИТЕ ВНИМАНИЕ: Если рекомендуете стейк, используйте СТРОГО dinner-steak.
+- breakfast-oatmeal (овсянка), breakfast-omelette (омлет), breakfast-smoothie (смузи)
+- lunch-salmon (лосось), lunch-salad-chicken (салат с курицей), lunch-soup (суп)
+- dinner-steak (стейк), dinner-white-fish (белая рыба), dinner-tofu (тофу)
+- snack-apple (яблоко), snack-pear (груша), snack-nuts (орехи), snack-yogurt (йогурт)
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 
@@ -128,7 +126,7 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await recommendationPrompt(input, {
-      model: googleAI.model('gemini-2.5-flash'),
+      model: googleAI.model('gemini-1.5-flash'),
     });
     if (!output) throw new Error('Модель вернула пустой результат');
     return output;
