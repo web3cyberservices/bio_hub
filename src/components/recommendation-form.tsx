@@ -15,7 +15,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-} from '@/components/ui/form';
+} from '@/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -30,7 +30,6 @@ import {
   Sparkles, 
   Scale, 
   Ruler, 
-  Calendar, 
   Zap,
   RefreshCw,
   Footprints,
@@ -45,7 +44,6 @@ import { doc, setDoc } from 'firebase/firestore';
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
   height: z.coerce.number().positive('Рост обязателен'),
-  age: z.coerce.number().int().min(1, 'Возраст обязателен'),
   gender: z.enum(['мужской', 'женский']),
   activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
@@ -82,7 +80,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       gender: 'мужской',
       weight: 70,
       height: 175,
-      age: 30,
       activityLevel: 'moderate',
       healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
@@ -100,7 +97,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         gender: userData.gender || 'мужской',
         weight: userData.weight || 70,
         height: userData.height || 175,
-        age: userData.age || 30,
         activityLevel: userData.activityLevel || 'moderate',
         healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
@@ -112,6 +108,17 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       });
     }
   }, [userData, form]);
+
+  const calculateAge = (dob: string) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const simulateSync = async () => {
     setSyncing(true);
@@ -136,11 +143,15 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     setLoading(true);
     try {
+      const birthDate = userData?.birthDate || '1990-01-01';
+      const age = calculateAge(birthDate);
+
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid,
         email: user.email,
         profileType: 'RegularUser',
         ...values,
+        age,
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
@@ -148,6 +159,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
       const result = await generatePersonalizedRecommendations({
         ...biometrics,
+        age,
         favoriteFoods: userData?.favoriteFoods,
         dislikedFoods: userData?.dislikedFoods,
         targetDate: selectedDate.toISOString(),
@@ -172,7 +184,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }
 
-  // Мятный цвет для формы в дашборде
   const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
   const selectTriggerClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
 
@@ -181,7 +192,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       <CardContent className="p-8 md:p-12 space-y-12">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
               <FormField control={form.control} name="gender" render={({ field }) => (
                 <FormItem className="col-span-2 md:col-span-1">
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пол</FormLabel>
@@ -191,7 +202,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   </Select>
                 </FormItem>
               )} />
-              {[{ name: 'weight', label: 'Вес (кг)', icon: Scale }, { name: 'height', label: 'Рост (см)', icon: Ruler }, { name: 'age', label: 'Возраст', icon: Calendar }].map((m) => (
+              {[{ name: 'weight', label: 'Вес (кг)', icon: Scale }, { name: 'height', label: 'Рост (см)', icon: Ruler }].map((m) => (
                 <FormField key={m.name} control={form.control} name={m.name as any} render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{m.label}</FormLabel>

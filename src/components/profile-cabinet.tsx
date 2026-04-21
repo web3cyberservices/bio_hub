@@ -45,7 +45,6 @@ const profileSchema = z.object({
   lastName: z.string().optional(),
   birthDate: z.string().optional(),
   gender: z.enum(['мужской', 'женский']),
-  age: z.coerce.number().int().min(1, 'Возраст обязателен').default(30),
   weight: z.coerce.number().positive('Вес обязателен').default(70),
   height: z.coerce.number().positive('Рост обязателен').default(175),
   activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
@@ -93,7 +92,6 @@ export function ProfileCabinet() {
       lastName: '',
       birthDate: '1990-01-01',
       gender: 'мужской',
-      age: 30,
       weight: 70,
       height: 175,
       activityLevel: 'moderate',
@@ -112,7 +110,6 @@ export function ProfileCabinet() {
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '1990-01-01',
         gender: userData.gender === 'женский' ? 'женский' : 'мужской',
-        age: userData.age || 30,
         weight: userData.weight || 70,
         height: userData.height || 175,
         activityLevel: userData.activityLevel || 'moderate',
@@ -150,6 +147,17 @@ export function ProfileCabinet() {
     form.setValue('birthDate', `${y}-${m}-${validDay}`);
   };
 
+  const calculateAge = (dob: string) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   async function onSubmit(values: ProfileValues) {
     if (!user || !firestore || user.uid === 'public-user') {
       toast({
@@ -162,9 +170,11 @@ export function ProfileCabinet() {
 
     setLoading(true);
     try {
+      const age = calculateAge(values.birthDate || '1990-01-01');
       const userRef = doc(firestore, 'users', user.uid);
       await setDoc(userRef, {
         ...values,
+        age,
         id: user.uid,
         email: (user as any).email || null,
         profileType: 'user',
@@ -190,7 +200,7 @@ export function ProfileCabinet() {
     toast({
       variant: 'destructive',
       title: 'Ошибка заполнения',
-      description: 'Проверьте обязательные поля (Имя, Возраст, Вес, Рост).',
+      description: 'Проверьте обязательные поля (Имя, Вес, Рост).',
     });
   };
 
@@ -268,8 +278,8 @@ export function ProfileCabinet() {
                     </FormItem>
                   )} />
                 </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-                  <FormItem className="col-span-1 md:col-span-2">
+                <div className="grid gap-6 grid-cols-1">
+                  <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
                       <CalendarDays className="h-3 w-3" /> Дата рождения
                     </FormLabel>
@@ -339,7 +349,7 @@ export function ProfileCabinet() {
                   <Activity className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3>
                 </div>
-                <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
                   <FormField control={form.control} name="gender" render={({ field }) => (
                     <FormItem className="col-span-2 lg:col-span-1">
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Пол</FormLabel>
@@ -350,13 +360,6 @@ export function ProfileCabinet() {
                           <SelectItem value="женский">Женский</SelectItem>
                         </SelectContent>
                       </Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="age" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Возраст *</FormLabel>
-                      <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
