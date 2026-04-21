@@ -1,16 +1,8 @@
-/**
- * Конфигурация Firebase для Bio-хаба "PRO Себя".
- * 
- * ВАЖНО: Эти данные заполняются автоматически после нажатия кнопки 
- * "Connect to Firebase" в верхней панели Firebase Studio.
- * После подключения ваше приложение получит доступ к Google Cloud Firestore 
- * и Firebase Authentication.
- */
 export const firebaseConfig = {
-  apiKey: "API_KEY_WILL_BE_HERE",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID",
+  "projectId": "webcybersecurity",
+  "appId": "1:631395655738:web:6904688486c71513939503",
+  "apiKey": "AIzaSyDiEz34LESJ9pOybZl1XoYiKcVjdNk1uXs",
+  "authDomain": "webcybersecurity.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "631395655738"
 };

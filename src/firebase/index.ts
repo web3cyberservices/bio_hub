@@ -1,58 +1,50 @@
 'use client';
 
+import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
-import { firebaseConfig } from './config';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore'
 
-interface FirebaseInstance {
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null;
+// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+export function initializeFirebase() {
+  if (!getApps().length) {
+    // Important! initializeApp() is called without any arguments because Firebase App Hosting
+    // integrates with the initializeApp() function to provide the environment variables needed to
+    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
+    // without arguments.
+    let firebaseApp;
+    try {
+      // Attempt to initialize via Firebase App Hosting environment variables
+      firebaseApp = initializeApp();
+    } catch (e) {
+      // Only warn in production because it's normal to use the firebaseConfig to initialize
+      // during development
+      if (process.env.NODE_ENV === "production") {
+        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+      }
+      firebaseApp = initializeApp(firebaseConfig);
+    }
+
+    return getSdks(firebaseApp);
+  }
+
+  // If already initialized, return the SDKs with the already initialized App
+  return getSdks(getApp());
 }
 
-/**
- * Безопасная инициализация Firebase.
- * Возвращает null для сервисов, если конфигурация пуста, не вызывая ошибок SDK.
- */
-export function initializeFirebase(): FirebaseInstance {
-  if (typeof window === 'undefined') {
-    return { firebaseApp: null, firestore: null, auth: null };
-  }
-
-  // Проверка валидности строк конфигурации
-  const isValidStr = (s: any) => typeof s === 'string' && s.trim().length > 5;
-  
-  const isConfigValid = 
-    firebaseConfig && 
-    isValidStr(firebaseConfig.apiKey) && 
-    isValidStr(firebaseConfig.projectId);
-
-  if (!isConfigValid) {
-    console.warn('Firebase: Конфигурация не найдена. Подключите проект через Studio.');
-    return { firebaseApp: null, firestore: null, auth: null };
-  }
-
-  try {
-    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    
-    return { 
-      firebaseApp: app, 
-      firestore: db, 
-      auth 
-    };
-  } catch (error) {
-    console.error('Firebase: Ошибка инициализации:', error);
-    return { firebaseApp: null, firestore: null, auth: null };
-  }
+export function getSdks(firebaseApp: FirebaseApp) {
+  return {
+    firebaseApp,
+    auth: getAuth(firebaseApp),
+    firestore: getFirestore(firebaseApp)
+  };
 }
 
 export * from './provider';
 export * from './client-provider';
-export * from './auth/use-user';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './error-emitter';
+export * from './non-blocking-updates';
+export * from './non-blocking-login';
 export * from './errors';
+export * from './error-emitter';
