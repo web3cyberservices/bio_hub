@@ -32,10 +32,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { ChatInterface } from '@/components/chat-interface';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { ProductsMenuGenerator } from '@/components/products-menu-generator';
 import { PersonalMealPlan } from '@/components/personal-meal-plan';
@@ -56,8 +53,9 @@ export default function DashboardPage() {
     setSelectedDate(startOfToday());
   }, []);
 
+  // Отключаем принудительный редирект, чтобы разрешить гостевой доступ
   useEffect(() => {
-    if (isMounted && !userLoading && (!user || user.uid === 'public-user')) {
+    if (isMounted && !userLoading && !user) {
       router.replace('/login');
     }
   }, [user, userLoading, router, isMounted]);
@@ -68,17 +66,17 @@ export default function DashboardPage() {
   }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user || user.uid === 'public-user') return null;
+    if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
   const recommendationRef = useMemoFirebase(() => {
-    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
+    if (!firestore || !user || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
   const dailyLogRef = useMemoFirebase(() => {
-    if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
+    if (!firestore || !user || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user, dateKey]);
 
@@ -110,7 +108,7 @@ export default function DashboardPage() {
   };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
-    if (!firestore || !user || !dateKey || user.uid === 'public-user') return;
+    if (!firestore || !user || !dateKey) return;
     const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
     const data = { id: dateKey, userId: user.uid, date: dateKey, data: result, createdAt: new Date().toISOString() };
     setDoc(docRef, data, { merge: true });
@@ -119,7 +117,7 @@ export default function DashboardPage() {
   };
 
   const handleLike = (postId: string, likedBy: string[]) => {
-    if (!firestore || !user || user.uid === 'public-user') return;
+    if (!firestore || !user) return;
     const isLiked = likedBy?.includes(user.uid);
     const postRef = doc(firestore, 'posts', postId);
     updateDoc(postRef, {
@@ -129,7 +127,10 @@ export default function DashboardPage() {
   };
 
   const handleStartChat = (targetId: string, name: string, photo: string) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || user.uid === 'public-user') {
+      toast({ title: 'Вход не выполнен', description: 'Для общения с экспертами необходимо авторизоваться.' });
+      return;
+    }
     const chatId = [user.uid, targetId].sort().join('_');
     const chatRef = doc(firestore, 'chats', chatId);
     setDoc(chatRef, {
@@ -141,7 +142,7 @@ export default function DashboardPage() {
     setActiveTab('chats');
   };
 
-  if (!isMounted || userLoading || !user || user.uid === 'public-user') {
+  if (!isMounted || userLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" /></div>;
   }
 

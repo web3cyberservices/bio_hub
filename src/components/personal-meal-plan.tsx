@@ -38,9 +38,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
   const mealsQuery = useMemoFirebase(() => {
-    // Критически важно: не запускаем запрос, пока идет загрузка пользователя
-    // или если UID отсутствует/является гостевым
-    if (!firestore || userLoading || !user?.uid || user.uid === 'public-user') return null;
+    // В тестовом режиме userId может быть 'public-user'
+    if (!firestore || userLoading || !user?.uid) return null;
     
     try {
       return query(
@@ -58,8 +57,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !firestore || !name || user.uid === 'public-user') {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Необходима авторизация' });
+    if (!user || !firestore || !name) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось определить пользователя' });
       return;
     }
 
@@ -87,7 +86,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleDeleteMeal = async (id: string) => {
-    if (!user || !firestore || user.uid === 'public-user') return;
+    if (!user || !firestore) return;
     try {
       await deleteDoc(doc(firestore, 'users', user.uid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
@@ -102,21 +101,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     return (
       <div className="py-24 text-center space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Авторизация в Bio-облаке...</p>
-      </div>
-    );
-  }
-
-  const isGuest = !user || user.uid === 'public-user';
-
-  if (isGuest) {
-    return (
-      <div className="py-24 text-center border-2 border-dashed border-primary/10 rounded-[2.5rem] bg-white/40 space-y-4 px-10">
-         <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
-            <Utensils className="h-8 w-8 text-primary/20" />
-         </div>
-         <p className="text-xl font-black text-foreground/40">Войдите в профиль</p>
-         <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Свой план доступен только для зарегистрированных пользователей.</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Подключение к Bio-облаку...</p>
       </div>
     );
   }
@@ -127,6 +112,9 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
         <div className="space-y-1">
           <h3 className="text-3xl font-black tracking-tighter">Свой план</h3>
           <p className="text-muted-foreground text-sm font-medium">Ваш персональный рацион на этот день.</p>
+          {user?.uid === 'public-user' && (
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[8px] uppercase tracking-widest">Тестовый режим</Badge>
+          )}
         </div>
         <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-4">
            <div className="text-center">

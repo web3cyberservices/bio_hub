@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 8.0
-     * Оптимизированный доступ к личным данным и системе чатов.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 9.0
+     * Открытый доступ для тестового режима и полная защита личных данных.
      */
 
     // Вспомогательные функции
@@ -17,44 +17,33 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // --- Профили пользователей ---
+    // --- Профили пользователей и личные данные ---
     match /users/{userId} {
-      // Любой авторизованный пользователь может видеть основные данные профиля
-      allow read: if isAuthenticated();
-      
-      // Создание и полное редактирование только владельцем
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers', 'rating']));
+      // Разрешаем чтение и запись если это владелец ИЛИ если это публичный тестовый профиль
+      allow read, write: if isOwner(userId) || userId == 'public-user';
 
-      // Личные коллекции (доступ СТРОГО владельцу)
-      match /dailyLogs/{id} { allow read, write: if isOwner(userId); }
-      match /dietaryLogs/{id} { allow read, write: if isOwner(userId); }
-      match /recommendations/{id} { allow read, write: if isOwner(userId); }
-      match /labResults/{id} { allow read, write: if isOwner(userId); }
-      match /personalMeals/{id} { allow read, write: if isOwner(userId); }
-      
-      // Отзывы о специалисте
-      match /reviews/{id} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow delete: if isAuthenticated() && (isOwner(userId) || resource.data.authorId == request.auth.uid);
+      // Глубокий доступ ко всем вложенным коллекциям (планы, логи, анализы)
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId) || userId == 'public-user';
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
-      allow read, list: if isAuthenticated();
+      allow read, list: if true; // Чтение ленты доступно всем
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
     }
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, get, list, update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow read, get, list: if isAuthenticated() && request.auth.uid in resource.data.participants;
       allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
 
       match /messages/{messageId} {
-        allow read, list, create: if isAuthenticated();
+        allow read, list: if isAuthenticated();
+        allow create: if isAuthenticated();
         allow update, delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
       }
     }
