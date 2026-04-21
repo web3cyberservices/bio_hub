@@ -114,7 +114,6 @@ export default function DashboardPage() {
 
   const currentResult = recommendationDoc?.data as GenerateRecommendationsOutput | undefined;
 
-  // Mock-данные для ленты (в реальности будут из Firestore /posts)
   const posts = [
     {
       id: '1',

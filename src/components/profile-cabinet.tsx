@@ -29,7 +29,6 @@ import {
   Save, 
   Loader2,
   Activity,
-  Settings,
   Target,
   Mail,
   Fingerprint,
@@ -164,8 +163,10 @@ export function ProfileCabinet() {
   };
 
   const calculateAge = (dob: string) => {
+    if (!dob) return 0;
     const today = new Date();
     const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return 0;
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
