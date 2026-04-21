@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,17 +34,11 @@ import {
   Fingerprint,
   Heart,
   Ban,
-  CalendarDays,
-  Calendar as CalendarIcon
+  CalendarDays
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { format, parseISO, isValid } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -64,6 +58,21 @@ const profileSchema = z.object({
 
 type ProfileValues = z.infer<typeof profileSchema>;
 
+const months = [
+  { value: "01", label: "Январь" },
+  { value: "02", label: "Февраль" },
+  { value: "03", label: "Март" },
+  { value: "04", label: "Апрель" },
+  { value: "05", label: "Май" },
+  { value: "06", label: "Июнь" },
+  { value: "07", label: "Июль" },
+  { value: "08", label: "Август" },
+  { value: "09", label: "Сентябрь" },
+  { value: "10", label: "Октябрь" },
+  { value: "11", label: "Ноябрь" },
+  { value: "12", label: "Декабрь" },
+];
+
 export function ProfileCabinet() {
   const { user } = useUser();
   const { firestore } = useFirestore();
@@ -82,7 +91,7 @@ export function ProfileCabinet() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      birthDate: '',
+      birthDate: '1990-01-01',
       gender: 'мужской',
       age: 30,
       weight: 70,
@@ -101,7 +110,7 @@ export function ProfileCabinet() {
       form.reset({
         firstName: userData.firstName || userData.displayName || '',
         lastName: userData.lastName || '',
-        birthDate: userData.birthDate || '',
+        birthDate: userData.birthDate || '1990-01-01',
         gender: userData.gender || 'мужской',
         age: userData.age || 30,
         weight: userData.weight || 70,
@@ -115,6 +124,32 @@ export function ProfileCabinet() {
       });
     }
   }, [userData, form]);
+
+  const birthDateValue = form.watch('birthDate') || '1990-01-01';
+  const [currentYear, currentMonth, currentDay] = birthDateValue.split('-');
+
+  const years = useMemo(() => {
+    const endYear = new Date().getFullYear();
+    const startYear = endYear - 120;
+    return Array.from({ length: endYear - startYear + 1 }, (_, i) => (endYear - i).toString());
+  }, []);
+
+  const daysInMonth = useMemo(() => {
+    const y = parseInt(currentYear);
+    const m = parseInt(currentMonth);
+    const days = new Date(y, m, 0).getDate();
+    return Array.from({ length: days }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  }, [currentYear, currentMonth]);
+
+  const updateBirthDate = (y: string, m: string, d: string) => {
+    // Validate day doesn't exceed new month's days
+    const maxDays = new Date(parseInt(y), parseInt(m), 0).getDate();
+    let validDay = d;
+    if (parseInt(d) > maxDays) {
+      validDay = maxDays.toString().padStart(2, '0');
+    }
+    form.setValue('birthDate', `${y}-${m}-${validDay}`);
+  };
 
   async function onSubmit(values: ProfileValues) {
     if (!user || !firestore || user.uid === 'public-user') {
@@ -210,69 +245,50 @@ export function ProfileCabinet() {
                   <User className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
                 </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                  <FormField control={form.control} name="firstName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</FormLabel>
-                      <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="lastName" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
-                      <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="birthDate" render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
-                        <CalendarDays className="h-3 w-3" /> Дата рождения
-                      </FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 text-left transition-all hover:bg-primary/5",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(parseISO(field.value), "d MMMM yyyy", { locale: ru })
-                              ) : (
-                                <span>Выберите дату</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 text-primary opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-none" align="start">
-                          <Calendar
-                            mode="single"
-                            captionLayout="dropdown"
-                            fromYear={1900}
-                            toYear={new Date().getFullYear()}
-                            selected={field.value ? parseISO(field.value) : undefined}
-                            onSelect={(date) => {
-                              if (date) {
-                                field.onChange(format(date, "yyyy-MM-dd"));
-                              }
-                            }}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            locale={ru}
-                            className="bg-white"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="firstName" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</FormLabel>
+                        <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="lastName" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
+                        <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
+                      <CalendarDays className="h-3 w-3" /> Дата рождения
+                    </FormLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
+                        <SelectTrigger className={selectClasses}><SelectValue placeholder="День" /></SelectTrigger>
+                        <SelectContent>
+                          {daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
+                        <SelectTrigger className={selectClasses}><SelectValue placeholder="Месяц" /></SelectTrigger>
+                        <SelectContent>
+                          {months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
+                        <SelectTrigger className={selectClasses}><SelectValue placeholder="Год" /></SelectTrigger>
+                        <SelectContent>
+                          {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
                 </div>
               </div>
 
