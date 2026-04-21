@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -37,7 +38,9 @@ import {
   Upload,
   X,
   FileText,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Zap,
+  Target
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc } from '@/firebase';
@@ -50,6 +53,8 @@ const profileSchema = z.object({
   age: z.coerce.number().int().min(1, 'Возраст обязателен'),
   weight: z.coerce.number().positive('Вес обязателен'),
   height: z.coerce.number().positive('Рост обязателен'),
+  activityLevel: z.enum(['малоактивный', 'среднеактивный', 'средний', 'активный', 'перенагрузка']),
+  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
   smoking: z.enum(['да', 'нет']),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   labResults: z.string().optional(),
@@ -79,6 +84,8 @@ export function ProfileCabinet() {
       age: 30,
       weight: 70,
       height: 175,
+      activityLevel: 'средний',
+      healthGoal: 'поддержать текущее состояние',
       smoking: 'нет',
       alcohol: 'не употребляю',
       labResults: '',
@@ -95,6 +102,8 @@ export function ProfileCabinet() {
         age: userData.age || 30,
         weight: userData.weight || 70,
         height: userData.height || 175,
+        activityLevel: userData.activityLevel || 'средний',
+        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
         smoking: userData.smoking || 'нет',
         alcohol: userData.alcohol || 'не употребляю',
         labResults: userData.labResults || '',
@@ -181,7 +190,7 @@ export function ProfileCabinet() {
 
       toast({
         title: 'Профиль обновлен',
-        description: 'Все данные, включая анализы, сохранены.',
+        description: 'Ваши биометрические данные синхронизированы.',
       });
     } catch (error) {
       toast({
@@ -207,21 +216,21 @@ export function ProfileCabinet() {
   const selectClasses = "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 transition-all";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
           <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
         </div>
         <div>
-          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground">Личный кабинет</h2>
-          <p className="text-muted-foreground text-xs md:text-base font-medium">Управление вашим биометрическим профилем.</p>
+          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground leading-none">Bio-Профиль</h2>
+          <p className="text-muted-foreground text-xs md:text-base font-medium">Ваши базовые метрики и цели.</p>
         </div>
       </div>
 
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
         <CardContent className="p-8 md:p-12">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
               {/* Основные данные */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
@@ -231,16 +240,52 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя (Или никнейм)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя</FormLabel>
                       <FormControl><Input placeholder="Ваше имя" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="lastName" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия (Не обязательно)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
                       <FormControl><Input placeholder="Ваша фамилия" {...field} className={inputClasses} /></FormControl>
-                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </div>
+
+              {/* Цели и Активность */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-4">
+                  <Target className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-black uppercase tracking-tight">Цели и Активность</h3>
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                  <FormField control={form.control} name="healthGoal" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Основная цель</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержание веса</SelectItem>
+                          <SelectItem value="набор массы">Набор массы (Профицит)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="activityLevel" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Уровень активности</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="малоактивный">Малоактивный (Сидячий)</SelectItem>
+                          <SelectItem value="среднеактивный">Среднеактивный (1-3 тренировки)</SelectItem>
+                          <SelectItem value="средний">Средний (3-5 тренировок)</SelectItem>
+                          <SelectItem value="активный">Активный (Ежедневно)</SelectItem>
+                          <SelectItem value="перенагрузка">Профессиональный спорт</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormItem>
                   )} />
                 </div>
@@ -250,7 +295,7 @@ export function ProfileCabinet() {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Activity className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Биометрические показатели</h3>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Биометрия</h3>
                 </div>
                 <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
                   <FormField control={form.control} name="gender" render={({ field }) => (
@@ -267,54 +312,53 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="age" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex gap-2"><Calendar className="h-3 w-3" /> Возраст</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Возраст</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex gap-2"><Scale className="h-3 w-3" /> Вес (кг)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Вес (кг)</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex gap-2"><Ruler className="h-3 w-3" /> Рост (см)</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Рост (см)</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                     </FormItem>
                   )} />
                 </div>
               </div>
 
-              {/* Образ жизни */}
+              {/* Привычки */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4">
                   <Settings className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Образ жизни</h3>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Дополнительно</h3>
                 </div>
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="smoking" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex gap-2">Курение</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Курение</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
-                          <SelectItem value="да">Да, курю</SelectItem>
-                          <SelectItem value="нет">Нет, не курю</SelectItem>
+                          <SelectItem value="да">Курю</SelectItem>
+                          <SelectItem value="нет">Не курю</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="alcohol" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex gap-2">Алкоголь</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Алкоголь</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                           <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                          <SelectItem value="редко">Редко (по праздникам)</SelectItem>
+                          <SelectItem value="редко">Редко</SelectItem>
                           <SelectItem value="умеренно">Умеренно</SelectItem>
-                          <SelectItem value="часто">Часто</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -322,107 +366,12 @@ export function ProfileCabinet() {
                 </div>
               </div>
 
-              {/* Анализы */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-2 border-b pb-4">
-                  <FlaskConical className="h-5 w-5 text-primary" />
-                  <h3 className="text-lg font-black uppercase tracking-tight">Медицинские анализы</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <FormField control={form.control} name="labResults" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
-                        Текстовое описание показателей
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Например: Гемоглобин 145, Холестерин 4.2..." 
-                          className="min-h-[200px] rounded-[1.5rem] bg-white border-muted p-6 text-sm font-medium focus:ring-4 focus:ring-primary/10 shadow-inner" 
-                          {...field} 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )} />
-
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Прикрепить фото или файл бланка</label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all"
-                        onClick={startCamera}
-                      >
-                        <Camera className="h-7 w-7 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Снять фото</span>
-                      </Button>
-                      <label className="cursor-pointer">
-                        <div className="h-28 rounded-[2rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all">
-                          <Upload className="h-7 w-7 text-primary" />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Файл</span>
-                        </div>
-                        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
-                      </label>
-                    </div>
-
-                    {showCamera && (
-                      <div className="relative rounded-[2rem] overflow-hidden bg-black aspect-video shadow-2xl">
-                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                          <Button type="button" onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary hover:scale-110 transition-all"><Camera className="h-6 w-6" /></Button>
-                          <Button type="button" onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {labFile && !showCamera && (
-                      <div className="relative rounded-[2rem] overflow-hidden border p-4 bg-muted/20 group animate-in zoom-in duration-300">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                            {labFile.startsWith('data:image') ? <ImageIcon className="h-6 w-6 text-primary" /> : <FileText className="h-6 w-6 text-primary" />}
-                          </div>
-                          <div className="flex-1 overflow-hidden">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Документ загружен</p>
-                            <p className="text-xs font-bold truncate">Результат анализа</p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() => {
-                              setLabFile(null);
-                              form.setValue('labResultsFile', '');
-                            }}
-                          >
-                            <X className="h-5 w-5" />
-                          </Button>
-                        </div>
-                        {labFile.startsWith('data:image') && (
-                          <div className="mt-4 rounded-xl overflow-hidden aspect-video border-2 border-white">
-                            <img src={labFile} alt="Analysis Preview" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <CardDescription className="text-[9px] font-bold uppercase tracking-widest mt-2 px-2 text-muted-foreground/60">
-                  ИИ проанализирует загруженные документы и учтет их в ваших биометрических рекомендациях.
-                </CardDescription>
-              </div>
-
               <Button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 hover:scale-[1.01] transition-all active:scale-95"
+                className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20 transition-all hover:scale-[1.01]"
               >
-                {loading ? (
-                  <><Loader2 className="mr-4 animate-spin h-8 w-8" /> Сохранение...</>
-                ) : (
-                  <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>
-                )}
+                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
               </Button>
             </form>
           </Form>
