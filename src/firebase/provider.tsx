@@ -1,10 +1,10 @@
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, DependencyList } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -29,14 +29,9 @@ export interface FirebaseContextState {
   userError: Error | null;
 }
 
-export interface UserHookResult {
-  user: any; 
-  loading: boolean;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
+
+const GUEST_USER = { uid: 'public-user', displayName: 'Гость' };
 
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -114,9 +109,9 @@ export const useFirestore = () => {
   return { firestore };
 };
 
-export const useUser = (): UserHookResult => {
+export const useUser = () => {
   const { user, isUserLoading, userError } = useFirebase();
-  const finalUser = user || { uid: 'public-user', displayName: 'Гость' };
+  const finalUser = user || GUEST_USER;
   return { 
     user: finalUser, 
     loading: isUserLoading, 
