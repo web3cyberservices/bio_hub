@@ -35,11 +35,17 @@ import {
   Fingerprint,
   Heart,
   Ban,
-  CalendarDays
+  CalendarDays,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { format, parseISO, isValid } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -221,13 +227,47 @@ export function ProfileCabinet() {
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="birthDate" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
                         <CalendarDays className="h-3 w-3" /> Дата рождения
                       </FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} className={inputClasses} />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "h-14 rounded-2xl bg-white border-muted shadow-sm font-bold px-6 text-left transition-all hover:bg-primary/5",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(parseISO(field.value), "d MMMM yyyy", { locale: ru })
+                              ) : (
+                                <span>Выберите дату</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 text-primary opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 rounded-3xl overflow-hidden shadow-2xl border-none" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? parseISO(field.value) : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                field.onChange(format(date, "yyyy-MM-dd"));
+                              }
+                            }}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            locale={ru}
+                            className="bg-white"
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )} />
