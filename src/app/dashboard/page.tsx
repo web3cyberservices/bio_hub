@@ -20,6 +20,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
+import { ProfileCabinet } from '@/components/profile-cabinet';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -65,7 +66,7 @@ export default function DashboardPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Инициализация био-хаба...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/40 animate-pulse">Синхронизация био-хаба...</p>
         </div>
       </div>
     );
@@ -150,7 +151,7 @@ export default function DashboardPage() {
             {selectedDate && (
               <UnifiedDataEntry selectedDate={selectedDate}>
                 <Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20">
-                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Добавить данные</span>
+                  <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Записать данные</span>
                 </Button>
               </UnifiedDataEntry>
             )}
@@ -212,7 +213,7 @@ export default function DashboardPage() {
                        </div>
                        <div>
                           <h2 className="text-xl md:text-5xl font-black tracking-tighter text-foreground">Гастро-план</h2>
-                          <p className="text-muted-foreground text-[10px] md:text-base font-medium">Персонализированное меню оптимизированное ИИ.</p>
+                          <p className="text-muted-foreground text-[10px] md:text-base font-medium">Персонализированное меню от ИИ.</p>
                        </div>
                     </div>
                     <RecommendationDisplay data={currentResult} mode="meals" />
@@ -223,18 +224,7 @@ export default function DashboardPage() {
               </TabsContent>
 
               <TabsContent value="profile" className="mt-0 outline-none">
-                <div className="max-w-4xl mx-auto">
-                  <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-10">
-                     <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-                        <UserCircle className="h-5 w-5 md:h-8 md:w-8 text-primary" />
-                     </div>
-                     <div>
-                        <h2 className="text-xl md:text-5xl font-black tracking-tighter text-foreground">Личный кабинет</h2>
-                        <p className="text-muted-foreground text-[10px] md:text-base font-medium">Управление биометрическим профилем и целями.</p>
-                     </div>
-                  </div>
-                  {selectedDate && <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />}
-                </div>
+                <ProfileCabinet />
               </TabsContent>
             </div>
           )}
@@ -263,10 +253,10 @@ function NoDataView({ onResult, selectedDate }: { onResult: (r: GenerateRecommen
     <div className="max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-12 duration-1000 text-center space-y-8 md:space-y-12 py-6 md:py-10">
       <div className="space-y-3 md:space-y-4">
         <Badge variant="outline" className="px-4 md:px-6 py-1 md:py-2 rounded-lg md:rounded-xl border-primary/20 text-primary font-black uppercase tracking-widest text-[8px] md:text-[10px]">
-          Био-анализ не выполнен
+          Анализ не выполнен
         </Badge>
-        <h2 className="text-xl md:text-5xl font-black tracking-tight leading-tight md:leading-none">Сформируйте отчет для начала</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план и рекомендации на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+        <h2 className="text-xl md:text-5xl font-black tracking-tight leading-tight md:leading-none">Данные для анализа отсутствуют</h2>
+        <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
       </div>
       <RecommendationForm onResult={onResult} selectedDate={selectedDate} />
     </div>
