@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,7 +11,7 @@ import {
   ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
-  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket
+  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList
 } from 'lucide-react';
 import { format, addDays, startOfToday, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -37,6 +36,7 @@ import { ChatInterface } from '@/components/chat-interface';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
+import { ProductsMenuGenerator } from '@/components/products-menu-generator';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -183,38 +183,40 @@ export default function DashboardPage() {
                 <TabsContent value="feed" className="mt-0 outline-none"><div className="space-y-12"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-4"><div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center"><Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" /></div><div><h2 className="text-xl md:text-5xl font-black tracking-tighter">Bio-Лента</h2><p className="text-muted-foreground text-[10px] md:text-base">Знания экспертов и ИИ-аналитика в одном месте.</p></div></div>{profileType === 'specialist' && <CreatePostDialog />}</div><Tabs defaultValue="knowledge" className="w-full"><TabsList className="bg-transparent border-b rounded-none h-auto p-0 gap-8 mb-8"><TabsTrigger value="knowledge" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">Лента знаний</TabsTrigger>{profileType === 'user' && <TabsTrigger value="ai" className="data-[state=active]:border-primary border-b-2 border-transparent rounded-none bg-transparent px-0 pb-4 font-black uppercase tracking-widest text-[10px]">ИИ Консилиум</TabsTrigger>}</TabsList><TabsContent value="ai" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">{[{ name: 'Др. Ария', role: 'Нутрициолог', icon: Utensils, bg: 'bg-orange-50', color: 'text-orange-500' }, { name: 'Др. Кай', role: 'Биохакер', icon: Brain, bg: 'bg-emerald-50', color: 'text-emerald-500' }, { name: 'Др. Сола', role: 'Сомнолог', icon: HeartPulse, bg: 'bg-indigo-50', color: 'text-indigo-500' }].map((spec, i) => (<Card key={i} className="premium-card overflow-hidden"><CardContent className="p-8 space-y-6"><div className="flex items-center gap-4"><div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", spec.bg)}><spec.icon className={cn("h-7 w-7", spec.color)} /></div><div><h4 className="font-black text-lg">{spec.name}</h4><Badge variant="outline" className="text-[8px] uppercase tracking-widest border-primary/20 text-primary/60">{spec.role}</Badge></div></div><p className="text-sm italic text-muted-foreground">"На основе ваших данных, я рекомендую увеличить потребление магния."</p><Button variant="ghost" className="w-full rounded-xl bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest">Подробнее</Button></CardContent></Card>))}</TabsContent><TabsContent value="knowledge" className="max-w-3xl mx-auto space-y-8 pt-4">{posts?.map((post) => (<Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl"><div className="p-6 md:p-8 space-y-6"><div className="flex items-center justify-between"><button className="flex items-center gap-4 text-left hover:opacity-80 transition-opacity" onClick={() => setViewingSpecialistId(post.authorId)}><div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/10">{post.authorPhoto ? (<Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover w-full h-full" />) : (<User className="h-6 w-6 text-primary" />)}</div><div><h4 className="font-black text-base">{post.authorName}</h4><p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{post.authorRole}</p></div></button><div className="text-right"><p className="text-[9px] font-bold text-muted-foreground/40">{format(new Date(post.createdAt), 'd MMM HH:mm', { locale: ru })}</p><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewingSpecialistId(post.authorId)}><Info className="h-3 w-3 text-primary/40" /></Button></div></div><div className="space-y-4"><p className="text-sm md:text-base font-medium leading-relaxed whitespace-pre-wrap">{post.content}</p>{post.imageUrl && (<div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl"><Image src={post.imageUrl} alt="Post" fill className="object-cover" /></div>)}</div><div className="flex items-center gap-6 pt-4 border-t"><Button variant="ghost" className={cn("rounded-full px-6 gap-2 transition-all", post.likedBy?.includes(user.uid) ? "text-primary bg-primary/10" : "text-muted-foreground")} onClick={() => handleLike(post.id, post.likedBy || [])}><ThumbsUp className={cn("h-4 w-4", post.likedBy?.includes(user.uid) && "fill-primary")} /> <span className="font-black text-xs">{post.likes || 0}</span></Button><Button variant="ghost" className="rounded-full px-6 gap-2 text-muted-foreground"><Share2 className="h-4 w-4" /></Button></div></div></Card>))}{(!posts || posts.length === 0) && (<Card className="premium-card p-20 text-center border-dashed border-2"><p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Лента пока пуста</p></Card>)}</TabsContent></Tabs></div></TabsContent>
                 <TabsContent value="dashboard" className="mt-0 outline-none">{recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} /> : (<div className="text-center py-20 flex flex-col items-center gap-8"><div className="space-y-2"><h2 className="text-3xl md:text-5xl font-black tracking-tighter">Ваш Bio-Score пуст</h2><p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели в профиле, чтобы ИИ подготовил план на {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : ''}.</p></div><RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} /></div>)}</TabsContent>
                 <TabsContent value="meals" className="mt-0 outline-none">
-                  {recommendationDoc?.data ? (
-                    <RecommendationDisplay data={recommendationDoc.data} mode="meals" />
-                  ) : (
-                    <div className="max-w-4xl mx-auto py-20 space-y-12">
-                      <div className="text-center space-y-4">
-                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter">Настройте своё питание</h2>
-                        <p className="text-muted-foreground max-w-lg mx-auto font-medium text-sm md:text-lg">Убедитесь, что данные о целях и привычках заполнены в вашем <button onClick={() => setActiveTab('profile')} className="text-primary underline font-black">Профиле</button>.</p>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <Card className="premium-card p-10 border-none bg-primary text-white flex flex-col justify-between group cursor-pointer hover:scale-105 transition-all" onClick={() => setActiveTab('dashboard')}>
-                          <div className="space-y-6">
-                            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center"><Zap className="h-8 w-8 text-white" /></div>
-                            <div className="space-y-2">
-                              <h3 className="text-2xl font-black">Составить план с ИИ</h3>
-                              <p className="text-white/70 text-sm leading-relaxed">Глубокий анализ на основе ваших био-показателей, целей и предпочтений из профиля.</p>
-                            </div>
-                          </div>
-                          <Button className="mt-8 bg-white text-primary rounded-xl font-black uppercase tracking-widest text-[10px] w-full">Сгенерировать отчет</Button>
-                        </Card>
-                        <Card className="premium-card p-10 border-none bg-white flex flex-col justify-between group cursor-pointer hover:scale-105 transition-all" onClick={() => toast({ title: 'Функция в разработке', description: 'Скоро: распознавание продуктов в холодильнике по фото.' })}>
-                          <div className="space-y-6">
-                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center"><ShoppingBasket className="h-8 w-8 text-primary" /></div>
-                            <div className="space-y-2">
-                              <h3 className="text-2xl font-black">Меню из продуктов</h3>
-                              <p className="text-muted-foreground text-sm leading-relaxed">Введите список имеющихся продуктов, и ИИ предложит лучшие варианты блюд на их основе.</p>
-                            </div>
-                          </div>
-                          <Button variant="outline" className="mt-8 border-primary/20 text-primary rounded-xl font-black uppercase tracking-widest text-[10px] w-full">Найти решение</Button>
-                        </Card>
-                      </div>
+                  <div className="space-y-12">
+                    <div className="flex justify-center">
+                       <Tabs defaultValue="plan" className="w-full">
+                          <TabsList className="bg-white/40 border p-1 rounded-2xl h-14 md:h-18 max-w-xl mx-auto grid grid-cols-2 shadow-inner">
+                             <TabsTrigger value="plan" className="rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                                <ClipboardList className="h-4 w-4" /> План дня
+                             </TabsTrigger>
+                             <TabsTrigger value="inventory" className="rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] gap-2 data-[state=active]:bg-primary data-[state=active]:text-white">
+                                <ShoppingBasket className="h-4 w-4" /> Из продуктов
+                             </TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="plan" className="mt-10">
+                             {recommendationDoc?.data ? (
+                               <RecommendationDisplay data={recommendationDoc.data} mode="meals" />
+                             ) : (
+                               <div className="max-w-4xl mx-auto py-20 space-y-12">
+                                 <div className="text-center space-y-4">
+                                   <h2 className="text-3xl md:text-5xl font-black tracking-tighter">План питания не составлен</h2>
+                                   <p className="text-muted-foreground max-w-lg mx-auto font-medium text-sm md:text-lg">Убедитесь, что данные заполнены в вашем <button onClick={() => setActiveTab('profile')} className="text-primary underline font-black">Профиле</button>, затем создайте отчет в Дашборде.</p>
+                                 </div>
+                                 <div className="flex justify-center">
+                                    <Button onClick={() => setActiveTab('dashboard')} className="h-16 px-10 rounded-2xl bg-primary font-black uppercase tracking-widest text-xs shadow-xl">Сгенерировать в Дашборде</Button>
+                                 </div>
+                               </div>
+                             )}
+                          </TabsContent>
+                          
+                          <TabsContent value="inventory" className="mt-10">
+                             <ProductsMenuGenerator />
+                          </TabsContent>
+                       </Tabs>
                     </div>
-                  )}
+                  </div>
                 </TabsContent>
                 <TabsContent value="my-feed" className="mt-0 outline-none"><div className="max-w-4xl mx-auto space-y-10"><div className="flex items-center justify-between"><h2 className="text-3xl font-black tracking-tighter">Мои публикации</h2><CreatePostDialog /></div><div className="space-y-6">{posts?.filter(p => p.authorId === user.uid).map(post => (<Card key={post.id} className="premium-card overflow-hidden"><div className="p-8 space-y-6"><div className="flex justify-between items-start"><p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(new Date(post.createdAt), 'd MMMM yyyy, HH:mm', { locale: ru })}</p><Badge variant="outline" className="text-[9px] border-primary/20 text-primary">{post.likes || 0} Лайков</Badge></div><p className="text-lg font-medium leading-relaxed">{post.content}</p>{post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden"><Image src={post.imageUrl} alt="Post image" fill className="object-cover" /></div>}</div></Card>))}{(!posts || posts.filter(p => p.authorId === user.uid).length === 0) && (<Card className="premium-card p-20 text-center text-muted-foreground border-dashed border-2">Начните делиться знаниями!</Card>)}</div></div></TabsContent>
                 <TabsContent value="appointments" className="mt-0 outline-none"><div className="max-w-4xl mx-auto space-y-10"><h2 className="text-3xl font-black tracking-tighter">Записи на прием</h2><div className="grid grid-cols-1 gap-4">{[1,2].map(i => (<Card key={i} className="premium-card p-6 flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-black">П</div><div><p className="font-black">Пациент #{i}</p><p className="text-xs text-muted-foreground">Сегодня, 14:00</p></div></div><Button variant="outline" className="rounded-xl">Подтвердить</Button></Card>))}</div></div></TabsContent>
