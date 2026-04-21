@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Исправлено: повышена стабильность генерации и валидации JSON, усилены правила для imageUrl.
+ * Обновлено: переход на модель gemini-2.5-flash.
  */
 
 import {ai} from '@/ai/genkit';
@@ -132,7 +131,7 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await recommendationPrompt(input, {
-      model: googleAI.model('gemini-1.5-flash'),
+      model: googleAI.model('gemini-2.5-flash'),
     });
     if (!output) throw new Error('Модель вернула пустой результат');
     return output;
