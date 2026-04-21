@@ -203,7 +203,6 @@ export function ProfileCabinet() {
     );
   }
 
-  // Светло-мятный цвет для инпутов
   const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50";
   const textareaClasses = "min-h-[100px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
   const selectClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 transition-all";
@@ -228,15 +227,15 @@ export function ProfileCabinet() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</label>
-              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE]/50 rounded-2xl px-6 font-bold text-muted-foreground border-none">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Email</label>
+              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-bold text-muted-foreground border-none">
                 <Mail className="h-4 w-4 opacity-40" />
                 {(user as any)?.email || 'Не указан (Тестовый вход)'}
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">User ID</label>
-              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE]/50 rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">User ID</label>
+              <div className="flex items-center gap-3 h-14 bg-[#E8F5EE] rounded-2xl px-6 font-mono text-[10px] text-muted-foreground/60 border-none overflow-hidden">
                 {user?.uid}
               </div>
             </div>
@@ -253,27 +252,26 @@ export function ProfileCabinet() {
                   <User className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
                 </div>
-                {/* Выравнивание имя, фамилия и дата рождения в одну сетку */}
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-start">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Имя *</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Имя *</FormLabel>
                       <FormControl><Input placeholder="Имя" {...field} className={inputClasses} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="lastName" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Фамилия</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Фамилия</FormLabel>
                       <FormControl><Input placeholder="Фамилия" {...field} className={inputClasses} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
                       <CalendarDays className="h-3 w-3" /> Дата рождения
                     </FormLabel>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-3 gap-1.5 pt-1.5">
                       <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
                         <SelectTrigger className="h-14 rounded-xl bg-[#E8F5EE] border-none shadow-inner font-bold px-3 text-xs"><SelectValue placeholder="Д" /></SelectTrigger>
                         <SelectContent className="rounded-xl border-none shadow-2xl">
@@ -305,7 +303,7 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="healthGoal" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Цель</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Цель</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -318,7 +316,7 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="activityLevel" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Уровень активности</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Уровень активности</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -342,7 +340,7 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
                   <FormField control={form.control} name="gender" render={({ field }) => (
                     <FormItem className="col-span-2 lg:col-span-1">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пол</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Пол</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -354,21 +352,21 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="age" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Возраст *</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Возраст *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="weight" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Вес (кг) *</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Вес (кг) *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="height" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Рост (см) *</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Рост (см) *</FormLabel>
                       <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -384,7 +382,7 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
                         <Heart className="h-3 w-3 text-red-500 fill-red-500" /> Любимая еда
                       </FormLabel>
                       <FormControl><Textarea placeholder="Что вы любите? (авокадо, лосось...)" {...field} className={textareaClasses} /></FormControl>
@@ -392,7 +390,7 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
                         <Ban className="h-3 w-3 text-gray-400" /> Нелюбимая еда
                       </FormLabel>
                       <FormControl><Textarea placeholder="Что исключить? (кинза, лук...)" {...field} className={textareaClasses} /></FormControl>
@@ -409,7 +407,7 @@ export function ProfileCabinet() {
                 <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="smoking" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Курение</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Курение</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
@@ -421,7 +419,7 @@ export function ProfileCabinet() {
                   )} />
                   <FormField control={form.control} name="alcohol" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Алкоголь</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Алкоголь</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent className="rounded-2xl border-none shadow-2xl">
