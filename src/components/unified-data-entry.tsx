@@ -10,7 +10,7 @@ import {
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  Droplet, Scale, Utensils, Brain, Coffee, Clock
+  Droplet, Scale, Utensils, Brain
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -25,6 +27,8 @@ interface UnifiedDataEntryProps {
 }
 
 export function UnifiedDataEntry({ children, selectedDate = new Date() }: UnifiedDataEntryProps) {
+  const { user } = useUser();
+  const { firestore } = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('meal');
@@ -91,7 +95,33 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
+  const saveMealLog = async (data: AnalyzeMealOutput) => {
+    if (!firestore || !user) return;
+    
+    const dateKey = format(selectedDate, 'yyyy-MM-dd');
+    const logId = `${dateKey}_${Date.now()}`;
+    const logRef = doc(firestore, 'users', user.uid, 'dietaryLogs', logId);
+    
+    await setDoc(logRef, {
+      id: logId,
+      userId: user.uid,
+      logDate: selectedDate.toISOString(),
+      mealName: data.mealName,
+      calories: data.calories,
+      protein: data.protein,
+      fat: data.fat,
+      carbs: data.carbs,
+      analysis: data.analysis,
+      createdAt: serverTimestamp()
+    });
+  };
+
   const handleSubmit = async (isRefinement = false) => {
+    if (!firestore || !user) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы не авторизованы.' });
+      return;
+    }
+
     setLoading(true);
     try {
       if (activeTab === 'meal') {
@@ -101,7 +131,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           refinement: isRefinement ? refinement : undefined,
         });
         setMealResult(result);
+        await saveMealLog(result);
+        toast({ title: 'Прием пищи записан', description: `${result.mealName} добавлено в дневник.` });
       } else {
+        // Логика для других вкладок (вода, шаги и т.д.)
         await new Promise(r => setTimeout(r, 1000));
         setIsSuccess(true);
       }

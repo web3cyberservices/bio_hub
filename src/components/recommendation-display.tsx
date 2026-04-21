@@ -55,7 +55,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
                   <svg className="w-full h-full -rotate-90 bio-ring-glow">
                     <circle cx="50%" cy="50%" r="42%" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="24" />
-                    <circle cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeWidth="24" strokeDasharray="100 100" strokeDashoffset={100 - bioScore} pathLength="100" strokeLinecap="round" className="macro-ring" />
+                    <circle cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeWidth="24" strokeDasharray="100 100" strokeDashoffset={100 - (Math.min(100, (macros.calories / calorieLimit) * 100))} pathLength="100" strokeLinecap="round" className="macro-ring" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-[110px] md:text-[150px] font-black leading-none">{bioScore}</span>
@@ -110,7 +110,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
            <Card className="lg:col-span-5 premium-card p-14 border-none bg-white">
-              <h3 className="text-4xl font-black mb-12">Баланс КБЖУ</h3>
+              <h3 className="text-4xl font-black mb-12">Баланс КБЖУ (Факт)</h3>
               <div className="h-[350px] relative">
                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -130,7 +130,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }} />
                        <span className="text-[11px] font-black uppercase opacity-50">{m.name}</span>
                        <span className="text-xl font-black">{m.value}г</span>
-                       <span className="text-[9px] font-bold text-muted-foreground">из {m.goal}г</span>
+                       <span className="text-[9px] font-bold text-muted-foreground">цель: {m.goal}г</span>
                     </div>
                  ))}
               </div>
@@ -147,7 +147,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
               <div className="relative z-10 pt-16 flex items-center gap-10">
                  <div className="flex-1 space-y-4">
                     <div className="flex justify-between text-[11px] font-black uppercase opacity-60">
-                       <span>Прогресс дня</span>
+                       <span>Факт дня</span>
                        <span>{macros.calories} / {calorieLimit}</span>
                     </div>
                     <div className="h-4 bg-white/10 rounded-full overflow-hidden p-1">
@@ -189,7 +189,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
 
   if (mode === 'meals') {
     return (
-      <div className="space-y-16 md:space-y-24 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12 pb-32">
+      <div className="space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 max-w-6xl mx-auto py-12">
         <div className="space-y-12 relative">
           <div className="absolute left-8 top-10 bottom-10 w-1 bg-gradient-to-b from-primary/5 via-primary/20 to-primary/5 rounded-full hidden md:block" />
           {mealPlan[0].meals.map((meal, idx) => (
@@ -222,7 +222,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                        <p className="text-lg font-medium italic text-foreground/80 leading-relaxed">«{meal.description}»</p>
                     </div>
 
-                    {/* Детализация состава */}
                     <div className="space-y-4 pt-6">
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Состав блюда:</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -234,18 +233,6 @@ export function RecommendationDisplay({ data, mode = 'dashboard' }: Recommendati
                         ))}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-8 pt-8 border-t">
-                     {[{ label: 'Белки', val: meal.protein, color: 'bg-secondary' }, { label: 'Жиры', val: meal.fat, color: 'bg-accent' }, { label: 'Углеводы', val: meal.carbs, color: 'bg-muted-foreground' }].map((m, i) => (
-                       <div key={i} className="flex flex-col gap-1">
-                          <span className="text-[10px] font-black text-muted-foreground uppercase opacity-40">{m.label}</span>
-                          <div className="flex items-center gap-3">
-                             <div className={cn("w-2 h-8 rounded-full", m.color)} />
-                             <span className="text-3xl font-black">{m.val || 0}г</span>
-                          </div>
-                       </div>
-                     ))}
                   </div>
                 </div>
               </Card>

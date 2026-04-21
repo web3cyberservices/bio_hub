@@ -6,7 +6,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, Sparkles, Settings, Trash2 } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,8 +16,9 @@ import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { ProfileCabinet } from '@/components/profile-cabinet';
-import { useUser, useFirestore, useDoc } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, setDoc, query, collection, where, deleteDoc } from 'firebase/firestore';
+import { Card } from '@/components/ui/card';
 
 export default function LandingDashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -38,6 +39,39 @@ export default function LandingDashboardPage() {
   }, [firestore, user, dateKey]);
 
   const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+
+  // Получаем логи еды за выбранный день
+  const dietaryLogsQuery = useMemoFirebase(() => {
+    if (!firestore || !user || !dateKey) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'dietaryLogs'),
+      where('userId', '==', user.uid)
+      // Здесь можно добавить фильтр по дате, если структура позволяет
+    );
+  }, [firestore, user, dateKey]);
+
+  const { data: logs } = useCollection<any>(dietaryLogsQuery);
+
+  // Фильтруем логи на стороне клиента для точности
+  const todayLogs = useMemo(() => {
+    if (!logs || !dateKey) return [];
+    return logs.filter(log => log.logDate.startsWith(dateKey));
+  }, [logs, dateKey]);
+
+  // Агрегируем данные из логов
+  const aggregatedActual = useMemo(() => {
+    return todayLogs.reduce((acc, log) => ({
+      calories: acc.calories + (log.calories || 0),
+      protein: acc.protein + (log.protein || 0),
+      fat: acc.fat + (log.fat || 0),
+      carbs: acc.carbs + (log.carbs || 0),
+    }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
+  }, [todayLogs]);
+
+  const handleDeleteLog = async (id: string) => {
+    if (!firestore || !user) return;
+    await deleteDoc(doc(firestore, 'users', user.uid, 'dietaryLogs', id));
+  };
 
   if (!selectedDate || userLoading) {
     return (
@@ -147,7 +181,14 @@ export default function LandingDashboardPage() {
                         <p className="text-muted-foreground text-sm md:text-xl font-medium px-1">Биометрический анализ на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
                      </div>
                   </div>
-                  <RecommendationDisplay data={currentResult} mode="dashboard" />
+                  {/* Передаем агрегированные фактические данные в RecommendationDisplay */}
+                  <RecommendationDisplay 
+                    data={{
+                      ...currentResult,
+                      macros: aggregatedActual.calories > 0 ? aggregatedActual : currentResult.macros
+                    }} 
+                    mode="dashboard" 
+                  />
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-10">
@@ -167,25 +208,76 @@ export default function LandingDashboardPage() {
             </TabsContent>
 
             <TabsContent value="meals" className="mt-0 outline-none">
-              {currentResult ? (
-                <div className="space-y-16">
-                  <div className="flex flex-col md:flex-row md:items-center gap-6">
-                     <div className="w-16 h-16 md:w-24 md:h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
-                        <Utensils className="h-8 w-8 md:h-12 md:w-12 text-primary" />
-                     </div>
-                     <div className="space-y-1">
-                        <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-foreground leading-none">Меню Bio-Tech</h2>
-                        <p className="text-muted-foreground text-sm md:text-xl font-medium px-1">Рацион, оптимизированный под ваш метаболизм.</p>
-                     </div>
+              <div className="space-y-16">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 md:w-24 md:h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center shrink-0">
+                      <Utensils className="h-8 w-8 md:h-12 md:w-12 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-foreground leading-none">Дневник Еды</h2>
+                      <p className="text-muted-foreground text-sm md:text-xl font-medium px-1">Отслеживание и планирование питания.</p>
+                    </div>
                   </div>
-                  <RecommendationDisplay data={currentResult} mode="meals" />
+                  
+                  <UnifiedDataEntry selectedDate={selectedDate}>
+                    <Button className="rounded-[2rem] h-20 px-10 text-xl font-black bg-primary gap-4 shadow-xl">
+                      <Plus className="h-8 w-8" /> Записать прием пищи
+                    </Button>
+                  </UnifiedDataEntry>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-32 text-center space-y-10">
-                  <h2 className="text-4xl md:text-6xl font-black tracking-tighter">План питания не сформирован</h2>
-                  <Button onClick={() => setActiveTab("wizard")} className="rounded-[2rem] h-20 px-12 text-xl font-black bg-primary">Настроить сейчас</Button>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                  <div className="lg:col-span-8 space-y-10">
+                    <div className="flex items-center justify-between px-4">
+                      <h3 className="text-3xl font-black uppercase tracking-tight">Записи за сегодня</h3>
+                      <Badge variant="outline" className="font-black">{todayLogs.length} блюд</Badge>
+                    </div>
+
+                    {todayLogs.length === 0 ? (
+                      <Card className="p-20 text-center rounded-[3rem] border-dashed border-4 border-muted/20 bg-muted/5">
+                        <p className="text-muted-foreground text-xl font-medium">Вы еще не добавили ни одной записи за сегодня.</p>
+                      </Card>
+                    ) : (
+                      <div className="grid gap-6">
+                        {todayLogs.map((log) => (
+                          <Card key={log.id} className="p-8 rounded-[2.5rem] premium-card flex items-center justify-between border-none shadow-xl">
+                            <div className="flex items-center gap-6">
+                              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                <Utensils className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h4 className="text-2xl font-black">{log.mealName}</h4>
+                                <div className="flex gap-3 mt-1">
+                                  <Badge className="bg-primary/10 text-primary border-none text-[9px]">{log.calories} ккал</Badge>
+                                  <Badge className="bg-secondary/10 text-secondary border-none text-[9px]">Б: {log.protein}г</Badge>
+                                  <Badge className="bg-accent/10 text-accent-foreground border-none text-[9px]">Ж: {log.fat}г</Badge>
+                                  <Badge className="bg-muted text-muted-foreground border-none text-[9px]">У: {log.carbs}г</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteLog(log.id)} className="text-destructive hover:bg-destructive/10 rounded-full h-12 w-12">
+                              <Trash2 className="h-6 w-6" />
+                            </Button>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="lg:col-span-4 space-y-10">
+                    <h3 className="text-3xl font-black uppercase tracking-tight px-4">ИИ-Рекомендации</h3>
+                    {currentResult ? (
+                      <RecommendationDisplay data={currentResult} mode="meals" />
+                    ) : (
+                      <Card className="p-10 rounded-[3rem] text-center space-y-6">
+                        <Sparkles className="h-12 w-12 text-primary/20 mx-auto" />
+                        <p className="text-muted-foreground font-medium">Сформируйте план в разделе «Анализ»</p>
+                      </Card>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </TabsContent>
 
             <TabsContent value="wizard" className="mt-0 outline-none">
