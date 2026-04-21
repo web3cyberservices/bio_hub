@@ -9,19 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
-  Calendar as CalendarIcon, Footprints, Moon, RefreshCw, 
-  Droplet, Scale, Utensils, Brain, Smile, Thermometer, Battery,
-  Save, Beef, Wheat, MessageSquare
+  Footprints, Moon, RefreshCw, 
+  Droplet, Scale, Utensils, Smile, Save, MessageSquare
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Card } from '@/components/ui/card';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -41,7 +38,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  // Editable meal result state
   const [editedMeal, setEditedMeal] = useState<AnalyzeMealOutput | null>(null);
 
   const [water, setWater] = useState<string>('');
@@ -221,6 +217,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   onChange={(e) => setDescription(e.target.value)} 
                   className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/5 border-none p-6 md:p-8 text-lg md:text-xl font-medium resize-none shadow-inner" 
                 />
+                
                 <div className="grid grid-cols-2 gap-4 md:gap-6">
                   <Button variant="outline" className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all" onClick={startCamera}>
                     <Camera className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black">КАМЕРА</span>
@@ -233,22 +230,24 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   </label>
                 </div>
 
-                {showCamera && (
-                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
-                    <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                      <Button onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
-                      <Button onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                <div className="flex justify-center w-full">
+                  {showCamera && (
+                    <div className="relative rounded-2xl overflow-hidden bg-black aspect-video w-full max-w-md shadow-2xl">
+                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                        <Button onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
+                        <Button onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {image && !showCamera && (
-                  <div className="relative rounded-2xl overflow-hidden aspect-video">
-                    <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
-                  </div>
-                )}
+                  {image && !showCamera && (
+                    <div className="relative rounded-2xl overflow-hidden aspect-video w-full max-w-md shadow-2xl border-4 border-white">
+                      <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
+                    </div>
+                  )}
+                </div>
 
                 <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary shadow-xl" onClick={() => handleAnalyze(false)} disabled={loading}>
                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5 md:h-6 text-accent" /> РАСПОЗНАТЬ</>}
@@ -360,14 +359,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   </div>
                </div>
 
-               {/* Ingredients Breakdown Section */}
                <div className="space-y-4">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-2">Приблизительный состав</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {editedMeal.components?.map((comp, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                           <span className="text-sm font-bold text-foreground/80">{comp.ingredient}</span>
-                           <Badge className="bg-primary text-white font-black px-3 py-1 rounded-xl shadow-md">
+                        <div key={i} className="flex items-center justify-between p-5 bg-primary/5 rounded-2xl border border-primary/10 transition-colors hover:bg-primary/10">
+                           <span className="text-base font-bold text-foreground/80">{comp.ingredient}</span>
+                           <Badge className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm">
                               {comp.weight}
                            </Badge>
                         </div>
