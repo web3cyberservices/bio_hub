@@ -7,8 +7,9 @@ import { useUser } from '@/firebase';
 
 export function NavBar() {
   const { user } = useUser();
-  // Считаем гостем, если пользователя нет, если это public-user или если это анонимный вход (тестовый)
-  const isGuest = !user || user.uid === 'public-user' || (user as any).isAnonymous;
+  // Считаем гостем ТОЛЬКО если пользователя нет или это public-user. 
+  // Анонимные (тестовые) пользователи теперь считаются авторизованными в UI.
+  const isGuest = !user || user.uid === 'public-user';
 
   return (
     <nav className="sticky top-0 z-[100] w-full bg-primary border-b border-white/10 shadow-xl">

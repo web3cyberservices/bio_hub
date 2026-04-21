@@ -252,7 +252,7 @@ export function ProfileCabinet() {
                   <User className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-black uppercase tracking-tight">Профиль</h3>
                 </div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-3 items-start">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                   <FormField control={form.control} name="firstName" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Имя *</FormLabel>
@@ -267,7 +267,9 @@ export function ProfileCabinet() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <FormItem>
+                </div>
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+                  <FormItem className="col-span-1 md:col-span-2">
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2">
                       <CalendarDays className="h-3 w-3" /> Дата рождения
                     </FormLabel>
