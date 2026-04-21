@@ -12,7 +12,7 @@ export function NavBar() {
   const isGuest = !user || user.uid === 'public-user';
 
   return (
-    <nav className="sticky top-0 z-[100] w-full bg-[#0B1A10] border-b border-primary/20 shadow-2xl">
+    <nav className="sticky top-0 z-[100] w-full bg-[#1A2F22] border-b border-primary/20 shadow-2xl">
       <div className="container mx-auto flex h-20 items-center justify-between px-6 md:px-12">
         <Link href="/" className="flex items-center gap-4 group transition-all">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
