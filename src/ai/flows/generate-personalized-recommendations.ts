@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Обновлено: теперь ИИ возвращает прямые ссылки на качественные фото еды из Unsplash.
+ * Исправлено: повышена стабильность генерации и валидации JSON.
  */
 
 import {ai} from '@/ai/genkit';
@@ -61,7 +60,7 @@ const GenerateRecommendationsOutputSchema = z.object({
     current: z.number(),
     goal: z.number(),
     unit: z.string(),
-  })),
+  })).default([]),
   fastingWindow: z.object({
     type: z.string(),
     remainingTime: z.string(),
@@ -77,13 +76,13 @@ const GenerateRecommendationsOutputSchema = z.object({
       protein: z.number().optional(),
       fat: z.number().optional(),
       carbs: z.number().optional(),
-      imageUrl: z.string().describe('Прямая ссылка на качественное фото еды из Unsplash. СТРОГО ПО ПРАВИЛАМ.'),
+      imageUrl: z.string().describe('ПОЛНАЯ прямая ссылка на фото Unsplash.'),
       components: z.array(z.object({
         ingredient: z.string().describe('Название ингредиента'),
         weight: z.string().describe('Вес с единицами измерения, например "200г"')
-      })).describe('Разбивка блюда на компоненты.')
+      })).default([])
     }))
-  })),
+  })).default([]),
 });
 export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendationsOutputSchema>;
 
@@ -100,10 +99,10 @@ const recommendationPrompt = ai.definePrompt({
   prompt: `Вы — эксперт-нутрициолог системы "PRO Себя". Ваша задача — создать глубокий аналитический отчет и план питания.
 
 ПРАВИЛА ДЛЯ ПОЛЯ imageUrl:
-Вы ОБЯЗАНЫ для каждого блюда вернуть качественную ссылку на фото еды с Unsplash.
+Вы ОБЯЗАНЫ для каждого блюда вернуть качественную ПОЛНУЮ ссылку на фото еды с Unsplash.
 1. Запрещено использовать заглушки с мостами, городами, людьми или абстракциями. Только ЕДА.
-2. Формат ссылки СТРОГО: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=600&q=80
-3. Подбирайте [ID] из примеров ниже или используйте известные вам ID качественных фуд-фото:
+2. Формат ссылки СТРОГО (полный URL): https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=600&q=80
+3. Подбирайте [ID] из примеров ниже:
    - Салат: 1512621776951-a57141f2eefd
    - Каша/Овсянка: 1517673400267-0251440c45dc
    - Рыба: 1467003909585-2f8a72700288
@@ -115,7 +114,7 @@ const recommendationPrompt = ai.definePrompt({
    - Орехи: 1536592248-b0a688680074
    - Творог/Йогурт: 1481931098708-28308112ef81
 
-ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
+ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ. Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.
 
 Контекст:
 Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}.

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -22,12 +21,14 @@ import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
 import { ProfileCabinet } from '@/components/profile-cabinet';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
   const { auth } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
@@ -37,7 +38,6 @@ export default function DashboardPage() {
     setSelectedDate(startOfToday());
   }, []);
 
-  // Редирект только если загрузка завершена и пользователя реально нет
   useEffect(() => {
     if (isMounted && !userLoading && (!user || user.uid === 'public-user')) {
       router.replace('/login');
@@ -49,13 +49,11 @@ export default function DashboardPage() {
     return format(selectedDate, 'yyyy-MM-dd');
   }, [selectedDate]);
   
-  // Ссылка на рекомендации ИИ
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
-  // Ссылка на ежедневные логи пользователя (шаги, вода и т.д.)
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user || !dateKey || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
@@ -92,16 +90,21 @@ export default function DashboardPage() {
   const handleResult = async (result: GenerateRecommendationsOutput) => {
     if (!firestore || !user || !dateKey || user.uid === 'public-user') return;
     
-    const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
-    await setDoc(docRef, {
-      id: dateKey,
-      userId: user.uid,
-      date: dateKey,
-      data: result,
-      createdAt: new Date().toISOString()
-    }, { merge: true });
-    
-    setActiveTab("dashboard");
+    try {
+      const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+      await setDoc(docRef, {
+        id: dateKey,
+        userId: user.uid,
+        date: dateKey,
+        data: result,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+      
+      toast({ title: 'Анализ готов', description: 'Ваш био-отчет успешно сформирован.' });
+      setActiveTab("dashboard");
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось записать отчет в базу.' });
+    }
   };
 
   const currentResult = recommendationDoc?.data as GenerateRecommendationsOutput | undefined;
@@ -110,7 +113,6 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
       <NavBar />
       
-      {/* Date Navigation Bar */}
       <div className="bg-white/90 backdrop-blur-xl border-b sticky top-16 md:top-20 z-40 py-2 md:py-4 shadow-sm">
         <div className="container mx-auto px-4 flex items-center justify-between gap-2 md:gap-4">
           <div className="flex items-center gap-1 md:gap-2 mx-auto">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -137,14 +136,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
 
     setLoading(true);
     try {
-      if (firestore && user) {
-        await setDoc(doc(firestore, 'users', user.uid), {
-          ...values,
-          id: user.uid,
-          profileType: 'RegularUser',
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      }
+      // Сохраняем профиль перед генерацией
+      await setDoc(doc(firestore, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        profileType: 'RegularUser',
+        ...values,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
 
       const { steps, avgHeartRate, sleepDurationHours, bloodPressure, ...biometrics } = values;
 
