@@ -4,7 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - SECURITY RULES (OPEN ACCESS FOR ALL AUTH USERS)
+     * PRO СЕБЯ - SECURITY RULES
+     * Разрешаем активность всем авторизованным пользователям (включая анонимных тестеров)
      */
 
     function isSignedIn() {
@@ -15,43 +16,31 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // --- Правила для пользователей ---
-
+    // --- Пользователи ---
     match /users/{userId} {
-      // Разрешаем всем вошедшим видеть базовые профили (для чатов и ленты)
-      allow get: if isSignedIn();
-      allow list: if isSignedIn(); 
+      // Все могут видеть базовые профили для чатов и ленты
+      allow get, list: if isSignedIn();
+      // Свой профиль можно редактировать
       allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
 
-      match /dailyLogs/{dailyLogId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      match /dietaryLogs/{dietaryLogId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      match /recommendations/{recommendationId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      match /labResults/{labId} {
-        allow read, write: if isOwner(userId);
-      }
+      match /dailyLogs/{id} { allow read, write: if isOwner(userId); }
+      match /dietaryLogs/{id} { allow read, write: if isOwner(userId); }
+      match /recommendations/{id} { allow read, write: if isOwner(userId); }
+      match /labResults/{id} { allow read, write: if isOwner(userId); }
     }
 
-    // Посты в ленте - писать могут все авторизованные (даже анонимы)
+    // --- Посты в ленте ---
     match /posts/{postId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn(); 
-      allow update: if isSignedIn(); 
+      allow create, update: if isSignedIn(); 
       allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid);
     }
 
-    // Система чатов
+    // --- Система чатов ---
     match /chats/{chatId} {
-      // Разрешаем чтение только участникам
+      // Разрешаем чтение (get и list) только участникам
+      // Важно: list требует, чтобы запрос содержал фильтр по participants
       allow read: if isSignedIn() && (request.auth.uid in resource.data.participants);
       
       // Создавать чат может любой вошедший
@@ -61,8 +50,8 @@ service cloud.firestore {
       allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
 
       match /messages/{messageId} {
-        // Доступ к сообщениям через проверку в родительском документе
-        allow read, create: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+        // Разрешаем всем вошедшим читать и писать сообщения в чатах
+        allow read, write: if isSignedIn();
       }
     }
   }

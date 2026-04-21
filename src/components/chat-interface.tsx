@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Send, Loader2, User, Bot, Activity, MessageSquare, 
-  Search, Phone, Video, MoreVertical, CheckCheck
+  Send, Loader2, MessageSquare, 
+  Search, Phone, Video, MoreVertical, CheckCheck, Activity, Bot
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, addDoc, doc, updateDoc, where, limit } from 'firebase/firestore';
@@ -16,7 +16,6 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -27,9 +26,9 @@ export function ChatInterface() {
   const [message, setMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Список чатов пользователя - гарантируем наличие UID
+  // Список чатов пользователя
   const chatsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    if (!firestore || !user?.uid) return null;
     
     return query(
       collection(firestore, 'chats'),
@@ -39,7 +38,7 @@ export function ChatInterface() {
     );
   }, [firestore, user?.uid]);
 
-  const { data: chats, isLoading: chatsLoading, error: chatsError } = useCollection<any>(chatsQuery);
+  const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
 
   // Сообщения активного чата
   const messagesQuery = useMemoFirebase(() => {
@@ -137,7 +136,7 @@ export function ChatInterface() {
                 >
                   <Avatar className="h-12 w-12 rounded-2xl border-2 border-primary/10">
                     <AvatarImage src={oDetails?.photo} />
-                    <AvatarFallback className="bg-primary/5 text-primary font-bold">{oDetails?.name?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/5 text-primary font-bold">{oDetails?.name?.charAt(0) || '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
@@ -173,7 +172,7 @@ export function ChatInterface() {
                 </Button>
                 <Avatar className="h-10 w-10 md:h-12 md:w-12 rounded-xl border-2 border-primary/10">
                    <AvatarImage src={otherParticipant?.photo} />
-                   <AvatarFallback className="bg-primary/5 text-primary font-bold">{otherParticipant?.name?.charAt(0)}</AvatarFallback>
+                   <AvatarFallback className="bg-primary/5 text-primary font-bold">{otherParticipant?.name?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <div>
                    <h3 className="font-black text-sm md:text-base leading-none">{otherParticipant?.name || 'Загрузка...'}</h3>
@@ -192,7 +191,7 @@ export function ChatInterface() {
 
             <ScrollArea className="flex-1 p-6 md:p-10">
               <div className="space-y-6 md:space-y-8">
-                {messages?.map((m, i) => (
+                {messages?.map((m) => (
                   <div key={m.id} className={cn("flex flex-col gap-1.5", m.senderId === user?.uid ? "items-end" : "items-start")}>
                     <div className={cn(
                       "max-w-[85%] md:max-w-[70%] p-4 md:p-5 rounded-[1.8rem] text-sm font-medium shadow-sm transition-all",
