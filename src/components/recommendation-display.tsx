@@ -1,32 +1,38 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Activity, Footprints, Moon, Heart, Droplet, 
-  Timer, Trophy, Flame, Utensils,
-  Plus, Clock, Sparkles, Zap
+  Timer, Flame, Zap
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 
 interface RecommendationDisplayProps {
   data: GenerateRecommendationsOutput;
+  actualMacros?: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+  };
   mode?: 'dashboard' | 'meals';
   deviceData?: any;
 }
 
-export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
-  const { bioScore, recommendations, macros, micronutrients, fastingWindow, mealPlan } = data;
+export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
+  const { bioScore, recommendations, macros, fastingWindow, mealPlan } = data;
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (!mounted) return null;
 
   const getMealImage = (imageId: string) => {
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
@@ -34,23 +40,27 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
     return `https://picsum.photos/seed/food-${imageId}/600/400`;
   };
 
-  // Целевые значения из расчета ИИ (теперь более динамичные)
-  const goals = {
-    calories: data.macros.calories || 2400,
-    protein: data.macros.protein || 160,
-    fat: data.macros.fat || 80,
-    carbs: data.macros.carbs || 250,
-    steps: 10000,
-    water: 2500,
+  // Целевые значения из расчета ИИ
+  const targetGoals = {
+    calories: macros.calories || 2400,
+    protein: macros.protein || 160,
+    fat: macros.fat || 80,
+    carbs: macros.carbs || 250,
+  };
+
+  // Фактические значения (из логов или дефолт)
+  const currentFact = actualMacros || {
+    calories: 0,
+    protein: 0,
+    fat: 0,
+    carbs: 0
   };
 
   const macroRings = [
-    { name: 'Белки', current: macros.protein, goal: goals.protein, color: 'hsl(var(--secondary))', icon: Flame },
-    { name: 'Жиры', current: macros.fat, goal: goals.fat, color: 'hsl(var(--accent))', icon: Droplet },
-    { name: 'Углеводы', current: macros.carbs, goal: goals.carbs, color: 'hsl(var(--primary))', icon: Zap },
+    { name: 'Белки', current: currentFact.protein, goal: targetGoals.protein, color: '#F97316', icon: Flame },
+    { name: 'Жиры', current: currentFact.fat, goal: targetGoals.fat, color: '#EAB308', icon: Droplet },
+    { name: 'Углеводы', current: currentFact.carbs, goal: targetGoals.carbs, color: '#2D7A4D', icon: Zap },
   ];
-
-  if (!mounted) return null;
 
   if (mode === 'dashboard') {
     return (
@@ -59,6 +69,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
           <div className="lg:col-span-8">
             <Card className="bg-gradient-to-br from-[#1A3C26] via-[#2D5A3C] to-[#142F1C] text-white p-12 md:p-16 relative overflow-hidden h-full flex flex-col justify-center border-none shadow-3xl rounded-[4rem]">
               <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-16">
+                {/* Главное кольцо Bio-Score */}
                 <div className="relative w-72 h-72 md:w-[380px] md:h-[380px] shrink-0">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-[80px] animate-pulse" />
                   <svg className="w-full h-full -rotate-90 bio-ring-glow">
@@ -83,6 +94,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
                   </div>
                 </div>
 
+                {/* Кольца БЖУ */}
                 <div className="flex-1 grid grid-cols-3 gap-6 w-full">
                   {macroRings.map((m, i) => (
                     <div key={i} className="flex flex-col items-center gap-4 group">
@@ -110,6 +122,7 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
                       <div className="text-center">
                         <p className="text-xl md:text-2xl font-black leading-none">{Math.round(m.current)}г</p>
                         <p className="text-[9px] font-black uppercase tracking-widest opacity-50 mt-1">{m.name}</p>
+                        <p className="text-[8px] font-bold opacity-30 mt-0.5">из {Math.round(m.goal)}г</p>
                       </div>
                     </div>
                   ))}
@@ -122,15 +135,18 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
           <div className="lg:col-span-4 space-y-8">
             <Card className="premium-card p-12 border-none bg-white flex flex-col justify-between h-[calc(50%-16px)]">
               <div>
-                <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-4">ЛИМИТ ЭНЕРГИИ</p>
+                <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-4">КАЛОРИИ (ФАКТ)</p>
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-7xl font-black tracking-tighter text-foreground leading-none">{Math.round(goals.calories)}</h3>
-                  <span className="text-xl font-bold opacity-20">ккал</span>
+                  <h3 className="text-7xl font-black tracking-tighter text-foreground leading-none">{Math.round(currentFact.calories)}</h3>
+                  <span className="text-xl font-bold opacity-20">/ {Math.round(targetGoals.calories)}</span>
                 </div>
-                <p className="text-muted-foreground mt-4 font-medium">цель на день</p>
+                <p className="text-muted-foreground mt-4 font-medium">ккал съедено за сегодня</p>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden mt-8">
-                <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: '100%' }} />
+              <div className="h-3 bg-muted rounded-full overflow-hidden mt-8">
+                <div 
+                  className="h-full bg-primary rounded-full transition-all duration-1000" 
+                  style={{ width: `${Math.min(100, (currentFact.calories / targetGoals.calories) * 100)}%` }} 
+                />
               </div>
             </Card>
 
@@ -154,10 +170,10 @@ export function RecommendationDisplay({ data, mode = 'dashboard', deviceData }: 
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
            {[
-             { label: 'Шаги', val: deviceData?.steps?.toLocaleString() || '8,432', goal: '10,000', icon: Footprints, color: 'text-orange-500', bg: 'bg-orange-50' },
-             { label: 'Сон', val: '7ч 45м', goal: '8ч', icon: Moon, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-             { label: 'Пульс', val: '62', goal: 'bpm', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50' },
-             { label: 'Вода', val: '1.8л', goal: '2.5л', icon: Droplet, color: 'text-blue-500', bg: 'bg-blue-50' }
+             { label: 'Шаги', val: deviceData?.steps?.toLocaleString() || '0', goal: '10,000', icon: Footprints, color: 'text-orange-500', bg: 'bg-orange-50' },
+             { label: 'Энергия', val: `${deviceData?.energy || 50}%`, goal: '100%', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+             { label: 'Пульс', val: deviceData?.avgHeartRate || '--', goal: 'bpm', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-50' },
+             { label: 'Вода', val: `${(deviceData?.water || 0) / 1000}л`, goal: '2.5л', icon: Droplet, color: 'text-blue-500', bg: 'bg-blue-50' }
            ].map((m, i) => (
              <Card key={i} className={cn("premium-card p-10 border-none flex flex-col gap-8 transition-transform hover:scale-105", m.bg)}>
                 <div className="flex justify-between items-start">

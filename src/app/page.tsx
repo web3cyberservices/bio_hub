@@ -38,7 +38,7 @@ export default function LandingDashboardPage() {
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user, dateKey]);
 
-  const { data: recommendationDoc, loading: loadingRec } = useDoc<any>(recommendationRef);
+  const { data: recommendationDoc } = useDoc<any>(recommendationRef);
 
   // Получаем логи еды за выбранный день
   const dietaryLogsQuery = useMemoFirebase(() => {
@@ -65,7 +65,7 @@ export default function LandingDashboardPage() {
     return logs.filter(log => log.logDate.startsWith(dateKey));
   }, [logs, dateKey]);
 
-  // Агрегируем данные из логов еды
+  // Агрегируем фактические данные
   const aggregatedActual = useMemo(() => {
     return todayLogs.reduce((acc, log) => ({
       calories: acc.calories + (log.calories || 0),
@@ -90,7 +90,7 @@ export default function LandingDashboardPage() {
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
              </div>
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Инициализация био-хаба...</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Синхронизация био-хаба...</p>
         </div>
       </div>
     );
@@ -115,7 +115,6 @@ export default function LandingDashboardPage() {
     <div className="flex min-h-screen flex-col bg-[#F0F7F2] overflow-x-hidden">
       <NavBar />
       
-      {/* Стеклянный заголовок с навигацией дат */}
       <div className="bg-white/80 backdrop-blur-2xl border-b sticky top-16 md:top-20 z-40 py-4 shadow-sm">
         <div className="container mx-auto px-4 md:px-8 flex items-center justify-between gap-6">
           <div className="flex items-center gap-2 md:gap-4 mx-auto">
@@ -157,7 +156,6 @@ export default function LandingDashboardPage() {
 
       <main className="container mx-auto flex-1 px-4 md:px-8 py-10 md:py-16">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-16">
-          {/* Floating Dock Tabs */}
           <div className="fixed bottom-10 left-0 right-0 z-[100] flex justify-center px-4 md:static md:bottom-auto">
             <TabsList className="dock-blur p-2 rounded-[2.5rem] h-20 md:h-24 border max-w-4xl w-full flex items-stretch">
               <TabsTrigger value="dashboard" className="rounded-[2rem] px-4 md:px-10 font-black uppercase tracking-widest text-[9px] md:text-[11px] gap-3 data-[state=active]:bg-primary data-[state=active]:text-white h-full flex-1 transition-all">
@@ -188,17 +186,9 @@ export default function LandingDashboardPage() {
                         <p className="text-muted-foreground text-sm md:text-xl font-medium px-1">Биометрический анализ на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
                      </div>
                   </div>
-                  {/* Передаем агрегированные фактические данные из еды и носимых устройств */}
                   <RecommendationDisplay 
-                    data={{
-                      ...currentResult,
-                      macros: {
-                        calories: aggregatedActual.calories || currentResult.macros.calories,
-                        protein: aggregatedActual.protein || currentResult.macros.protein,
-                        fat: aggregatedActual.fat || currentResult.macros.fat,
-                        carbs: aggregatedActual.carbs || currentResult.macros.carbs,
-                      }
-                    }} 
+                    data={currentResult} 
+                    actualMacros={aggregatedActual}
                     deviceData={dailyLogDoc}
                     mode="dashboard" 
                   />

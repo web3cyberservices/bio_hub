@@ -7,21 +7,14 @@ import { getFirestore } from 'firebase/firestore'
 
 /**
  * Инициализация Firebase SDK.
- * Логика адаптирована для работы как в Google Cloud (App Hosting), 
- * так и через локальный конфигурационный объект.
+ * Приоритет отдается локальному конфигу для стабильности в Studio.
  */
 export function initializeFirebase() {
   let firebaseApp: FirebaseApp;
 
   if (!getApps().length) {
-    try {
-      // Пытаемся инициализировать без параметров (для среды Google Cloud/App Hosting)
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Если не вышло, используем предоставленный конфиг
-      console.log('Firebase: Инициализация через локальный конфиг-объект...');
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+    // В Studio всегда используем предоставленный конфиг для надежности соединения
+    firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
   }

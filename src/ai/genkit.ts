@@ -3,7 +3,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * Инициализация Genkit с использованием Google AI плагина.
- * Принудительно используем gemini-1.5-flash для стабильности в Firebase Studio.
+ * Принудительно используем gemini-1.5-flash для стабильности.
  */
 export const ai = genkit({
   plugins: [googleAI()],
