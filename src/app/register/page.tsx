@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/nav-bar';
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sparkles, Loader2, User } from 'lucide-react';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -22,8 +22,15 @@ export default function RegisterPage() {
   
   const { auth } = useAuth();
   const { firestore } = useFirestore();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!userLoading && user && user.uid !== 'public-user') {
+      router.replace('/dashboard');
+    }
+  }, [user, userLoading, router]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +38,17 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервисы Firebase недоступны. Подключите проект в Studio.',
+        description: 'Сервисы Firebase недоступны.',
       });
       return;
     }
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
 
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
+      await setDoc(doc(firestore, 'users', newUser.uid), {
+        uid: newUser.uid,
         displayName: name,
         email: email,
         profileType: 'user',
@@ -49,7 +56,6 @@ export default function RegisterPage() {
       }, { merge: true });
 
       toast({ title: 'Регистрация успешна' });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -90,12 +96,11 @@ export default function RegisterPage() {
         }, { merge: true });
       }
       toast({ title: 'Вход через Google выполнен' });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка Google входа',
-        description: 'Не удалось войти через Google. Убедитесь, что метод включен в консоли Firebase.',
+        description: 'Не удалось войти через Google.',
       });
     } finally {
       setLoading(false);
@@ -130,7 +135,6 @@ export default function RegisterPage() {
       }
 
       toast({ title: 'Вход выполнен' });
-      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -141,6 +145,14 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (userLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F0F7F2]">

@@ -25,7 +25,8 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!userLoading && user && user.uid !== 'public-user' && !(user as any).isAnonymous) {
+    // Перенаправляем любого авторизованного пользователя (включая анонимных) в дашборд
+    if (!userLoading && user && user.uid !== 'public-user') {
       router.replace('/dashboard');
     }
   }, [user, userLoading, router]);
@@ -43,12 +44,14 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Вход выполнен' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка входа',
         description: 'Неверный email или пароль.',
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -124,11 +127,13 @@ export default function LoginPage() {
 
       toast({ title: 'Вход выполнен' });
     } catch (error: any) {
+      console.error('Anonymous login error:', error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Не удалось выполнить быстрый вход.',
+        description: 'Не удалось выполнить быстрый вход. Убедитесь, что Anonymous Auth включен.',
       });
+    } finally {
       setLoading(false);
     }
   };
