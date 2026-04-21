@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
- * Добавлена логика повторных попыток для обработки перегрузки ИИ-модели (Error 503).
+ * Улучшена логика повторных попыток для обработки высокой нагрузки на Gemini (Error 503).
  */
 
 import {ai} from '@/ai/genkit';
@@ -114,27 +114,32 @@ const IMAGE_ID_PROMPT = `
 `;
 
 /**
- * Вспомогательная функция для повторных попыток при временных ошибках ИИ (503/429).
+ * Вспомогательная функция для повторных попыток при временных ошибках ИИ (503/429/UNAVAILABLE).
+ * Усилена для работы в условиях высокой нагрузки.
  */
-async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
+async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDelay = 2000): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error: any) {
-      const isTransient = error.message?.includes('503') || 
-                          error.message?.includes('UNAVAILABLE') || 
-                          error.message?.includes('429') ||
-                          error.message?.includes('overloaded');
+      const errorMsg = error.message || '';
+      const isTransient = errorMsg.includes('503') || 
+                          errorMsg.includes('UNAVAILABLE') || 
+                          errorMsg.includes('429') ||
+                          errorMsg.includes('overloaded') ||
+                          errorMsg.includes('demand');
       
       if (isTransient && i < maxRetries - 1) {
-        const delay = initialDelay * Math.pow(2, i); // Экспоненциальная задержка
+        // Экспоненциальная задержка с небольшим "дребезгом" (jitter)
+        const delay = initialDelay * Math.pow(2, i) + (Math.random() * 500); 
+        console.warn(`[BioTech AI] Временная ошибка (попытка ${i + 1}/${maxRetries}). Ожидание ${Math.round(delay)}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
       throw error;
     }
   }
-  throw new Error('ИИ временно недоступен из-за высокой нагрузки. Попробуйте еще раз через минуту.');
+  throw new Error('ИИ временно недоступен из-за экстремальной нагрузки на серверы Google. Пожалуйста, попробуйте еще раз через 30-60 секунд.');
 }
 
 const recommendationPrompt = ai.definePrompt({
