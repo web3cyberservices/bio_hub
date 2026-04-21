@@ -7,7 +7,7 @@ import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, HeartPulse, Stethoscope } from 'lucide-react';
 import { format, addDays, startOfToday, isPast, isFuture, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -22,6 +22,7 @@ import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
 import { ProfileCabinet } from '@/components/profile-cabinet';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -178,7 +179,10 @@ export default function DashboardPage() {
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
           <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-2xl w-full">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-4xl w-full">
+              <TabsTrigger value="specialists" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                <Stethoscope className="h-3 w-3 md:h-4 md:w-4" /> Советы
+              </TabsTrigger>
               <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
                 <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
               </TabsTrigger>
@@ -198,6 +202,82 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <TabsContent value="specialists" className="mt-0 outline-none">
+                <div className="space-y-8 md:space-y-12">
+                   <div className="flex items-center gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+                         <Sparkles className="h-5 w-5 md:h-8 md:w-8 text-primary" />
+                      </div>
+                      <div>
+                         <h2 className="text-xl md:text-5xl font-black tracking-tighter text-foreground">Советы ИИ-специалистов</h2>
+                         <p className="text-muted-foreground text-[10px] md:text-base font-medium">Ваш персональный консилиум по биохакингу.</p>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        { 
+                          name: 'Др. Ария', 
+                          role: 'Нутрициолог', 
+                          icon: Utensils, 
+                          color: 'text-orange-500', 
+                          bg: 'bg-orange-50',
+                          advice: currentResult?.recommendations.diet || 'Для получения советов по питанию необходимо выполнить био-анализ.'
+                        },
+                        { 
+                          name: 'Др. Кай', 
+                          role: 'Эксперт по образу жизни', 
+                          icon: Brain, 
+                          color: 'text-indigo-600', 
+                          bg: 'bg-indigo-50',
+                          advice: currentResult?.recommendations.lifestyle || 'Рекомендации по режиму дня появятся здесь после обработки ваших данных.'
+                        },
+                        { 
+                          name: 'Др. Сола', 
+                          role: 'Биохимик', 
+                          icon: HeartPulse, 
+                          color: 'text-rose-600', 
+                          bg: 'bg-rose-50',
+                          advice: currentResult?.recommendations.supplements || 'Анализ необходимых нутрицевтиков будет доступен в этом разделе.'
+                        }
+                      ].map((spec, i) => (
+                        <Card key={i} className="premium-card border-none shadow-xl overflow-hidden group hover:scale-[1.02] transition-all">
+                           <CardContent className="p-8 space-y-6">
+                              <div className="flex items-center gap-4">
+                                 <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", spec.bg)}>
+                                    <spec.icon className={cn("h-7 w-7", spec.color)} />
+                                 </div>
+                                 <div>
+                                    <h4 className="font-black text-lg leading-none">{spec.name}</h4>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{spec.role}</p>
+                                 </div>
+                              </div>
+                              <div className="bg-[#E8F5EE] p-5 rounded-2xl shadow-inner min-h-[120px]">
+                                 <p className="text-sm font-medium text-foreground/80 leading-relaxed italic">
+                                    "{spec.advice}"
+                                 </p>
+                              </div>
+                              <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 gap-2">
+                                 <MessageSquare className="h-3 w-3" /> Обсудить в чате
+                              </Button>
+                           </CardContent>
+                        </Card>
+                      ))}
+                   </div>
+
+                   {!currentResult && selectedDate && (
+                      <div className="text-center py-10">
+                        <Button 
+                           onClick={() => setActiveTab("dashboard")}
+                           className="rounded-2xl h-16 px-10 bg-primary font-black shadow-xl hover:scale-105 transition-all gap-3"
+                        >
+                           <Sparkles className="h-5 w-5 text-accent" /> Сформировать советы на сегодня
+                        </Button>
+                      </div>
+                   )}
+                </div>
+              </TabsContent>
+
               <TabsContent value="dashboard" className="mt-0 outline-none">
                 {currentResult ? (
                   <div className="space-y-6 md:space-y-10">
@@ -278,7 +358,7 @@ function NoDataView({ onResult, selectedDate }: { onResult: (r: GenerateRecommen
         <h2 className="text-xl md:text-5xl font-black tracking-tight leading-tight md:leading-none">Данные для анализа отсутствуют</h2>
         <p className="text-muted-foreground max-w-lg mx-auto font-medium text-xs md:text-lg px-4">Обновите ваши показатели, чтобы ИИ подготовил план на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
       </div>
-      <RecommendationForm onResult={onResult} selectedDate={selectedDate} />
+      <RecommendationForm onResult={handleResult} selectedDate={selectedDate} />
     </div>
   );
 }
