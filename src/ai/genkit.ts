@@ -3,8 +3,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 
 /**
  * Инициализация Genkit с использованием Google AI плагина.
- * Модель принудительно установлена на gemini-1.5-flash для предотвращения ошибок thought_signature.
- * Это обеспечивает максимальную стабильность в текущем окружении Firebase Studio.
+ * Принудительно используем gemini-1.5-flash для стабильности в Firebase Studio.
  */
 export const ai = genkit({
   plugins: [googleAI()],

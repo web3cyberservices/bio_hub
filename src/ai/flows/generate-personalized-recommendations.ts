@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Использует Gemini 1.5 Flash со встроенной логикой повторных попыток (retry).
+ * Использует Gemini 1.5 Flash для стабильности.
  */
 
 import {ai} from '@/ai/genkit';
@@ -96,12 +96,6 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  config: {
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-    ],
-  },
   prompt: `Вы — ИИ-биохакер и нутрициолог системы "PRO Себя".
 
 ВАША ЗАДАЧА:
@@ -109,7 +103,6 @@ const recommendationPrompt = ai.definePrompt({
 
 ПРАВИЛА ДЕТАЛИЗАЦИИ БЛЮД:
 Для каждого приема пищи в mealPlan вы ОБЯЗАНЫ предоставить массив components. 
-Разбивайте блюдо на логические части. Пример: "Стейк с брокколи" -> [{ingredient: "Говядина", weight: "200г"}, {ingredient: "Брокколи", weight: "150г"}].
 
 ИСПОЛЬЗУЙТЕ ТОЛЬКО ЭТИ ИЗОБРАЖЕНИЯ:
 breakfast-oatmeal, breakfast-omelette, breakfast-smoothie, lunch-salmon, lunch-salad-chicken, lunch-soup, dinner-steak, dinner-white-fish, dinner-tofu, snack-nuts, snack-yogurt, snack-avocado, snack-fruit.
@@ -129,7 +122,6 @@ const generateRecommendationsFlow = ai.defineFlow(
   },
   async (input) => {
     let lastError;
-    // Цикл повторных попыток для обхода ошибки 503 (Service Unavailable)
     for (let i = 0; i < 3; i++) {
       try {
         const {output} = await recommendationPrompt(input, {
@@ -140,7 +132,6 @@ const generateRecommendationsFlow = ai.defineFlow(
       } catch (err: any) {
         lastError = err;
         console.error(`Попытка ${i + 1} не удалась:`, err.message);
-        // Если ошибка 503 или связана с загрузкой, ждем и пробуем снова
         if (err.status === 503 || err.message?.includes('503') || err.message?.includes('thought_signature')) {
           await new Promise(resolve => setTimeout(resolve, 2000 * (i + 1)));
           continue;
