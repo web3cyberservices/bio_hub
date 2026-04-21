@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -89,7 +88,20 @@ export default function DashboardPage() {
   const { data: dailyLogDoc, isLoading: loadingLogs } = useDoc<any>(dailyLogRef);
   const { data: posts } = useCollection<any>(postsQuery);
 
-  const profileType = userData?.profileType || 'user';
+  // Стабильное определение типа профиля
+  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
+
+  // Эффект для предотвращения "зависания" на несуществующей вкладке при смене роли
+  useEffect(() => {
+    const userTabs = ["feed", "dashboard", "meals", "chats", "profile"];
+    const specialistTabs = ["feed", "my-feed", "appointments", "chats", "profile"];
+    
+    if (profileType === 'user' && !userTabs.includes(activeTab)) {
+      setActiveTab("feed");
+    } else if (profileType === 'specialist' && !specialistTabs.includes(activeTab)) {
+      setActiveTab("feed");
+    }
+  }, [profileType, activeTab]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -230,34 +242,34 @@ export default function DashboardPage() {
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
           <div className="flex justify-center">
-            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full">
-              <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+            <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl md:rounded-[2rem] h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
+              <TabsTrigger value="feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                 <BookOpen className="h-3 w-3 md:h-4 md:w-4" /> Bio-Лента
               </TabsTrigger>
               
               {profileType === 'user' ? (
                 <>
-                  <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                  <TabsTrigger value="dashboard" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                     <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" /> Дашборд
                   </TabsTrigger>
-                  <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                  <TabsTrigger value="meals" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                     <Utensils className="h-3 w-3 md:h-4 md:w-4" /> Питание
                   </TabsTrigger>
                 </>
               ) : (
                 <>
-                  <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                  <TabsTrigger value="my-feed" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                     <Briefcase className="h-3 w-3 md:h-4 md:w-4" /> Мои посты
                   </TabsTrigger>
-                  <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+                  <TabsTrigger value="appointments" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                     <CalendarCheck className="h-3 w-3 md:h-4 md:w-4" /> Приемы
                   </TabsTrigger>
                 </>
               )}
-              <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+              <TabsTrigger value="chats" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                 <Users className="h-3 w-3 md:h-4 md:w-4" /> Чаты
               </TabsTrigger>
-              <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1">
+              <TabsTrigger value="profile" className="rounded-lg md:rounded-[1.5rem] px-2 md:px-8 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all h-full flex-1 min-w-max">
                 <UserCircle className="h-3 w-3 md:h-4 md:w-4" /> Профиль
               </TabsTrigger>
             </TabsList>

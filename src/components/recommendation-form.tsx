@@ -146,10 +146,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       const birthDate = userData?.birthDate || '1990-01-01';
       const age = calculateAge(birthDate);
 
+      // Сохраняем биометрию, но НЕ перезаписываем profileType
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid,
         email: user.email,
-        profileType: 'RegularUser',
         ...values,
         age,
         updatedAt: new Date().toISOString()
