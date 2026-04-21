@@ -71,8 +71,8 @@ const GenerateRecommendationsOutputSchema = z.object({
     day: z.string(),
     meals: z.array(z.object({
       time: z.string(),
-      name: z.string(),
-      description: z.string(),
+      name: z.string().describe('Короткое аппетитное название блюда'),
+      description: z.string().describe('Краткое описание пользы и состава'),
       calories: z.number(),
       protein: z.number().optional(),
       fat: z.number().optional(),
@@ -100,19 +100,18 @@ const recommendationPrompt = ai.definePrompt({
   prompt: `Вы — ИИ-биохакер и нутрициолог системы "PRO Себя".
 
 ВАША ЗАДАЧА:
-Создать глубокий аналитический отчет на основе биометрических данных.
+Создать глубокий аналитический отчет и план питания на основе биометрии.
 
-ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId):
-Выберите наиболее подходящий ID из списка ниже. Если это фруктовый перекус, используйте snack-fruit, если только яблоко — snack-apple.
+ПРАВИЛА ВЫБОРА ИЗОБРАЖЕНИЙ (imageId) - КРИТИЧЕСКИ ВАЖНО:
+Выберите наиболее подходящий ID из списка ниже. ОШИБКА В ВЫБОРЕ ID ПРИВЕДЕТ К НЕВЕРНОЙ КАРТИНКЕ (например, одуванчик вместо стейка).
 
 СПИСОК ДОСТУПНЫХ ID:
-- breakfast-oatmeal, breakfast-omelette, breakfast-smoothie
-- lunch-salmon, lunch-salad-chicken, lunch-soup
-- dinner-steak, dinner-white-fish, dinner-tofu
-- snack-nuts, snack-yogurt, snack-avocado, snack-fruit, snack-apple, snack-pear
+- breakfast-oatmeal (каши), breakfast-omelette (яичница), breakfast-smoothie (напитки)
+- lunch-salmon (рыба), lunch-salad-chicken (салаты с птицей), lunch-soup (супы)
+- dinner-steak (мясо, стейки), dinner-white-fish (белая рыба), dinner-tofu (веган)
+- snack-nuts (орехи), snack-yogurt (молочка), snack-avocado (тосты), snack-fruit (фруктовая нарезка), snack-apple (яблоко), snack-pear (груша)
 
-ДЕТАЛИЗАЦИЯ:
-Для каждого приема пищи в mealPlan предоставьте массив components с точным указанием веса (граммы/мл).
+ОБРАТИТЕ ВНИМАНИЕ: Если рекомендуете стейк, используйте СТРОГО dinner-steak.
 
 ОТВЕЧАЙТЕ СТРОГО НА РУССКОМ ЯЗЫКЕ.
 

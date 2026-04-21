@@ -39,7 +39,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     const found = (PlaceHolderImages || []).find(img => img?.id === imageId);
     if (found) return { url: found.imageUrl, hint: found.imageHint };
     return { 
-      url: `https://picsum.photos/seed/food-${imageId}/600/400`, 
+      url: `https://picsum.photos/seed/${imageId}-food/600/400`, 
       hint: "healthy food" 
     };
   };
@@ -204,35 +204,43 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
             const imageData = getMealImageData(meal.imageId);
             return (
               <Card key={idx} className="premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all hover:scale-[1.01]">
-                <div className="relative w-full xl:w-[350px] h-[250px] xl:h-auto shrink-0 overflow-hidden">
+                <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group">
                   <Image 
                     src={imageData.url} 
                     alt={meal.name} 
                     fill 
-                    className="object-cover" 
+                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     data-ai-hint={imageData.hint}
                   />
-                  <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl">
-                     <span className="text-lg font-black text-white">{meal.time}</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                     <Badge className="bg-primary/90 text-white border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                        {meal.time}
+                     </Badge>
+                     <h4 className="text-white text-xl font-black leading-tight drop-shadow-lg line-clamp-2">
+                        {meal.name}
+                     </h4>
                   </div>
                 </div>
-                <div className="p-10 flex-1 space-y-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-3xl font-black tracking-tighter leading-none">{meal.name}</h3>
-                      <p className="text-muted-foreground mt-2 text-sm italic">{meal.description}</p>
+                <div className="p-10 flex-1 space-y-8">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-1">
+                      <h3 className="text-3xl font-black tracking-tighter leading-none text-foreground">{meal.name}</h3>
+                      <p className="text-muted-foreground text-sm font-medium italic leading-relaxed">{meal.description}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-4xl font-black text-primary">{meal.calories} <span className="text-[12px] uppercase opacity-30">ккал</span></p>
+                    <div className="text-right shrink-0">
+                      <p className="text-5xl font-black text-primary drop-shadow-sm">{meal.calories}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">ккал</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {meal.components?.map((comp, ci) => (
-                      <div key={ci} className="flex items-center justify-between p-5 bg-primary/5 rounded-[1.5rem] border border-primary/10 transition-colors hover:bg-primary/10">
-                        <span className="text-base font-bold text-foreground/90">{comp.ingredient}</span>
+                      <div key={ci} className="flex items-center justify-between p-6 bg-primary/5 rounded-[2rem] border border-primary/10 transition-all hover:bg-primary/10 group/item">
+                        <span className="text-base font-bold text-foreground/80 group-hover/item:text-foreground transition-colors">{comp.ingredient}</span>
                         <Badge 
                           variant="default" 
-                          className="bg-foreground text-background font-black px-3 py-1.5 rounded-xl shadow-md text-xs"
+                          className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm transition-transform group-hover/item:scale-110"
                         >
                           {comp.weight}
                         </Badge>
