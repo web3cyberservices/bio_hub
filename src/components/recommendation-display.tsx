@@ -7,11 +7,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  Activity, Footprints, Moon, Heart, 
-  MessageSquare, ShieldCheck,
-  Smartphone, Database, LayoutGrid, FlaskConical, Zap
+  Activity, Droplets, Moon, Utensils, 
+  FlaskConical, Database, Zap, LayoutGrid, 
+  ChevronRight, Sparkles, MessageSquare, ShoppingBasket
 } from 'lucide-react';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
+import { cn } from '@/lib/utils';
 
 interface RecommendationDisplayProps {
   data?: GenerateRecommendationsOutput;
@@ -36,17 +37,23 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   const bioScore = data?.bioScore ?? 0;
   const macros = data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
-  const systemStatus = data ? "SYSTEM STATUS: OPTIMAL" : "SYSTEM STATUS: INITIALIZING";
 
   if (mode === 'dashboard') {
     return (
-      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-4xl mx-auto overflow-visible pb-32">
+      <div className="space-y-2 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-2xl mx-auto pb-40">
         
-        {/* Bio-Score Central Hub (Matching the photo) */}
-        <div className="text-center py-10 relative z-20">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -z-10" />
-           <div className="inline-flex flex-col items-center">
-              <div className="relative w-40 h-40 flex items-center justify-center">
+        {/* Top Header - Compact Bio-Score (as in reference) */}
+        <div className="flex items-center justify-between px-6 pt-4 mb-4">
+           <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
+                 <Droplets className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-[7px] font-black text-white/40 uppercase mt-1">Вода</span>
+           </div>
+
+           <div className="relative group">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+              <div className="relative w-32 h-32 flex items-center justify-center">
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
                   <circle cx="50%" cy="50%" r="45%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="4" />
                   <circle 
@@ -56,53 +63,72 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                   />
                 </svg>
                 <div className="text-center">
-                  <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em] block">Bio-Score</span>
-                  <span className="text-6xl font-black text-white neo-glow-strong leading-none">{bioScore}</span>
-                  <span className="text-[9px] font-bold text-white/40 block mt-1">/100</span>
+                  <span className="text-[8px] font-black text-primary/60 uppercase tracking-[0.2em] block">Bio-Score</span>
+                  <span className="text-4xl font-black text-white neo-glow leading-none">{bioScore}</span>
+                  <span className="text-[8px] font-bold text-white/40 block">/100</span>
                 </div>
               </div>
-              <p className="mt-4 text-[10px] font-black tracking-[0.5em] text-primary/80 uppercase">{systemStatus}</p>
+           </div>
+
+           <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
+                 <Moon className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-[7px] font-black text-white/40 uppercase mt-1">Сон</span>
            </div>
         </div>
 
-        {/* The Holographic Digital Twin Visualizer */}
+        {/* The Holographic Digital Twin Visualizer - Centered and Shrunk */}
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
           macros={macros}
         />
 
-        {/* Quick Insights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 pt-10">
-           <Card className="cyber-card p-6 flex items-center justify-between border-white/5 hover:border-primary/40 group cursor-pointer">
+        {/* Functional List (as in reference bottom section) */}
+        <div className="px-6 space-y-3 pt-6">
+           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all shadow-[0_0_15px_rgba(14,165,233,0.1)]">
-                    <FlaskConical className="h-6 w-6" />
+                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <MessageSquare className="h-5 w-5" />
                  </div>
                  <div>
-                    <h3 className="text-xs font-black tracking-tight text-white uppercase">LabScan AI</h3>
-                    <p className="text-[9px] text-white/40 font-medium">Анализ маркеров крови</p>
+                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Мой Чат: Ассистент PRO</h3>
+                    <p className="text-[9px] text-white/40 font-medium">Мгновенные советы по биометрии</p>
                  </div>
               </div>
-              <LayoutGrid className="h-4 w-4 text-white/20 group-hover:text-primary transition-colors" />
+              <ChevronRight className="h-4 w-4 text-white/20" />
            </Card>
 
-           <Card className="cyber-card p-6 flex items-center justify-between border-white/5 hover:border-primary/40 group cursor-pointer">
+           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all shadow-[0_0_15px_rgba(14,165,233,0.1)]">
-                    <Database className="h-6 w-6" />
+                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <FlaskConical className="h-5 w-5" />
                  </div>
                  <div>
-                    <h3 className="text-xs font-black tracking-tight text-white uppercase">Bio-Архив</h3>
-                    <p className="text-[9px] text-white/40 font-medium">История и рекомендации</p>
+                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Расшифровка LabScan AI</h3>
+                    <p className="text-[9px] text-white/40 font-medium">Анализ маркеров крови и гормонов</p>
                  </div>
               </div>
-              <LayoutGrid className="h-4 w-4 text-white/20 group-hover:text-primary transition-colors" />
+              <ChevronRight className="h-4 w-4 text-white/20" />
+           </Card>
+
+           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
+              <div className="flex items-center gap-4">
+                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <ShoppingBasket className="h-5 w-5" />
+                 </div>
+                 <div>
+                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Smart Inventory</h3>
+                    <p className="text-[9px] text-white/40 font-medium">Меню из вашего холодильника</p>
+                 </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-white/20" />
            </Card>
         </div>
 
-        <div className="text-center pt-10 opacity-20">
-           <p className="text-[6px] font-black uppercase tracking-[1.2em]">PRO SEBYA DIGITAL TWIN INTERFACE V4.0.2</p>
+        <div className="text-center pt-8 opacity-10">
+           <p className="text-[6px] font-black uppercase tracking-[1em]">PRO SEBYA INTERFACE V4.0.2</p>
         </div>
       </div>
     );
@@ -117,7 +143,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
           <h2 className="text-3xl font-black text-white neo-glow tracking-tighter uppercase">План оптимизации</h2>
        </div>
        
-       <div className="grid grid-cols-1 gap-6">
+       <div className="grid grid-cols-1 gap-6 px-4">
           {data.mealPlan?.[0]?.meals.map((meal, idx) => (
              <Card key={idx} className="cyber-card overflow-hidden flex flex-col md:flex-row border-white/5 hover:border-primary/30 transition-all">
                 <div className="relative w-full md:w-56 h-48 md:h-auto shrink-0 group">
