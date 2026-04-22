@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -68,7 +69,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore || user.uid === 'public-user') return null;
+    if (!user || !firestore) return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
@@ -132,11 +133,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !firestore || user.uid === 'public-user') {
+    if (!user || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Вход не выполнен',
-        description: 'Пожалуйста, авторизуйтесь для использования ИИ-анализа.',
+        title: 'Ошибка',
+        description: 'Сервисы Firebase недоступны.',
       });
       return;
     }
@@ -146,10 +147,10 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       const birthDate = userData?.birthDate || '1990-01-01';
       const age = calculateAge(birthDate);
 
-      // Сохраняем биометрию, но НЕ перезаписываем profileType
+      // Сохраняем биометрию (включая public-user)
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid,
-        email: user.email,
+        email: (user as any).email || null,
         ...values,
         age,
         updatedAt: new Date().toISOString()
@@ -265,6 +266,13 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                 )} />
               </div>
             </div>
+
+            {user?.uid === 'public-user' && (
+               <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-2xl flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-secondary" />
+                  <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Вы в тестовом режиме. Данные будут видны всем гостям.</p>
+               </div>
+            )}
 
             <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20">
               {loading ? <><Loader2 className="mr-4 animate-spin h-8 w-8" /> Анализ данных...</> : <><Sparkles className="mr-4 h-8 w-8" /> Сформировать био-отчет</>}

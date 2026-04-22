@@ -107,7 +107,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const handleSmartSync = async () => {
     setSyncing(true);
-    // Имитация задержки подключения к API Apple Health / Google Fit
     await new Promise(r => setTimeout(r, 1500));
     
     setSteps(Math.floor(Math.random() * 5000 + 5000).toString());
@@ -122,7 +121,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const saveMealToFirestore = async (data: AnalyzeMealOutput) => {
-    if (!firestore || !user || user.uid === 'public-user') return;
+    if (!firestore || !user) return;
     
     setLoading(true);
     try {
@@ -154,8 +153,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const handleAnalyze = async (isRefinement = false) => {
-    if (!firestore || !user || user.uid === 'public-user') {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Вы не авторизованы.' });
+    if (!firestore || !user) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Сервисы временно недоступны.' });
       return;
     }
 
@@ -202,7 +201,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const handleDailyLogSubmit = async () => {
-    if (!firestore || !user || user.uid === 'public-user') return;
+    if (!firestore || !user) return;
     
     setLoading(true);
     try {
@@ -230,7 +229,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const saveLabResultToFirestore = async () => {
-    if (!firestore || !user || !labResult || user.uid === 'public-user') return;
+    if (!firestore || !user || !labResult) return;
     
     setLoading(true);
     try {
@@ -436,7 +435,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   {image && (
                     <div className="relative rounded-2xl overflow-hidden aspect-video border-4 border-white shadow-lg bg-black/5 flex items-center justify-center">
                       <img src={image} alt="Lab Preview" className="max-w-full max-h-full object-contain" />
-                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 rounded-full h-8 w-8" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
+                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
                     </div>
                   )}
 
