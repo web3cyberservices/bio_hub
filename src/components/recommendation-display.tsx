@@ -40,57 +40,18 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative h-[calc(100vh-280px)] flex flex-col items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-1000 overflow-hidden">
+      <div className="relative flex-1 flex flex-col animate-in fade-in duration-1000 overflow-hidden h-full">
+        {/* The Holographic Digital Twin Visualizer */}
+        <BioTwinVisualizer 
+          score={bioScore} 
+          deviceData={deviceData} 
+          macros={macros}
+          className="flex-1 w-full"
+        />
         
-        {/* Top Header - Compact Bio-Score */}
-        <div className="flex items-center justify-between w-full max-w-md px-6 pt-4 z-50">
-           <div className="flex flex-col items-center">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
-                 <Droplets className="h-5 w-5 text-primary" />
-              </div>
-              <span className="text-[7px] font-black text-white/40 uppercase mt-1">Вода</span>
-           </div>
-
-           <div className="relative group">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-              <div className="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center">
-                <svg className="absolute inset-0 w-full h-full -rotate-90">
-                  <circle cx="50%" cy="50%" r="45%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="4" />
-                  <circle 
-                    cx="50%" cy="50%" r="45%" fill="none" stroke="hsl(var(--primary))" strokeWidth="6" 
-                    strokeDasharray="100" strokeDashoffset={100 - bioScore} pathLength="100" strokeLinecap="round"
-                    className="drop-shadow-[0_0_15px_hsl(var(--primary))]"
-                  />
-                </svg>
-                <div className="text-center">
-                  <span className="text-[8px] font-black text-primary/60 uppercase tracking-[0.2em] block">Bio-Score</span>
-                  <span className="text-3xl md:text-4xl font-black text-white neo-glow leading-none">{bioScore}</span>
-                  <span className="text-[8px] font-bold text-white/40 block">/100</span>
-                </div>
-              </div>
-           </div>
-
-           <div className="flex flex-col items-center">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
-                 <Moon className="h-5 w-5 text-primary" />
-              </div>
-              <span className="text-[7px] font-black text-white/40 uppercase mt-1">Сон</span>
-           </div>
-        </div>
-
-        {/* The Holographic Digital Twin Visualizer - Fixed in Center */}
-        <div className="flex-1 w-full flex items-center justify-center py-4">
-          <BioTwinVisualizer 
-            score={bioScore} 
-            deviceData={deviceData} 
-            macros={macros}
-            className="scale-110 md:scale-125"
-          />
-        </div>
-
-        {/* Bottom Metadata - Shrunk and cleaned */}
-        <div className="text-center pb-4 opacity-10">
-           <p className="text-[6px] font-black uppercase tracking-[1em]">PRO SEBYA INTERFACE V4.0.2</p>
+        {/* Version Badge */}
+        <div className="absolute bottom-2 left-6 opacity-20 hidden md:block">
+           <p className="text-[6px] font-black uppercase tracking-[1em] text-white">PRO SEBYA INTERFACE V4.0.2</p>
         </div>
       </div>
     );

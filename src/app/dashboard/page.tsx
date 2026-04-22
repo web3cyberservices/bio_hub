@@ -121,15 +121,15 @@ export default function DashboardPage() {
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" /></div>;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
+    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20 overflow-hidden">
       <NavBar />
       
-      <main className={cn("container mx-auto flex-1 px-4 py-6 md:py-10 max-w-6xl pb-32", activeTab === 'dashboard' && "overflow-hidden h-[calc(100vh-100px)]")} key={profileType}>
+      <main className={cn("container mx-auto flex-1 px-4 max-w-6xl relative", activeTab === 'dashboard' ? "h-[calc(100vh-160px)] mt-20" : "py-10 pb-32 mt-20 overflow-y-auto")} key={profileType}>
         {viewingSpecialistId ? <SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /> : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
-              <TabsContent value="feed" className="mt-0 space-y-8">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex-1">
+              <TabsContent value="feed" className="mt-0 space-y-8 h-full">
                  <div className="flex items-center justify-between px-2">
                     <h2 className="text-xl font-black tracking-widest text-primary neo-glow uppercase">Bio-Лента</h2>
                     {profileType === 'specialist' && <CreatePostDialog />}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="mt-0 h-full overflow-hidden flex flex-col">
+              <TabsContent value="dashboard" className="mt-0 h-full flex flex-col">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
@@ -270,10 +270,6 @@ export default function DashboardPage() {
           </Tabs>
         )}
       </main>
-      
-      <footer className="py-10 text-center opacity-10">
-         <p className="text-[6px] font-black uppercase tracking-[1em]">Bio-Tech Interface Protocol</p>
-      </footer>
     </div>
   );
 }
