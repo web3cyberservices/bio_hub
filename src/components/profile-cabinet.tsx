@@ -50,7 +50,8 @@ import {
   Mic,
   FileText,
   History,
-  ExternalLink
+  ExternalLink,
+  Instagram
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -79,6 +80,7 @@ const profileSchema = z.object({
   profileType: z.enum(['user', 'specialist']).default('user'),
   specialization: z.string().optional(),
   bio: z.string().optional(),
+  instagramUrl: z.string().optional(),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -124,12 +126,13 @@ export function ProfileCabinet() {
       profileType: 'user',
       specialization: '',
       bio: '',
+      instagramUrl: '',
     },
   });
 
   const handleConnectTelegram = () => {
     if (!user) return;
-    const botUsername = 'ProSebyaBot'; // Замените на реального бота
+    const botUsername = 'ProSebyaBot'; 
     const link = `https://t.me/${botUsername}?start=${user.uid}`;
     window.open(link, '_blank');
     toast({ title: 'Telegram', description: 'Открываем диалог с ботом для связки аккаунта.' });
@@ -185,6 +188,7 @@ export function ProfileCabinet() {
         profileType: userData.profileType || 'user',
         specialization: userData.specialization || '',
         bio: userData.bio || '',
+        instagramUrl: userData.instagramUrl || '',
       });
     }
   }, [userData, form]);
@@ -286,7 +290,6 @@ export function ProfileCabinet() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-          {/* Section 1: Account Type */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-8">
@@ -309,7 +312,6 @@ export function ProfileCabinet() {
             )}
           </div>
 
-          {/* Section 2: Personal Data */}
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
             <CardContent className="p-8 md:p-12 space-y-8">
               <div className="flex items-center gap-2 border-b pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3></div>
@@ -341,7 +343,6 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          {/* Section 3: Photo Profile */}
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
             <CardContent className="p-8 md:p-12 space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Фото профиля</h3></div>
@@ -364,7 +365,6 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          {/* Section 4: Role-Specific Bio / Metrics */}
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
             <CardContent className="p-8 md:p-12 space-y-12">
               {profileTypeValue === 'specialist' ? (
@@ -377,6 +377,9 @@ export function ProfileCabinet() {
                       )} />
                       <FormField control={form.control} name="bio" render={({ field }) => (
                         <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel><FormControl><div className="relative"><Textarea placeholder="Ваш опыт..." {...field} className={textareaClasses} /><VoiceBtn field="bio" /></div></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name="instagramUrl" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><Instagram className="h-3 w-3" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/username" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                     </div>
                   </div>
@@ -490,4 +493,3 @@ export function ProfileCabinet() {
     </div>
   );
 }
-
