@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа медицинских анализов по фото/скану.
- * Оптимизирован для извлечения конкретных числовых норм и минимизации ошибок генерации.
  */
 
 import {ai} from '@/ai/genkit';
@@ -79,8 +78,8 @@ const analyzeLabResultsFlow = ai.defineFlow(
       const {output} = await labPrompt(input, {
         model: googleAI.model('gemini-2.5-flash'), 
       });
-      if (!output) throw new Error('ИИ не смог прочитать данные. Попробуйте сделать фото четче.');
+      if (!output) throw new Error('ИИ не смог распознать данные. Попробуйте сделать фото четче.');
       return output;
-    }, 4, 3000); // 4 попытки для баланса между успехом и временем выполнения
+    }, 6); // Увеличено число попыток для тяжелых запросов
   }
 );
