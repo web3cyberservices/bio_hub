@@ -2,19 +2,22 @@
 'use server';
 
 /**
- * @fileOverview Server Action для получения данных из Google Fitness REST API.
+ * @fileOverview Расширенный Server Action для получения детальной биометрии из Google Fit.
  */
 
-interface GoogleFitSyncResult {
+interface DetailedHealthData {
   steps: number;
   calories: number;
   sleepHours: number;
   heartRate: number;
+  hrv: number; // Heart Rate Variability
+  source: string;
 }
 
-export async function syncGoogleFitData(accessToken: string): Promise<GoogleFitSyncResult> {
+export async function syncGoogleFitData(accessToken: string, startTimeMillis?: number): Promise<DetailedHealthData> {
   const endTime = Date.now();
-  const startTime = endTime - 24 * 60 * 60 * 1000; // Последние 24 часа
+  // Если время начала не передано, берем последние 24 часа
+  const startTime = startTimeMillis || (endTime - 24 * 60 * 60 * 1000);
 
   const aggregateRequest = {
     aggregateBy: [
@@ -53,7 +56,6 @@ export async function syncGoogleFitData(accessToken: string): Promise<GoogleFitS
 
     const data = await response.json();
     
-    // Парсим результат агрегации
     let steps = 0;
     let calories = 0;
     let heartRate = 0;
@@ -71,12 +73,10 @@ export async function syncGoogleFitData(accessToken: string): Promise<GoogleFitS
       });
     }
 
-    // Запрос на данные о сне (отдельный endpoint для сессий)
+    // Получаем сессии сна
     const sleepResponse = await fetch(
       `https://www.googleapis.com/fitness/v1/users/me/sessions?startTime=${new Date(startTime).toISOString()}&endTime=${new Date(endTime).toISOString()}&type=72`,
-      {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      }
+      { headers: { "Authorization": `Bearer ${accessToken}` } }
     );
     
     let sleepHours = 0;
@@ -94,10 +94,12 @@ export async function syncGoogleFitData(accessToken: string): Promise<GoogleFitS
       steps: steps || 0,
       calories: calories || 0,
       sleepHours: sleepHours || 0,
-      heartRate: heartRate || 0
+      heartRate: heartRate || 0,
+      hrv: 0, // HRV через REST API часто требует дополнительных scope и не всегда доступен без Health Connect SDK
+      source: "Google Fit / Health Connect"
     };
   } catch (error: any) {
-    console.error("Google Fit Sync Error:", error);
-    throw new Error(error.message || "Не удалось синхронизировать биометрию");
+    console.error("Google Fit Detailed Sync Error:", error);
+    throw error;
   }
 }

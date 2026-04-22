@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -11,7 +12,8 @@ import {
   ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
-  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList, PenTool
+  ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList, PenTool,
+  RefreshCw
 } from 'lucide-react';
 import { format, addDays, startOfToday, isToday as isDateToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -35,6 +37,7 @@ import { ChatInterface } from '@/components/chat-interface';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { ProductsMenuGenerator } from '@/components/products-menu-generator';
 import { PersonalMealPlan } from '@/components/personal-meal-plan';
+import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -46,6 +49,9 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("feed");
   const [isMounted, setIsMounted] = useState(false);
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
+
+  // Запуск фоновой синхронизации агрегатора здоровья
+  const { isSyncing: aggregatorSyncing } = useHealthAggregator();
 
   useEffect(() => {
     setIsMounted(true);
@@ -148,7 +154,16 @@ export default function DashboardPage() {
             </Popover>
             <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}><ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-primary" /></Button>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">{selectedDate && <UnifiedDataEntry selectedDate={selectedDate}><Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Данные</span></Button></UnifiedDataEntry>}{user?.uid !== 'public-user' && <Button variant="outline" size="icon" onClick={handleLogout} className="rounded-xl md:rounded-2xl h-10 md:h-12 w-10 md:w-12 border-primary/20 text-primary hover:bg-primary/5"><LogOut className="h-4 w-4 md:h-5 md:w-5" /></Button>}</div>
+          <div className="flex items-center gap-2 md:gap-4">
+            {aggregatorSyncing && (
+              <div className="hidden sm:flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full animate-pulse">
+                <RefreshCw className="h-3 w-3 text-primary animate-spin" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-primary">Синхронизация биометрии...</span>
+              </div>
+            )}
+            {selectedDate && <UnifiedDataEntry selectedDate={selectedDate}><Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Данные</span></Button></UnifiedDataEntry>}
+            {user?.uid !== 'public-user' && <Button variant="outline" size="icon" onClick={handleLogout} className="rounded-xl md:rounded-2xl h-10 md:h-12 w-10 md:w-12 border-primary/20 text-primary hover:bg-primary/5"><LogOut className="h-4 w-4 md:h-5 md:w-5" /></Button>}
+          </div>
         </div>
       </div>
 
