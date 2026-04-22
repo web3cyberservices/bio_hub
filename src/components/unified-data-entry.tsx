@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -150,7 +149,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       setHeartRate(fitData.heartRate.toString());
       setSleep(fitData.sleepHours.toString());
       
-      // Сохраняем в Firestore personalStats как запрашивал пользователь
       if (firestore) {
         const statsRef = doc(firestore, 'users', user.uid, 'personalStats', format(selectedDate, 'yyyy-MM-dd'));
         await setDoc(statsRef, {
@@ -663,7 +661,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                             {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
                           </Badge>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">{marker.interpretation}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">{marker.interpretation}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-black text-lg">{marker.value}</p>
