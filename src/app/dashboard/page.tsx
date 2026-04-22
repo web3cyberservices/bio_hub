@@ -19,7 +19,6 @@ import { ru } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { AISpecialistChat } from '@/components/ai-specialist-chat';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -272,7 +271,6 @@ export default function DashboardPage() {
         )}
       </main>
       
-      <AISpecialistChat />
       <footer className="py-10 text-center opacity-10">
          <p className="text-[6px] font-black uppercase tracking-[1em]">Bio-Tech Interface Protocol</p>
       </footer>

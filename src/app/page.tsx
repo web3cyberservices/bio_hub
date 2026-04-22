@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Badge } from '@/components/ui/badge';
-import { AISpecialistChat } from '@/components/ai-specialist-chat';
 
 export default function LandingPage() {
   const { user, loading: userLoading } = useUser();
@@ -201,8 +200,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
-      <AISpecialistChat />
     </div>
   );
 }

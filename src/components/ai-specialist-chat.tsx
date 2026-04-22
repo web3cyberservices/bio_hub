@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -12,10 +11,9 @@ import {
   Loader2, 
   Bot, 
   User, 
-  Maximize2, 
-  Minimize2,
   Activity,
-  Mic
+  Mic,
+  ArrowLeft
 } from 'lucide-react';
 import { chatWithSpecialist } from '@/ai/flows/ai-specialist-chat';
 import { useToast } from '@/hooks/use-toast';
@@ -30,11 +28,14 @@ interface Message {
   content: string;
 }
 
-export function AISpecialistChat() {
+interface AISpecialistChatProps {
+  onBack?: () => void;
+  className?: string;
+}
+
+export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -109,105 +110,93 @@ export function AISpecialistChat() {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 md:h-16 md:w-16 rounded-full bg-primary shadow-[0_20px_50px_rgba(45,122,77,0.4)] hover:scale-110 transition-all z-[110] border-4 border-white"
-      >
-        <MessageSquare className="h-6 w-6 md:h-7 md:w-7 text-white" />
-        <span className="absolute -top-1 -right-1 flex h-4 w-4 md:h-5 md:w-5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 md:h-5 md:w-5 bg-accent"></span>
-        </span>
-      </Button>
-    );
-  }
-
   return (
-    <Card className={cn(
-      "fixed bottom-6 right-4 md:right-6 z-[120] overflow-hidden flex flex-col transition-all duration-500 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-4 border-white/50 bg-white/95 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem]",
-      isMinimized 
-        ? "h-16 md:h-20 w-64 md:w-80" 
-        : "h-[380px] md:h-[520px] max-h-[calc(100vh-160px)] w-[calc(100vw-32px)] md:w-[400px]"
-    )}>
-      <div className="bg-primary p-4 md:p-5 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-xl flex items-center justify-center">
-            <Activity className="h-4 w-4 md:h-5 md:w-5 text-white" />
+    <div className={cn("flex flex-col h-full bg-transparent", className)}>
+      <div className="p-4 md:p-6 bg-primary/10 border-b flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 text-primary" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30">
+            <Activity className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-white font-black text-xs md:text-sm tracking-tight">ИИ-Специалист</h3>
-            <Badge variant="outline" className="border-white/30 text-white/80 text-[7px] md:text-[8px] uppercase tracking-widest px-2 py-0">Online</Badge>
+            <h3 className="text-white font-black text-sm md:text-base tracking-tight uppercase">ИИ-Специалист PRO</h3>
+            <div className="flex items-center gap-1.5">
+               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+               <span className="text-[8px] md:text-[10px] font-bold text-primary/60 uppercase tracking-widest">Active Intelligence</span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:bg-white/10" onClick={() => setIsMinimized(!isMinimized)}>
-            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:bg-white/10" onClick={() => setIsOpen(false)}>
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
-      {!isMinimized && (
-        <>
-          <ScrollArea className="flex-1 p-4 md:p-6">
-            <div className="space-y-4 md:space-y-6">
-              {messages.map((m, i) => (
-                <div key={i} className={cn("flex gap-2 md:gap-3", m.role === 'user' ? "flex-row-reverse" : "flex-row")}>
-                  <div className={cn("w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm", m.role === 'user' ? "bg-primary text-white" : "bg-muted text-primary")}>
-                    {m.role === 'user' ? <User className="h-3 w-3 md:h-4 md:w-4" /> : <Bot className="h-3 w-3 md:h-4 md:w-4" />}
-                  </div>
-                  <div className={cn("max-w-[85%] p-3 md:p-4 rounded-2xl text-xs md:text-sm font-medium shadow-sm leading-relaxed", m.role === 'user' ? "bg-primary text-white rounded-tr-none" : "bg-muted/50 text-foreground rounded-tl-none")}>
-                    {m.content}
-                  </div>
+      <ScrollArea className="flex-1 p-6 md:p-10">
+        <div className="space-y-6 md:space-y-8">
+          {messages.map((m, i) => (
+            <div key={i} className={cn("flex flex-col gap-2", m.role === 'user' ? "items-end" : "items-start")}>
+              <div className={cn(
+                "p-4 md:p-6 rounded-[1.8rem] text-sm md:text-base font-medium shadow-lg transition-all relative max-w-[85%] md:max-w-[75%]",
+                m.role === 'user' 
+                  ? "bg-primary text-slate-950 rounded-tr-none" 
+                  : "bg-white/5 text-white/90 rounded-tl-none border border-white/10 backdrop-blur-sm"
+              )}>
+                <div className="flex items-center gap-2 mb-2 opacity-40">
+                   {m.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                   <span className="text-[8px] font-black uppercase tracking-widest">{m.role === 'user' ? 'Вы' : 'ИИ Помощник'}</span>
                 </div>
-              ))}
-              {loading && (
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-primary animate-pulse" />
-                  </div>
-                  <div className="bg-muted/30 p-3 md:p-4 rounded-2xl">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary opacity-40" />
-                  </div>
-                </div>
-              )}
-              <div ref={scrollRef} />
-            </div>
-          </ScrollArea>
-          <div className="p-4 md:p-6 bg-muted/20 border-t shrink-0">
-            <div className="relative flex items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="Ваш вопрос..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  className="h-12 md:h-14 rounded-2xl bg-white border-none pr-20 md:pr-24 shadow-inner text-xs md:text-sm font-medium"
-                />
-                <div className="absolute right-10 md:right-12 top-1/2 -translate-y-1/2">
-                   <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={startVoiceInput}
-                    className={cn(
-                      "h-8 w-8 md:h-10 md:w-10 rounded-full transition-all",
-                      isRecording ? "bg-red-500 text-white animate-pulse" : "bg-primary/10 text-primary"
-                    )}
-                   >
-                    <Mic className="h-3 w-3 md:h-4 md:w-4" />
-                   </Button>
-                </div>
+                {m.content}
               </div>
-              <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="h-10 w-10 md:h-12 md:w-12 bg-primary shadow-lg shadow-primary/20 shrink-0"><Send className="h-4 w-4 md:h-5 md:w-5 text-white" /></Button>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex flex-col items-start gap-2">
+              <div className="bg-white/5 p-4 md:p-6 rounded-[1.8rem] rounded-tl-none border border-white/10 flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs font-black uppercase tracking-widest text-primary/40 animate-pulse">Генерация ответа...</span>
+              </div>
+            </div>
+          )}
+          <div ref={scrollRef} />
+        </div>
+      </ScrollArea>
+
+      <div className="p-4 md:p-8 bg-black/20 border-t border-white/5 shrink-0">
+        <div className="relative flex items-center gap-4">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Спросите об анализах, питании или здоровье..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/10 border-none px-6 md:px-8 font-bold text-white placeholder:text-white/20 focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32"
+            />
+            <div className="absolute right-12 md:right-16 top-1/2 -translate-y-1/2">
+               <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={startVoiceInput}
+                className={cn(
+                  "h-10 w-10 md:h-12 md:w-12 rounded-full transition-all",
+                  isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary"
+                )}
+               >
+                <Mic className="h-4 w-4 md:h-5 md:w-5" />
+               </Button>
             </div>
           </div>
-        </>
-      )}
-    </Card>
+          <Button 
+            size="icon" 
+            onClick={handleSend} 
+            disabled={loading || !input.trim()} 
+            className="h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl bg-primary shadow-xl shadow-primary/20 shrink-0"
+          >
+            <Send className="h-5 w-5 md:h-6 md:w-6 text-slate-950" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Send, Loader2, MessageSquare, 
   Search, Phone, Video, MoreVertical, CheckCheck, Activity, Bot,
-  Pencil, Trash2, X, Check, Mic
+  Pencil, Trash2, X, Check, Mic, Sparkles
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, addDoc, doc, updateDoc, where, limit, deleteDoc } from 'firebase/firestore';
@@ -21,12 +20,14 @@ import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
+import { AISpecialistChat } from './ai-specialist-chat';
 
 export function ChatInterface() {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [message, setMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -149,6 +150,16 @@ export function ChatInterface() {
     toast({ title: 'Сообщение удалено' });
   };
 
+  const handleOpenAIChat = () => {
+    setShowAIChat(true);
+    setActiveChatId(null);
+  };
+
+  const handleSelectRegularChat = (id: string) => {
+    setActiveChatId(id);
+    setShowAIChat(false);
+  };
+
   if (chatsLoading) {
     return (
       <div className="flex h-[600px] items-center justify-center">
@@ -171,50 +182,74 @@ export function ChatInterface() {
   }) : [];
 
   return (
-    <div className="flex h-[70vh] md:h-[750px] bg-white/40 backdrop-blur-xl rounded-[2.5rem] border shadow-2xl overflow-hidden">
+    <div className="flex h-[70vh] md:h-[750px] bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden">
       <div className={cn(
-        "w-full md:w-80 border-r bg-white/60 flex flex-col transition-all",
-        activeChatId ? "hidden md:flex" : "flex"
+        "w-full md:w-80 border-r border-white/10 bg-black/40 flex flex-col transition-all",
+        (activeChatId || showAIChat) ? "hidden md:flex" : "flex"
       )}>
-        <div className="p-6 border-b space-y-4">
-          <h2 className="text-xl font-black tracking-tight">Сообщения</h2>
+        <div className="p-6 border-b border-white/5 space-y-4">
+          <h2 className="text-xl font-black tracking-tight text-white uppercase">Чаты</h2>
           <div className="relative">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             <Input placeholder="Поиск диалогов..." className="pl-9 h-10 rounded-xl bg-primary/5 border-none text-xs" />
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+             <Input placeholder="Поиск..." className="pl-9 h-10 rounded-xl bg-white/5 border-none text-xs text-white" />
           </div>
         </div>
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
+          <div className="p-2 space-y-2">
+            {/* AI Specialist Pinned Entry */}
+            <button
+              onClick={handleOpenAIChat}
+              className={cn(
+                "w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all group relative overflow-hidden",
+                showAIChat ? "bg-primary text-slate-950 shadow-lg" : "bg-primary/5 hover:bg-primary/10 text-primary"
+              )}
+            >
+              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center border transition-all", showAIChat ? "bg-white/20 border-white/30" : "bg-primary/20 border-primary/20")}>
+                <Sparkles className={cn("h-6 w-6", showAIChat ? "text-white animate-pulse" : "text-primary")} />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <div className="flex justify-between items-baseline mb-0.5">
+                   <p className="font-black text-sm truncate uppercase tracking-tight">ИИ-Консультант PRO</p>
+                </div>
+                <p className={cn("text-[10px] truncate font-bold uppercase tracking-widest", showAIChat ? "text-slate-950/60" : "text-primary/60")}>Мгновенная помощь</p>
+              </div>
+              {!showAIChat && <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary neo-glow" />}
+            </button>
+
+            <div className="h-px bg-white/5 my-2 mx-4" />
+
             {sortedChats.map((chat) => {
               const oId = chat.participants.find((id: string) => id !== user?.uid);
               const oDetails = chat.participantDetails?.[oId];
+              const isSelected = activeChatId === chat.id;
               return (
                 <button
                   key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
+                  onClick={() => handleSelectRegularChat(chat.id)}
                   className={cn(
-                    "w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:bg-white/80",
-                    activeChatId === chat.id ? "bg-white shadow-md" : "opacity-70"
+                    "w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:bg-white/5",
+                    isSelected ? "bg-white/10 shadow-xl border border-white/5" : "opacity-60"
                   )}
                 >
-                  <Avatar className="h-12 w-12 rounded-2xl border-2 border-primary/10">
+                  <Avatar className="h-12 w-12 rounded-2xl border border-white/10">
                     <AvatarImage src={oDetails?.photo} />
-                    <AvatarFallback className="bg-primary/5 text-primary font-bold">{oDetails?.name?.charAt(0) || '?'}</AvatarFallback>
+                    <AvatarFallback className="bg-white/5 text-white font-bold">{oDetails?.name?.charAt(0) || '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
-                       <p className="font-black text-sm truncate">{oDetails?.name || 'Специалист'}</p>
-                       <span className="text-[8px] font-bold text-muted-foreground uppercase">{chat.updatedAt && format(new Date(chat.updatedAt), 'HH:mm')}</span>
+                       <p className="font-black text-sm text-white truncate">{oDetails?.name || 'Специалист'}</p>
+                       <span className="text-[8px] font-bold text-white/30 uppercase">{chat.updatedAt && format(new Date(chat.updatedAt), 'HH:mm')}</span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate font-medium">{chat.lastMessage || 'Начните общение...'}</p>
+                    <p className="text-[11px] text-white/40 truncate font-medium">{chat.lastMessage || 'Начните общение...'}</p>
                   </div>
                 </button>
               );
             })}
-            {(!sortedChats || sortedChats.length === 0) && (
-              <div className="p-10 text-center space-y-2 opacity-30">
-                 <MessageSquare className="h-10 w-10 mx-auto" />
-                 <p className="text-[10px] font-black uppercase tracking-widest">Нет активных чатов</p>
+            
+            {(!sortedChats || sortedChats.length === 0) && !showAIChat && (
+              <div className="p-10 text-center space-y-2 opacity-20">
+                 <MessageSquare className="h-10 w-10 mx-auto text-white" />
+                 <p className="text-[10px] font-black uppercase tracking-widest text-white">Список пуст</p>
               </div>
             )}
           </div>
@@ -222,55 +257,57 @@ export function ChatInterface() {
       </div>
 
       <div className={cn(
-        "flex-1 flex flex-col bg-white/20",
-        !activeChatId ? "hidden md:flex items-center justify-center" : "flex"
+        "flex-1 flex flex-col bg-black/20",
+        (!activeChatId && !showAIChat) ? "hidden md:flex items-center justify-center" : "flex"
       )}>
-        {activeChatId ? (
+        {showAIChat ? (
+          <AISpecialistChat onBack={() => setShowAIChat(false)} />
+        ) : activeChatId ? (
           <>
-            <div className="p-4 md:p-6 bg-white/80 border-b flex items-center justify-between shrink-0">
+            <div className="p-4 md:p-6 bg-white/5 border-b border-white/5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setActiveChatId(null)}>
-                  <Bot className="h-4 w-4 rotate-180" />
+                <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 text-white/40" onClick={() => setActiveChatId(null)}>
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <Avatar className="h-10 w-10 md:h-12 md:w-12 rounded-xl border-2 border-primary/10">
+                <Avatar className="h-10 w-10 md:h-12 md:w-12 rounded-xl border border-white/10">
                    <AvatarImage src={otherParticipant?.photo} />
-                   <AvatarFallback className="bg-primary/5 text-primary font-bold">{otherParticipant?.name?.charAt(0) || '?'}</AvatarFallback>
+                   <AvatarFallback className="bg-white/5 text-white font-bold">{otherParticipant?.name?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <div>
-                   <h3 className="font-black text-sm md:text-base leading-none">{otherParticipant?.name || 'Загрузка...'}</h3>
+                   <h3 className="font-black text-sm md:text-base leading-none text-white">{otherParticipant?.name || 'Загрузка...'}</h3>
                    <div className="flex items-center gap-1.5 mt-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">В сети</span>
+                      <span className="text-[8px] md:text-[10px] font-bold text-white/30 uppercase tracking-widest">В сети</span>
                    </div>
                 </div>
               </div>
               <div className="flex items-center gap-1 md:gap-2">
-                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-primary/40"><Phone className="h-4 w-4 md:h-5 md:w-5" /></Button>
-                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-primary/40"><Video className="h-4 w-4 md:h-5 md:w-5" /></Button>
-                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-primary/40"><MoreVertical className="h-4 w-4 md:h-5 md:w-5" /></Button>
+                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-white/20"><Phone className="h-4 w-4 md:h-5 md:w-5" /></Button>
+                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-white/20"><Video className="h-4 w-4 md:h-5 md:w-5" /></Button>
+                 <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 md:h-11 md:w-11 text-white/20"><MoreVertical className="h-4 w-4 md:h-5 md:w-5" /></Button>
               </div>
             </div>
 
             <ScrollArea className="flex-1 p-6 md:p-10">
               <div className="space-y-6 md:space-y-8">
                 {sortedMessages.map((m) => (
-                  <div key={m.id} className={cn("flex flex-col gap-1.5 group", m.senderId === user?.uid ? "items-end" : "items-start")}>
-                    <div className="flex items-center gap-2 max-w-[85%] md:max-w-[70%]">
+                  <div key={m.id} className={cn("flex flex-col gap-1.5", m.senderId === user?.uid ? "items-end" : "items-start")}>
+                    <div className="flex items-center gap-2 max-w-[85%] md:max-w-[70%] group">
                       {m.senderId === user?.uid && (
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-                           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-primary" onClick={() => handleStartEdit(m)}>
+                           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-white/20 hover:text-primary" onClick={() => handleStartEdit(m)}>
                               <Pencil className="h-3 w-3" />
                            </Button>
-                           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMessage(m.id)}>
+                           <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-white/20 hover:text-destructive" onClick={() => handleDeleteMessage(m.id)}>
                               <Trash2 className="h-3 w-3" />
                            </Button>
                         </div>
                       )}
                       <div className={cn(
-                        "p-4 md:p-5 rounded-[1.8rem] text-sm font-medium shadow-sm transition-all relative",
+                        "p-4 md:p-5 rounded-[1.8rem] text-sm font-medium shadow-lg transition-all relative",
                         m.senderId === user?.uid 
-                          ? "bg-primary text-white rounded-tr-none" 
-                          : "bg-white text-foreground rounded-tl-none border border-primary/5"
+                          ? "bg-primary text-slate-950 rounded-tr-none" 
+                          : "bg-white/5 text-white/90 rounded-tl-none border border-white/5 backdrop-blur-sm"
                       )}>
                         {m.text}
                         {m.isEdited && (
@@ -279,7 +316,7 @@ export function ChatInterface() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 px-2">
-                       <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">{format(new Date(m.createdAt), 'HH:mm')}</span>
+                       <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{format(new Date(m.createdAt), 'HH:mm')}</span>
                        {m.senderId === user?.uid && <CheckCheck className="h-3 w-3 text-primary/40" />}
                     </div>
                   </div>
@@ -288,13 +325,13 @@ export function ChatInterface() {
               </div>
             </ScrollArea>
 
-            <div className="p-4 md:p-8 bg-white/80 border-t shrink-0">
+            <div className="p-4 md:p-8 bg-black/40 border-t border-white/5 shrink-0">
                {editingMessageId && (
-                 <div className="mb-2 px-4 flex items-center justify-between bg-primary/5 py-2 rounded-xl">
+                 <div className="mb-2 px-4 flex items-center justify-between bg-primary/10 py-2 rounded-xl border border-primary/20">
                    <p className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                     <Pencil className="h-3 w-3" /> Редактирование сообщения
+                     <Pencil className="h-3 w-3" /> Редактирование
                    </p>
-                   <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={handleCancelEdit}>
+                   <Button variant="ghost" size="icon" className="h-6 w-6 text-white/40" onClick={handleCancelEdit}>
                      <X className="h-3 w-3" />
                    </Button>
                  </div>
@@ -305,7 +342,7 @@ export function ChatInterface() {
                       placeholder={editingMessageId ? "Измените сообщение..." : "Напишите сообщение..."}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none px-6 md:px-8 font-bold text-sm md:text-base focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32"
+                      className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-white/5 border-none px-6 md:px-8 font-bold text-sm text-white placeholder:text-white/20 focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32"
                     />
                     <div className="absolute right-12 md:right-16 top-1/2 -translate-y-1/2">
                        <Button 
@@ -315,7 +352,7 @@ export function ChatInterface() {
                           onClick={startVoiceInput}
                           className={cn(
                             "h-10 w-10 md:h-12 md:w-12 rounded-full transition-all",
-                            isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/80 text-primary"
+                            isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/5 text-primary"
                           )}
                        >
                           <Mic className="h-4 w-4 md:h-5 md:w-5" />
@@ -326,23 +363,23 @@ export function ChatInterface() {
                     type="submit" 
                     disabled={!message.trim()} 
                     className={cn(
-                      "h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl shadow-xl transition-transform hover:scale-105 shrink-0",
-                      editingMessageId ? "bg-emerald-500 hover:bg-emerald-600" : "bg-primary"
+                      "h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl shadow-2xl transition-transform hover:scale-105 shrink-0",
+                      editingMessageId ? "bg-emerald-500" : "bg-primary"
                     )}
                   >
-                     {editingMessageId ? <Check className="h-5 w-5 md:h-6 md:w-6" /> : <Send className="h-5 w-5 md:h-6 md:w-6" />}
+                     {editingMessageId ? <Check className="h-5 w-5 md:h-6 md:w-6 text-white" /> : <Send className="h-5 w-5 md:h-6 md:w-6 text-slate-950" />}
                   </Button>
                </form>
             </div>
           </>
         ) : (
           <div className="text-center space-y-6 opacity-20">
-             <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+             <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20">
                 <Activity className="h-10 w-10 text-primary" />
              </div>
              <div className="space-y-1">
-                <h3 className="text-2xl font-black tracking-tight">Выберите диалог</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em]">Начните консультацию прямо сейчас</p>
+                <h3 className="text-2xl font-black tracking-tight text-white uppercase">Выберите диалог</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Или начните консультацию с ИИ</p>
              </div>
           </div>
         )}
