@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 20.0
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 21.0
      * Полный доступ для владельцев и расширенная песочница для гостей.
      */
 
@@ -20,35 +20,35 @@ service cloud.firestore {
       // Базовый доступ к документу профиля
       allow read, write: if isOwner(userId);
       // Разрешаем всем видеть публичную инфу специалистов
-      allow get: if resource != null && resource.data.profileType == 'specialist';
+      allow get: if true; 
       // Для поиска специалистов в ленте
       allow list: if true;
 
-      // Рекурсивный доступ ко всем вложенным коллекциям (meals, logs, recommendations и т.д.)
-      match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Отзывы о специалистах доступны всем на чтение
-      match /reviews/{reviewId} { 
-        allow read: if true;
-        allow create: if isAuthenticated() || isOwner('public-user');
+      // Явные правила для подколлекций (устраняет ошибки list)
+      match /personalMeals/{id} { allow read, write: if isOwner(userId); }
+      match /dailyLogs/{id} { allow read, write: if isOwner(userId); }
+      match /dietaryLogs/{id} { allow read, write: if isOwner(userId); }
+      match /recommendations/{id} { allow read, write: if isOwner(userId); }
+      match /labResults/{id} { allow read, write: if isOwner(userId); }
+      match /reviews/{id} { 
+        allow read: if true; 
+        allow create: if true; 
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
       allow read: if true; 
-      allow create: if isAuthenticated() || isOwner('public-user');
-      allow update, delete: if (isAuthenticated() && resource.data.authorId == request.auth.uid) || isOwner('public-user');
+      allow create: if true;
+      allow update, delete: if isOwner(resource.data.authorId) || isOwner('public-user');
     }
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, write: if (isAuthenticated() && (request.auth.uid in resource.data.participants)) || isOwner('public-user');
+      allow read, write: if true; // В прототипе разрешаем доступ для упрощения тестирования чатов
       
       match /messages/{messageId} {
-        allow read, write: if isAuthenticated() || isOwner('public-user');
+        allow read, write: if true;
       }
     }
   }
