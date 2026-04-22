@@ -47,7 +47,10 @@ import {
   Ban,
   Heart,
   Utensils,
-  Mic
+  Mic,
+  FileText,
+  History,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -56,7 +59,8 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -122,6 +126,14 @@ export function ProfileCabinet() {
       bio: '',
     },
   });
+
+  const handleConnectTelegram = () => {
+    if (!user) return;
+    const botUsername = 'ProSebyaBot'; // Замените на реального бота
+    const link = `https://t.me/${botUsername}?start=${user.uid}`;
+    window.open(link, '_blank');
+    toast({ title: 'Telegram', description: 'Открываем диалог с ботом для связки аккаунта.' });
+  };
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -441,15 +453,41 @@ export function ProfileCabinet() {
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
           </Button>
           
-          <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
-            <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button variant="outline" type="button" onClick={() => toast({ title: 'Telegram привязан' })} className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]"><div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div><Badge variant="outline" className="text-[7px] border-primary/20">Подключить</Badge></Button>
-              <Button variant="outline" type="button" onClick={() => toast({ title: 'WhatsApp привязан' })} className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]"><div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div><Badge variant="outline" className="text-[7px] border-primary/20">Подключить</Badge></Button>
-            </div>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
+              <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
+              <div className="grid grid-cols-1 gap-4">
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={handleConnectTelegram} 
+                  className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]"
+                >
+                  <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[7px] border-primary/20">Подключить</Badge>
+                    <ExternalLink className="h-3 w-3 opacity-30" />
+                  </div>
+                </Button>
+                <Button variant="outline" type="button" onClick={() => toast({ title: 'WhatsApp привязан' })} className="h-16 rounded-2xl bg-[#E8F5EE] border-none flex justify-between px-6 font-black text-primary hover:bg-[#D9EDE3]"><div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div><Badge variant="outline" className="text-[7px] border-primary/20">Подключить</Badge></Button>
+              </div>
+            </Card>
+
+            <Card className="premium-card p-8 border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10">
+               <div className="flex items-center gap-2 border-b pb-4 mb-6"><History className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Архив здоровья</h3></div>
+               <div className="space-y-4">
+                  <p className="text-[10px] text-muted-foreground font-medium px-1">Здесь хранятся все ваши загруженные отчеты, результаты анализов и рекомендации ИИ.</p>
+                  <AnalysisHistoryDialog>
+                     <Button type="button" className="w-full h-16 rounded-2xl bg-white text-primary border-2 border-primary/20 font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg hover:bg-primary/5">
+                        <FileText className="h-5 w-5" /> Посмотреть отчеты и анализы
+                     </Button>
+                  </AnalysisHistoryDialog>
+               </div>
+            </Card>
+          </div>
         </form>
       </Form>
     </div>
   );
 }
+
