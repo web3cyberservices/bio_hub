@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -15,7 +14,7 @@ import {
   History, FileText, Calendar, 
   ChevronRight, FlaskConical, Loader2,
   TrendingUp, TrendingDown, CheckCircle2,
-  AlertCircle, ArrowLeft
+  AlertCircle, ArrowLeft, Zap
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
