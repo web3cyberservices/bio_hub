@@ -213,14 +213,15 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       return;
     }
 
-    if (activeTab === 'meal') {
-      if (!description && !image && !refinement) {
-        toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
-        return;
-      }
+    setLoading(true);
+    try {
+      if (activeTab === 'meal') {
+        if (!description && !image && !refinement) {
+          toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
+          setLoading(false);
+          return;
+        }
 
-      setLoading(true);
-      try {
         const result = await analyzeMeal({
           description: description || undefined,
           photoDataUri: image || undefined,
@@ -229,29 +230,27 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         setMealResult(result);
         setEditedMeal(result);
         if (isRefinement) setRefinement('');
-      } catch (error: any) {
-        console.error("AI Error:", error);
-        toast({ variant: 'destructive', title: 'Ошибка анализа ИИ', description: error.message || 'Не удалось обработать.' });
-      } finally {
-        setLoading(false);
-      }
-    } else if (activeTab === 'labs') {
-      if (!image) {
-        toast({ variant: 'destructive', title: 'Нет фото', description: 'Сфотографируйте или загрузите результат анализов.' });
-        return;
-      }
+      } else if (activeTab === 'labs') {
+        if (!image) {
+          toast({ variant: 'destructive', title: 'Нет фото', description: 'Сфотографируйте или загрузите результат анализов.' });
+          setLoading(false);
+          return;
+        }
 
-      setLoading(true);
-      try {
         const result = await analyzeLabResults({
           photoDataUri: image,
         });
         setLabResult(result);
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Ошибка ИИ-анализа', description: 'Не удалось распознать документ.' });
-      } finally {
-        setLoading(false);
       }
+    } catch (error: any) {
+      console.error("AI Error:", error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка анализа ИИ', 
+        description: error.message || 'Не удалось распознать данные. Попробуйте еще раз.' 
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

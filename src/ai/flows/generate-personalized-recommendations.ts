@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
@@ -116,19 +115,17 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, init
     try {
       return await fn();
     } catch (error: any) {
-      // Увеличен таймаут до 120 секунд для тяжелых задач
       if (Date.now() - actionStartTime > 120000) {
-        throw new Error('Превышено время ожидания ИИ (2 мин). Попробуйте упростить запрос.');
+        throw new Error('Превышено время ожидания ИИ (2 мин). Попробуйте упростить запрос или сделать фото четче.');
       }
       
       console.warn(`AI Retry attempt ${i + 1}/${maxRetries} error:`, error.message);
       
-      // Экспоненциальная задержка с небольшим случайным фактором
       const delay = initialDelay * Math.pow(2, i) + (Math.random() * 1000);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  throw new Error('Сервис ИИ временно перегружен. Пожалуйста, попробуйте снова через минуту.');
+  throw new Error('ИИ временно перегружен запросами. Пожалуйста, подождите 30 секунд и попробуйте снова.');
 }
 
 const recommendationPrompt = ai.definePrompt({
