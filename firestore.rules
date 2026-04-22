@@ -3,48 +3,38 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (FINAL FIX)
      * Обеспечивают полный доступ владельцам данных и открытость для тестового режима.
      */
 
-    // Проверка авторизации
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Проверка владения документом или принадлежности к гостевой песочнице
-    function isOwner(userId) {
-      return (isAuthenticated() && request.auth.uid == userId) || userId == 'public-user';
-    }
-
-    // --- Коллекция пользователей и их данные ---
+    // --- Коллекция пользователей и их иерархия ---
     match /users/{userId} {
-      // Доступ к самому документу профиля
-      allow read, write: if isOwner(userId);
       
-      // Публичный доступ к базовой информации (нужно для отображения специалистов в ленте)
-      // Разрешаем get и list для всех, чтобы поиск и отображение в ленте работали корректно
-      allow get, list: if true;
-
-      // РЕКУРСИВНОЕ ПРАВИЛО ДЛЯ ВСЕХ ПОДКОЛЛЕКЦИЙ
-      // Это критически важно для работы useCollection (операция list) 
-      // в коллекциях personalMeals, dailyLogs, dietaryLogs и т.д.
-      match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
+      // Правило 1: Владелец (или гость в тестовом режиме) имеет ПОЛНЫЙ доступ ко всему в своей ветке
+      // Это правило применяется рекурсивно ко всем подколлекциям (personalMeals, dailyLogs и т.д.)
+      // Именно это исправляет ошибку доступа при вызове useCollection (метод list)
+      match /{allData=**} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
       }
+
+      // Правило 2: Доступ к самому документу профиля
+      // Разрешаем чтение всем (нужно для отображения специалистов в ленте)
+      // Запись только владельцу
+      allow read: if true;
+      allow write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
 
       // Публичные отзывы о специалистах
       match /reviews/{reviewId} { 
         allow read: if true; 
-        allow create: if isAuthenticated() || userId == 'public-user'; 
+        allow create: if request.auth != null || userId == 'public-user'; 
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
       allow read: if true; 
-      allow create: if isAuthenticated() || isOwner('public-user');
-      allow update, delete: if isOwner(resource.data.authorId) || isOwner('public-user');
+      allow create: if request.auth != null || (request.auth == null && request.resource.data.authorId == 'public-user');
+      allow update, delete: if (request.auth != null && request.auth.uid == resource.data.authorId) || resource.data.authorId == 'public-user';
     }
 
     // --- Система чатов ---
