@@ -154,19 +154,14 @@ export default function DashboardPage() {
               </TabsContent>
 
               <TabsContent value="dashboard" className="mt-0">
-                {recommendationDoc?.data ? (
-                  <RecommendationDisplay data={recommendationDoc.data} mode="dashboard" deviceData={dailyLogDoc} />
-                ) : (
-                  <div className="text-center py-20 flex flex-col items-center gap-8 animate-in zoom-in-95 duration-500">
-                    <div className="relative">
-                       <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-                       <Brain className="h-24 w-24 text-primary neo-glow-strong" />
-                    </div>
-                    <div className="space-y-2">
-                       <h2 className="text-3xl font-black tracking-tighter text-white uppercase">Инициализация двойника</h2>
-                       <p className="text-primary/60 font-bold uppercase tracking-widest text-[10px]">Нужны данные для формирования цифровой копии</p>
-                    </div>
-                    {!viewingPatientId && <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />}
+                <RecommendationDisplay 
+                  data={recommendationDoc?.data} 
+                  mode="dashboard" 
+                  deviceData={dailyLogDoc} 
+                />
+                {!recommendationDoc?.data && !viewingPatientId && (
+                  <div className="mt-10">
+                     <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
                   </div>
                 )}
               </TabsContent>

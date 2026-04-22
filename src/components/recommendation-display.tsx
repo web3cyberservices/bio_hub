@@ -14,7 +14,7 @@ import {
 import { BioTwinVisualizer } from './bio-twin-visualizer';
 
 interface RecommendationDisplayProps {
-  data: GenerateRecommendationsOutput;
+  data?: GenerateRecommendationsOutput;
   actualMacros?: {
     calories: number;
     protein: number;
@@ -34,7 +34,9 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (!mounted) return null;
 
-  const { bioScore, recommendations, macros } = data;
+  const bioScore = data?.bioScore ?? 0;
+  const macros = data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
+  const systemStatus = data ? "SYSTEM STATUS: OPTIMAL" : "SYSTEM STATUS: INITIALIZING";
 
   if (mode === 'dashboard') {
     return (
@@ -59,7 +61,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                   <span className="text-[9px] font-bold text-white/40 block mt-1">/100</span>
                 </div>
               </div>
-              <p className="mt-4 text-[10px] font-black tracking-[0.5em] text-primary/80 uppercase">SYSTEM STATUS: OPTIMAL</p>
+              <p className="mt-4 text-[10px] font-black tracking-[0.5em] text-primary/80 uppercase">{systemStatus}</p>
            </div>
         </div>
 
@@ -105,6 +107,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
       </div>
     );
   }
+
+  if (!data) return null;
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-4xl mx-auto py-10">
