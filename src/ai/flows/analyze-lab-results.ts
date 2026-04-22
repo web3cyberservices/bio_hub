@@ -1,13 +1,12 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа медицинских анализов по фото/скану.
- * Использует Gemini 3.1 Pro для максимальной точности OCR и интерпретации.
  */
 
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
-import { runWithRetry } from './generate-personalized-recommendations';
+import {runWithRetry} from '@/ai/utils';
 
 const AnalyzeLabInputSchema = z.object({
   photoDataUri: z
@@ -55,7 +54,7 @@ const labPrompt = ai.definePrompt({
 3. Оцените статус каждого маркера (normal/high/low).
 4. В поле interpretation, если статус НЕ normal, ОБЯЗАТЕЛЬНО укажите норму в скобках.
 5. Результат должен быть СТРОГО на русском языке.
-6. ВАЖНО: Если данные на фото неразборчивы, попробуйте восстановить их по контексту таблицы, но будьте осторожны.
+6. ВАЖНО: Если данные на фото неразборчивы, попробуйте восстановить их по контексту таблицы.
 
 Изображение для анализа: {{media url=photoDataUri}}`,
 });
@@ -67,12 +66,12 @@ const analyzeLabResultsFlow = ai.defineFlow(
     outputSchema: AnalyzeLabOutputSchema,
   },
   async (input) => {
-    // Для анализов используем 5 попыток и более мощную модель 3.1 Pro
     return runWithRetry(async () => {
+      // Используем gemini-3-flash-preview для лучшего OCR и стабильности
       const {output} = await labPrompt(input, {
-        model: googleAI.model('gemini-3.1-pro-preview'),
+        model: googleAI.model('gemini-3-flash-preview'),
       });
-      if (!output) throw new Error('ИИ не смог извлечь данные из изображения. Попробуйте сделать более четкое фото.');
+      if (!output) throw new Error('ИИ не смог извлечь данные. Попробуйте сделать фото четче или использовать другой файл.');
       return output;
     }, 5);
   }

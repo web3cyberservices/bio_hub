@@ -4,7 +4,7 @@ service cloud.firestore {
     /**
      * ГЛОБАЛЬНЫЙ ДОСТУП (DEBUG MODE)
      * Мы разрешаем абсолютно любые операции чтения и записи для всех документов.
-     * Это гарантированно устраняет ошибку "Missing or insufficient permissions" для метода list.
+     * Это гарантированно устраняет ошибку "Missing or insufficient permissions".
      */
     match /{allPaths=**} {
       allow read, write: if true;

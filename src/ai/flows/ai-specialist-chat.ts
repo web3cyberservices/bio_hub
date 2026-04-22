@@ -1,12 +1,12 @@
 'use server';
 /**
- * @fileOverview Поток Genkit для чата с ИИ-специалистом по биохакингу и нутрициологии.
+ * @fileOverview Поток Genkit для чата с ИИ-специалистом.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
-import { runWithRetry } from './generate-personalized-recommendations';
+import {runWithRetry} from '@/ai/utils';
 
 const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -37,10 +37,7 @@ const specialistPrompt = ai.definePrompt({
   name: 'specialistChatPrompt',
   input: {schema: AISpecialistChatInputSchema},
   output: {schema: AISpecialistChatOutputSchema},
-  prompt: `Вы — ИИ-специалист платформы "PRO Себя", эксперт в области биохакинга, нутрициологии и функциональной медицины.
-
-ВАША МИССИЯ:
-Помогать пользователю оптимизировать его здоровье, объяснять сложные медицинские концепции простым языком и давать практические советы.
+  prompt: `Вы — ИИ-специалист платформы "PRO Себя", эксперт в области биохакинга и нутрициологии.
 
 КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ:
 {{#if userContext}}
@@ -50,10 +47,9 @@ const specialistPrompt = ai.definePrompt({
 {{/if}}
 
 ПРАВИЛА ОБЩЕНИЯ:
-1. Будьте профессиональны, но эмпатичны.
-2. Используйте доказательный подход (EBM).
-3. Не ставьте окончательных диагнозов, рекомендуйте консультацию с врачом при серьезных жалобах.
-4. Отвечайте СТРОГО на русском языке.
+1. Будьте профессиональны и эмпатичны.
+2. Используйте доказательный подход.
+3. Отвечайте СТРОГО на русском языке.
 
 ИСТОРИЯ ПЕРЕПИСКИ:
 {{#each history}}

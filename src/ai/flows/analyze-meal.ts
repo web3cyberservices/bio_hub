@@ -6,7 +6,7 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
-import { runWithRetry } from './generate-personalized-recommendations';
+import {runWithRetry} from '@/ai/utils';
 
 const AnalyzeMealInputSchema = z.object({
   description: z.string().optional().describe('Текстовое описание приема пищи.'),
@@ -45,9 +45,9 @@ const mealPrompt = ai.definePrompt({
   prompt: `Вы — эксперт-нутрициолог. Ваша задача — максимально точно определить КБЖУ блюда и его детальный состав.
 
 ПРАВИЛА:
-1. Если предоставлено уточнение (refinement), оно является приоритетным и исправляет визуальное распознавание.
+1. Если предоставлено уточнение (refinement), оно является приоритетным.
 2. Оценивайте размер порции по фото.
-3. ОБЯЗАТЕЛЬНО выделите основные компоненты блюда и их примерный вес в граммах (поле components).
+3. ОБЯЗАТЕЛЬНО выделите компоненты блюда и их примерный вес.
 4. Отвечайте СТРОГО на русском языке.
 
 Контекст:

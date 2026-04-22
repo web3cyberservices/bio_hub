@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -25,7 +24,6 @@ import { AISpecialistChat } from '@/components/ai-specialist-chat';
 export default function LandingPage() {
   const { user, loading: userLoading } = useUser();
   
-  // Учитываем загрузку, чтобы не показывать кнопки гостя преждевременно
   const isGuest = !userLoading && (!user || user.uid === 'public-user');
   const isAuthenticated = !userLoading && user && user.uid !== 'public-user';
 
