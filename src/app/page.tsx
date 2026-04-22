@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -14,7 +15,8 @@ import {
   LineChart,
   CheckCircle2,
   Loader2,
-  LogIn
+  LogIn,
+  User
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Badge } from '@/components/ui/badge';
@@ -55,15 +57,23 @@ export default function LandingPage() {
                     <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
                   </div>
                 ) : isGuest ? (
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-2xl">
-                    <Button asChild className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black bg-primary shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
-                      <Link href="/register">
-                        Начать бесплатно <ArrowRight className="h-6 w-6" />
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black border-2 border-primary/10 hover:bg-primary/5 transition-all bg-white/50 backdrop-blur-sm gap-3">
-                      <Link href="/login">
-                        Войти <LogIn className="h-6 w-6" />
+                  <div className="flex flex-col items-center justify-center gap-6 w-full max-w-4xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                      <Button asChild className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black bg-primary shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                        <Link href="/register">
+                          Начать бесплатно <ArrowRight className="h-6 w-6" />
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black border-2 border-primary/10 hover:bg-primary/5 transition-all bg-white/50 backdrop-blur-sm gap-3">
+                        <Link href="/login">
+                          Войти <LogIn className="h-6 w-6" />
+                        </Link>
+                      </Button>
+                    </div>
+                    
+                    <Button asChild variant="ghost" className="h-12 rounded-xl text-primary font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-primary/5">
+                      <Link href="/dashboard">
+                        <User className="h-4 w-4" /> Попробовать как гость (Тестовый режим)
                       </Link>
                     </Button>
                   </div>
