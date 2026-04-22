@@ -12,7 +12,7 @@ import {
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
   ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList, PenTool,
-  RefreshCw, ShieldCheck, Mic
+  RefreshCw, ShieldCheck, Mic, Smile
 } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -35,6 +35,7 @@ import { ChatInterface } from '@/components/chat-interface';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { ProductsMenuGenerator } from '@/components/products-menu-generator';
 import { PersonalMealPlan } from '@/components/personal-meal-plan';
+import { WellBeingStatus } from '@/components/well-being-status';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 
 export default function DashboardPage() {
@@ -73,7 +74,7 @@ export default function DashboardPage() {
   // Автоматическая смена вкладок при смене роли в профиле
   useEffect(() => {
     if (profileType === 'specialist') {
-      if (activeTab === 'dashboard' || activeTab === 'meals') {
+      if (activeTab === 'dashboard' || activeTab === 'meals' || activeTab === 'feeling') {
         setActiveTab('patients');
       }
     } else {
@@ -217,6 +218,7 @@ export default function DashboardPage() {
                 </div>
               </TabsContent>
               <TabsContent value="chats" className="mt-0"><ChatInterface /></TabsContent>
+              <TabsContent value="feeling" className="mt-0"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
               <TabsContent value="profile" className="mt-0"><ProfileCabinet /></TabsContent>
             </div>
 
@@ -260,6 +262,14 @@ export default function DashboardPage() {
                     <MessageSquare className={cn("h-5 w-5", activeTab === 'chats' && "neo-glow")} />
                     <span className="text-[7px] font-black uppercase tracking-widest">Чаты</span>
                   </button>
+
+                  {profileType === 'user' && (
+                    <button onClick={() => setActiveTab('feeling')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'feeling' ? "text-primary" : "text-white/40")}>
+                      <Smile className={cn("h-5 w-5", activeTab === 'feeling' && "neo-glow")} />
+                      <span className="text-[7px] font-black uppercase tracking-widest">Статус</span>
+                    </button>
+                  )}
+
                   <button onClick={() => setActiveTab('profile')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'profile' ? "text-primary" : "text-white/40")}>
                     <UserCircle className={cn("h-5 w-5", activeTab === 'profile' && "neo-glow")} />
                     <span className="text-[7px] font-black uppercase tracking-widest">Профиль</span>
