@@ -14,7 +14,7 @@ import {
   History, FileText, Calendar, 
   ChevronRight, FlaskConical, Loader2,
   TrendingUp, TrendingDown, CheckCircle2,
-  AlertCircle, ArrowLeft, Zap
+  AlertCircle, ArrowLeft, Zap, Download
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
@@ -23,6 +23,7 @@ import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { downloadLabResultsDocx } from '@/lib/docx-generator';
 
 interface AnalysisHistoryDialogProps {
   children: React.ReactNode;
@@ -43,17 +44,20 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
 
   const { data: labs, isLoading } = useCollection<any>(labsQuery);
 
-  // Безопасное форматирование даты
   const safeFormatDate = (dateValue: any, formatStr: string = 'd MMM yyyy') => {
     if (!dateValue) return '—';
     try {
-      // Обработка Timestamp Firestore или строки
       const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
       if (isNaN(date.getTime())) return '—';
       return format(date, formatStr, { locale: ru });
     } catch (e) {
       return '—';
     }
+  };
+
+  const handleDownload = (e: React.MouseEvent, lab: any) => {
+    e.stopPropagation();
+    downloadLabResultsDocx(lab);
   };
 
   return (
@@ -64,25 +68,37 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
       <DialogContent className="w-[95vw] md:max-w-[700px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] flex flex-col h-[85vh] md:h-[80vh] gap-0">
         <DialogHeader className="p-6 md:p-8 bg-primary text-white shrink-0 relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#163D25] opacity-95" />
-          <div className="relative z-10 flex items-center gap-4">
+          <div className="relative z-10 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {selectedLab && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-10 w-10 rounded-full text-white hover:bg-white/10"
+                  onClick={() => setSelectedLab(null)}
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </Button>
+              )}
+              <div>
+                <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter">
+                  {selectedLab ? 'Детали анализа' : 'История анализов'}
+                </DialogTitle>
+                <p className="text-white/60 text-[10px] md:text-sm font-medium uppercase tracking-widest mt-0.5">
+                  {selectedLab ? safeFormatDate(selectedLab.createdAt, 'd MMMM yyyy') : 'Ваш медицинский архив'}
+                </p>
+              </div>
+            </div>
             {selectedLab && (
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className="h-10 w-10 rounded-full text-white hover:bg-white/10"
-                onClick={() => setSelectedLab(null)}
+                size="sm" 
+                onClick={(e) => handleDownload(e, selectedLab)}
+                className="rounded-xl bg-white/10 text-white hover:bg-white/20 border border-white/20 font-black uppercase text-[10px] gap-2"
               >
-                <ArrowLeft className="h-6 w-6" />
+                <Download className="h-3 w-3" /> <span className="hidden sm:inline">Скачать DOCX</span>
               </Button>
             )}
-            <div>
-              <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter">
-                {selectedLab ? 'Детали анализа' : 'История анализов'}
-              </DialogTitle>
-              <p className="text-white/60 text-[10px] md:text-sm font-medium uppercase tracking-widest mt-0.5">
-                {selectedLab ? safeFormatDate(selectedLab.createdAt, 'd MMMM yyyy') : 'Ваш медицинский архив'}
-              </p>
-            </div>
           </div>
           {!selectedLab && <History className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 rotate-12" />}
         </DialogHeader>

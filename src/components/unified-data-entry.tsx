@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -12,7 +11,7 @@ import {
   CheckCircle2, Timer, Zap, Heart, 
   Footprints, Moon, RefreshCw, 
   Droplet, Scale, Utensils, Smile, Save, MessageSquare,
-  AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic
+  AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic, Download
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -24,6 +23,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
+import { downloadLabResultsDocx } from '@/lib/docx-generator';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -290,13 +290,14 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     try {
       const labId = `lab_${Date.now()}`;
       const docRef = doc(firestore, 'users', user.uid, 'labResults', labId);
-      await setDoc(docRef, {
+      const dataToSave = {
         id: labId,
         userId: user.uid,
         date: format(selectedDate, 'yyyy-MM-dd'),
         ...labResult,
         createdAt: new Date().toISOString()
-      });
+      };
+      await setDoc(docRef, dataToSave);
       setIsSuccess(true);
       toast({ title: 'Анализы сохранены' });
     } catch (error: any) {
@@ -304,6 +305,14 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownloadDocx = () => {
+    if (!labResult) return;
+    downloadLabResultsDocx({
+      ...labResult,
+      createdAt: new Date().toISOString()
+    });
   };
 
   const reset = () => {
@@ -502,7 +511,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
               </TabsContent>
 
               <TabsContent value="fasting" className="space-y-6 outline-none">
-                {/* Fasting UI can be here */}
               </TabsContent>
 
               <TabsContent value="labs" className="space-y-6 outline-none">
@@ -634,7 +642,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
               <div className="text-center space-y-2">
                 <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">LabScan AI 1.0</Badge>
-                <h3 className="text-2xl font-black tracking-tighter">Результаты анализа</h3>
+                <div className="flex items-center justify-center gap-4">
+                  <h3 className="text-2xl font-black tracking-tighter">Результаты анализа</h3>
+                  <Button variant="outline" size="icon" onClick={handleDownloadDocx} className="rounded-full h-10 w-10 text-primary border-primary/20 bg-primary/5">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
