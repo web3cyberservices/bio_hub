@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа медицинских анализов по фото/скану.
@@ -79,13 +78,13 @@ const analyzeLabResultsFlow = ai.defineFlow(
     outputSchema: AnalyzeLabOutputSchema,
   },
   async (input) => {
-    // Используем увеличенное количество попыток (7) для OCR анализов
+    // Используем 3 попытки для OCR анализов, чтобы не превысить лимит таймаута Next.js (120с)
     return runWithRetry(async () => {
       const {output} = await labPrompt(input, {
-        model: googleAI.model('gemini-3.1-flash-preview'), // Используем самую свежую модель для лучшего распознавания
+        model: googleAI.model('gemini-2.5-flash'), // Используем стабильную 2.5 Flash для скорости
       });
       if (!output) throw new Error('ИИ не смог извлечь данные. Попробуйте сделать фото четче.');
       return output;
-    }, 7, 5000);
+    }, 3, 5000);
   }
 );

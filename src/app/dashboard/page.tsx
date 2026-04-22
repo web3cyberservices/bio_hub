@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -98,7 +97,7 @@ export default function DashboardPage() {
 
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Автоматическое переключение вкладок при смене роли
+  // Автоматическое переключение вкладок при смене роли и сброс невалидных вкладок
   useEffect(() => {
     if (viewingPatientId || profileLoading || !userData) return;
 
@@ -111,7 +110,7 @@ export default function DashboardPage() {
         setActiveTab('dashboard');
       }
     }
-  }, [profileType, viewingPatientId, profileLoading]);
+  }, [profileType, userData?.profileType, activeTab, viewingPatientId, profileLoading]);
 
   const handleLogout = async () => {
     if (auth) { await signOut(auth); router.replace('/'); }

@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '50mb',
-      timeout: 120, // Увеличиваем время выполнения серверных экшенов до 2 минут для распознавания анализов
+      timeout: 120, // Увеличиваем время выполнения серверных экшенов до 2 минут
     },
   },
   images: {
