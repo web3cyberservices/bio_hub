@@ -162,6 +162,10 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                   <div className="grid gap-3">
                     {selectedLab.markers?.map((marker: any, i: number) => {
                       const isOffNorm = marker.status !== 'normal';
+                      const rangeText = marker.referenceRange && marker.referenceRange !== 'undefined' && marker.referenceRange !== '—' 
+                        ? marker.referenceRange 
+                        : 'норма не указана';
+                        
                       return (
                         <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm">
                           <div className="flex-1">
@@ -191,7 +195,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                                  {marker.value}
                                  {isOffNorm && (
                                    <span className="text-[10px] ml-1 font-bold opacity-60">
-                                      (норма {marker.referenceRange})
+                                      (норма {rangeText})
                                    </span>
                                  )}
                                </p>

@@ -84,12 +84,12 @@ export async function downloadLabResultsDocx(data: LabData) {
               }),
               ...data.markers.map(m => {
                 const isOffNorm = m.status !== 'normal';
-                const rangeText = m.referenceRange && m.referenceRange !== 'undefined' ? m.referenceRange : '—';
+                const range = m.referenceRange && m.referenceRange !== 'undefined' && m.referenceRange !== '—' 
+                  ? m.referenceRange 
+                  : 'норма не указана';
                 
-                // Формат согласно запросу: 900 (норма 500)
-                const displayValue = isOffNorm 
-                  ? `${m.value} (норма ${rangeText})` 
-                  : m.value;
+                // Формат: "Значение (норма Интервал)"
+                const displayValue = `${m.value} (норма ${range})`;
 
                 return new TableRow({
                   children: [
