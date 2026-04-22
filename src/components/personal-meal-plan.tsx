@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Plus, Trash2, Loader2, Utensils, Clock, Flame, 
-  Beef, Droplet, Zap, Save, Calendar
+  Beef, Droplet, Zap, Save, Calendar, Mic
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface PersonalMealPlanProps {
   selectedDate: Date;
@@ -27,6 +28,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   
   const [name, setName] = useState('');
   const [time, setTime] = useState('Завтрак');
@@ -37,8 +39,26 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Ваш браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setName(transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
+
   const mealsQuery = useMemoFirebase(() => {
-    // В тестовом режиме userId может быть 'public-user'
     if (!firestore || userLoading || !user?.uid) return null;
     
     try {
@@ -133,9 +153,23 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
            <CardContent className="p-8">
               <form onSubmit={handleAddMeal} className="space-y-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 relative">
                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Название</label>
-                       <Input placeholder="Напр: Салат с тунцом" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold" required />
+                       <div className="relative">
+                        <Input placeholder="Напр: Салат с тунцом" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold pr-14" required />
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={startVoiceInput}
+                          className={cn(
+                            "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-sm transition-all",
+                            isRecording ? "bg-red-500 text-white animate-pulse" : "bg-primary/5 text-primary"
+                          )}
+                        >
+                          <Mic className="h-4 w-4" />
+                        </Button>
+                       </div>
                     </div>
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Прием пищи</label>

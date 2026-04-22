@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -13,7 +14,8 @@ import {
   User, 
   Maximize2, 
   Minimize2,
-  Activity
+  Activity,
+  Mic
 } from 'lucide-react';
 import { chatWithSpecialist } from '@/ai/flows/ai-specialist-chat';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +35,7 @@ export function AISpecialistChat() {
   const { firestore } = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -54,6 +57,25 @@ export function AISpecialistChat() {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, loading]);
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => (prev ? prev + ' ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -157,15 +179,31 @@ export function AISpecialistChat() {
             </div>
           </ScrollArea>
           <div className="p-4 md:p-6 bg-muted/20 border-t shrink-0">
-            <div className="relative flex items-center">
-              <Input
-                placeholder="Ваш вопрос..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                className="h-12 md:h-14 rounded-2xl bg-white border-none pr-12 md:pr-14 shadow-inner text-xs md:text-sm font-medium"
-              />
-              <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="absolute right-2 h-8 w-8 md:h-10 md:w-10 bg-primary shadow-lg shadow-primary/20"><Send className="h-3 w-3 md:h-4 md:w-4 text-white" /></Button>
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Ваш вопрос..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="h-12 md:h-14 rounded-2xl bg-white border-none pr-20 md:pr-24 shadow-inner text-xs md:text-sm font-medium"
+                />
+                <div className="absolute right-10 md:right-12 top-1/2 -translate-y-1/2">
+                   <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={startVoiceInput}
+                    className={cn(
+                      "h-8 w-8 md:h-10 md:w-10 rounded-full transition-all",
+                      isRecording ? "bg-red-500 text-white animate-pulse" : "bg-primary/10 text-primary"
+                    )}
+                   >
+                    <Mic className="h-3 w-3 md:h-4 md:w-4" />
+                   </Button>
+                </div>
+              </div>
+              <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="h-10 w-10 md:h-12 md:w-12 bg-primary shadow-lg shadow-primary/20 shrink-0"><Send className="h-4 w-4 md:h-5 md:w-5 text-white" /></Button>
             </div>
           </div>
         </>

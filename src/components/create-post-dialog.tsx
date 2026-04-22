@@ -6,12 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Plus, Loader2, ImageIcon, Sparkles, Image as ImageIconLucide } from 'lucide-react';
+import { Plus, Loader2, ImageIcon, Sparkles, Image as ImageIconLucide, Mic } from 'lucide-react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export function CreatePostDialog() {
   const { user } = useUser();
@@ -19,6 +20,7 @@ export function CreatePostDialog() {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
@@ -29,6 +31,25 @@ export function CreatePostDialog() {
 
   const { data: userData } = useDoc<any>(userDocRef);
 
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Ваш браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setContent(prev => (prev ? prev + ' ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
+
   const handleSubmit = async () => {
     if (!firestore || !user || !content.trim()) return;
 
@@ -36,7 +57,7 @@ export function CreatePostDialog() {
     try {
       await addDoc(collection(firestore, 'posts'), {
         authorId: user.uid,
-        authorName: userData?.firstName + (userData?.lastName ? ` ${userData.lastName}` : '') || 'Специалист',
+        authorName: (userData?.firstName || 'Эксперт') + (userData?.lastName ? ` ${userData.lastName}` : ''),
         authorRole: userData?.specialization || 'Эксперт',
         authorPhoto: userData?.photoUrl || '',
         content,
@@ -71,14 +92,28 @@ export function CreatePostDialog() {
           </DialogTitle>
         </DialogHeader>
         <div className="p-8 space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-4 relative">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Текст сообщения</label>
-            <Textarea 
-              placeholder="Поделитесь знаниями или советом..." 
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[150px] rounded-2xl bg-[#E8F5EE] border-none p-6 text-lg font-medium resize-none shadow-inner"
-            />
+            <div className="relative">
+              <Textarea 
+                placeholder="Поделитесь знаниями или советом..." 
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[150px] rounded-2xl bg-[#E8F5EE] border-none p-6 text-lg font-medium resize-none shadow-inner pr-14"
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={startVoiceInput}
+                className={cn(
+                  "absolute right-3 top-3 h-10 w-10 rounded-full shadow-lg transition-all",
+                  isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white text-primary"
+                )}
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div className="space-y-4">

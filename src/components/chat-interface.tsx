@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Send, Loader2, MessageSquare, 
   Search, Phone, Video, MoreVertical, CheckCheck, Activity, Bot,
-  Pencil, Trash2, X, Check
+  Pencil, Trash2, X, Check, Mic
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, addDoc, doc, updateDoc, where, limit, deleteDoc } from 'firebase/firestore';
@@ -28,6 +29,7 @@ export function ChatInterface() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Список чатов пользователя
@@ -64,12 +66,30 @@ export function ChatInterface() {
     }
   }, [messages]);
 
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Ваш браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setMessage(prev => (prev ? prev + ' ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
+
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
 
     if (editingMessageId) {
-      // Логика сохранения отредактированного сообщения
       const msgRef = doc(firestore, 'chats', activeChatId, 'messages', editingMessageId);
       updateDocumentNonBlocking(msgRef, {
         text: message.trim(),
@@ -280,21 +300,37 @@ export function ChatInterface() {
                  </div>
                )}
                <form onSubmit={handleSendMessage} className="relative flex items-center gap-4">
-                  <Input 
-                    placeholder={editingMessageId ? "Измените сообщение..." : "Напишите сообщение..."}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none px-6 md:px-8 font-bold text-sm md:text-base focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-16 md:pr-20"
-                  />
+                  <div className="relative flex-1">
+                    <Input 
+                      placeholder={editingMessageId ? "Измените сообщение..." : "Напишите сообщение..."}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none px-6 md:px-8 font-bold text-sm md:text-base focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32"
+                    />
+                    <div className="absolute right-12 md:right-16 top-1/2 -translate-y-1/2">
+                       <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={startVoiceInput}
+                          className={cn(
+                            "h-10 w-10 md:h-12 md:w-12 rounded-full transition-all",
+                            isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/80 text-primary"
+                          )}
+                       >
+                          <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                       </Button>
+                    </div>
+                  </div>
                   <Button 
                     type="submit" 
                     disabled={!message.trim()} 
                     className={cn(
-                      "absolute right-2 md:right-3 h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl shadow-xl transition-transform hover:scale-105",
+                      "h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl shadow-xl transition-transform hover:scale-105 shrink-0",
                       editingMessageId ? "bg-emerald-500 hover:bg-emerald-600" : "bg-primary"
                     )}
                   >
-                     {editingMessageId ? <Check className="h-4 w-4 md:h-5 md:w-5" /> : <Send className="h-4 w-4 md:h-5 md:w-5" />}
+                     {editingMessageId ? <Check className="h-5 w-5 md:h-6 md:w-6" /> : <Send className="h-5 w-5 md:h-6 md:w-6" />}
                   </Button>
                </form>
             </div>

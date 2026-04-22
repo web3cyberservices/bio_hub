@@ -46,7 +46,8 @@ import {
   Wine,
   Ban,
   Heart,
-  Utensils
+  Utensils,
+  Mic
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -90,6 +91,7 @@ export function ProfileCabinet() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [recordingField, setRecordingField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => {
@@ -120,6 +122,26 @@ export function ProfileCabinet() {
       bio: '',
     },
   });
+
+  const startVoiceInput = (fieldName: keyof ProfileValues) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setRecordingField(fieldName);
+    recognition.onend = () => setRecordingField(null);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const currentVal = form.getValues(fieldName as any);
+      form.setValue(fieldName as any, (currentVal ? currentVal + ' ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
 
   const normalizeActivity = (val: string): any => {
     const map: Record<string, string> = {
@@ -215,9 +237,24 @@ export function ProfileCabinet() {
       });
   };
 
-  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all";
-  const textareaClasses = "min-h-[120px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none";
+  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 focus:ring-2 focus:ring-primary/20 transition-all pr-14";
+  const textareaClasses = "min-h-[120px] rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 py-4 focus:ring-2 focus:ring-primary/20 transition-all resize-none pr-14";
   const selectClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none shadow-inner font-bold px-6 transition-all";
+
+  const VoiceBtn = ({ field }: { field: keyof ProfileValues }) => (
+    <Button 
+      type="button" 
+      variant="ghost" 
+      size="icon" 
+      onClick={() => startVoiceInput(field)}
+      className={cn(
+        "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-sm transition-all",
+        recordingField === field ? "bg-red-500 text-white animate-pulse" : "bg-white/80 text-primary hover:bg-white"
+      )}
+    >
+      <Mic className="h-4 w-4" />
+    </Button>
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -260,16 +297,16 @@ export function ProfileCabinet() {
             )}
           </div>
 
-          {/* Section 2: Personal Data (Moved Up) */}
+          {/* Section 2: Personal Data */}
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
             <CardContent className="p-8 md:p-12 space-y-8">
               <div className="flex items-center gap-2 border-b pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="firstName" /></div></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="lastName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="lastName" /></div></FormControl></FormItem>
                 )} />
               </div>
               <FormItem>
@@ -324,10 +361,10 @@ export function ProfileCabinet() {
                     <div className="flex items-center gap-2 border-b pb-4"><Briefcase className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Профессиональные данные</h3></div>
                     <div className="grid gap-6">
                       <FormField control={form.control} name="specialization" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация</FormLabel><FormControl><Input placeholder="Например: Нутрициолог..." {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация</FormLabel><FormControl><div className="relative"><Input placeholder="Например: Нутрициолог..." {...field} className={inputClasses} /><VoiceBtn field="specialization" /></div></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="bio" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel><FormControl><Textarea placeholder="Ваш опыт..." {...field} className={textareaClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel><FormControl><div className="relative"><Textarea placeholder="Ваш опыт..." {...field} className={textareaClasses} /><VoiceBtn field="bio" /></div></FormControl></FormItem>
                       )} />
                     </div>
                   </div>
@@ -388,10 +425,10 @@ export function ProfileCabinet() {
                     <div className="flex items-center gap-2 border-b pb-4"><Utensils className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Пищевые предпочтения</h3></div>
                     <div className="grid gap-6">
                       <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Любимые блюда / ингредиенты</FormLabel><FormControl><Textarea placeholder="Например: Авокадо, лосось, орехи..." {...field} className={textareaClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Любимые блюда / ингредиенты</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Авокадо, лосось, орехи..." {...field} className={textareaClasses} /><VoiceBtn field="favoriteFoods" /></div></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Исключить из рациона</FormLabel><FormControl><Textarea placeholder="Например: Молоко, лук, кинза..." {...field} className={textareaClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Исключить из рациона</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Молоко, лук, кинза..." {...field} className={textareaClasses} /><VoiceBtn field="dislikedFoods" /></div></FormControl></FormItem>
                       )} />
                     </div>
                   </div>

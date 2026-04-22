@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Timer, Zap, Heart, 
   Footprints, Moon, RefreshCw, 
   Droplet, Scale, Utensils, Smile, Save, MessageSquare,
-  AlertCircle, TrendingUp, TrendingDown, Smartphone
+  AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -43,6 +43,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mealResult, setMealResult] = useState<AnalyzeMealOutput | null>(null);
   const [labResult, setLabResult] = useState<AnalyzeLabOutput | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [recordingField, setRecordingField] = useState<string | null>(null);
   
   const [editedMeal, setEditedMeal] = useState<AnalyzeMealOutput | null>(null);
 
@@ -56,6 +57,25 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+
+  const startVoiceInput = (fieldName: string, setter: (val: string) => void) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setRecordingField(fieldName);
+    recognition.onend = () => setRecordingField(null);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setter(transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -257,7 +277,22 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     stopCamera();
   };
 
-  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-2xl placeholder:text-muted-foreground/20 focus:ring-4 focus:ring-primary/5 transition-all px-6 md:px-8 shadow-inner";
+  const VoiceBtn = ({ field, setter }: { field: string, setter: (v: string) => void }) => (
+    <Button 
+      type="button" 
+      variant="ghost" 
+      size="icon" 
+      onClick={() => startVoiceInput(field, setter)}
+      className={cn(
+        "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-sm transition-all z-10",
+        recordingField === field ? "bg-red-500 text-white animate-pulse" : "bg-white/80 text-primary hover:bg-white"
+      )}
+    >
+      <Mic className="h-4 w-4" />
+    </Button>
+  );
+
+  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-2xl placeholder:text-muted-foreground/20 focus:ring-4 focus:ring-primary/5 transition-all px-6 md:px-8 shadow-inner pr-14";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
@@ -284,12 +319,28 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
               </TabsList>
 
               <TabsContent value="meal" className="space-y-6 outline-none">
-                <Textarea 
-                  placeholder="Что вы съели?" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)} 
-                  className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/5 border-none p-6 md:p-8 text-lg md:text-xl font-medium resize-none shadow-inner" 
-                />
+                <div className="relative">
+                  <Textarea 
+                    placeholder="Что вы съели?" 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/5 border-none p-6 md:p-8 text-lg md:text-xl font-medium resize-none shadow-inner pr-16" 
+                  />
+                  <div className="absolute right-4 top-4">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => startVoiceInput('description', setDescription)}
+                      className={cn(
+                        "h-12 w-12 rounded-full shadow-lg transition-all",
+                        recordingField === 'description' ? "bg-red-500 text-white animate-pulse" : "bg-white text-primary"
+                      )}
+                    >
+                      <Mic className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4 md:gap-6">
                   <Button variant="outline" className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all" onClick={startCamera}>
@@ -384,25 +435,30 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="space-y-2">
+                   <div className="space-y-2 relative">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-4 flex items-center gap-2"><Scale className="h-3 w-3" /> Вес (кг)</label>
                       <Input placeholder="76.2" value={weight} onChange={e => setWeight(e.target.value)} type="number" className={inputClasses} />
+                      <VoiceBtn field="weight" setter={setWeight} />
                    </div>
-                   <div className="space-y-2">
+                   <div className="space-y-2 relative">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-4 flex items-center gap-2"><Droplet className="h-3 w-3" /> Вода (мл)</label>
                       <Input placeholder="500" value={water} onChange={e => setWater(e.target.value)} type="number" className={inputClasses} />
+                      <VoiceBtn field="water" setter={setWater} />
                    </div>
-                   <div className="space-y-2">
+                   <div className="space-y-2 relative">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-4 flex items-center gap-2"><Footprints className="h-3 w-3" /> Шаги</label>
                       <Input placeholder="10,000" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
+                      <VoiceBtn field="steps" setter={setSteps} />
                    </div>
-                   <div className="space-y-2">
+                   <div className="space-y-2 relative">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-4 flex items-center gap-2"><Heart className="h-3 w-3" /> Пульс (bpm)</label>
                       <Input placeholder="72" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className={inputClasses} />
+                      <VoiceBtn field="heartRate" setter={setHeartRate} />
                    </div>
-                   <div className="space-y-2 col-span-full">
+                   <div className="space-y-2 col-span-full relative">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-4 flex items-center gap-2"><Moon className="h-3 w-3" /> Сон (часов)</label>
                       <Input placeholder="7.5" value={sleep} onChange={e => setSleep(e.target.value)} type="number" step="0.1" className={inputClasses} />
+                      <VoiceBtn field="sleep" setter={setSleep} />
                    </div>
                 </div>
                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2" onClick={handleDailyLogSubmit} disabled={loading}>
@@ -449,11 +505,14 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="text-center space-y-2">
                   <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">AI BioScan Result</Badge>
-                  <Input 
-                    value={editedMeal.mealName} 
-                    onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
-                    className="text-2xl md:text-3xl font-black text-center border-none bg-transparent h-auto focus-visible:ring-0"
-                  />
+                  <div className="relative">
+                    <Input 
+                      value={editedMeal.mealName} 
+                      onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
+                      className="text-2xl md:text-3xl font-black text-center border-none bg-transparent h-auto focus-visible:ring-0 pr-12"
+                    />
+                    <VoiceBtn field="editedMealName" setter={(val) => setEditedMeal({...editedMeal, mealName: val})} />
+                  </div>
                </div>
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
