@@ -124,11 +124,11 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
       <NavBar />
       
-      <main className="container mx-auto flex-1 px-4 py-6 md:py-10 max-w-6xl pb-32" key={profileType}>
+      <main className={cn("container mx-auto flex-1 px-4 py-6 md:py-10 max-w-6xl pb-32", activeTab === 'dashboard' && "overflow-hidden h-[calc(100vh-100px)]")} key={profileType}>
         {viewingSpecialistId ? <SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /> : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
             
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
               <TabsContent value="feed" className="mt-0 space-y-8">
                  <div className="flex items-center justify-between px-2">
                     <h2 className="text-xl font-black tracking-widest text-primary neo-glow uppercase">Bio-Лента</h2>
@@ -153,14 +153,14 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="mt-0">
+              <TabsContent value="dashboard" className="mt-0 h-full overflow-hidden flex flex-col">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
                   deviceData={dailyLogDoc} 
                 />
                 {!recommendationDoc?.data && !viewingPatientId && (
-                  <div className="mt-10">
+                  <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-[60] w-full max-w-xs px-4">
                      <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
                   </div>
                 )}
@@ -218,7 +218,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Bottom Futuristic Navigation Bar */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95vw] max-w-lg">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-lg">
                <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2rem] h-20 px-2 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'feed' ? "text-primary" : "text-white/40")}>
                     <BookOpen className={cn("h-5 w-5", activeTab === 'feed' && "neo-glow")} />

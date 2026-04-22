@@ -40,12 +40,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'dashboard') {
     return (
-      <div className="space-y-2 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-2xl mx-auto pb-40">
+      <div className="relative h-[calc(100vh-280px)] flex flex-col items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-1000 overflow-hidden">
         
-        {/* Top Header - Compact Bio-Score (as in reference) */}
-        <div className="flex items-center justify-between px-6 pt-4 mb-4">
+        {/* Top Header - Compact Bio-Score */}
+        <div className="flex items-center justify-between w-full max-w-md px-6 pt-4 z-50">
            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
                  <Droplets className="h-5 w-5 text-primary" />
               </div>
               <span className="text-[7px] font-black text-white/40 uppercase mt-1">Вода</span>
@@ -53,7 +53,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
            <div className="relative group">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-              <div className="relative w-32 h-32 flex items-center justify-center">
+              <div className="relative w-28 h-28 md:w-32 md:h-32 flex items-center justify-center">
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
                   <circle cx="50%" cy="50%" r="45%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="4" />
                   <circle 
@@ -64,70 +64,32 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
                 </svg>
                 <div className="text-center">
                   <span className="text-[8px] font-black text-primary/60 uppercase tracking-[0.2em] block">Bio-Score</span>
-                  <span className="text-4xl font-black text-white neo-glow leading-none">{bioScore}</span>
+                  <span className="text-3xl md:text-4xl font-black text-white neo-glow leading-none">{bioScore}</span>
                   <span className="text-[8px] font-bold text-white/40 block">/100</span>
                 </div>
               </div>
            </div>
 
            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-primary/20 flex items-center justify-center bg-primary/5">
                  <Moon className="h-5 w-5 text-primary" />
               </div>
               <span className="text-[7px] font-black text-white/40 uppercase mt-1">Сон</span>
            </div>
         </div>
 
-        {/* The Holographic Digital Twin Visualizer - Centered and Shrunk */}
-        <BioTwinVisualizer 
-          score={bioScore} 
-          deviceData={deviceData} 
-          macros={macros}
-        />
-
-        {/* Functional List (as in reference bottom section) */}
-        <div className="px-6 space-y-3 pt-6">
-           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
-              <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <MessageSquare className="h-5 w-5" />
-                 </div>
-                 <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Мой Чат: Ассистент PRO</h3>
-                    <p className="text-[9px] text-white/40 font-medium">Мгновенные советы по биометрии</p>
-                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-white/20" />
-           </Card>
-
-           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
-              <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <FlaskConical className="h-5 w-5" />
-                 </div>
-                 <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Расшифровка LabScan AI</h3>
-                    <p className="text-[9px] text-white/40 font-medium">Анализ маркеров крови и гормонов</p>
-                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-white/20" />
-           </Card>
-
-           <Card className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer group">
-              <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <ShoppingBasket className="h-5 w-5" />
-                 </div>
-                 <div>
-                    <h3 className="text-xs font-black text-white uppercase tracking-tight">Smart Inventory</h3>
-                    <p className="text-[9px] text-white/40 font-medium">Меню из вашего холодильника</p>
-                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-white/20" />
-           </Card>
+        {/* The Holographic Digital Twin Visualizer - Fixed in Center */}
+        <div className="flex-1 w-full flex items-center justify-center py-4">
+          <BioTwinVisualizer 
+            score={bioScore} 
+            deviceData={deviceData} 
+            macros={macros}
+            className="scale-110 md:scale-125"
+          />
         </div>
 
-        <div className="text-center pt-8 opacity-10">
+        {/* Bottom Metadata - Shrunk and cleaned */}
+        <div className="text-center pb-4 opacity-10">
            <p className="text-[6px] font-black uppercase tracking-[1em]">PRO SEBYA INTERFACE V4.0.2</p>
         </div>
       </div>
