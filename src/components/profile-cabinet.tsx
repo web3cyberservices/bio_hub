@@ -237,6 +237,7 @@ export function ProfileCabinet() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          {/* Section 1: Account Type */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="premium-card border-none shadow-xl bg-white/60 backdrop-blur-md overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-8">
@@ -259,9 +260,41 @@ export function ProfileCabinet() {
             )}
           </div>
 
+          {/* Section 2: Personal Data (Moved Up) */}
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
-            <CardContent className="p-8 md:p-12 space-y-12">
-              <div className="space-y-6">
+            <CardContent className="p-8 md:p-12 space-y-8">
+              <div className="flex items-center gap-2 border-b pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3></div>
+              <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                <FormField control={form.control} name="firstName" render={({ field }) => (
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="lastName" render={({ field }) => (
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
+                )} />
+              </div>
+              <FormItem>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
+                <div className="grid grid-cols-3 gap-3 pt-1.5">
+                  <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-2xl">{daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-2xl">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
+                    <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-2xl">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </FormItem>
+            </CardContent>
+          </Card>
+
+          {/* Section 3: Photo Profile */}
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
+            <CardContent className="p-8 md:p-12 space-y-6">
                 <div className="flex items-center gap-2 border-b pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Фото профиля</h3></div>
                 <div className="flex flex-col md:flex-row gap-8 items-center">
                    <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-primary/5 border-4 border-white shadow-xl flex items-center justify-center shrink-0 overflow-hidden group">
@@ -279,8 +312,12 @@ export function ProfileCabinet() {
                       </div>
                    </div>
                 </div>
-              </div>
+            </CardContent>
+          </Card>
 
+          {/* Section 4: Role-Specific Bio / Metrics */}
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
+            <CardContent className="p-8 md:p-12 space-y-12">
               {profileTypeValue === 'specialist' ? (
                 <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-6">
@@ -360,41 +397,12 @@ export function ProfileCabinet() {
                   </div>
                 </div>
               )}
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 border-b pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3></div>
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField control={form.control} name="firstName" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
-                  )} />
-                  <FormField control={form.control} name="lastName" render={({ field }) => (
-                    <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><Input {...field} className={inputClasses} /></FormControl></FormItem>
-                  )} />
-                </div>
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
-                  <div className="grid grid-cols-3 gap-3 pt-1.5">
-                    <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">{daysInMonth.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <Select value={currentMonth} onValueChange={(val) => updateBirthDate(currentYear, val, currentDay)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <Select value={currentYear} onValueChange={(val) => updateBirthDate(val, currentMonth, currentDay)}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-[#E8F5EE] border-none font-bold px-6 focus:ring-0"><SelectValue /></SelectTrigger>
-                      <SelectContent className="rounded-2xl">{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                </FormItem>
-              </div>
-
-              <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl">
-                {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
-              </Button>
             </CardContent>
           </Card>
+
+          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl">
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
+          </Button>
           
           <Card className="premium-card p-8 border-none shadow-xl bg-white/60">
             <div className="flex items-center gap-2 border-b pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
