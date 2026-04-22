@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -23,7 +22,7 @@ interface PersonalMealPlanProps {
 }
 
 export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
@@ -95,7 +94,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setIsAdding(false);
     } catch (error: any) {
       console.error("Add meal error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить блюдо. Проверьте доступ.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить блюдо.' });
     } finally {
       setLoading(false);
     }

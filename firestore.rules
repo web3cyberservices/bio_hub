@@ -1,11 +1,10 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 17.0
-     * Полная открытость для тестирования и надежная защита личных данных.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 18.0
+     * Полный доступ для владельцев и открытая гостевая песочница.
      */
 
     function isAuthenticated() {
@@ -16,22 +15,23 @@ service cloud.firestore {
       return (isAuthenticated() && request.auth.uid == userId) || userId == 'public-user';
     }
 
-    // --- Личные данные пользователей (Питание, Логи, Рекомендации) ---
-    // Используем рекурсивный поиск, чтобы разрешить доступ ко всем вложенным коллекциям владельцу
-    match /users/{userId}/{allSubcollections=**} {
-      allow read, write: if isOwner(userId);
-    }
-
-    // --- Профили пользователей ---
+    // --- Профили пользователей и вложенные данные ---
     match /users/{userId} {
-      // Разрешаем просмотр профиля владельцу ИЛИ если это специалист
-      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist') || userId == 'public-user';
-      
-      // Разрешаем список пользователей всем (для поиска экспертов в ленте)
-      allow list: if true;
-
-      // Запись владельцу
+      // Базовый доступ к документу профиля
+      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist');
+      allow list: if true; // Для поиска специалистов
       allow write: if isOwner(userId);
+
+      // Явный доступ ко всем личным подколлекциям (для list и get операций)
+      match /personalMeals/{mealId} { allow read, write: if isOwner(userId); }
+      match /dailyLogs/{logId} { allow read, write: if isOwner(userId); }
+      match /dietaryLogs/{logId} { allow read, write: if isOwner(userId); }
+      match /recommendations/{logId} { allow read, write: if isOwner(userId); }
+      match /labResults/{logId} { allow read, write: if isOwner(userId); }
+      match /reviews/{reviewId} { 
+        allow read: if true;
+        allow write: if isAuthenticated() || isOwner('public-user');
+      }
     }
 
     // --- Bio-Лента (Посты) ---

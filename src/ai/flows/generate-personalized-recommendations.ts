@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
- * Оптимизирована логика повторных попыток для предотвращения тайм-аутов Server Actions.
+ * Оптимизирована логика подбора изображений и повторных попыток.
  */
 
 import {ai} from '@/ai/genkit';
@@ -30,22 +29,8 @@ const GenerateRecommendationsInputSchema = z.object({
   height: z.number().positive().describe('Текущий рост в сантиметрах.'),
   age: z.number().int().min(1).describe('Текущий возраст в годах.'),
   gender: z.enum(['мужской', 'женский']).describe('Пол пользователя.'),
-  activityLevel:
-    z.enum([
-      'minimal',
-      'low',
-      'moderate',
-      'high',
-      'athlete',
-    ])
-    .describe('Уровень активности.'),
-  healthGoal:
-    z.enum([
-      'снизить массу тела',
-      'поддержать текущее состояние',
-      'набор массы',
-    ])
-    .describe('Основная цель пользователя.'),
+  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']).describe('Уровень активности.'),
+  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']).describe('Основная цель пользователя.'),
   smoking: z.enum(['да', 'нет']).describe('Курит ли пользователь.'),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).describe('Частота употребления алкоголя.'),
   favoriteFoods: z.string().optional().describe('Любимые продукты.'),
@@ -54,6 +39,7 @@ const GenerateRecommendationsInputSchema = z.object({
     steps: z.number().optional(),
     avgHeartRate: z.number().optional(),
     sleepDurationHours: z.number().optional(),
+    bloodPressure: z.string().optional(),
   }).optional(),
 });
 
@@ -96,40 +82,38 @@ export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendatio
 export type ReplaceMealInput = z.infer<typeof ReplaceMealInputSchema>;
 
 const IMAGE_ID_PROMPT = `
-ПРАВИЛА ДЛЯ imageUrl (КРИТИЧНО):
-Для каждого блюда ОБЯЗАТЕЛЬНО верните ПОЛНУЮ валидную ссылку Unsplash: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
-Используйте ОДИН из этих ID строго по смыслу:
-- Овсяная каша: 1517673400267-0251440c45dc
-- Омлет/Яичница: 1525351484163-7529414344d8
-- Смузи: 1505252585461-04db1eb84625
-- Творог/Йогурт: 1481931098708-28308112ef81
-- Суп/Борщ: 1547592166903-89826d2d82bb
+ПРАВИЛА ДЛЯ imageUrl (КРИТИЧЕСКИ ВАЖНО):
+Выбирайте ID строго в соответствии с типом блюда. Верните ПОЛНУЮ ссылку: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
+СПИСОК РАЗРЕШЕННЫХ ID:
+- Овсяная каша / Злаки: 1517673400267-0251440c45dc
+- Омлет / Яичница: 1525351484163-7529414344d8
+- Смузи / Боул: 1505252585461-04db1eb84625
+- Творог / Йогурт: 1481931098708-28308112ef81
+- Суп / Борщ: 1547592166903-89826d2d82bb
 - Салат овощной: 1512621776951-a57141f2eefd
-- Лосось/Семга: 1467003909585-2f8a72700288
-- Стейк/Говядина: 1600891964092-4316c2850dbc
+- Лосось / Рыба: 1467003909585-2f8a72700288
+- Стейк / Говядина: 1600891964092-4316c2850dbc
 - Куриная грудка: 1632778149955-e80f8ceca23b
-- Паста/Макароны: 1473093226724-4e24059a9742
-- Рис/Плов: 1512058560367-0035672fb799
-- Фрукты/Яблоко: 1567306226416-28f0efdc88ce
-- Орехи: 1536592248-b0a688680074
+- Паста / Макароны: 1473093226724-4e24059a9742
+- Рис / Плов: 1512058560367-0035672fb799
+- Фрукты / Яблоко: 1567306226416-28f0efdc88ce
+- Орехи / Перекус: 1536592248-b0a688680074
 - Авокадо тост: 1525351484163-7529414344d8
-- Гречка/Крупа: 1500315331676-957a82b3b5c8
+- Гречка / Крупа: 1500315331676-957a82b3b5c8
 - Индейка: 1604908176997-125c9306b3a2
 - Морепродукты: 1514362545818-201c4d699ac2
-- Сыр/Закуски: 1486297678142-f87ea97a03f0
+- Сыр / Снек: 1486297678142-f87ea97a03f0
+- Блины / Оладьи: 1567620905049-cf37180b7ccf
+- Бутерброд / Сэндвич: 1528735602780-2552da2451b6
 `;
 
-/**
- * Вспомогательная функция для повторных попыток.
- */
 export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
   const actionStartTime = Date.now();
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error: any) {
-      const errorMsg = (error.message || '').toUpperCase();
-      if (Date.now() - actionStartTime > 12000) throw new Error('Превышено время ожидания ИИ.');
+      if (Date.now() - actionStartTime > 15000) throw new Error('Превышено время ожидания ИИ.');
       let delay = initialDelay * Math.pow(2, i);
       await new Promise(resolve => setTimeout(resolve, delay));
       continue;
@@ -154,7 +138,8 @@ ${IMAGE_ID_PROMPT}
 Выдавайте результат СТРОГО в формате JSON.
 
 Контекст:
-Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}. Активность: {{activityLevel}}.`,
+Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}. Активность: {{activityLevel}}.
+Показатели: {{#if deviceData}}Шаги: {{deviceData.steps}}, Сон: {{deviceData.sleepDurationHours}}ч, Давление: {{deviceData.bloodPressure}}{{/if}}`,
 });
 
 const replaceMealPrompt = ai.definePrompt({
