@@ -347,7 +347,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     </Button>
   );
 
-  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/5 border-none font-black text-foreground text-xl md:text-2xl placeholder:text-muted-foreground/20 focus:ring-4 focus:ring-primary/5 transition-all px-6 md:px-8 shadow-inner pr-14";
+  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-black text-slate-950 text-xl md:text-2xl placeholder:text-slate-950/20 focus:ring-4 focus:ring-primary/10 transition-all px-6 md:px-8 shadow-inner pr-14";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
@@ -356,16 +356,16 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         <DialogHeader className="p-5 md:p-8 bg-primary text-white relative overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#163D25] opacity-95" />
           <div className="relative z-10 space-y-0.5">
-            <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter leading-none">Bio-Синхронизация</DialogTitle>
+            <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter leading-none uppercase">Bio-Синхронизация</DialogTitle>
             <p className="text-white/70 font-medium text-[10px] md:text-sm">Запишите показатели на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
           </div>
           <Zap className="absolute -right-6 -bottom-6 h-24 w-24 text-white/10 rotate-12" />
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar bg-background">
           {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-muted/60 p-1.5 mb-6 md:mb-10 shadow-inner">
+              <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-white/5 p-1.5 mb-6 md:mb-10 shadow-inner">
                 <TabsTrigger value="meal" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full"><Utensils className="h-3 w-3" /> ЕДА</TabsTrigger>
                 <TabsTrigger value="feeling" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full"><Smile className="h-3 w-3" /> ДУХ</TabsTrigger>
                 <TabsTrigger value="metrics" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full"><Scale className="h-3 w-3" /> ТЕЛО</TabsTrigger>
@@ -379,7 +379,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     placeholder="Что вы съели?" 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)} 
-                    className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/5 border-none p-6 md:p-8 text-lg md:text-xl font-medium resize-none shadow-inner pr-16" 
+                    className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-primary/20 backdrop-blur-md border border-primary/30 p-6 md:p-8 text-lg md:text-xl font-bold resize-none shadow-inner pr-16 text-slate-950 placeholder:text-slate-950/30" 
                   />
                   <div className="absolute right-4 top-4">
                     <Button 
@@ -398,12 +398,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 md:gap-6">
-                  <Button variant="outline" className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all" onClick={startCamera}>
-                    <Camera className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black">КАМЕРА</span>
+                  <Button variant="outline" className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 border-primary/20 flex flex-col gap-2 hover:bg-primary/10 transition-all bg-primary/5" onClick={startCamera}>
+                    <Camera className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black uppercase tracking-widest">КАМЕРА</span>
                   </Button>
                   <label className="cursor-pointer">
-                    <div className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all">
-                      <Upload className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black">ФАЙЛ</span>
+                    <div className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 border-primary/20 flex flex-col gap-2 items-center justify-center hover:bg-primary/10 transition-all bg-primary/5">
+                      <Upload className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black uppercase tracking-widest">ФАЙЛ</span>
                     </div>
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   </label>
@@ -428,7 +428,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   )}
                 </div>
 
-                <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary shadow-xl" onClick={() => handleAnalyze(false)} disabled={loading}>
+                <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary shadow-xl shadow-primary/20" onClick={() => handleAnalyze(false)} disabled={loading}>
                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5 md:h-6 text-accent" /> РАСПОЗНАТЬ</>}
                 </Button>
               </TabsContent>
@@ -442,7 +442,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                              key={m} 
                              onClick={() => setMood(m)}
                              variant={mood === m ? "default" : "outline"}
-                             className="h-14 rounded-[1.2rem] font-black text-xs"
+                             className={cn("h-14 rounded-[1.2rem] font-black text-xs transition-all", mood === m ? "bg-primary shadow-lg" : "bg-white/5 border-white/10")}
                           >
                              {m}
                           </Button>
@@ -463,7 +463,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                        </div>
                     </div>
                  </div>
-                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-6" onClick={handleDailyLogSubmit} disabled={loading}>
+                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-6 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ"}
                  </Button>
               </TabsContent>
@@ -516,12 +516,16 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                       <VoiceBtn field="sleep" setter={setSleep} />
                    </div>
                 </div>
-                <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2" onClick={handleDailyLogSubmit} disabled={loading}>
+                <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ОБНОВИТЬ ТЕЛО"}
                 </Button>
               </TabsContent>
 
               <TabsContent value="fasting" className="space-y-6 outline-none">
+                 <div className="py-20 text-center space-y-6 opacity-30">
+                    <Timer className="h-16 w-16 mx-auto text-primary" />
+                    <p className="font-black uppercase tracking-widest text-[10px]">Интервальное голодание (Coming Soon)</p>
+                 </div>
               </TabsContent>
 
               <TabsContent value="labs" className="space-y-6 outline-none">
@@ -529,17 +533,17 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   <div className="bg-primary/5 p-6 rounded-2xl border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-4">
                     <FlaskConical className="h-10 w-10 text-primary opacity-40" />
                     <div>
-                      <p className="font-bold">Анализ документов</p>
+                      <p className="font-bold text-white uppercase tracking-tight">Анализ документов</p>
                       <p className="text-[10px] text-muted-foreground">Загрузите фото бланка с результатами анализов</p>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-16 rounded-xl flex items-center gap-2" onClick={startCamera}>
+                    <Button variant="outline" className="h-16 rounded-xl flex items-center gap-2 bg-white/5 border-white/10 text-white" onClick={startCamera}>
                       <Camera className="h-5 w-5" /> Камера
                     </Button>
                     <label className="cursor-pointer">
-                      <div className="h-16 rounded-xl border border-input flex items-center justify-center gap-2 hover:bg-accent transition-colors">
+                      <div className="h-16 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center gap-2 hover:bg-white/10 transition-colors text-white">
                         <Upload className="h-5 w-5" /> Файл
                       </div>
                       <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
@@ -553,7 +557,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     </div>
                   )}
 
-                  <Button className="w-full h-16 rounded-xl bg-primary font-black" onClick={() => handleAnalyze()} disabled={loading || !image}>
+                  <Button className="w-full h-16 rounded-xl bg-primary font-black shadow-xl shadow-primary/20" onClick={() => handleAnalyze()} disabled={loading || !image}>
                     {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-2 h-5 w-5" /> АНАЛИЗИРОВАТЬ ИИ</>}
                   </Button>
                 </div>
@@ -567,58 +571,38 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     <Input 
                       value={editedMeal.mealName} 
                       onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
-                      className="text-2xl md:text-3xl font-black text-center border-none bg-transparent h-auto focus-visible:ring-0 pr-12"
+                      className="text-2xl md:text-3xl font-black text-center border-none bg-primary/20 backdrop-blur-md rounded-2xl h-auto focus-visible:ring-0 pr-12 text-slate-950 py-4 shadow-[0_0_15px_rgba(14,165,233,0.1)]"
                     />
                     <VoiceBtn field="editedMealName" setter={(val) => setEditedMeal({...editedMeal, mealName: val})} />
                   </div>
                </div>
 
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Ккал</label>
-                     <Input 
+                  {[
+                    { label: 'Ккал', val: editedMeal.calories, field: 'calories', color: 'bg-primary/20' },
+                    { label: 'Белки (г)', val: editedMeal.protein, field: 'protein', color: 'bg-orange-500/20' },
+                    { label: 'Жиры (г)', val: editedMeal.fat, field: 'fat', color: 'bg-yellow-500/20' },
+                    { label: 'Углеводы (г)', val: editedMeal.carbs, field: 'carbs', color: 'bg-emerald-500/20' }
+                  ].map((stat, i) => (
+                    <div key={i} className="space-y-2">
+                      <label className="text-[9px] font-black uppercase text-muted-foreground text-center block tracking-widest">{stat.label}</label>
+                      <Input 
                         type="number" 
-                        value={editedMeal.calories} 
-                        onChange={e => setEditedMeal({...editedMeal, calories: Number(e.target.value)})}
-                        className="h-14 rounded-2xl bg-primary/5 border-none text-center font-black text-xl"
-                     />
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Белки (г)</label>
-                     <Input 
-                        type="number" 
-                        value={editedMeal.protein} 
-                        onChange={e => setEditedMeal({...editedMeal, protein: Number(e.target.value)})}
-                        className="h-14 rounded-2xl bg-secondary/10 border-none text-center font-black text-xl"
-                     />
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Жиры (г)</label>
-                     <Input 
-                        type="number" 
-                        value={editedMeal.fat} 
-                        onChange={e => setEditedMeal({...editedMeal, fat: Number(e.target.value)})}
-                        className="h-14 rounded-2xl bg-accent/20 border-none text-center font-black text-xl"
-                     />
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-black uppercase text-muted-foreground text-center block">Углеводы (г)</label>
-                     <Input 
-                        type="number" 
-                        value={editedMeal.carbs} 
-                        onChange={e => setEditedMeal({...editedMeal, carbs: Number(e.target.value)})}
-                        className="h-14 rounded-2xl bg-muted border-none text-center font-black text-xl"
-                     />
-                  </div>
+                        value={stat.val} 
+                        onChange={e => setEditedMeal({...editedMeal, [stat.field]: Number(e.target.value)})}
+                        className={cn("h-14 rounded-2xl border-primary/20 text-center font-black text-xl text-slate-950 shadow-inner", stat.color)}
+                      />
+                    </div>
+                  ))}
                </div>
 
                <div className="space-y-4">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-2">Приблизительный состав</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {editedMeal.components?.map((comp, i) => (
-                        <div key={i} className="flex items-center justify-between p-5 bg-primary/5 rounded-2xl border border-primary/10 transition-colors hover:bg-primary/10">
-                           <span className="text-base font-bold text-foreground/80">{comp.ingredient}</span>
-                           <Badge className="bg-primary text-white font-black px-4 py-2 rounded-xl shadow-lg text-sm">
+                        <div key={i} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 transition-colors hover:bg-white/10">
+                           <span className="text-base font-bold text-white/80">{comp.ingredient}</span>
+                           <Badge className="bg-primary text-slate-950 font-black px-4 py-2 rounded-xl shadow-lg text-sm">
                               {comp.weight}
                            </Badge>
                         </div>
@@ -626,25 +610,25 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                   </div>
                </div>
 
-               <div className="bg-muted/30 p-5 rounded-[1.75rem]">
-                  <p className="text-sm font-medium leading-relaxed italic text-foreground/80">"{editedMeal.analysis}"</p>
+               <div className="bg-primary/5 p-5 rounded-[1.75rem] border border-primary/10">
+                  <p className="text-sm font-medium leading-relaxed italic text-white/70">"{editedMeal.analysis}"</p>
                </div>
 
                <div className="space-y-4">
                   <div className="flex gap-4">
                      <Button 
                         variant="outline" 
-                        className="flex-1 h-16 rounded-[1.2rem] font-bold" 
+                        className="flex-1 h-16 rounded-[1.2rem] font-black uppercase text-[10px] tracking-widest border-white/10 bg-white/5 text-white" 
                         onClick={() => { setMealResult(null); setEditedMeal(null); }}
                      >
                         Переснять
                      </Button>
                      <Button 
-                        className="flex-[2] h-16 rounded-[1.2rem] font-black text-lg bg-primary shadow-xl"
+                        className="flex-[2] h-16 rounded-[1.2rem] font-black text-lg bg-primary shadow-xl shadow-primary/20"
                         onClick={() => saveMealToFirestore(editedMeal)}
                         disabled={loading}
                      >
-                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-5 w-5" /> ПОДТВЕРДИТЬ И ЗАПИСАТЬ</>}
+                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-5 w-5" /> ПОДТВЕРДИТЬ</>}
                      </Button>
                   </div>
                </div>
@@ -654,7 +638,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
               <div className="text-center space-y-2">
                 <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">LabScan AI 1.0</Badge>
                 <div className="flex items-center justify-center gap-4">
-                  <h3 className="text-2xl font-black tracking-tighter">Результаты анализа</h3>
+                  <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Результаты анализа</h3>
                   <Button variant="outline" size="icon" onClick={handleDownloadDocx} className="rounded-full h-10 w-10 text-primary border-primary/20 bg-primary/5">
                     <Download className="h-4 w-4" />
                   </Button>
@@ -662,7 +646,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
               </div>
 
               <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
-                <p className="text-sm font-medium leading-relaxed text-foreground/80">{labResult.summary}</p>
+                <p className="text-sm font-medium leading-relaxed text-white/80">{labResult.summary}</p>
               </div>
 
               <div className="space-y-4">
@@ -673,31 +657,31 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     const cleanRange = marker.referenceRange ? marker.referenceRange.replace(/норма/gi, '').trim() : null;
                     
                     return (
-                      <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4">
+                      <div key={i} className="bg-white/5 border border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-black text-sm">{marker.name}</span>
+                            <span className="font-black text-sm text-white">{marker.name}</span>
                             <Badge 
                               variant="outline" 
                               className={cn(
                                 "text-[8px] h-4 px-1 border-none",
-                                marker.status === 'high' ? "bg-red-100 text-red-600" : 
-                                marker.status === 'low' ? "bg-yellow-100 text-yellow-700" : 
-                                "bg-green-100 text-green-600"
+                                marker.status === 'high' ? "bg-red-500/20 text-red-500" : 
+                                marker.status === 'low' ? "bg-yellow-500/20 text-yellow-500" : 
+                                "bg-emerald-500/20 text-emerald-500"
                               )}
                             >
                               {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
                             </Badge>
                           </div>
                           <div className="mt-0.5">
-                             <p className="text-[10px] text-muted-foreground font-medium">{marker.interpretation}</p>
+                             <p className="text-[10px] text-white/40 font-medium">{marker.interpretation}</p>
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end">
                           <div className="flex items-center justify-end gap-1.5 flex-wrap">
                              <div className="flex flex-col items-end">
                                 <div className="flex items-center gap-1">
-                                  <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm && "text-destructive")}>
+                                  <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm ? "text-destructive" : "text-white")}>
                                     {marker.value}
                                   </p>
                                   {isOffNorm && (
@@ -705,7 +689,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                   )}
                                 </div>
                                 {isOffNorm && cleanRange && (
-                                  <p className="text-[10px] md:text-[11px] font-bold text-destructive/60 mt-1 uppercase tracking-tight">
+                                  <p className="text-[10px] md:text-[11px] font-bold text-destructive/80 mt-1 uppercase tracking-tight">
                                      (норма {cleanRange})
                                   </p>
                                 )}
@@ -722,29 +706,31 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Рекомендации</label>
                 <div className="grid gap-3">
                   {labResult.recommendations.map((rec, i) => (
-                    <div key={i} className="flex gap-3 items-start p-4 bg-muted/30 rounded-2xl">
+                    <div key={i} className="flex gap-3 items-start p-4 bg-white/5 rounded-2xl border border-white/5">
                       <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <p className="text-xs font-medium">{rec}</p>
+                      <p className="text-xs font-medium text-white/80">{rec}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button variant="outline" className="flex-1 h-14 rounded-xl" onClick={() => setLabResult(null)}>Переснять</Button>
-                <Button className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl" onClick={saveLabResultToFirestore} disabled={loading}>
+                <Button variant="outline" className="flex-1 h-14 rounded-xl bg-white/5 border-white/10 text-white" onClick={() => setLabResult(null)}>Переснять</Button>
+                <Button className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl shadow-primary/20" onClick={saveLabResultToFirestore} disabled={loading}>
                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ В ПРОФИЛЬ"}
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="py-8 flex flex-col items-center text-center space-y-6">
-               <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-xl animate-in zoom-in">
-                  <CheckCircle2 className="h-12 w-12 text-white" />
+            <div className="py-12 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500">
+               <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(14,165,233,0.5)]">
+                  <CheckCircle2 className="h-12 w-12 text-slate-950" />
                </div>
-               <h3 className="text-2xl font-black tracking-tighter">Bio-Синхронизация завершена!</h3>
-               <p className="text-muted-foreground font-medium">Ваши данные успешно записаны в облако.</p>
-               <Button className="w-56 h-14 rounded-[1.2rem] font-black text-lg bg-primary" onClick={reset}>ОТЛИЧНО</Button>
+               <div className="space-y-2">
+                  <h3 className="text-3xl font-black tracking-tighter text-white uppercase">Синхронизация завершена!</h3>
+                  <p className="text-white/40 font-medium">Ваши биометрические данные успешно записаны в облако.</p>
+               </div>
+               <Button className="w-56 h-14 rounded-[1.2rem] font-black text-lg bg-primary shadow-lg shadow-primary/20" onClick={reset}>ОТЛИЧНО</Button>
             </div>
           )}
         </div>
