@@ -59,19 +59,19 @@ export default function DashboardPage() {
   }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user?.uid) return null;
     return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const recommendationRef = useMemoFirebase(() => {
-    if (!firestore || !user || !dateKey) return null;
+    if (!firestore || !user?.uid || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
-  }, [firestore, user, dateKey]);
+  }, [firestore, user?.uid, dateKey]);
 
   const dailyLogRef = useMemoFirebase(() => {
-    if (!firestore || !user || !dateKey) return null;
+    if (!firestore || !user?.uid || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
-  }, [firestore, user, dateKey]);
+  }, [firestore, user?.uid, dateKey]);
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -101,7 +101,7 @@ export default function DashboardPage() {
   };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
-    if (!firestore || !user || !dateKey) return;
+    if (!firestore || !user?.uid || !dateKey) return;
     const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
     const data = { id: dateKey, userId: user.uid, date: dateKey, data: result, createdAt: new Date().toISOString() };
     setDoc(docRef, data, { merge: true });
@@ -110,7 +110,7 @@ export default function DashboardPage() {
   };
 
   const handleLike = (postId: string, likedBy: string[]) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user?.uid) return;
     const isLiked = likedBy?.includes(user.uid);
     const postRef = doc(firestore, 'posts', postId);
     updateDoc(postRef, {
@@ -120,8 +120,8 @@ export default function DashboardPage() {
   };
 
   const handleStartChat = (targetId: string, name: string, photo: string) => {
-    if (!firestore || !user || user.uid === 'public-user') {
-      toast({ title: 'Вход не выполнен', description: 'Для общения с экспертами необходимо авторизоваться.' });
+    if (!firestore || !user?.uid) {
+      toast({ title: 'Ошибка', description: 'Не удалось инициализировать чат.' });
       return;
     }
     const chatId = [user.uid, targetId].sort().join('_');
@@ -157,7 +157,7 @@ export default function DashboardPage() {
             </Popover>
             <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 md:h-10 md:w-10 hover:bg-primary/5" onClick={() => setSelectedDate(prev => prev ? addDays(prev, 1) : null)}><ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-primary" /></Button>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">{selectedDate && <UnifiedDataEntry selectedDate={selectedDate}><Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Данные</span></Button></UnifiedDataEntry>}<Button variant="outline" size="icon" onClick={handleLogout} className="rounded-xl md:rounded-2xl h-10 md:h-12 w-10 md:w-12 border-primary/20 text-primary hover:bg-primary/5"><LogOut className="h-4 w-4 md:h-5 md:w-5" /></Button></div>
+          <div className="flex items-center gap-2 md:gap-4">{selectedDate && <UnifiedDataEntry selectedDate={selectedDate}><Button className="rounded-xl md:rounded-2xl h-10 md:h-12 gap-2 bg-primary hover:bg-primary/90 font-black px-4 md:px-6 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Данные</span></Button></UnifiedDataEntry>}{user?.uid !== 'public-user' && <Button variant="outline" size="icon" onClick={handleLogout} className="rounded-xl md:rounded-2xl h-10 md:h-12 w-10 md:w-12 border-primary/20 text-primary hover:bg-primary/5"><LogOut className="h-4 w-4 md:h-5 md:w-5" /></Button>}</div>
         </div>
       </div>
 

@@ -59,7 +59,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!firestore || userLoading || !user?.uid) return null;
+    // Ждем, пока пользователь определится (даже если это public-user)
+    if (!firestore || !user?.uid) return null;
     
     try {
       return query(
@@ -71,14 +72,14 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       console.error("Query creation error:", e);
       return null;
     }
-  }, [firestore, user?.uid, userLoading, dateKey]);
+  }, [firestore, user?.uid, dateKey]);
 
   const { data: meals, isLoading: mealsLoading } = useCollection<any>(mealsQuery);
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !firestore || !name) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось определить пользователя' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Заполните название блюда' });
       return;
     }
 
@@ -99,7 +100,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAdding(false);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: error.message });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проблема с доступом к базе данных.' });
     } finally {
       setLoading(false);
     }
@@ -111,29 +112,20 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       await deleteDoc(doc(firestore, 'users', user.uid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: error.message });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить блюдо.' });
     }
   };
 
   const totalCalories = meals?.reduce((acc, m) => acc + (m.calories || 0), 0) || 0;
 
-  if (userLoading) {
-    return (
-      <div className="py-24 text-center space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Подключение к Bio-облаку...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
-          <h3 className="text-3xl font-black tracking-tighter">Свой план</h3>
+          <h3 className="text-3xl font-black tracking-tighter text-foreground">Свой план</h3>
           <p className="text-muted-foreground text-sm font-medium">Ваш персональный рацион на этот день.</p>
           {user?.uid === 'public-user' && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-[8px] uppercase tracking-widest">Тестовый режим</Badge>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[8px] uppercase tracking-widest mt-1">Тестовый режим</Badge>
           )}
         </div>
         <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-4">
@@ -207,7 +199,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
       <div className="space-y-4">
          {mealsLoading ? (
-            <div className="py-20 text-center"><Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" /></div>
+            <div className="py-24 text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Синхронизация списка...</p>
+            </div>
          ) : meals && meals.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
                {meals.map((meal) => (
@@ -229,7 +224,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                            </div>
                         </div>
                      </div>
-                     <Button variant="ghost" size="icon" onClick={() => handleDeleteMeal(meal.id)} className="rounded-xl h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all">
+                     <Button variant="ghost" size="icon" onClick={() => handleDeleteMeal(meal.id)} className="rounded-xl h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/5 md:opacity-0 group-hover:opacity-100 transition-all">
                         <Trash2 className="h-5 w-5" />
                      </Button>
                   </Card>
@@ -241,8 +236,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
                <div className="space-y-1">
-                  <p className="text-xl font-black text-foreground/40">Свой план пока пуст</p>
-                  <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Добавляйте свои любимые рецепты и контролируйте калории на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                  <p className="text-xl font-black text-foreground/40">План пока пуст</p>
+                  <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Добавляйте свои блюда и контролируйте калории на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
                </div>
                <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black">
                   <Plus className="h-4 w-4 mr-2" /> Добавить первое блюдо

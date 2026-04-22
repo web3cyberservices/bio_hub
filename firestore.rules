@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 12.0
-     * Полная свобода для тестового режима и "Своего плана".
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 15.0
+     * Оптимизировано для мгновенного доступа к "Своему плану" и работы в тестовом режиме.
      */
 
     function isAuthenticated() {
@@ -19,17 +19,30 @@ service cloud.firestore {
     // --- Профили пользователей ---
     match /users/{userId} {
       // Разрешаем просмотр если владелец ИЛИ если это специалист
-      allow get: if isOwner(userId) || resource.data.profileType == 'specialist';
+      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist');
       
-      // Разрешаем список всем (для поиска экспертов)
+      // Разрешаем список пользователей всем (для поиска экспертов)
       allow list: if true;
 
       // Запись владельцу или в публичный профиль
       allow write: if isOwner(userId);
 
-      // Глубокий доступ ко всем вложенным данным (планы, логи, анализы)
+      // Явные правила для личных подколлекций (для стабильности операции list)
+      match /personalMeals/{mealId} { allow read, write: if isOwner(userId); }
+      match /dailyLogs/{date} { allow read, write: if isOwner(userId); }
+      match /dietaryLogs/{logId} { allow read, write: if isOwner(userId); }
+      match /recommendations/{date} { allow read, write: if isOwner(userId); }
+      match /labResults/{labId} { allow read, write: if isOwner(userId); }
+      
+      // Глубокий доступ ко всем остальным вложенным данным
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
+      }
+      
+      // Специальное правило для отзывов
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow write: if isAuthenticated();
       }
     }
 
@@ -42,13 +55,10 @@ service cloud.firestore {
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, update: if (isAuthenticated() && request.auth.uid in resource.data.participants) || isOwner('public-user');
-      allow create: if isAuthenticated() || isOwner('public-user');
-
+      allow read, write: if (isAuthenticated() && request.auth.uid in resource.data.participants) || isOwner('public-user');
+      
       match /messages/{messageId} {
-        allow read: if isAuthenticated() || isOwner('public-user');
-        allow create: if isAuthenticated() || isOwner('public-user');
-        allow update, delete: if (isAuthenticated() && resource.data.senderId == request.auth.uid) || isOwner('public-user');
+        allow read, write: if isAuthenticated() || isOwner('public-user');
       }
     }
   }
