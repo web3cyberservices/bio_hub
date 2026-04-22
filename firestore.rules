@@ -3,25 +3,28 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (FINAL RECURSIVE FIX)
-     * Мы разрешаем полный доступ владельцу ко всем своим данным и под-коллекциям.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (ULTIMATE FIX)
+     * Мы используем иерархическую структуру для гарантированного доступа к под-коллекциям.
      */
     
-    // 1. ПРАВИЛО ВЛАДЕНИЯ (РЕКУРСИВНОЕ)
-    // Конструкция {document=**} охватывает как сам документ пользователя, так и все его вложенные коллекции (personalMeals, dailyLogs и др.).
-    // Это гарантирует работу метода 'list' для любого уровня вложенности.
-    match /users/{userId}/{document=**} {
+    // 1. БАЗОВЫЕ ПРАВИЛА ДЛЯ ПОЛЬЗОВАТЕЛЕЙ
+    match /users/{userId} {
+      // Доступ владельца ко всему дереву данных (включая личный документ и ВСЕ под-коллекции)
+      // Правило {allPaths=**} внутри блока пользователя — самый надежный способ разрешить 'list'
       allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
+      
+      match /{allPaths=**} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
+      }
     }
 
-    // 2. ПУБЛИЧНЫЕ ПРОФИЛИ (ТОЛЬКО ЧТЕНИЕ)
-    // Разрешаем просмотр основного документа пользователя, если он является специалистом.
+    // 2. ПУБЛИЧНЫЙ ДОСТУП К ПРОФИЛЯМ
+    // Разрешаем всем видеть основные данные профиля (нужно для специалистов в ленте)
     match /users/{userId} {
       allow read: if true;
     }
 
     // 3. ПУБЛИЧНЫЕ ОТЗЫВЫ
-    // Отзывы к специалистам должны быть видны всем.
     match /users/{userId}/reviews/{reviewId} {
       allow read: if true;
       allow create: if request.auth != null || userId == 'public-user';
