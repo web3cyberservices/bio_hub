@@ -30,7 +30,9 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, init
         throw error;
       }
 
-      // Если общее время выполнения превысило 100 секунд, прекращаем попытки, чтобы не упасть по таймауту Next.js (120с)
+      // КРИТИЧЕСКИЙ МОМЕНТ: Если общее время выполнения превысило 100 секунд, 
+      // прекращаем попытки, чтобы не упасть по таймауту Next.js (120с).
+      // Это предотвращает ошибку "An unexpected response was received from the server".
       if (Date.now() - actionStartTime > 100000) {
         throw new Error('Превышено время ожидания ИИ. Пожалуйста, попробуйте сделать запрос позже или упростите его.');
       }

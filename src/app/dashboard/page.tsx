@@ -67,6 +67,23 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
+  const { data: userData, isLoading: profileLoading } = useDoc<any>(userDocRef);
+
+  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
+
+  // Смена вкладок при смене роли
+  useEffect(() => {
+    if (profileType === 'specialist') {
+      if (activeTab === 'dashboard' || activeTab === 'meals') {
+        setActiveTab('patients');
+      }
+    } else {
+      if (activeTab === 'patients') {
+        setActiveTab('dashboard');
+      }
+    }
+  }, [profileType]);
+
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
     const targetUid = viewingPatientId || user.uid;
@@ -89,32 +106,10 @@ export default function DashboardPage() {
     return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
-  const { data: userData, isLoading: profileLoading } = useDoc<any>(userDocRef);
-  const { data: recommendationDoc, isLoading: loadingRec } = useDoc<any>(recommendationRef);
-  const { data: dailyLogDoc, isLoading: loadingLogs } = useDoc<any>(dailyLogRef);
+  const { data: recommendationDoc } = useDoc<any>(recommendationRef);
+  const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
   const { data: posts } = useCollection<any>(postsQuery);
   const { data: patients } = useCollection<any>(patientsQuery);
-
-  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
-
-  // Автоматическое переключение вкладок при смене роли
-  useEffect(() => {
-    if (profileType === 'specialist') {
-      // Если специалист зашел на пользовательские вкладки, перекидываем его на пациентов или ленту
-      if (activeTab === 'dashboard' || activeTab === 'meals') {
-        setActiveTab('patients');
-      }
-    } else {
-      // Если пользователь оказался на вкладке пациентов, возвращаем на дашборд
-      if (activeTab === 'patients') {
-        setActiveTab('dashboard');
-      }
-    }
-  }, [profileType]);
-
-  const handleLogout = async () => {
-    if (auth) { await signOut(auth); router.replace('/'); }
-  };
 
   const handleResult = (result: GenerateRecommendationsOutput) => {
     if (!firestore || !user?.uid || !dateKey) return;
@@ -193,7 +188,35 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="patients" className="mt-0"><div className="max-w-4xl mx-auto space-y-8"><h2 className="text-xl font-black text-primary uppercase tracking-widest px-2">Список пациентов</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{patients?.map(p => (<Card key={p.id} className="cyber-card p-6 flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">{p.photoUrl ? <Image src={p.photoUrl} alt="Patient" width={48} height={48} className="rounded-lg object-cover" /> : <User className="h-6 w-6 text-primary" />}</div><div><h4 className="font-black text-sm text-white">{p.firstName} {p.lastName}</h4><Badge variant="outline" className="text-[7px] uppercase tracking-widest border-primary/20 text-primary/60">Доступ разрешен</Badge></div></div><div className="flex gap-2"><Button size="sm" className="rounded-lg h-9 px-3 bg-primary font-black uppercase text-[8px]" onClick={() => { setViewingPatientId(p.id); setActiveTab('dashboard'); }}>Аналитика</Button></div></Card>))}{(!patients || patients.length === 0) && <div className="py-20 text-center opacity-30"><ShieldCheck className="h-12 w-12 mx-auto text-primary mb-4" /><p className="font-black uppercase tracking-widest text-[10px]">Пациенты пока не открыли доступ</p></div>}</div></div></TabsContent>
+              <TabsContent value="patients" className="mt-0">
+                <div className="max-w-4xl mx-auto space-y-8">
+                  <h2 className="text-xl font-black text-primary uppercase tracking-widest px-2">Список пациентов</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {patients?.map(p => (
+                      <Card key={p.id} className="cyber-card p-6 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                            {p.photoUrl ? <Image src={p.photoUrl} alt="Patient" width={48} height={48} className="rounded-lg object-cover" /> : <User className="h-6 w-6 text-primary" />}
+                          </div>
+                          <div>
+                            <h4 className="font-black text-sm text-white">{p.firstName} {p.lastName}</h4>
+                            <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-primary/20 text-primary/60">Доступ разрешен</Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="rounded-lg h-9 px-3 bg-primary font-black uppercase text-[8px]" onClick={() => { setViewingPatientId(p.id); setActiveTab('dashboard'); }}>Аналитика</Button>
+                        </div>
+                      </Card>
+                    ))}
+                    {(!patients || patients.length === 0) && (
+                      <div className="col-span-full py-20 text-center opacity-30">
+                        <ShieldCheck className="h-12 w-12 mx-auto text-primary mb-4" />
+                        <p className="font-black uppercase tracking-widest text-[10px]">Пациенты пока не открыли доступ</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
               <TabsContent value="chats" className="mt-0"><ChatInterface /></TabsContent>
               <TabsContent value="profile" className="mt-0"><ProfileCabinet /></TabsContent>
             </div>
