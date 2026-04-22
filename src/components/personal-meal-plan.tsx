@@ -55,31 +55,40 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setName(transcript);
+      // Запускаем расчет после голосового ввода
+      handleAiCalculate(transcript);
       toast({ title: 'Голос распознан' });
     };
     recognition.start();
   };
 
-  const handleAiCalculate = async () => {
-    if (!name.trim()) {
-      toast({ variant: 'destructive', title: 'Введите название', description: 'Сначала напишите, что вы съели.' });
-      return;
-    }
+  const handleAiCalculate = async (targetName?: string) => {
+    const nameToAnalyze = targetName || name;
+    if (!nameToAnalyze.trim()) return;
 
     setIsCalculating(true);
     try {
-      const result = await analyzeMeal({ description: name });
+      const result = await analyzeMeal({ description: nameToAnalyze });
       if (result) {
         setCalories(result.calories.toString());
         setProtein(result.protein.toString());
         setFat(result.fat.toString());
         setCarbs(result.carbs.toString());
-        toast({ title: 'Расчет готов', description: `Подобраны средние значения для: ${result.mealName}` });
+        if (!targetName) {
+           toast({ title: 'ИИ рассчитал состав', description: `Данные подобраны для: ${result.mealName}` });
+        }
       }
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось рассчитать данные автоматически.' });
+      console.error('AI calculation error:', error);
     } finally {
       setIsCalculating(false);
+    }
+  };
+
+  const handleNameBlur = () => {
+    // Если введено название, но КБЖУ еще пустые — считаем автоматически
+    if (name.trim() && !calories && !protein && !fat && !carbs && !isCalculating) {
+      handleAiCalculate();
     }
   };
 
@@ -96,7 +105,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore || !name || !effectiveUid) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось определить пользователя или название блюда' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Пожалуйста, введите название блюда.' });
       return;
     }
 
@@ -117,7 +126,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAdding(false);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте соединение с базой данных.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить запись.' });
     } finally {
       setLoading(false);
     }
@@ -129,7 +138,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       await deleteDoc(doc(firestore, 'users', effectiveUid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить блюдо.' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить запись.' });
     }
   };
 
@@ -140,7 +149,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
           <h3 className="text-3xl font-black tracking-tighter text-foreground">Свой план</h3>
-          <p className="text-muted-foreground text-sm font-medium">Ваш персональный рацион на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+          <p className="text-muted-foreground text-sm font-medium">Рацион на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
         </div>
         <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-4">
            <div className="text-center">
@@ -166,6 +175,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                           placeholder="Напр: Салат с тунцом" 
                           value={name} 
                           onChange={e => setName(e.target.value)} 
+                          onBlur={handleNameBlur}
                           className="h-14 rounded-xl bg-white border-none shadow-inner font-bold pr-24" 
                           required 
                         />
@@ -174,7 +184,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                             type="button" 
                             variant="ghost" 
                             size="icon" 
-                            onClick={handleAiCalculate}
+                            onClick={() => handleAiCalculate()}
                             disabled={isCalculating || !name.trim()}
                             className="h-10 w-10 rounded-full text-primary hover:bg-primary/10 transition-all"
                             title="Рассчитать через ИИ"
@@ -211,20 +221,46 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                        </Select>
                     </div>
                  </div>
+                 
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[{ l: 'Ккал', v: calories, s: setCalories, i: Flame, c: 'text-orange-500' }, { l: 'Белки', v: protein, s: setProtein, i: Beef, c: 'text-red-400' }, { l: 'Жиры', v: fat, s: setFat, i: Droplet, c: 'text-yellow-500' }, { l: 'Углеводы', v: carbs, s: setCarbs, i: Zap, c: 'text-primary' }].map((m, i) => (
+                    {[
+                      { l: 'Ккал', v: calories, s: setCalories, i: Flame, c: 'text-orange-500' },
+                      { l: 'Белки', v: protein, s: setProtein, i: Beef, c: 'text-red-400' },
+                      { l: 'Жиры', v: fat, s: setFat, i: Droplet, c: 'text-yellow-500' },
+                      { l: 'Углеводы', v: carbs, s: setCarbs, i: Zap, c: 'text-primary' }
+                    ].map((m, i) => (
                        <div key={i} className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 flex items-center gap-1"><m.i className={cn("h-2 w-2", m.c)} /> {m.l}</label>
-                          <Input type="number" placeholder="0" value={m.v} onChange={e => m.s(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold text-center" />
+                          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 flex items-center gap-1">
+                            <m.i className={cn("h-2.5 w-2.5", m.c)} /> {m.l}
+                          </label>
+                          <div className="relative">
+                            <Input 
+                              type="number" 
+                              placeholder={isCalculating ? "..." : "0"} 
+                              value={m.v} 
+                              onChange={e => m.s(e.target.value)} 
+                              className={cn(
+                                "h-14 rounded-xl bg-white border-none shadow-inner font-black text-center transition-all",
+                                isCalculating && "animate-pulse opacity-50"
+                              )} 
+                            />
+                            {isCalculating && (
+                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span className="text-[8px] font-bold text-primary animate-bounce uppercase">считаю...</span>
+                              </div>
+                            )}
+                          </div>
                        </div>
                     ))}
                  </div>
+
                  <div className="flex gap-4 pt-2">
                     <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-14 rounded-xl font-bold">Отмена</Button>
                     <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl">
                        {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> Сохранить в план</>}
                     </Button>
                  </div>
+                 <p className="text-[9px] text-center text-muted-foreground/60 italic">ИИ рассчитывает средние значения для порции. Вы можете скорректировать их вручную.</p>
               </form>
            </CardContent>
         </Card>
