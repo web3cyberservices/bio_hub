@@ -3,8 +3,9 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 21.0
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 22.0
      * Полный доступ для владельцев и расширенная песочница для гостей.
+     * Рекурсивные правила устраняют ошибки доступа к спискам (list) в подколлекциях.
      */
 
     function isAuthenticated() {
@@ -17,35 +18,36 @@ service cloud.firestore {
 
     // --- Профили пользователей и вложенные данные ---
     match /users/{userId} {
-      // Базовый доступ к документу профиля
+      // Владелец (или любой гость для public-user) имеет полный доступ к своему профилю
       allow read, write: if isOwner(userId);
-      // Разрешаем всем видеть публичную инфу специалистов
-      allow get: if true; 
-      // Для поиска специалистов в ленте
-      allow list: if true;
+      
+      // РЕКУРСИВНОЕ ПРАВИЛО: Разрешает все операции (включая list) во всех подколлекциях пользователя
+      // Это исправляет ошибку доступа к /personalMeals, /dailyLogs, /dietaryLogs и т.д.
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
 
-      // Явные правила для подколлекций (устраняет ошибки list)
-      match /personalMeals/{id} { allow read, write: if isOwner(userId); }
-      match /dailyLogs/{id} { allow read, write: if isOwner(userId); }
-      match /dietaryLogs/{id} { allow read, write: if isOwner(userId); }
-      match /recommendations/{id} { allow read, write: if isOwner(userId); }
-      match /labResults/{id} { allow read, write: if isOwner(userId); }
-      match /reviews/{id} { 
+      // Публичный доступ к базовой информации (нужно для отображения специалистов в ленте)
+      allow get, list: if true;
+
+      // Публичные отзывы (читать могут все, создавать — авторизованные или гости)
+      match /reviews/{reviewId} { 
         allow read: if true; 
-        allow create: if true; 
+        allow create: if isAuthenticated() || isOwner('public-user'); 
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
       allow read: if true; 
-      allow create: if true;
+      allow create: if isAuthenticated() || isOwner('public-user');
       allow update, delete: if isOwner(resource.data.authorId) || isOwner('public-user');
     }
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, write: if true; // В прототипе разрешаем доступ для упрощения тестирования чатов
+      // В прототипе разрешаем доступ для упрощения тестирования чатов
+      allow read, write: if true; 
       
       match /messages/{messageId} {
         allow read, write: if true;
