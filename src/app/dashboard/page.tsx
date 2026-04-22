@@ -222,7 +222,7 @@ export default function DashboardPage() {
 
           </Tabs>
         )}
-      </header>
+      </main>
     </div>
   );
 }
