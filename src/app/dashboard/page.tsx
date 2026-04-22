@@ -95,8 +95,8 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#010409] text-foreground overflow-hidden">
       
-      {/* Futuristic Header integrated into terminal look */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] w-[95vw] max-w-6xl">
+      {/* Fixed Header with high z-index */}
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] w-[95vw] max-w-6xl">
         <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-8 flex items-center justify-between shadow-2xl">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.4)]">
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden">
+              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
-            {/* Futuristic Floating Navigation Bar exactly as in design */}
+            {/* Fixed Navigation with high z-index */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] w-[90vw] max-w-xl">
                <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-4 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'feed' ? "text-primary" : "text-white/30")}>

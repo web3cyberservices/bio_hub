@@ -18,18 +18,18 @@ interface IndicatorProps {
 
 const CircularIndicator = ({ label, value, icon, color, progress, unitLabel, className }: IndicatorProps) => {
   return (
-    <div className={cn("flex flex-col items-center gap-2 transition-all duration-700", className)}>
+    <div className={cn("flex flex-col items-center gap-1.5 transition-all duration-700", className)}>
       {/* Icon Above */}
-      <div className="w-9 h-9 rounded-full bg-black/60 border border-white/10 flex items-center justify-center shadow-lg mb-1">
+      <div className="w-8 h-8 rounded-full bg-black/60 border border-white/10 flex items-center justify-center shadow-lg">
         {icon}
       </div>
 
-      <div className="relative w-18 h-18 md:w-22 md:h-22 flex items-center justify-center">
+      <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
         {/* Progress Ring */}
         <svg className="absolute inset-0 w-full h-full -rotate-90">
-          <circle cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="3" />
+          <circle cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="2" />
           <circle 
-            cx="50%" cy="50%" r="42%" fill="none" stroke={color} strokeWidth="5" 
+            cx="50%" cy="50%" r="42%" fill="none" stroke={color} strokeWidth="4" 
             strokeDasharray="100" strokeDashoffset={100 - progress} pathLength="100" strokeLinecap="round"
             className="drop-shadow-[0_0_8px_currentColor] opacity-80 transition-all duration-1000"
             style={{ color }}
@@ -38,14 +38,14 @@ const CircularIndicator = ({ label, value, icon, color, progress, unitLabel, cla
         
         {/* Value */}
         <div className="text-center">
-          <span className="text-lg md:text-xl font-black text-white leading-none block">{value}</span>
-          <span className="text-[6px] font-bold text-white/30 uppercase tracking-tighter">{unitLabel}</span>
+          <span className="text-base md:text-lg font-black text-white leading-none block">{value}</span>
+          <span className="text-[5px] font-bold text-white/30 uppercase tracking-tighter">{unitLabel}</span>
         </div>
       </div>
 
       {/* Label Below */}
       <div className="text-center">
-        <span className="text-[8px] md:text-[10px] font-black uppercase text-white/50 tracking-[0.2em] block">{label}</span>
+        <span className="text-[7px] md:text-[9px] font-black uppercase text-white/50 tracking-[0.2em] block">{label}</span>
       </div>
     </div>
   );
@@ -77,11 +77,11 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
 
-      {/* Grid Layout for Gauges */}
-      <div className="relative w-full h-full max-w-6xl mx-auto flex items-center justify-between px-6 md:px-12 z-30">
+      {/* 3-Column Grid Layout */}
+      <div className="relative w-full max-w-5xl mx-auto grid grid-cols-3 items-center px-4 md:px-8 z-30 h-full max-h-[85vh]">
         
-        {/* Left Stack (3 Gauges) */}
-        <div className="flex flex-col gap-6 md:gap-10">
+        {/* Left Column (Stack 3) */}
+        <div className="flex flex-col justify-between py-10 h-[55vh]">
           <CircularIndicator 
             label="ВОДА" value={deviceData?.water || 0} unitLabel="МЛ"
             icon={<Droplets className="h-4 w-4 text-[#0EA5E9]" />} color="#0EA5E9" 
@@ -99,46 +99,47 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
           />
         </div>
 
-        {/* Center: Main Hologram Human Asset */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[85%] flex items-center justify-center z-10 pointer-events-none">
-          <div className="relative h-full aspect-[1/2.2] max-h-[75vh]">
-            {/* Cyan Glow Layer */}
-            <div className="absolute inset-0 bg-[#00ffff]/5 rounded-full blur-[80px] animate-pulse" />
-            
+        {/* Center Column (Human Hologram ONLY) */}
+        <div className="relative flex flex-col items-center justify-center h-[55vh] w-full">
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Hologram Image with Max-Height constraint */}
             {hologramImg && (
-              <Image
-                src={hologramImg.imageUrl}
-                alt="Digital Twin Hologram"
-                fill
-                className="object-contain drop-shadow-[0_0_35px_rgba(0,255,255,0.6)] animate-hologram mix-blend-screen"
-                data-ai-hint={hologramImg.imageHint}
-                priority
-                unoptimized
-              />
+              <div className="relative w-full h-full max-h-[55vh] flex items-center justify-center">
+                <Image
+                  src={hologramImg.imageUrl}
+                  alt="Digital Twin Hologram"
+                  fill
+                  style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 20px #00ffff)' }}
+                  className="animate-hologram mix-blend-screen"
+                  data-ai-hint={hologramImg.imageHint}
+                  priority
+                  unoptimized
+                />
+              </div>
             )}
             
-            {/* Heart Core Pulsation */}
-            <div className="absolute top-[35%] left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rounded-full neo-glow animate-pulse z-20" />
-            <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-2 h-2 bg-primary/40 rounded-full neo-glow animate-ping z-20" />
+            {/* Vitality Core */}
+            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-4 h-4 bg-primary/40 rounded-full neo-glow animate-ping z-20" />
+            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full neo-glow z-20" />
 
-            {/* Scan Line Effect */}
-            <div className="scan-line" />
+            {/* Scan Line */}
+            <div className="scan-line !opacity-30" />
           </div>
 
-          {/* Bio-Score Central Tag - Positioned at feet */}
-          <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2">
-             <div className="bg-black/80 backdrop-blur-xl px-6 py-2 rounded-2xl border border-white/10 flex flex-col items-center gap-0 shadow-2xl">
-                <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em]">SYSTEM BIO-SCORE</p>
-                <div className="flex items-center gap-2">
+          {/* Floating Bio-Score Tag */}
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-40">
+             <div className="bg-black/60 backdrop-blur-xl px-5 py-1.5 rounded-2xl border border-white/10 flex flex-col items-center gap-0 shadow-2xl">
+                <p className="text-[6px] font-black text-white/40 uppercase tracking-[0.3em]">SYSTEM BIO-SCORE</p>
+                <div className="flex items-center gap-1.5">
                    <Activity className="h-3 w-3 text-primary animate-pulse" />
-                   <p className="text-2xl font-black text-primary neo-glow">{score || 0}</p>
+                   <p className="text-xl font-black text-primary neo-glow">{score || 0}</p>
                 </div>
              </div>
           </div>
         </div>
 
-        {/* Right Stack (3 Gauges) */}
-        <div className="flex flex-col gap-6 md:gap-10">
+        {/* Right Column (Stack 3) */}
+        <div className="flex flex-col justify-between py-10 h-[55vh]">
           <CircularIndicator 
             label="ЖИРЫ" value={macros?.fat || 0} unitLabel="ГР"
             icon={<Moon className="h-4 w-4 text-[#EAB308]" />} color="#EAB308" 
