@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, addDoc, deleteDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,9 +37,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const [carbs, setCarbs] = useState('');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  
-  // Определяем UID: приоритет у авторизованного пользователя, иначе гость
-  const effectiveUid = user?.uid || 'public-user';
+  const effectiveUid = user?.uid;
 
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -63,11 +61,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const mealsQuery = useMemoFirebase(() => {
     if (!firestore || !effectiveUid) return null;
     
-    // Прямой запрос к коллекции без лишних фильтров, если UID не готов
+    // Упрощенный запрос без orderBy для предотвращения ошибок прав доступа и индексов
     return query(
       collection(firestore, 'users', effectiveUid, 'personalMeals'),
-      where('date', '==', dateKey),
-      orderBy('createdAt', 'asc')
+      where('date', '==', dateKey)
     );
   }, [firestore, effectiveUid, dateKey]);
 
@@ -76,7 +73,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore || !name || !effectiveUid) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Заполните название блюда' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось определить пользователя или название блюда' });
       return;
     }
 
@@ -97,8 +94,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAdding(false);
     } catch (error: any) {
-      console.error("Add meal error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить блюдо.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте соединение с базой данных.' });
     } finally {
       setLoading(false);
     }
