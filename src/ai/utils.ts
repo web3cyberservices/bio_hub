@@ -1,10 +1,12 @@
 /**
  * @fileOverview Общие утилиты для ИИ-потоков.
+ * Оптимизировано для работы в условиях жестких таймаутов Next.js (120с).
  */
 
 /**
  * Функция для повторных попыток выполнения ИИ-запросов с экспоненциальной задержкой.
- * Оптимизирована для работы в условиях высокой нагрузки и предотвращения таймаутов Next.js.
+ * Предотвращает ошибку "An unexpected response was received from the server"
+ * путем контроля общего времени выполнения.
  */
 export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDelay = 2000): Promise<T> {
   const actionStartTime = Date.now();
@@ -15,7 +17,7 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, init
     } catch (error: any) {
       const errorMsg = error.message?.toLowerCase() || '';
       
-      // Проверяем, является ли ошибка временной (перегрузка, квоты, таймауты)
+      // Список временных ошибок, которые стоит переповторить
       const isTransient = 
         errorMsg.includes('429') || 
         errorMsg.includes('quota') || 
@@ -23,25 +25,32 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, init
         errorMsg.includes('503') || 
         errorMsg.includes('timeout') ||
         errorMsg.includes('deadline') ||
-        errorMsg.includes('unexpected response');
+        errorMsg.includes('unexpected response') ||
+        errorMsg.includes('socket');
       
-      // Если это фатальная ошибка (например, 400 Bad Request), нет смысла пробовать снова
-      const isFatal = errorMsg.includes('400') || errorMsg.includes('invalid') || errorMsg.includes('not found');
+      // Список фатальных ошибок (некорректный ввод, не найдено и т.д.)
+      const isFatal = 
+        errorMsg.includes('400') || 
+        errorMsg.includes('invalid') || 
+        errorMsg.includes('not found') ||
+        errorMsg.includes('permission');
 
       if (isFatal && !isTransient) {
         throw error;
       }
 
-      // КРИТИЧЕСКИЙ МОМЕНТ: Если общее время выполнения превысило 80 секунд, 
-      // прекращаем попытки, чтобы гарантированно ответить пользователю до таймаута Next.js (120с).
-      // Это предотвращает ошибку "An unexpected response was received from the server".
+      // КРИТИЧЕСКИЙ ПРЕДОХРАНИТЕЛЬ:
+      // Если прошло более 80 секунд, мы должны прекратить попытки.
+      // Это позволяет вернуть ошибку пользователю до того, как Next.js (120с) или Vercel (60-120с)
+      // принудительно обрубят соединение с ошибкой 504/500.
       if (Date.now() - actionStartTime > 80000) {
         throw new Error('ИИ временно перегружен. Пожалуйста, попробуйте отправить запрос еще раз через минуту.');
       }
       
       console.warn(`AI Retry attempt ${i + 1}/${maxRetries} error:`, error.message);
       
-      // Экспоненциальная задержка: 2s, 4s, 8s... + случайный фактор (jitter)
+      // Экспоненциальная задержка с случайным фактором (jitter)
+      // 2s, 4s, 8s...
       const baseDelay = isTransient ? initialDelay : initialDelay / 2;
       const delay = baseDelay * Math.pow(2, i) + (Math.random() * 2000);
       
