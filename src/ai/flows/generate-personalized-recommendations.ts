@@ -109,20 +109,22 @@ const IMAGE_ID_PROMPT = `
 - Овощи на гриле / Брокколи: 1566190063405-7c74468d62ad
 `;
 
-export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
+export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDelay = 2000): Promise<T> {
   const actionStartTime = Date.now();
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error: any) {
-      // Увеличен таймаут до 60 секунд для тяжелых задач анализа документов
-      if (Date.now() - actionStartTime > 60000) throw new Error('Превышено время ожидания ИИ.');
+      // Увеличен таймаут до 120 секунд для особо тяжелых задач расшифровки PDF/фото
+      if (Date.now() - actionStartTime > 120000) throw new Error('Превышено максимальное время ожидания ИИ (2 мин).');
+      
+      console.warn(`AI Retry attempt ${i + 1} due to error:`, error.message);
       let delay = initialDelay * Math.pow(2, i);
       await new Promise(resolve => setTimeout(resolve, delay));
       continue;
     }
   }
-  throw new Error('ИИ временно недоступен.');
+  throw new Error('ИИ временно недоступен после нескольких попыток.');
 }
 
 const recommendationPrompt = ai.definePrompt({
