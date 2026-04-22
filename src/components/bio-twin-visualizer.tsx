@@ -4,28 +4,21 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Droplets, Flame, Zap, Droplet, Moon } from 'lucide-react';
+import { Droplets, Flame, Zap, Droplet, Moon, Footprints, Beef } from 'lucide-react';
 
 interface IndicatorProps {
   label: string;
-  value: number;
+  value: number | string;
   icon: React.ReactNode;
   color: string;
-  position: 'left-top' | 'left-bottom' | 'right-top' | 'right-bottom';
   progress: number;
   unitLabel: string;
+  className?: string;
 }
 
-const CircularIndicator = ({ label, value, icon, color, position, progress, unitLabel }: IndicatorProps) => {
-  const posClasses = {
-    'left-top': 'top-[20%] left-[10%] md:left-[15%]',
-    'left-bottom': 'bottom-[20%] left-[10%] md:left-[15%]',
-    'right-top': 'top-[20%] right-[10%] md:right-[15%]',
-    'right-bottom': 'bottom-[20%] right-[10%] md:right-[15%]',
-  };
-
+const CircularIndicator = ({ label, value, icon, color, progress, unitLabel, className }: IndicatorProps) => {
   return (
-    <div className={cn("absolute flex flex-col items-center gap-2 z-30 transition-all duration-700", posClasses[position])}>
+    <div className={cn("flex flex-col items-center gap-2 transition-all duration-700", className)}>
       {/* Icon Above */}
       <div className="w-10 h-10 rounded-full bg-black/40 border border-white/10 flex items-center justify-center shadow-lg mb-1">
         {icon}
@@ -84,68 +77,68 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:100px_100px]" />
       </div>
 
-      {/* Symmetric Indicators exactly as in reference */}
-      <CircularIndicator 
-        label="ВОДА" value={deviceData?.water || 0} unitLabel="ВОДА"
-        icon={<Droplets className="h-4 w-4 text-[#0EA5E9]" />} color="#0EA5E9" 
-        position="left-top" progress={getProgress(deviceData?.water || 0, 2000)}
-      />
-      <CircularIndicator 
-        label="ККАЛ" value={macros?.calories || 0} unitLabel="ККАЛ"
-        icon={<Flame className="h-4 w-4 text-[#F97316]" />} color="#F97316" 
-        position="left-bottom" progress={getProgress(macros?.calories || 0, 2500)}
-      />
-      <CircularIndicator 
-        label="ЖИРЫ" value={macros?.fat || 0} unitLabel="ЖИРЫ"
-        icon={<Moon className="h-4 w-4 text-[#EAB308]" />} color="#EAB308" 
-        position="right-top" progress={getProgress(macros?.fat || 0, 80)}
-      />
-      <CircularIndicator 
-        label="УГЛЕВОДЫ" value={macros?.carbs || 0} unitLabel="УГЛЕВОДЫ"
-        icon={<Zap className="h-4 w-4 text-[#10B981]" />} color="#10B981" 
-        position="right-bottom" progress={getProgress(macros?.carbs || 0, 300)}
-      />
+      {/* Left Stack */}
+      <div className="absolute left-[5%] md:left-[10%] top-1/2 -translate-y-1/2 flex flex-col gap-8 md:gap-12 z-30">
+        <CircularIndicator 
+          label="ВОДА" value={deviceData?.water || 0} unitLabel="МЛ"
+          icon={<Droplets className="h-4 w-4 text-[#0EA5E9]" />} color="#0EA5E9" 
+          progress={getProgress(deviceData?.water || 0, 2000)}
+        />
+        <CircularIndicator 
+          label="ККАЛ" value={macros?.calories || 0} unitLabel="ККАЛ"
+          icon={<Flame className="h-4 w-4 text-[#F97316]" />} color="#F97316" 
+          progress={getProgress(macros?.calories || 0, 2500)}
+        />
+        <CircularIndicator 
+          label="ШАГИ" value={deviceData?.steps || 0} unitLabel="ЗНЕИ"
+          icon={<Footprints className="h-4 w-4 text-[#00FFFF]" />} color="#00FFFF" 
+          progress={getProgress(deviceData?.steps || 0, 10000)}
+        />
+      </div>
+
+      {/* Right Stack */}
+      <div className="absolute right-[5%] md:right-[10%] top-1/2 -translate-y-1/2 flex flex-col gap-8 md:gap-12 z-30">
+        <CircularIndicator 
+          label="ЖИРЫ" value={macros?.fat || 0} unitLabel="ГР"
+          icon={<Moon className="h-4 w-4 text-[#EAB308]" />} color="#EAB308" 
+          progress={getProgress(macros?.fat || 0, 80)}
+        />
+        <CircularIndicator 
+          label="УГЛЕВОДЫ" value={macros?.carbs || 0} unitLabel="ГР"
+          icon={<Zap className="h-4 w-4 text-[#10B981]" />} color="#10B981" 
+          progress={getProgress(macros?.carbs || 0, 300)}
+        />
+        <CircularIndicator 
+          label="БЕЛКИ" value={macros?.protein || 0} unitLabel="ГР"
+          icon={<Beef className="h-4 w-4 text-[#A855F7]" />} color="#A855F7" 
+          progress={getProgress(macros?.protein || 0, 150)}
+        />
+      </div>
 
       {/* Main Hologram Asset */}
-      <div className="relative w-full h-[70vh] flex items-center justify-center z-10">
-        
+      <div className="relative w-full h-[75vh] flex items-center justify-center z-10 px-4">
         {/* Glow behind */}
         <div className="absolute top-[30%] w-80 h-80 bg-[#00ffff]/10 rounded-full blur-[120px] animate-pulse" />
 
-        <div className="relative h-full aspect-[1/2] transition-transform duration-1000 group">
+        <div className="relative h-full aspect-[1/2] transition-transform duration-1000 group max-h-[70vh]">
           {hologramImg && (
             <Image
               src={hologramImg.imageUrl}
               alt="Digital Twin Hologram"
               fill
-              className="object-contain drop-shadow-[0_0_40px_rgba(0,255,255,0.3)] animate-hologram"
+              className="object-contain drop-shadow-[0_0_40px_rgba(0,255,255,0.4)] animate-hologram"
               data-ai-hint={hologramImg.imageHint}
               priority
               unoptimized
             />
           )}
-          
-          {/* Glowing Brain Node */}
-          <div className="absolute top-[5%] left-[50%] -translate-x-1/2 w-8 h-8 z-20">
-            <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full blur-xl animate-pulse" />
-            <div className="absolute inset-2 bg-[#00ffff]/60 rounded-full shadow-[0_0_20px_#00ffff]" />
-          </div>
-
-          {/* Glowing Heart Node (The Pulse) */}
-          <div className="absolute top-[25%] left-[49%] -translate-x-1/2 w-6 h-6 z-20">
-            <div className="absolute inset-0 bg-[#00ffff] rounded-full animate-ping opacity-30" />
-            <div className="absolute inset-1 bg-[#00ffff] rounded-full shadow-[0_0_25px_#00ffff] border border-white/20" />
-          </div>
         </div>
 
-        {/* Floating Steps Widget */}
-        <div className="absolute right-[5%] top-[45%] opacity-60">
-           <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex flex-col items-center gap-1 shadow-2xl">
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-white">{deviceData?.steps || '0'}</span>
-                <span className="text-[8px] font-black text-white/40 uppercase">STEP</span>
-              </div>
-              <span className="text-[6px] font-black text-primary uppercase tracking-[0.2em]">ЗНЕИ</span>
+        {/* Bio-Score Central Label */}
+        <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2">
+           <div className="bg-black/60 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/10 flex flex-col items-center gap-0 shadow-2xl">
+              <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em]">Bio-Score</p>
+              <p className="text-2xl font-black text-primary neo-glow">{score || 0}</p>
            </div>
         </div>
       </div>
