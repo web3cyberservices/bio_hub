@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
@@ -56,6 +56,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [sleep, setSleep] = useState<string>('');
   const [mood, setMood] = useState<string>('');
   const [energy, setEnergy] = useState<number>(50);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -241,6 +248,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
         const result = await analyzeLabResults({
           photoDataUri: image,
+          userContext: userData ? {
+            age: userData.age,
+            gender: userData.gender
+          } : undefined
         });
         setLabResult(result);
       }

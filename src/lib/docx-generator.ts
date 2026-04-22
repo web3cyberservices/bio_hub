@@ -85,8 +85,9 @@ export async function downloadLabResultsDocx(data: LabData) {
               }),
               ...data.markers.map(m => {
                 const isOffNorm = m.status !== 'normal';
+                const rangeText = m.referenceRange && m.referenceRange !== 'undefined' ? m.referenceRange : 'По возрасту';
                 const displayValue = isOffNorm 
-                  ? `${m.value} (Норма: ${m.referenceRange})` 
+                  ? `${m.value} (Норма: ${rangeText})` 
                   : m.value;
 
                 return new TableRow({
