@@ -670,7 +670,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 <div className="space-y-3">
                   {labResult.markers.map((marker, i) => {
                     const isOffNorm = marker.status !== 'normal';
-                    // Чистим норму от слова "норма", если ИИ его добавил
                     const cleanRange = marker.referenceRange ? marker.referenceRange.replace(/норма/gi, '').trim() : null;
                     
                     return (
@@ -694,20 +693,20 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                              <p className="text-[10px] text-muted-foreground font-medium">{marker.interpretation}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end">
                           <div className="flex items-center justify-end gap-1.5">
-                             <p className={cn("font-black text-lg", isOffNorm && "text-destructive")}>
+                             <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm && "text-destructive")}>
                                {marker.value}
-                               {isOffNorm && cleanRange && (
-                                 <span className="text-[9px] ml-1 font-bold opacity-40">
-                                   (норма {cleanRange})
-                                 </span>
-                               )}
                              </p>
                              {isOffNorm && (
                                marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
                              )}
                           </div>
+                          {isOffNorm && cleanRange && (
+                            <p className="text-[10px] font-black text-muted-foreground/50 mt-1 uppercase tracking-tighter">
+                               (норма {cleanRange})
+                            </p>
+                          )}
                         </div>
                       </div>
                     );

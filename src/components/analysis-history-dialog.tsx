@@ -187,20 +187,20 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex flex-col items-end">
                             <div className="flex items-center justify-end gap-1.5">
-                               <p className={cn("font-black text-lg", isOffNorm && "text-destructive")}>
+                               <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm && "text-destructive")}>
                                  {marker.value}
-                                 {isOffNorm && cleanRange && (
-                                   <span className="text-[10px] ml-1 font-bold opacity-60">
-                                      (норма {cleanRange})
-                                   </span>
-                                 )}
                                </p>
                                {isOffNorm && (
                                  marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
                                )}
                             </div>
+                            {isOffNorm && cleanRange && (
+                              <p className="text-[10px] md:text-[11px] font-black text-muted-foreground/50 mt-1 uppercase tracking-tighter">
+                                (норма {cleanRange})
+                              </p>
+                            )}
                           </div>
                         </div>
                       );
