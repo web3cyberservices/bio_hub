@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Plus, Trash2, Loader2, Utensils, Clock, Flame, 
-  Beef, Droplet, Zap, Save, Calendar, Mic
+  Beef, Droplet, Zap, Save, Calendar, Mic, Sparkles
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { analyzeMeal } from '@/ai/flows/analyze-meal';
 
 interface PersonalMealPlanProps {
   selectedDate: Date;
@@ -27,6 +28,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   
   const [name, setName] = useState('');
@@ -58,10 +60,31 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     recognition.start();
   };
 
+  const handleAiCalculate = async () => {
+    if (!name.trim()) {
+      toast({ variant: 'destructive', title: 'Введите название', description: 'Сначала напишите, что вы съели.' });
+      return;
+    }
+
+    setIsCalculating(true);
+    try {
+      const result = await analyzeMeal({ description: name });
+      if (result) {
+        setCalories(result.calories.toString());
+        setProtein(result.protein.toString());
+        setFat(result.fat.toString());
+        setCarbs(result.carbs.toString());
+        toast({ title: 'Расчет готов', description: `Подобраны средние значения для: ${result.mealName}` });
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось рассчитать данные автоматически.' });
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
   const mealsQuery = useMemoFirebase(() => {
     if (!firestore || !effectiveUid) return null;
-    
-    // Упрощенный запрос без orderBy для предотвращения ошибок прав доступа и индексов
     return query(
       collection(firestore, 'users', effectiveUid, 'personalMeals'),
       where('date', '==', dateKey)
@@ -139,19 +162,38 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                     <div className="space-y-2 relative">
                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Название блюда</label>
                        <div className="relative">
-                        <Input placeholder="Напр: Салат с тунцом" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold pr-14" required />
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={startVoiceInput}
-                          className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-sm transition-all",
-                            isRecording ? "bg-red-500 text-white animate-pulse" : "bg-primary/5 text-primary"
-                          )}
-                        >
-                          <Mic className="h-4 w-4" />
-                        </Button>
+                        <Input 
+                          placeholder="Напр: Салат с тунцом" 
+                          value={name} 
+                          onChange={e => setName(e.target.value)} 
+                          className="h-14 rounded-xl bg-white border-none shadow-inner font-bold pr-24" 
+                          required 
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={handleAiCalculate}
+                            disabled={isCalculating || !name.trim()}
+                            className="h-10 w-10 rounded-full text-primary hover:bg-primary/10 transition-all"
+                            title="Рассчитать через ИИ"
+                          >
+                            {isCalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={startVoiceInput}
+                            className={cn(
+                              "h-10 w-10 rounded-full shadow-sm transition-all",
+                              isRecording ? "bg-red-500 text-white animate-pulse" : "text-primary hover:bg-primary/5"
+                            )}
+                          >
+                            <Mic className="h-4 w-4" />
+                          </Button>
+                        </div>
                        </div>
                     </div>
                     <div className="space-y-2">
@@ -170,9 +212,9 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                     </div>
                  </div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[{ l: 'Ккал', v: calories, s: setCalories, i: Flame }, { l: 'Белки', v: protein, s: setProtein, i: Beef }, { l: 'Жиры', v: fat, s: setFat, i: Droplet }, { l: 'Углеводы', v: carbs, s: setCarbs, i: Zap }].map((m, i) => (
+                    {[{ l: 'Ккал', v: calories, s: setCalories, i: Flame, c: 'text-orange-500' }, { l: 'Белки', v: protein, s: setProtein, i: Beef, c: 'text-red-400' }, { l: 'Жиры', v: fat, s: setFat, i: Droplet, c: 'text-yellow-500' }, { l: 'Углеводы', v: carbs, s: setCarbs, i: Zap, c: 'text-primary' }].map((m, i) => (
                        <div key={i} className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 flex items-center gap-1"><m.i className="h-2 w-2" /> {m.l}</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 flex items-center gap-1"><m.i className={cn("h-2 w-2", m.c)} /> {m.l}</label>
                           <Input type="number" placeholder="0" value={m.v} onChange={e => m.s(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold text-center" />
                        </div>
                     ))}
