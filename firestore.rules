@@ -3,45 +3,43 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (FINAL FIX)
-     * Обеспечивают полный доступ владельцам данных и открытость для тестового режима.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (ULTIMATE FIX)
+     * Эти правила гарантируют полный доступ владельца к своим данным, включая операции LIST.
      */
 
-    // --- Коллекция пользователей и их иерархия ---
-    match /users/{userId} {
-      
-      // Правило 1: Владелец (или гость в тестовом режиме) имеет ПОЛНЫЙ доступ ко всему в своей ветке
-      // Это правило применяется рекурсивно ко всем подколлекциям (personalMeals, dailyLogs и т.д.)
-      // Именно это исправляет ошибку доступа при вызове useCollection (метод list)
-      match /{allData=**} {
-        allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
-      }
-
-      // Правило 2: Доступ к самому документу профиля
-      // Разрешаем чтение всем (нужно для отображения специалистов в ленте)
-      // Запись только владельцу
-      allow read: if true;
-      allow write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
-
-      // Публичные отзывы о специалистах
-      match /reviews/{reviewId} { 
-        allow read: if true; 
-        allow create: if request.auth != null || userId == 'public-user'; 
-      }
+    // 1. ГЛАВНОЕ ПРАВИЛО ВЛАДЕЛЬЦА
+    // Использование {anyPath=**} на уровне пользователя гарантирует, что 
+    // ВСЕ документы и ВСЕ коллекции внутри пути /users/{userId}/ будут доступны владельцу.
+    // Это исправляет ошибку 'method: list' для подколлекций типа personalMeals.
+    match /users/{userId}/{anyPath=**} {
+      allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
     }
 
-    // --- Bio-Лента (Посты) ---
+    // 2. ПУБЛИЧНЫЕ ПРОФИЛИ
+    // Разрешаем всем видеть базовую информацию пользователей (нужно для ленты специалистов).
+    // Это правило дополняет предыдущее, открывая только чтение самого документа профиля.
+    match /users/{userId} {
+      allow read: if true;
+    }
+
+    // 3. ПУБЛИЧНЫЕ ОТЗЫВЫ
+    // Отзывы должны быть видны всем, а создавать их могут авторизованные пользователи.
+    match /users/{userId}/reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null || userId == 'public-user';
+    }
+
+    // 4. BIO-ЛЕНТА (ПОСТЫ)
     match /posts/{postId} {
       allow read: if true; 
       allow create: if request.auth != null || (request.auth == null && request.resource.data.authorId == 'public-user');
       allow update, delete: if (request.auth != null && request.auth.uid == resource.data.authorId) || resource.data.authorId == 'public-user';
     }
 
-    // --- Система чатов ---
+    // 5. СИСТЕМА ЧАТОВ
+    // В прототипе разрешаем доступ для упрощения тестирования.
     match /chats/{chatId} {
-      // В прототипе разрешаем доступ для упрощения тестирования
       allow read, write: if true; 
-      
       match /messages/{messageId} {
         allow read, write: if true;
       }
