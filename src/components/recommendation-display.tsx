@@ -2,19 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { GenerateRecommendationsOutput, replaceMeal } from '@/ai/flows/generate-personalized-recommendations';
+import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Activity, Footprints, Moon, Heart, Droplet, 
-  Timer, Flame, Zap, Utensils, RefreshCw, Loader2,
-  ScanBarcode, Sparkles, MessageSquare, ShieldCheck,
-  Smartphone, Database, LayoutGrid
+  MessageSquare, ShieldCheck,
+  Smartphone, Database, LayoutGrid, FlaskConical
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { BarcodeScannerDialog } from './barcode-scanner-dialog';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
 
 interface RecommendationDisplayProps {
@@ -31,10 +28,6 @@ interface RecommendationDisplayProps {
 
 export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
   const [mounted, setMounted] = useState(false);
-  const [mealPlan, setMealPlan] = useState(data.mealPlan);
-  const [replacingIdx, setReplacingIdx] = useState<number | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [activeReplaceIdx, setActiveReplaceIdx] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,8 +72,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
            </div>
         </div>
 
-        {/* Holographic Twin Visualizer */}
-        <BioTwinVisualizer score={bioScore} deviceData={deviceData} />
+        {/* Holographic Twin Visualizer with KBJU Rings */}
+        <BioTwinVisualizer 
+          score={bioScore} 
+          deviceData={deviceData} 
+          macros={macros}
+        />
 
         {/* Quick Access Grid */}
         <div className="grid grid-cols-1 gap-4 px-2">
@@ -149,7 +146,6 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
     );
   }
 
-  // Rest of the component (Meals mode) remains mostly the same but with dark styling
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-4xl mx-auto py-10">
        <h2 className="text-2xl font-black text-center text-primary neo-glow tracking-widest">Протокол питания</h2>
