@@ -78,13 +78,13 @@ const analyzeLabResultsFlow = ai.defineFlow(
     outputSchema: AnalyzeLabOutputSchema,
   },
   async (input) => {
-    // Используем 3 попытки для OCR анализов, чтобы не превысить лимит таймаута Next.js (120с)
+    // Используем 6 попыток для OCR анализов, так как это тяжелая и важная операция
     return runWithRetry(async () => {
       const {output} = await labPrompt(input, {
-        model: googleAI.model('gemini-2.5-flash'), // Используем стабильную 2.5 Flash для скорости
+        model: googleAI.model('gemini-2.5-flash'), 
       });
       if (!output) throw new Error('ИИ не смог извлечь данные. Попробуйте сделать фото четче.');
       return output;
-    }, 3, 5000);
+    }, 6, 4000);
   }
 );

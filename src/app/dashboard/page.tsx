@@ -97,6 +97,21 @@ export default function DashboardPage() {
 
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
+  // Автоматическое переключение вкладок при смене роли
+  useEffect(() => {
+    if (profileType === 'specialist') {
+      // Если специалист зашел на пользовательские вкладки, перекидываем его на пациентов или ленту
+      if (activeTab === 'dashboard' || activeTab === 'meals') {
+        setActiveTab('patients');
+      }
+    } else {
+      // Если пользователь оказался на вкладке пациентов, возвращаем на дашборд
+      if (activeTab === 'patients') {
+        setActiveTab('dashboard');
+      }
+    }
+  }, [profileType]);
+
   const handleLogout = async () => {
     if (auth) { await signOut(auth); router.replace('/'); }
   };
