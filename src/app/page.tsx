@@ -164,7 +164,7 @@ export default function LandingPage() {
               </div>
               <div className="flex-1 flex justify-center relative z-10">
                 <div className="relative w-48 h-48 md:w-[400px] md:h-[400px]">
-                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping duration-[3s]" />
+                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping duration-[3000ms]" />
                    <div className="relative w-full h-full bg-white rounded-[4rem] shadow-3xl flex items-center justify-center border-4 border-primary/5">
                       <ShieldCheck className="h-20 w-20 md:h-48 md:w-48 text-primary drop-shadow-2xl" />
                    </div>

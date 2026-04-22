@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций и замены блюд.
@@ -109,22 +110,25 @@ const IMAGE_ID_PROMPT = `
 - Овощи на гриле / Брокколи: 1566190063405-7c74468d62ad
 `;
 
-export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 5, initialDelay = 2000): Promise<T> {
+export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 3000): Promise<T> {
   const actionStartTime = Date.now();
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error: any) {
-      // Увеличен таймаут до 120 секунд для особо тяжелых задач расшифровки PDF/фото
-      if (Date.now() - actionStartTime > 120000) throw new Error('Превышено максимальное время ожидания ИИ (2 мин).');
+      // Увеличен таймаут до 120 секунд для тяжелых задач
+      if (Date.now() - actionStartTime > 120000) {
+        throw new Error('Превышено время ожидания ИИ (2 мин). Попробуйте упростить запрос.');
+      }
       
-      console.warn(`AI Retry attempt ${i + 1} due to error:`, error.message);
-      let delay = initialDelay * Math.pow(2, i);
+      console.warn(`AI Retry attempt ${i + 1}/${maxRetries} error:`, error.message);
+      
+      // Экспоненциальная задержка с небольшим случайным фактором
+      const delay = initialDelay * Math.pow(2, i) + (Math.random() * 1000);
       await new Promise(resolve => setTimeout(resolve, delay));
-      continue;
     }
   }
-  throw new Error('ИИ временно недоступен после нескольких попыток.');
+  throw new Error('Сервис ИИ временно перегружен. Пожалуйста, попробуйте снова через минуту.');
 }
 
 const recommendationPrompt = ai.definePrompt({
@@ -173,7 +177,7 @@ const generateRecommendationsFlow = ai.defineFlow(
       const {output} = await recommendationPrompt(input, {
         model: googleAI.model('gemini-2.5-flash'),
       });
-      if (!output) throw new Error('Ошибка генерации био-отчета');
+      if (!output) throw new Error('Ошибка генерации био-отчета: Пустой ответ');
       return output;
     });
   }
@@ -190,7 +194,7 @@ const replaceMealFlow = ai.defineFlow(
       const {output} = await replaceMealPrompt(input, {
         model: googleAI.model('gemini-2.5-flash'),
       });
-      if (!output) throw new Error('Ошибка замены блюда');
+      if (!output) throw new Error('Ошибка замены блюда: Пустой ответ');
       return output;
     });
   }
@@ -206,7 +210,7 @@ export async function replaceMeal(input: ReplaceMealInput): Promise<z.infer<type
   try {
     return await replaceMealFlow(input);
   } catch (e: any) {
-    console.error('AI Replace Meal Error:', e);
+    console.error('AI Replace Meal Action Error:', e);
     return null;
   }
 }
