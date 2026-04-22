@@ -670,6 +670,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 <div className="space-y-3">
                   {labResult.markers.map((marker, i) => {
                     const isOffNorm = marker.status !== 'normal';
+                    // Чистим норму от слова "норма", если ИИ его добавил
+                    const cleanRange = marker.referenceRange ? marker.referenceRange.replace(/норма/gi, '').trim() : null;
+                    
                     return (
                       <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4">
                         <div className="flex-1">
@@ -695,9 +698,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                           <div className="flex items-center justify-end gap-1.5">
                              <p className={cn("font-black text-lg", isOffNorm && "text-destructive")}>
                                {marker.value}
-                               {isOffNorm && (
+                               {isOffNorm && cleanRange && (
                                  <span className="text-[9px] ml-1 font-bold opacity-40">
-                                   (норма {marker.referenceRange})
+                                   (норма {cleanRange})
                                  </span>
                                )}
                              </p>

@@ -84,12 +84,14 @@ export async function downloadLabResultsDocx(data: LabData) {
               }),
               ...data.markers.map(m => {
                 const isOffNorm = m.status !== 'normal';
-                const range = m.referenceRange && m.referenceRange !== 'undefined' && m.referenceRange !== '—' 
-                  ? m.referenceRange 
-                  : 'норма не указана';
+                // Чистим range от лишнего текста, если ИИ все же что-то добавил
+                const range = m.referenceRange || '';
                 
-                // Формат: "Значение (норма Интервал)"
-                const displayValue = `${m.value} (норма ${range})`;
+                // Формат строго по запросу пользователя: "Значение (норма Интервал)"
+                // Убираем лишнее слово "норма", если оно уже есть в строке от ИИ
+                const displayValue = range 
+                  ? `${m.value} (норма ${range.replace(/норма/gi, '').trim()})`
+                  : m.value;
 
                 return new TableRow({
                   children: [
