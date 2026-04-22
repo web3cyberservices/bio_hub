@@ -117,41 +117,41 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   const getFallbackImage = (mealName: string) => {
     const name = mealName.toLowerCase();
     
-    // Продвинутый маппинг ключевых слов на Unsplash IDs
-    if (name.includes('каша') || name.includes('овсян') || name.includes('злаки')) 
+    // Продвинутый маппинг ключевых слов на Unsplash IDs для 100% соответствия
+    if (name.includes('каша') || name.includes('овсян') || name.includes('злаки') || name.includes('геркулес')) 
       return "https://images.unsplash.com/photo-1517673400267-0251440c45dc?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('яйц') || name.includes('омлет') || name.includes('глазунья')) 
+    if (name.includes('яйц') || name.includes('омлет') || name.includes('глазунья') || name.includes('пашот') || name.includes('скрэмбл')) 
       return "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('смузи') || name.includes('боул')) 
+    if (name.includes('смузи') || name.includes('боул') || name.includes('детокс')) 
       return "https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('творог') || name.includes('йогурт')) 
+    if (name.includes('творог') || name.includes('йогурт') || name.includes('сырник')) 
       return "https://images.unsplash.com/photo-1481931098708-28308112ef81?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('рыб') || name.includes('лосось') || name.includes('треска')) 
+    if (name.includes('рыб') || name.includes('лосось') || name.includes('треска') || name.includes('сибас') || name.includes('тунец')) 
       return "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('стейк') || name.includes('мясо') || name.includes('говядин')) 
+    if (name.includes('стейк') || name.includes('мясо') || name.includes('говядин') || name.includes('телятин')) 
       return "https://images.unsplash.com/photo-1600891964092-4316c2850dbc?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('куриц') || name.includes('индейк') || name.includes('птиц')) 
+    if (name.includes('куриц') || name.includes('индейк') || name.includes('птиц') || name.includes('филе')) 
       return "https://images.unsplash.com/photo-1632778149955-e80f8ceca23b?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('суп') || name.includes('борщ')) 
+    if (name.includes('суп') || name.includes('борщ') || name.includes('бульон') || name.includes('харчо')) 
       return "https://images.unsplash.com/photo-1547592166903-89826d2d82bb?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('салат') || name.includes('овощ')) 
+    if (name.includes('салат') || name.includes('овощ') || name.includes('зелень')) 
       return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('паста') || name.includes('макарон')) 
+    if (name.includes('паста') || name.includes('макарон') || name.includes('спагетти')) 
       return "https://images.unsplash.com/photo-1473093226724-4e24059a9742?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('рис') || name.includes('плов')) 
+    if (name.includes('рис') || name.includes('плов') || name.includes('ризотто')) 
       return "https://images.unsplash.com/photo-1512058560367-0035672fb799?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('яблок') || name.includes('фрукт') || name.includes('банан')) 
+    if (name.includes('яблок') || name.includes('фрукт') || name.includes('банан') || name.includes('груш')) 
       return "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('орех') || name.includes('кешью')) 
+    if (name.includes('орех') || name.includes('кешью') || name.includes('миндаль')) 
       return "https://images.unsplash.com/photo-1536592248-b0a688680074?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('авокадо') || name.includes('тост')) 
+    if (name.includes('авокадо') || name.includes('тост') || name.includes('брускетт')) 
       return "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('блины') || name.includes('оладьи'))
+    if (name.includes('блины') || name.includes('оладьи') || name.includes('панкейк'))
       return "https://images.unsplash.com/photo-1567620905049-cf37180b7ccf?auto=format&fit=crop&w=800&q=80";
-    if (name.includes('сэндвич') || name.includes('бутерброд'))
+    if (name.includes('сэндвич') || name.includes('бутерброд') || name.includes('бургер'))
       return "https://images.unsplash.com/photo-1528735602780-2552da2451b6?auto=format&fit=crop&w=800&q=80";
 
-    return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"; // Default salad
+    return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"; // По умолчанию салат
   };
 
   if (mode === 'dashboard') {

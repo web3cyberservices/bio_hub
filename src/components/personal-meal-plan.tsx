@@ -58,10 +58,12 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    // Включаем доступ даже если пользователь еще не до конца загружен, используя public-user как фоллбек
+    const uid = user?.uid || 'public-user';
+    if (!firestore) return null;
     
     return query(
-      collection(firestore, 'users', user.uid, 'personalMeals'),
+      collection(firestore, 'users', uid, 'personalMeals'),
       where('date', '==', dateKey),
       orderBy('createdAt', 'asc')
     );
@@ -71,14 +73,15 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.uid || !firestore || !name) {
+    const uid = user?.uid || 'public-user';
+    if (!firestore || !name) {
       toast({ variant: 'destructive', title: 'Ошибка', description: 'Заполните название блюда' });
       return;
     }
 
     setLoading(true);
     try {
-      await addDoc(collection(firestore, 'users', user.uid, 'personalMeals'), {
+      await addDoc(collection(firestore, 'users', uid, 'personalMeals'), {
         date: dateKey,
         name,
         time,
@@ -101,9 +104,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleDeleteMeal = async (id: string) => {
-    if (!user?.uid || !firestore) return;
+    const uid = user?.uid || 'public-user';
+    if (!firestore) return;
     try {
-      await deleteDoc(doc(firestore, 'users', user.uid, 'personalMeals', id));
+      await deleteDoc(doc(firestore, 'users', uid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить блюдо.' });

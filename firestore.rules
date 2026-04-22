@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 18.0
-     * Полный доступ для владельцев и открытая гостевая песочница.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 20.0
+     * Полный доступ для владельцев и расширенная песочница для гостей.
      */
 
     function isAuthenticated() {
@@ -18,19 +18,21 @@ service cloud.firestore {
     // --- Профили пользователей и вложенные данные ---
     match /users/{userId} {
       // Базовый доступ к документу профиля
-      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist');
-      allow list: if true; // Для поиска специалистов
-      allow write: if isOwner(userId);
+      allow read, write: if isOwner(userId);
+      // Разрешаем всем видеть публичную инфу специалистов
+      allow get: if resource != null && resource.data.profileType == 'specialist';
+      // Для поиска специалистов в ленте
+      allow list: if true;
 
-      // Явный доступ ко всем личным подколлекциям (для list и get операций)
-      match /personalMeals/{mealId} { allow read, write: if isOwner(userId); }
-      match /dailyLogs/{logId} { allow read, write: if isOwner(userId); }
-      match /dietaryLogs/{logId} { allow read, write: if isOwner(userId); }
-      match /recommendations/{logId} { allow read, write: if isOwner(userId); }
-      match /labResults/{logId} { allow read, write: if isOwner(userId); }
+      // Рекурсивный доступ ко всем вложенным коллекциям (meals, logs, recommendations и т.д.)
+      match /{allSubcollections=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Отзывы о специалистах доступны всем на чтение
       match /reviews/{reviewId} { 
         allow read: if true;
-        allow write: if isAuthenticated() || isOwner('public-user');
+        allow create: if isAuthenticated() || isOwner('public-user');
       }
     }
 
