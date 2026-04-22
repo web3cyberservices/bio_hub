@@ -1,37 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     /**
-     * PRO СЕБЯ - ОТКРЫТЫЕ ПРАВИЛА ДОСТУПА
-     * Мы открываем доступ к данным пользователей для устранения ошибок Permission Denied,
-     * как запрошено пользователем.
+     * ПОЛНЫЙ ПУБЛИЧНЫЙ ДОСТУП
+     * Мы разрешаем чтение и запись для ВСЕХ документов на любом уровне вложенности.
+     * Это гарантированно убирает ошибку "Missing or insufficient permissions".
      */
-    
-    // 1. ПОЛЬЗОВАТЕЛИ И ИХ ДАННЫЕ (ОТКРЫТО)
-    match /users/{userId} {
-      // Разрешаем всё для всех уровней вложенности
-      allow read, write: if true;
-      
-      match /{allPaths=**} {
-        allow read, write: if true;
-      }
-    }
-
-    // 2. BIO-ЛЕНТА (ПОСТЫ)
-    match /posts/{postId} {
-      allow read, write: if true;
-    }
-
-    // 3. СИСТЕМА ЧАТОВ
-    match /chats/{chatId} {
-      allow read, write: if true; 
-      match /messages/{messageId} {
-        allow read, write: if true;
-      }
-    }
-    
-    // 4. ПУБЛИЧНЫЙ ДОСТУП КО ВСЕМУ ОСТАЛЬНОМУ
     match /{document=**} {
       allow read, write: if true;
     }

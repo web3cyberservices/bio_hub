@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -85,13 +84,19 @@ export default function DashboardPage() {
 
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
+  // Исправлено: не сбрасываем вкладку, если данные еще загружаются или если это разрешенная вкладка
   useEffect(() => {
-    if (profileLoading) return;
+    if (profileLoading || !isMounted) return;
+    
     const userTabs = ["feed", "dashboard", "meals", "chats", "profile"];
     const specialistTabs = ["feed", "my-feed", "appointments", "chats", "profile"];
-    if (profileType === 'user' && !userTabs.includes(activeTab)) setActiveTab("feed");
-    else if (profileType === 'specialist' && !specialistTabs.includes(activeTab)) setActiveTab("feed");
-  }, [profileType, activeTab, profileLoading]);
+    
+    if (profileType === 'user' && !userTabs.includes(activeTab)) {
+      setActiveTab("feed");
+    } else if (profileType === 'specialist' && !specialistTabs.includes(activeTab)) {
+      setActiveTab("feed");
+    }
+  }, [profileType, activeTab, profileLoading, isMounted]);
 
   const handleLogout = async () => {
     if (auth) {
