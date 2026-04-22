@@ -8,7 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
-import { runWithRetry } from './generate-personalized-recommendations';
+import {runWithRetry} from '@/ai/utils';
 
 const MealSchema = z.object({
   time: z.string().describe('Тип блюда (например, "Завтрак", "Обед", "Перекус")'),

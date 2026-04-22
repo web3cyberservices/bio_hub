@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для анализа медицинских анализов по фото/скану.
@@ -54,7 +55,7 @@ const labPrompt = ai.definePrompt({
 3. Оцените статус каждого маркера (normal/high/low).
 4. В поле interpretation, если статус НЕ normal, ОБЯЗАТЕЛЬНО укажите норму в скобках.
 5. Результат должен быть СТРОГО на русском языке.
-6. ВАЖНО: Если данные на фото неразборчивы, попробуйте восстановить их по контексту таблицы.
+6. ВАЖНО: Модель должна прочитать каждую цифру максимально внимательно. Если данные на фото неразборчивы, попробуйте восстановить их по контексту таблицы.
 
 Изображение для анализа: {{media url=photoDataUri}}`,
 });
@@ -67,7 +68,7 @@ const analyzeLabResultsFlow = ai.defineFlow(
   },
   async (input) => {
     return runWithRetry(async () => {
-      // Используем gemini-3-flash-preview для лучшего OCR и стабильности
+      // Используем gemini-3-flash-preview для лучшего OCR и стабильности в текущей среде
       const {output} = await labPrompt(input, {
         model: googleAI.model('gemini-3-flash-preview'),
       });
