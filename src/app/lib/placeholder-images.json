@@ -2,82 +2,100 @@
 {
   "placeholderImages": [
     {
-      "id": "breakfast-oatmeal",
-      "description": "Овсяная каша с ягодами",
-      "imageUrl": "https://picsum.photos/seed/oatmeal-plate/600/400",
-      "imageHint": "oatmeal porridge"
+      "id": "digital-twin-hologram",
+      "description": "Голограмма светящегося человека с нервной системой",
+      "imageUrl": "https://picsum.photos/seed/cyberhologram1/800/1200",
+      "imageHint": "hologram human body blue"
     },
     {
       "id": "breakfast-omelette",
-      "description": "Пышный омлет с зеленью",
-      "imageUrl": "https://picsum.photos/seed/omelette-dish/600/400",
+      "description": "Аппетитный омлет с зеленью",
+      "imageUrl": "https://picsum.photos/seed/omelette1/600/400",
       "imageHint": "omelette breakfast"
     },
     {
+      "id": "breakfast-oatmeal",
+      "description": "Овсяная каша с ягодами и орехами",
+      "imageUrl": "https://picsum.photos/seed/oats2/600/400",
+      "imageHint": "oatmeal porridge"
+    },
+    {
       "id": "breakfast-smoothie",
-      "description": "Зеленый смузи боул",
-      "imageUrl": "https://picsum.photos/seed/smoothie-bowl/600/400",
+      "description": "Полезный смузи боул",
+      "imageUrl": "https://picsum.photos/seed/smoothie3/600/400",
       "imageHint": "smoothie bowl"
     },
     {
+      "id": "lunch-salad-chicken",
+      "description": "Цезарь или салат с курицей",
+      "imageUrl": "https://picsum.photos/seed/chickensalad4/600/400",
+      "imageHint": "chicken salad"
+    },
+    {
       "id": "lunch-salmon",
-      "description": "Лосось на гриле",
-      "imageUrl": "https://picsum.photos/seed/salmon-meal/600/400",
+      "description": "Стейк из лосося с овощами",
+      "imageUrl": "https://picsum.photos/seed/salmonsteak5/600/400",
       "imageHint": "grilled salmon"
     },
     {
       "id": "lunch-soup",
-      "description": "Крем-суп из тыквы",
-      "imageUrl": "https://picsum.photos/seed/soup-bowl/600/400",
+      "description": "Овощной или крем-суп",
+      "imageUrl": "https://picsum.photos/seed/soup6/600/400",
       "imageHint": "vegetable soup"
     },
     {
-      "id": "lunch-salad-chicken",
-      "description": "Салат с курицей и авокадо",
-      "imageUrl": "https://picsum.photos/seed/chicken-salad/600/400",
-      "imageHint": "chicken salad"
-    },
-    {
       "id": "dinner-steak",
-      "description": "Сочный мясной стейк",
-      "imageUrl": "https://picsum.photos/seed/beef-steak/600/400",
+      "description": "Говяжий стейк с гарниром",
+      "imageUrl": "https://picsum.photos/seed/beefsteak7/600/400",
       "imageHint": "beef steak"
     },
     {
       "id": "dinner-white-fish",
-      "description": "Треска с овощами",
-      "imageUrl": "https://picsum.photos/seed/white-fish/600/400",
+      "description": "Белая рыба на пару или запеченная",
+      "imageUrl": "https://picsum.photos/seed/whitefish8/600/400",
       "imageHint": "baked fish"
     },
     {
       "id": "dinner-tofu",
-      "description": "Жареный тофу с брокколи",
-      "imageUrl": "https://picsum.photos/seed/tofu-dish/600/400",
+      "description": "Тофу с овощами гриль",
+      "imageUrl": "https://picsum.photos/seed/tofu9/600/400",
       "imageHint": "tofu stir-fry"
     },
     {
-      "id": "snack-apple",
-      "description": "Свежее зеленое яблоко",
-      "imageUrl": "https://picsum.photos/seed/fresh-apple/600/400",
-      "imageHint": "green apple"
-    },
-    {
-      "id": "snack-pear",
-      "description": "Сочная спелая груша",
-      "imageUrl": "https://picsum.photos/seed/ripe-pear/600/400",
-      "imageHint": "ripe pear"
-    },
-    {
       "id": "snack-nuts",
-      "description": "Микс орехов",
-      "imageUrl": "https://picsum.photos/seed/mixed-nuts/600/400",
+      "description": "Горсть орехов и сухофруктов",
+      "imageUrl": "https://picsum.photos/seed/nuts10/600/400",
       "imageHint": "mixed nuts"
     },
     {
       "id": "snack-yogurt",
-      "description": "Натуральный йогурт",
-      "imageUrl": "https://picsum.photos/seed/natural-yogurt/600/400",
-      "imageHint": "plain yogurt"
+      "description": "Греческий йогурт с ягодами",
+      "imageUrl": "https://picsum.photos/seed/yogurt11/600/400",
+      "imageHint": "yogurt berries"
+    },
+    {
+      "id": "snack-avocado",
+      "description": "Авокадо-тост",
+      "imageUrl": "https://picsum.photos/seed/avocado12/600/400",
+      "imageHint": "avocado toast"
+    },
+    {
+      "id": "snack-fruit",
+      "description": "Нарезка свежих фруктов",
+      "imageUrl": "https://picsum.photos/seed/fruits13/600/400",
+      "imageHint": "fruit platter"
+    },
+    {
+      "id": "snack-apple",
+      "description": "Свежее яблоко",
+      "imageUrl": "https://picsum.photos/seed/apple14/600/400",
+      "imageHint": "fresh apple"
+    },
+    {
+      "id": "snack-pear",
+      "description": "Спелая груша",
+      "imageUrl": "https://picsum.photos/seed/pear15/600/400",
+      "imageHint": "ripe pear"
     }
   ]
 }
