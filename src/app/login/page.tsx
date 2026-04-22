@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -68,8 +69,19 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Добавляем scope для Google Fit
+      provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
+      provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
+      provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
+
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
+      
+      // Сохраняем access token для Google Fit (в реальном приложении лучше использовать Refresh Token)
+      const credential = GoogleAuthProvider.credentialFromResult(userCredential);
+      if (credential?.accessToken) {
+        sessionStorage.setItem('google_fit_token', credential.accessToken);
+      }
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
       const userDoc = await getDoc(userDocRef);
@@ -86,12 +98,12 @@ export default function LoginPage() {
           createdAt: new Date().toISOString(),
         }, { merge: true });
       }
-      toast({ title: 'Вход через Google выполнен' });
+      toast({ title: 'Вход через Google выполнен', description: 'Разрешения Google Fit получены.' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Ошибка Google входа',
-        description: 'Не удалось войти через Google.',
+        description: error.message || 'Не удалось войти через Google.',
       });
     } finally {
       setLoading(false);

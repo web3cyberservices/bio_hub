@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -22,6 +23,7 @@ import { ru } from 'date-fns/locale';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -125,18 +127,54 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const handleSmartSync = async () => {
+    if (!user || user.uid === 'public-user') {
+      toast({ variant: 'destructive', title: 'Режим гостя', description: 'Синхронизация Google Fit доступна только после входа.' });
+      return;
+    }
+
+    const token = sessionStorage.getItem('google_fit_token');
+    if (!token) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Нужна авторизация', 
+        description: 'Пожалуйста, перезайдите через Google, чтобы дать разрешение на чтение биометрии.' 
+      });
+      return;
+    }
+
     setSyncing(true);
-    await new Promise(r => setTimeout(r, 1500));
-    
-    setSteps(Math.floor(Math.random() * 5000 + 5000).toString());
-    setHeartRate(Math.floor(Math.random() * 20 + 60).toString());
-    setSleep((Math.random() * 2 + 6).toFixed(1));
-    
-    setSyncing(false);
-    toast({
-      title: 'Синхронизация завершена',
-      description: 'Данные с ваших устройств успешно импортированы.',
-    });
+    try {
+      const fitData = await syncGoogleFitData(token);
+      
+      setSteps(fitData.steps.toString());
+      setHeartRate(fitData.heartRate.toString());
+      setSleep(fitData.sleepHours.toString());
+      
+      // Сохраняем в Firestore personalStats как запрашивал пользователь
+      if (firestore) {
+        const statsRef = doc(firestore, 'users', user.uid, 'personalStats', format(selectedDate, 'yyyy-MM-dd'));
+        await setDoc(statsRef, {
+          userId: user.uid,
+          date: format(selectedDate, 'yyyy-MM-dd'),
+          source: 'Google Fit',
+          raw: fitData,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      }
+
+      toast({
+        title: 'Google Fit синхронизирован',
+        description: `Импортировано: ${fitData.steps} шагов, пульс ${fitData.heartRate} bpm.`,
+      });
+    } catch (error: any) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка Google Fit', 
+        description: error.message || 'Срок действия разрешения истек. Попробуйте войти заново.'
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const saveMealToFirestore = async (data: AnalyzeMealOutput) => {
@@ -417,7 +455,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                          <Smartphone className="h-5 w-5 text-primary" />
-                         <span className="text-sm font-black uppercase tracking-tight">Умные устройства</span>
+                         <span className="text-sm font-black uppercase tracking-tight">Google Fit Sync</span>
                       </div>
                       <Button 
                         variant="ghost" 
@@ -427,10 +465,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         disabled={syncing}
                       >
                          {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                         Синхронизация
+                         Синхронизировать
                       </Button>
                    </div>
-                   <p className="text-[10px] text-muted-foreground font-medium">Автоматический импорт шагов, пульса и сна из Health Kit.</p>
+                   <p className="text-[10px] text-muted-foreground font-medium">Реальный импорт шагов, пульса и сна из вашего Google-аккаунта.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -463,6 +501,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary mt-2" onClick={handleDailyLogSubmit} disabled={loading}>
                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ОБНОВИТЬ ТЕЛО"}
                 </Button>
+              </TabsContent>
+
+              <TabsContent value="fasting" className="space-y-6 outline-none">
+                {/* Fasting UI can be here */}
               </TabsContent>
 
               <TabsContent value="labs" className="space-y-6 outline-none">
