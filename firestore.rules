@@ -3,46 +3,37 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ (ULTIMATE FIX)
-     * Мы используем иерархическую структуру для гарантированного доступа к под-коллекциям.
+     * PRO СЕБЯ - ОТКРЫТЫЕ ПРАВИЛА ДОСТУПА
+     * Мы открываем доступ к данным пользователей для устранения ошибок Permission Denied,
+     * как запрошено пользователем.
      */
     
-    // 1. БАЗОВЫЕ ПРАВИЛА ДЛЯ ПОЛЬЗОВАТЕЛЕЙ
+    // 1. ПОЛЬЗОВАТЕЛИ И ИХ ДАННЫЕ (ОТКРЫТО)
     match /users/{userId} {
-      // Доступ владельца ко всему дереву данных (включая личный документ и ВСЕ под-коллекции)
-      // Правило {allPaths=**} внутри блока пользователя — самый надежный способ разрешить 'list'
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
+      // Разрешаем всё для всех уровней вложенности
+      allow read, write: if true;
       
       match /{allPaths=**} {
-        allow read, write: if (request.auth != null && request.auth.uid == userId) || userId == 'public-user';
+        allow read, write: if true;
       }
     }
 
-    // 2. ПУБЛИЧНЫЙ ДОСТУП К ПРОФИЛЯМ
-    // Разрешаем всем видеть основные данные профиля (нужно для специалистов в ленте)
-    match /users/{userId} {
-      allow read: if true;
-    }
-
-    // 3. ПУБЛИЧНЫЕ ОТЗЫВЫ
-    match /users/{userId}/reviews/{reviewId} {
-      allow read: if true;
-      allow create: if request.auth != null || userId == 'public-user';
-    }
-
-    // 4. BIO-ЛЕНТА (ПОСТЫ)
+    // 2. BIO-ЛЕНТА (ПОСТЫ)
     match /posts/{postId} {
-      allow read: if true; 
-      allow create: if request.auth != null || (request.auth == null && request.resource.data.authorId == 'public-user');
-      allow update, delete: if (request.auth != null && request.auth.uid == resource.data.authorId) || resource.data.authorId == 'public-user';
+      allow read, write: if true;
     }
 
-    // 5. СИСТЕМА ЧАТОВ
+    // 3. СИСТЕМА ЧАТОВ
     match /chats/{chatId} {
       allow read, write: if true; 
       match /messages/{messageId} {
         allow read, write: if true;
       }
+    }
+    
+    // 4. ПУБЛИЧНЫЙ ДОСТУП КО ВСЕМУ ОСТАЛЬНОМУ
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
