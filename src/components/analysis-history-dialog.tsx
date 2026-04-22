@@ -188,19 +188,23 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                             </div>
                           </div>
                           <div className="text-right flex flex-col items-end">
-                            <div className="flex items-center justify-end gap-1.5">
-                               <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm && "text-destructive")}>
-                                 {marker.value}
-                               </p>
-                               {isOffNorm && (
-                                 marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
-                               )}
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                               <div className="flex flex-col items-end">
+                                  <div className="flex items-center gap-1">
+                                    <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm && "text-destructive")}>
+                                      {marker.value}
+                                    </p>
+                                    {isOffNorm && (
+                                      marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
+                                    )}
+                                  </div>
+                                  {isOffNorm && cleanRange && (
+                                    <p className="text-[10px] md:text-[11px] font-bold text-destructive/60 mt-1 uppercase tracking-tight">
+                                      (норма {cleanRange})
+                                    </p>
+                                  )}
+                               </div>
                             </div>
-                            {isOffNorm && cleanRange && (
-                              <p className="text-[10px] md:text-[11px] font-black text-muted-foreground/50 mt-1 uppercase tracking-tighter">
-                                (норма {cleanRange})
-                              </p>
-                            )}
                           </div>
                         </div>
                       );
