@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -43,6 +44,19 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
 
   const { data: labs, isLoading } = useCollection<any>(labsQuery);
 
+  // Безопасное форматирование даты
+  const safeFormatDate = (dateValue: any, formatStr: string = 'd MMM yyyy') => {
+    if (!dateValue) return '—';
+    try {
+      // Обработка Timestamp Firestore или строки
+      const date = dateValue?.toDate ? dateValue.toDate() : new Date(dateValue);
+      if (isNaN(date.getTime())) return '—';
+      return format(date, formatStr, { locale: ru });
+    } catch (e) {
+      return '—';
+    }
+  };
+
   return (
     <Dialog onOpenChange={(open) => { if (!open) setSelectedLab(null); }}>
       <DialogTrigger asChild>
@@ -59,7 +73,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                 className="h-10 w-10 rounded-full text-white hover:bg-white/10"
                 onClick={() => setSelectedLab(null)}
               >
-                <ArrowLeft className="h-6 w-6" />
+                <ArrowLeft className="h-6" />
               </Button>
             )}
             <div>
@@ -67,7 +81,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                 {selectedLab ? 'Детали анализа' : 'История анализов'}
               </DialogTitle>
               <p className="text-white/60 text-[10px] md:text-sm font-medium uppercase tracking-widest mt-0.5">
-                {selectedLab ? format(new Date(selectedLab.createdAt), 'd MMMM yyyy', { locale: ru }) : 'Ваш медицинский архив'}
+                {selectedLab ? safeFormatDate(selectedLab.createdAt, 'd MMMM yyyy') : 'Ваш медицинский архив'}
               </p>
             </div>
           </div>
@@ -95,7 +109,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                              <FlaskConical className="h-7 w-7" />
                           </div>
                           <div>
-                             <h4 className="font-black text-lg group-hover:text-primary transition-colors">Отчет от {format(new Date(lab.createdAt), 'd MMM yyyy', { locale: ru })}</h4>
+                             <h4 className="font-black text-lg group-hover:text-primary transition-colors">Отчет от {safeFormatDate(lab.createdAt)}</h4>
                              <div className="flex items-center gap-3 mt-1">
                                 <Badge variant="outline" className="text-[8px] border-primary/20 text-primary font-bold uppercase">{lab.markers?.length || 0} маркеров</Badge>
                                 <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[200px]">{lab.summary?.slice(0, 50)}...</span>

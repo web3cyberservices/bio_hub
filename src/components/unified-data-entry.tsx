@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -156,7 +157,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           date: format(selectedDate, 'yyyy-MM-dd'),
           source: 'Google Fit',
           raw: fitData,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date().toISOString()
         }, { merge: true });
       }
 
@@ -195,7 +196,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         carbs: data.carbs,
         analysis: data.analysis,
         components: data.components,
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       });
       
       setIsSuccess(true);
@@ -270,7 +271,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         sleepDurationHours: sleep ? Number(sleep) : undefined,
         mood: mood || undefined,
         energy: energy,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date().toISOString()
       }, { merge: true });
       
       setIsSuccess(true);
@@ -294,7 +295,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         userId: user.uid,
         date: format(selectedDate, 'yyyy-MM-dd'),
         ...labResult,
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       });
       setIsSuccess(true);
       toast({ title: 'Анализы сохранены' });
