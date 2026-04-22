@@ -100,18 +100,18 @@ export default function DashboardPage() {
 
   // Автоматическое переключение вкладок при смене роли
   useEffect(() => {
-    if (viewingPatientId) return; // Не переключаем, если смотрим карту пациента
+    if (viewingPatientId || profileLoading || !userData) return;
 
     if (profileType === 'specialist') {
       if (activeTab === 'dashboard' || activeTab === 'meals') {
         setActiveTab('patients');
       }
-    } else if (profileType === 'user') {
+    } else {
       if (activeTab === 'patients' || activeTab === 'my-feed') {
         setActiveTab('dashboard');
       }
     }
-  }, [profileType, viewingPatientId]);
+  }, [profileType, viewingPatientId, profileLoading]);
 
   const handleLogout = async () => {
     if (auth) { await signOut(auth); router.replace('/'); }
@@ -176,7 +176,7 @@ export default function DashboardPage() {
 
       <main className="container mx-auto flex-1 px-4 py-6 md:py-12">
         {viewingSpecialistId ? <SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={handleStartChat} /> : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
+          <Tabs key={profileType} value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6 md:space-y-10">
             <div className="flex justify-center">
               <TabsList className="bg-white/60 backdrop-blur-md p-1 rounded-xl h-14 md:h-20 border shadow-md max-w-6xl w-full overflow-x-auto no-scrollbar">
                 <TabsTrigger value="feed" className="rounded-lg px-4 font-black uppercase tracking-widest text-[7px] md:text-[10px] gap-2 data-[state=active]:bg-primary h-full flex-1"><BookOpen className="h-4 w-4" /> Лента</TabsTrigger>
