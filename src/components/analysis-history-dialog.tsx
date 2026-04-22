@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -177,9 +178,14 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                               {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
                             </Badge>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
-                            {marker.interpretation}
-                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-muted-foreground font-medium">
+                              {marker.interpretation}
+                            </p>
+                            {marker.referenceRange && (
+                               <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter">(Норма: {marker.referenceRange})</span>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
                           <p className="font-black text-lg">{marker.value}</p>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
@@ -8,6 +9,7 @@ import { ru } from 'date-fns/locale';
 interface LabMarker {
   name: string;
   value: string;
+  referenceRange: string;
   status: 'normal' | 'high' | 'low';
   interpretation: string;
 }
@@ -16,35 +18,20 @@ interface LabData {
   summary: string;
   markers: LabMarker[];
   recommendations: string[];
-  createdAt: any; // Может быть строкой или Timestamp
+  createdAt: any;
 }
 
-/**
- * Безопасно преобразует входное значение в объект Date.
- */
 function toSafeDate(dateValue: any): Date {
   if (!dateValue) return new Date();
-  
   try {
-    // Если это Firestore Timestamp
-    if (typeof dateValue.toDate === 'function') {
-      return dateValue.toDate();
-    }
-    
+    if (typeof dateValue.toDate === 'function') return dateValue.toDate();
     const date = new Date(dateValue);
-    // Если дата невалидна, возвращаем текущую
-    if (isNaN(date.getTime())) {
-      return new Date();
-    }
-    return date;
+    return isNaN(date.getTime()) ? new Date() : date;
   } catch (e) {
     return new Date();
   }
 }
 
-/**
- * Генерирует и скачивает DOCX файл с результатами анализа.
- */
 export async function downloadLabResultsDocx(data: LabData) {
   const dateObj = toSafeDate(data.createdAt);
   const docDate = format(dateObj, 'dd.MM.yyyy', { locale: ru });
@@ -73,78 +60,69 @@ export async function downloadLabResultsDocx(data: LabData) {
           }),
 
           new Paragraph({
-            children: [
-              new TextRun({ text: "Общее заключение ИИ:", bold: true, size: 22 }),
-            ],
+            children: [new TextRun({ text: "Общее заключение ИИ:", bold: true, size: 22 })],
             spacing: { after: 100 },
           }),
           new Paragraph({
-            children: [
-              new TextRun({ text: data.summary, italic: true }),
-            ],
+            children: [new TextRun({ text: data.summary, italic: true })],
             spacing: { after: 400 },
           }),
 
           new Paragraph({
-            children: [
-              new TextRun({ text: "Детализация биомаркеров:", bold: true, size: 22 }),
-            ],
+            children: [new TextRun({ text: "Детализация биомаркеров:", bold: true, size: 22 })],
             spacing: { after: 200 },
           }),
 
-          // Таблица маркеров
           new Table({
-            width: {
-              size: 100,
-              type: WidthType.PERCENTAGE,
-            },
+            width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
               new TableRow({
                 children: [
                   new TableCell({ children: [new Paragraph({ text: "Показатель", bold: true })] }),
-                  new TableCell({ children: [new Paragraph({ text: "Значение", bold: true })] }),
+                  new TableCell({ children: [new Paragraph({ text: "Значение (Норма)", bold: true })] }),
                   new TableCell({ children: [new Paragraph({ text: "Интерпретация", bold: true })] }),
                 ],
               }),
-              ...data.markers.map(m => new TableRow({
-                children: [
-                  new TableCell({ children: [new Paragraph(m.name)] }),
-                  new TableCell({ children: [new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: m.value,
-                        bold: true,
-                        color: m.status === 'normal' ? '2D7A4D' : (m.status === 'high' ? 'EF4444' : 'EAB308')
-                      })
-                    ]
-                  })] }),
-                  new TableCell({ children: [new Paragraph(m.interpretation)] }),
-                ],
-              })),
+              ...data.markers.map(m => {
+                const isOffNorm = m.status !== 'normal';
+                const displayValue = isOffNorm 
+                  ? `${m.value} (Норма: ${m.referenceRange})` 
+                  : m.value;
+
+                return new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph(m.name)] }),
+                    new TableCell({ 
+                      children: [
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: displayValue,
+                              bold: isOffNorm,
+                              color: m.status === 'normal' ? '2D7A4D' : (m.status === 'high' ? 'EF4444' : 'EAB308')
+                            })
+                          ]
+                        })
+                      ] 
+                    }),
+                    new TableCell({ children: [new Paragraph(m.interpretation)] }),
+                  ],
+                });
+              }),
             ],
           }),
 
+          new Paragraph({ text: "", spacing: { before: 400 } }),
           new Paragraph({
-            text: "",
-            spacing: { before: 400 },
-          }),
-
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Персональные рекомендации:", bold: true, size: 22 }),
-            ],
+            children: [new TextRun({ text: "Персональные рекомендации:", bold: true, size: 22 })],
             spacing: { after: 200 },
           }),
-
           ...data.recommendations.map(rec => new Paragraph({
             text: `• ${rec}`,
             spacing: { after: 100 },
           })),
 
-          new Paragraph({
-            text: "",
-            spacing: { before: 800 },
-          }),
+          new Paragraph({ text: "", spacing: { before: 800 } }),
           new Paragraph({
             children: [
               new TextRun({ 
