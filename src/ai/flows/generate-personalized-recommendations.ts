@@ -115,7 +115,8 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, init
     try {
       return await fn();
     } catch (error: any) {
-      if (Date.now() - actionStartTime > 15000) throw new Error('Превышено время ожидания ИИ.');
+      // Увеличен таймаут до 60 секунд для тяжелых задач анализа документов
+      if (Date.now() - actionStartTime > 60000) throw new Error('Превышено время ожидания ИИ.');
       let delay = initialDelay * Math.pow(2, i);
       await new Promise(resolve => setTimeout(resolve, delay));
       continue;
