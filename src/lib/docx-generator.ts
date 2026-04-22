@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
@@ -85,9 +84,11 @@ export async function downloadLabResultsDocx(data: LabData) {
               }),
               ...data.markers.map(m => {
                 const isOffNorm = m.status !== 'normal';
-                const rangeText = m.referenceRange && m.referenceRange !== 'undefined' ? m.referenceRange : 'По возрасту';
+                const rangeText = m.referenceRange && m.referenceRange !== 'undefined' ? m.referenceRange : '—';
+                
+                // Формат согласно запросу: 900 (норма 500)
                 const displayValue = isOffNorm 
-                  ? `${m.value} (Норма: ${rangeText})` 
+                  ? `${m.value} (норма ${rangeText})` 
                   : m.value;
 
                 return new TableRow({

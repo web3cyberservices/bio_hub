@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -669,38 +668,47 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
               <div className="space-y-4">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 px-2">Обнаруженные маркеры</label>
                 <div className="space-y-3">
-                  {labResult.markers.map((marker, i) => (
-                    <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-sm">{marker.name}</span>
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "text-[8px] h-4 px-1 border-none",
-                              marker.status === 'high' ? "bg-red-100 text-red-600" : 
-                              marker.status === 'low' ? "bg-yellow-100 text-yellow-700" : 
-                              "bg-green-100 text-green-600"
-                            )}
-                          >
-                            {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
-                          </Badge>
+                  {labResult.markers.map((marker, i) => {
+                    const isOffNorm = marker.status !== 'normal';
+                    return (
+                      <div key={i} className="bg-white border rounded-2xl p-4 flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm">{marker.name}</span>
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-[8px] h-4 px-1 border-none",
+                                marker.status === 'high' ? "bg-red-100 text-red-600" : 
+                                marker.status === 'low' ? "bg-yellow-100 text-yellow-700" : 
+                                "bg-green-100 text-green-600"
+                              )}
+                            >
+                              {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
+                            </Badge>
+                          </div>
+                          <div className="mt-0.5">
+                             <p className="text-[10px] text-muted-foreground font-medium">{marker.interpretation}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                           <p className="text-[10px] text-muted-foreground font-medium">{marker.interpretation}</p>
-                           {marker.referenceRange && (
-                              <span className="text-[9px] font-bold text-primary/40 uppercase tracking-tighter">(Норма: {marker.referenceRange})</span>
-                           )}
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                             <p className={cn("font-black text-lg", isOffNorm && "text-destructive")}>
+                               {marker.value}
+                               {isOffNorm && (
+                                 <span className="text-[9px] ml-1 font-bold opacity-40">
+                                   (норма {marker.referenceRange})
+                                 </span>
+                               )}
+                             </p>
+                             {isOffNorm && (
+                               marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
+                             )}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-black text-lg">{marker.value}</p>
-                        {marker.status !== 'normal' && (
-                          marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500 ml-auto" /> : <TrendingDown className="h-4 w-4 text-yellow-500 ml-auto" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
