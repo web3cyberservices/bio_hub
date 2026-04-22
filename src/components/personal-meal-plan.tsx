@@ -37,6 +37,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const [carbs, setCarbs] = useState('');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  
+  // Получаем актуальный UID пользователя или используем гостевой ID
   const authUid = user?.uid;
 
   const startVoiceInput = () => {
@@ -59,11 +61,13 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const mealsQuery = useMemoFirebase(() => {
-    // Ждем, пока firestore и ID пользователя будут готовы
-    // Если пользователь не авторизован (loading или гость), используем 'public-user'
+    // Ждем готовности firestore
     if (!firestore) return null;
+    
+    // Если пользователь еще не загружен, используем гостевой UID, чтобы избежать Permission Denied при инициализации
     const currentUid = authUid || 'public-user';
     
+    // Прямой путь к коллекции личных блюд пользователя
     return query(
       collection(firestore, 'users', currentUid, 'personalMeals'),
       where('date', '==', dateKey),
