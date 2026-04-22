@@ -3,31 +3,26 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { NavBar } from '@/components/nav-bar';
-import { RecommendationForm } from '@/components/recommendation-form';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, ChevronRight, Activity, Calendar as CalendarIcon, LayoutDashboard, 
+  Activity, Calendar as CalendarIcon, LayoutDashboard, 
   Utensils, UserCircle, Loader2, Plus, LogOut, Sparkles, MessageSquare, Brain, 
   HeartPulse, Stethoscope, Heart, ArrowLeft, Star, User, BookOpen, Users, CalendarCheck,
   ThumbsUp, Share2, Info, Briefcase, Zap, ShoppingBasket, ClipboardList, PenTool,
   RefreshCw, ShieldCheck, Mic, Smile
 } from 'lucide-react';
-import { format, addDays, startOfToday } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, setDoc, collection, query, orderBy, arrayUnion, arrayRemove, updateDoc, where } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase/provider';
+import { doc, setDoc, collection, query, orderBy, where } from 'firebase/firestore';
 import { ProfileCabinet } from '@/components/profile-cabinet';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
@@ -41,8 +36,6 @@ import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
-  const { auth } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -67,22 +60,8 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: userData, isLoading: profileLoading } = useDoc<any>(userDocRef);
-
+  const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
-
-  // Автоматическая смена вкладок при смене роли в профиле
-  useEffect(() => {
-    if (profileType === 'specialist') {
-      if (activeTab === 'dashboard' || activeTab === 'meals' || activeTab === 'feeling') {
-        setActiveTab('patients');
-      }
-    } else {
-      if (activeTab === 'patients') {
-        setActiveTab('dashboard');
-      }
-    }
-  }, [profileType]);
 
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
@@ -111,26 +90,36 @@ export default function DashboardPage() {
   const { data: posts } = useCollection<any>(postsQuery);
   const { data: patients } = useCollection<any>(patientsQuery);
 
-  const handleResult = (result: GenerateRecommendationsOutput) => {
-    if (!firestore || !user?.uid || !dateKey) return;
-    const docRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
-    setDoc(docRef, { id: dateKey, userId: user.uid, date: dateKey, data: result, createdAt: new Date().toISOString() }, { merge: true });
-    toast({ title: 'Цифровая копия обновлена' });
-  };
-
-  if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" /></div>;
+  if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-[#010409]"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" /></div>;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20 overflow-hidden">
-      <NavBar />
+    <div className="flex h-screen flex-col bg-[#010409] text-foreground overflow-hidden">
       
-      <main className={cn("container mx-auto flex-1 px-4 max-w-6xl relative", activeTab === 'dashboard' ? "h-[calc(100vh-160px)] mt-20" : "py-10 pb-32 mt-20 overflow-y-auto")} key={profileType}>
-        {viewingSpecialistId ? <SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /> : (
+      {/* Futuristic Header integrated into terminal look */}
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] w-[95vw] max-w-6xl">
+        <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-8 flex items-center justify-between shadow-2xl">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.4)]">
+              <Activity className="h-6 w-6 text-black" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO <span className="text-primary">Себя</span></h1>
+              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="h-10 px-6 rounded-full border-primary/20 bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest gap-2">
+            <Zap className="h-3 w-3" /> БИО-ДАШБОРД
+          </Badge>
+        </div>
+      </header>
+      
+      <main className="flex-1 relative w-full h-full">
+        {viewingSpecialistId ? <div className="mt-28 overflow-y-auto h-full px-4 pb-32"><SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /></div> : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex-1">
-              <TabsContent value="feed" className="mt-0 space-y-8 h-full">
-                 <div className="flex items-center justify-between px-2">
+            <div className="flex-1">
+              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-32 no-scrollbar">
+                 <div className="flex items-center justify-between px-2 max-w-2xl mx-auto">
                     <h2 className="text-xl font-black tracking-widest text-primary neo-glow uppercase">Bio-Лента</h2>
                     {profileType === 'specialist' && <CreatePostDialog />}
                  </div>
@@ -153,7 +142,7 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="mt-0 h-full flex flex-col">
+              <TabsContent value="dashboard" className="m-0 h-full w-full">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
@@ -161,24 +150,13 @@ export default function DashboardPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="meals" className="mt-0">
+              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar">
                  <div className="max-w-4xl mx-auto space-y-8">
-                    <Tabs defaultValue="personal" className="w-full">
-                       <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-14 max-w-md mx-auto grid grid-cols-3 mb-10">
-                          <TabsTrigger value="personal" className="rounded-xl font-black uppercase text-[9px] data-[state=active]:bg-primary">Свой план</TabsTrigger>
-                          <TabsTrigger value="plan" className="rounded-xl font-black uppercase text-[9px] data-[state=active]:bg-primary">План ИИ</TabsTrigger>
-                          <TabsTrigger value="inventory" className="rounded-xl font-black uppercase text-[9px] data-[state=active]:bg-primary">Из продуктов</TabsTrigger>
-                       </TabsList>
-                       <TabsContent value="personal"><PersonalMealPlan selectedDate={selectedDate || startOfToday()} /></TabsContent>
-                       <TabsContent value="plan">
-                          {recommendationDoc?.data ? <RecommendationDisplay data={recommendationDoc.data} mode="meals" /> : <div className="text-center py-20"><Button onClick={() => setActiveTab('dashboard')} className="bg-primary font-black px-10 rounded-xl">Сгенерировать</Button></div>}
-                       </TabsContent>
-                       <TabsContent value="inventory"><ProductsMenuGenerator /></TabsContent>
-                    </Tabs>
+                    <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                  </div>
               </TabsContent>
 
-              <TabsContent value="patients" className="mt-0">
+              <TabsContent value="patients" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar">
                 <div className="max-w-4xl mx-auto space-y-8">
                   <h2 className="text-xl font-black text-primary uppercase tracking-widest px-2">Список пациентов</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,76 +171,51 @@ export default function DashboardPage() {
                             <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-primary/20 text-primary/60">Доступ разрешен</Badge>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="rounded-lg h-9 px-3 bg-primary font-black uppercase text-[8px]" onClick={() => { setViewingPatientId(p.id); setActiveTab('dashboard'); }}>Аналитика</Button>
-                        </div>
+                        <Button size="sm" className="rounded-lg h-9 px-3 bg-primary font-black uppercase text-[8px]" onClick={() => { setViewingPatientId(p.id); setActiveTab('dashboard'); }}>Аналитика</Button>
                       </Card>
                     ))}
-                    {(!patients || patients.length === 0) && (
-                      <div className="col-span-full py-20 text-center opacity-30">
-                        <ShieldCheck className="h-12 w-12 mx-auto text-primary mb-4" />
-                        <p className="font-black uppercase tracking-widest text-[10px]">Пациенты пока не открыли доступ</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="chats" className="mt-0"><ChatInterface /></TabsContent>
-              <TabsContent value="feeling" className="mt-0"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
-              <TabsContent value="profile" className="mt-0"><ProfileCabinet /></TabsContent>
+
+              <TabsContent value="chats" className="mt-28 h-full px-4 pb-32"><ChatInterface /></TabsContent>
+              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
+              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
-            {/* Bottom Futuristic Navigation Bar */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[95vw] max-w-lg">
-               <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2rem] h-20 px-2 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                  <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'feed' ? "text-primary" : "text-white/40")}>
-                    <BookOpen className={cn("h-5 w-5", activeTab === 'feed' && "neo-glow")} />
-                    <span className="text-[7px] font-black uppercase tracking-widest">Лента</span>
+            {/* Futuristic Floating Navigation Bar exactly as in design */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] w-[90vw] max-w-xl">
+               <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-4 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+                  <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'feed' ? "text-primary" : "text-white/30")}>
+                    <BookOpen className="h-6 w-6" />
                   </button>
                   
-                  {profileType === 'user' ? (
-                    <>
-                      <button onClick={() => setActiveTab('dashboard')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'dashboard' ? "text-primary" : "text-white/40")}>
-                        <Activity className={cn("h-5 w-5", activeTab === 'dashboard' && "neo-glow")} />
-                        <span className="text-[7px] font-black uppercase tracking-widest">Двойник</span>
-                      </button>
-                      <button onClick={() => setActiveTab('meals')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'meals' ? "text-primary" : "text-white/40")}>
-                        <Utensils className={cn("h-5 w-5", activeTab === 'meals' && "neo-glow")} />
-                        <span className="text-[7px] font-black uppercase tracking-widest">Питание</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => setActiveTab('patients')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'patients' ? "text-primary" : "text-white/40")}>
-                        <Users className={cn("h-5 w-5", activeTab === 'patients' && "neo-glow")} />
-                        <span className="text-[7px] font-black uppercase tracking-widest">Пациенты</span>
-                      </button>
-                    </>
-                  )}
+                  <button onClick={() => setActiveTab('dashboard')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'dashboard' ? "text-primary" : "text-white/30")}>
+                    <Activity className="h-6 w-6" />
+                  </button>
 
-                  <div className="relative flex items-center justify-center px-2">
+                  <button onClick={() => setActiveTab('meals')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'meals' ? "text-primary" : "text-white/30")}>
+                    <Utensils className="h-6 w-6" />
+                  </button>
+
+                  <div className="relative flex items-center justify-center px-4 -mt-4">
                      <UnifiedDataEntry selectedDate={selectedDate || startOfToday()}>
-                        <button className="h-14 w-14 bg-primary rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(14,165,233,0.5)] hover:scale-110 active:scale-95 transition-all">
-                           <Plus className="h-6 w-6 text-black" />
+                        <button className="h-16 w-16 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,255,255,0.5)] hover:scale-110 active:scale-95 transition-all border-4 border-black">
+                           <Plus className="h-8 w-8 text-black" />
                         </button>
                      </UnifiedDataEntry>
                   </div>
 
-                  <button onClick={() => setActiveTab('chats')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'chats' ? "text-primary" : "text-white/40")}>
-                    <MessageSquare className={cn("h-5 w-5", activeTab === 'chats' && "neo-glow")} />
-                    <span className="text-[7px] font-black uppercase tracking-widest">Чаты</span>
+                  <button onClick={() => setActiveTab('chats')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'chats' ? "text-primary" : "text-white/30")}>
+                    <MessageSquare className="h-6 w-6" />
                   </button>
 
-                  {profileType === 'user' && (
-                    <button onClick={() => setActiveTab('feeling')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'feeling' ? "text-primary" : "text-white/40")}>
-                      <Smile className={cn("h-5 w-5", activeTab === 'feeling' && "neo-glow")} />
-                      <span className="text-[7px] font-black uppercase tracking-widest">Статус</span>
-                    </button>
-                  )}
+                  <button onClick={() => setActiveTab('feeling')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'feeling' ? "text-primary" : "text-white/30")}>
+                    <Smile className="h-6 w-6" />
+                  </button>
 
-                  <button onClick={() => setActiveTab('profile')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl gap-1 transition-all", activeTab === 'profile' ? "text-primary" : "text-white/40")}>
-                    <UserCircle className={cn("h-5 w-5", activeTab === 'profile' && "neo-glow")} />
-                    <span className="text-[7px] font-black uppercase tracking-widest">Профиль</span>
+                  <button onClick={() => setActiveTab('profile')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'profile' ? "text-primary" : "text-white/30")}>
+                    <UserCircle className="h-6 w-6" />
                   </button>
                </div>
             </div>

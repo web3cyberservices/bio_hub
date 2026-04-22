@@ -5,14 +5,7 @@ import Image from 'next/image';
 import { GenerateRecommendationsOutput } from '@/ai/flows/generate-personalized-recommendations';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Activity, Droplets, Moon, Utensils, 
-  FlaskConical, Database, Zap, LayoutGrid, 
-  ChevronRight, Sparkles, MessageSquare, ShoppingBasket
-} from 'lucide-react';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
-import { cn } from '@/lib/utils';
 
 interface RecommendationDisplayProps {
   data?: GenerateRecommendationsOutput;
@@ -40,19 +33,13 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative flex-1 flex flex-col animate-in fade-in duration-1000 overflow-hidden h-full">
-        {/* The Holographic Digital Twin Visualizer */}
+      <div className="relative w-full h-full animate-in fade-in duration-1000 overflow-hidden">
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
           macros={macros}
-          className="flex-1 w-full"
+          className="w-full h-full"
         />
-        
-        {/* Version Badge */}
-        <div className="absolute bottom-2 left-6 opacity-20 hidden md:block">
-           <p className="text-[6px] font-black uppercase tracking-[1em] text-white">PRO SEBYA INTERFACE V4.0.2</p>
-        </div>
       </div>
     );
   }
