@@ -15,7 +15,9 @@ import {
   CheckCircle2,
   Loader2,
   LogIn,
-  User
+  User,
+  Database,
+  Fingerprint
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Badge } from '@/components/ui/badge';
@@ -28,57 +30,57 @@ export default function LandingPage() {
   const isAuthenticated = !userLoading && user && user.uid !== 'public-user';
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F0F7F2] overflow-x-hidden">
+    <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
       <NavBar />
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative pt-12 pb-16 md:pt-20 md:pb-32 overflow-hidden min-h-[80vh] flex items-center">
+        <section className="relative pt-32 pb-24 md:pt-48 md:pb-48 overflow-hidden min-h-[90vh] flex items-center">
           <div className="container mx-auto px-6 relative z-10">
-            <div className="max-w-5xl mx-auto text-center space-y-6 md:space-y-10">
+            <div className="max-w-6xl mx-auto text-center space-y-8 md:space-y-12">
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <Badge variant="outline" className="px-5 py-1.5 rounded-2xl border-primary/20 text-primary font-black uppercase tracking-[0.3em] text-[8px] md:text-[11px] bg-white/50 backdrop-blur-md mb-6">
-                  Next Gen Biohacking Hub
+                <Badge variant="outline" className="px-6 py-2 rounded-2xl border-primary/30 text-primary font-black uppercase tracking-[0.4em] text-[9px] md:text-[12px] bg-primary/5 backdrop-blur-md mb-8 border-2">
+                  <Fingerprint className="h-4 w-4 mr-2" /> Neural Health Intelligence
                 </Badge>
-                <h1 className="text-4xl md:text-8xl lg:text-9xl font-black tracking-tighter text-foreground leading-[0.95] mb-4">
-                  Управляй своим <br />
-                  <span className="text-primary">потенциалом</span>
+                <h1 className="text-5xl md:text-8xl lg:text-[10rem] font-black tracking-tighter text-white leading-[0.85] mb-6">
+                  CONTROL YOUR <br />
+                  <span className="text-primary neo-glow-strong">POTENTIAL</span>
                 </h1>
-                <p className="text-xs md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed px-4 opacity-80">
-                  PRO Себя — это персональный ИИ био-хаб для глубокого управления здоровьем, питанием и энергией на основе ваших данных.
+                <p className="text-sm md:text-2xl text-white/50 max-w-3xl mx-auto font-medium leading-relaxed px-4">
+                  PRO Себя — это футуристичный био-хаб. Управляй своим организмом через ИИ, глубокую аналитику и персональный био-хакинг.
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center gap-6 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              <div className="flex flex-col items-center justify-center gap-8 pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
                 {userLoading ? (
-                  <div className="h-20 flex items-center justify-center">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+                  <div className="h-24 flex items-center justify-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
                   </div>
                 ) : isGuest ? (
-                  <div className="flex flex-col items-center justify-center gap-6 w-full max-w-4xl">
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                      <Button asChild className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black bg-primary shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                  <div className="flex flex-col items-center justify-center gap-8 w-full max-w-5xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full">
+                      <Button asChild className="w-full sm:w-auto rounded-[2rem] h-20 md:h-24 px-12 md:px-16 text-xl md:text-2xl font-black bg-primary text-slate-950 shadow-[0_0_50px_rgba(14,165,233,0.5)] transition-all hover:scale-105 active:scale-95 gap-4">
                         <Link href="/register">
-                          Начать бесплатно <ArrowRight className="h-6 w-6" />
+                          НАЧАТЬ <ArrowRight className="h-7 w-7" />
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl font-black border-2 border-primary/10 hover:bg-primary/5 transition-all bg-white/50 backdrop-blur-sm gap-3">
+                      <Button asChild variant="outline" className="w-full sm:w-auto rounded-[2rem] h-20 md:h-24 px-12 md:px-16 text-xl md:text-2xl font-black border-2 border-primary/20 hover:bg-primary/10 transition-all bg-white/5 backdrop-blur-md gap-4 text-white">
                         <Link href="/login">
-                          Войти <LogIn className="h-6 w-6" />
+                          ВОЙТИ <LogIn className="h-7 w-7" />
                         </Link>
                       </Button>
                     </div>
                     
-                    <Button asChild variant="ghost" className="h-12 rounded-xl text-primary font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-primary/5">
+                    <Button asChild variant="ghost" className="h-14 rounded-2xl text-primary font-black uppercase tracking-widest text-[11px] gap-3 hover:bg-primary/5 transition-all">
                       <Link href="/dashboard">
-                        <User className="h-4 w-4" /> Попробовать как гость (Тестовый режим)
+                        <User className="h-5 w-5" /> РЕЖИМ ГОСТЯ (DEMO V4.0)
                       </Link>
                     </Button>
                   </div>
                 ) : isAuthenticated ? (
-                  <Button asChild className="w-full sm:w-auto rounded-[2.5rem] h-20 md:h-24 px-12 md:px-20 text-xl md:text-2xl font-black bg-primary shadow-2xl transition-all hover:scale-105 gap-4">
+                  <Button asChild className="w-full sm:w-auto rounded-[3rem] h-24 md:h-28 px-16 md:px-24 text-2xl md:text-3xl font-black bg-primary text-slate-950 shadow-[0_0_60px_rgba(14,165,233,0.6)] transition-all hover:scale-105 gap-6">
                     <Link href="/dashboard">
-                      Перейти в Bio-Хаб <Activity className="h-8 w-8" />
+                      ВХОД В ХАБ <Activity className="h-10 w-10" />
                     </Link>
                   </Button>
                 ) : null}
@@ -86,48 +88,52 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Background Elements */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] -z-10 animate-pulse" />
-          <Zap className="absolute top-10 -left-10 h-32 w-32 md:h-64 md:w-64 text-primary/10 -rotate-12 animate-float opacity-20 md:opacity-40" />
-          <Activity className="absolute bottom-10 -right-10 h-40 w-40 md:h-80 md:w-80 text-primary/10 rotate-12 animate-float opacity-20 md:opacity-40" style={{ animationDelay: '2s' }} />
+          {/* Background Decor */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-primary/10 rounded-full blur-[150px] -z-10 animate-pulse" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none" />
+          <Zap className="absolute top-20 -left-20 h-48 w-48 md:h-96 md:w-48 text-primary/10 -rotate-45 animate-float opacity-30" />
+          <Activity className="absolute bottom-20 -right-20 h-64 w-64 md:h-[500px] md:w-64 text-primary/10 rotate-45 animate-float opacity-30" style={{ animationDelay: '2s' }} />
         </section>
 
-        {/* Features Grid */}
-        <section className="py-20 md:py-32 bg-white/50 backdrop-blur-md border-y">
+        {/* Tech Specs Grid */}
+        <section className="py-32 md:py-48 relative">
+          <div className="absolute inset-0 bg-white/2 backdrop-blur-3xl -z-10 border-y border-white/5" />
           <div className="container mx-auto px-6">
-            <div className="text-center mb-16 md:mb-24 space-y-3">
-              <h2 className="text-3xl md:text-6xl font-black tracking-tighter">Технологии здоровья</h2>
-              <p className="text-muted-foreground text-xs md:text-lg font-medium opacity-60 uppercase tracking-widest">Мы объединили науку и ИИ для вашего благополучия.</p>
+            <div className="text-center mb-24 md:mb-32 space-y-6">
+              <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 font-black px-4 py-1 uppercase text-[10px] tracking-widest">System Protocols</Badge>
+              <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-white">Технологии <span className="text-primary">будущего</span></h2>
+              <p className="text-white/40 text-sm md:text-xl font-medium max-w-2xl mx-auto uppercase tracking-widest">Биометрия, нейросети и облачная синхронизация в одной экосистеме.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
               {[
                 {
                   title: "Bio-Score 4.0",
-                  desc: "Единый индекс здоровья, рассчитываемый ИИ на основе ваших показателей в реальном времени.",
+                  desc: "Голографический индекс здоровья, рассчитываемый нейросетью в реальном времени.",
                   icon: LineChart,
-                  color: "bg-blue-500"
+                  color: "bg-blue-600 shadow-blue-500/40"
                 },
                 {
                   title: "Нейро-сканер еды",
-                  desc: "Мгновенное распознавание КБЖУ блюда по одной фотографии с точностью до грамма.",
+                  desc: "Мгновенное распознавание молекулярного состава блюда по фото с точностью до 98%.",
                   icon: Utensils,
-                  color: "bg-orange-500"
+                  color: "bg-cyan-600 shadow-cyan-500/40"
                 },
                 {
-                  title: "Смарт-трекинг",
-                  desc: "Бесшовная синхронизация с носимыми устройствами для мониторинга активности и сна.",
+                  title: "Smart Sync 2.0",
+                  desc: "Бесшовное слияние с Apple Health, Google Fit и носимыми биометрическими сенсорами.",
                   icon: Smartphone,
-                  color: "bg-emerald-600"
+                  color: "bg-indigo-600 shadow-indigo-500/40"
                 }
               ].map((f, i) => (
-                <div key={i} className="premium-card p-8 md:p-12 border-none space-y-8 group transition-all">
-                  <div className={f.color + " w-16 h-16 md:w-20 md:h-20 rounded-[1.75rem] flex items-center justify-center shadow-2xl shadow-black/10 group-hover:scale-110 transition-transform"}>
-                    <f.icon className="h-8 w-8 md:h-10 md:w-10 text-white" />
+                <div key={i} className="cyber-card p-10 md:p-16 border-none space-y-10 group relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className={f.color + " w-20 h-20 md:w-24 md:h-24 rounded-3xl flex items-center justify-center shadow-[0_0_40px_-5px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-500 relative z-10"}>
+                    <f.icon className="h-10 w-10 md:h-12 md:w-12 text-white" />
                   </div>
-                  <div className="space-y-3">
-                    <h3 className="text-xl md:text-2xl font-black tracking-tight">{f.title}</h3>
-                    <p className="text-muted-foreground text-sm md:text-base font-medium leading-relaxed opacity-70">{f.desc}</p>
+                  <div className="space-y-4 relative z-10">
+                    <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white">{f.title}</h3>
+                    <p className="text-white/50 text-base md:text-lg font-medium leading-relaxed">{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -135,36 +141,38 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Trust Section */}
-        <section className="py-20 md:py-40">
+        {/* Security / Neural Protection */}
+        <section className="py-32 md:py-64">
           <div className="container mx-auto px-6">
-            <div className="glass-panel p-10 md:p-24 flex flex-col md:flex-row items-center gap-12 md:gap-20 relative overflow-hidden">
-              <div className="flex-1 space-y-6 md:space-y-10 relative z-10">
-                <Badge className="bg-primary/10 text-primary border-none font-black px-5 py-1.5 uppercase tracking-widest">БЕЗОПАСНОСТЬ</Badge>
-                <h2 className="text-3xl md:text-7xl font-black tracking-tighter leading-[0.95]">Ваши био-данные <br /> под защитой</h2>
-                <div className="space-y-4 md:space-y-6">
+            <div className="glass-panel p-12 md:p-32 flex flex-col lg:flex-row items-center gap-16 md:gap-32 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,rgba(14,165,233,0.1),transparent_70%)]" />
+              <div className="flex-1 space-y-8 md:space-y-16 relative z-10 text-center lg:text-left">
+                <Badge className="bg-primary/20 text-primary border-primary/40 font-black px-6 py-2 uppercase tracking-widest text-xs">Security Protocol: Active</Badge>
+                <h2 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.85] text-white">ТВОИ ДАННЫЕ — <br /><span className="text-primary">ТВОЯ КРЕПОСТЬ</span></h2>
+                <div className="space-y-6 md:space-y-8">
                   {[
-                    "Шифрование данных военного уровня (AES-256)",
-                    "Полная анонимность сессий и тестов",
-                    "Доказательная база ИИ на основе EBM"
+                    "Нейронное шифрование AES-512",
+                    "Полная децентрализация био-архива",
+                    "ИИ-верификация медицинских данных"
                   ].map((text, i) => (
-                    <div key={i} className="flex items-center gap-4 text-xs md:text-xl font-bold">
-                      <CheckCircle2 className="h-5 w-5 md:h-7 md:w-7 text-primary shrink-0" />
+                    <div key={i} className="flex items-center gap-6 text-base md:text-2xl font-black text-white/80 justify-center lg:justify-start">
+                      <CheckCircle2 className="h-6 w-6 md:h-10 md:w-10 text-primary shrink-0 neo-glow" />
                       <span>{text}</span>
                     </div>
                   ))}
                 </div>
-                <div className="pt-4">
-                  <Button asChild variant="secondary" className="w-full sm:w-auto rounded-2xl h-16 md:h-20 px-10 text-base md:text-xl font-black">
-                     <Link href="/register">Создать защищенный профиль</Link>
+                <div className="pt-8">
+                  <Button asChild variant="secondary" className="w-full sm:w-auto rounded-2xl h-20 md:h-24 px-12 text-lg md:text-2xl font-black bg-primary text-slate-950 shadow-primary/20 hover:scale-105 transition-all">
+                     <Link href="/register">СОЗДАТЬ ID В ХАБЕ</Link>
                   </Button>
                 </div>
               </div>
               <div className="flex-1 flex justify-center relative z-10">
-                <div className="relative w-48 h-48 md:w-[400px] md:h-[400px]">
-                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping duration-[3000ms]" />
-                   <div className="relative w-full h-full bg-white rounded-[4rem] shadow-3xl flex items-center justify-center border-4 border-primary/5">
-                      <ShieldCheck className="h-20 w-20 md:h-48 md:w-48 text-primary drop-shadow-2xl" />
+                <div className="relative w-64 h-64 md:w-[500px] md:h-[500px]">
+                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping duration-[4000ms] opacity-30" />
+                   <div className="relative w-full h-full bg-slate-900 rounded-[5rem] shadow-[0_0_100px_rgba(14,165,233,0.3)] flex items-center justify-center border-4 border-primary/20 backdrop-blur-3xl overflow-hidden">
+                      <div className="scan-line" />
+                      <ShieldCheck className="h-32 w-32 md:h-64 md:w-64 text-primary neo-glow-strong" />
                    </div>
                 </div>
               </div>
@@ -173,20 +181,24 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t py-16 md:py-24 bg-white/50 backdrop-blur-md">
-        <div className="container mx-auto px-6 text-center space-y-10">
-          <div className="flex justify-center items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-xl">
-              <Activity className="h-6 w-6 text-white" />
+      <footer className="border-t border-white/5 py-24 md:py-48 bg-slate-950/40 backdrop-blur-xl relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="container mx-auto px-6 text-center space-y-16">
+          <div className="flex justify-center items-center gap-4">
+            <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(14,165,233,0.5)]">
+              <Activity className="h-8 w-8 text-slate-950" />
             </div>
-            <span className="font-headline font-black tracking-tighter text-2xl md:text-3xl text-primary uppercase">PRO Себя</span>
+            <span className="font-headline font-black tracking-tighter text-3xl md:text-5xl text-white uppercase">PRO <span className="text-primary">Себя</span></span>
           </div>
-          <div className="flex flex-wrap justify-center gap-8 text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">
-            <Link href="#" className="hover:text-primary transition-colors">Политика конфиденциальности</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Условия использования</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Центр поддержки</Link>
+          <div className="flex flex-wrap justify-center gap-12 text-[10px] md:text-[13px] font-black uppercase tracking-[0.4em] text-white/30">
+            <Link href="#" className="hover:text-primary transition-colors">Privacy Protocol</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Neural Support</Link>
           </div>
-          <p className="text-muted-foreground/20 text-[8px] md:text-[10px] uppercase tracking-[0.6em] font-black">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
+          <div className="space-y-4">
+             <p className="text-white/10 text-[9px] md:text-[12px] uppercase tracking-[0.8em] font-black italic">Holographic Biometric Interface v4.0.2</p>
+             <p className="text-white/5 text-[8px] md:text-[10px] uppercase tracking-[0.5em] font-black">© 2024 NEXT GEN BIOTECH LABS. ALL RIGHTS RESERVED.</p>
+          </div>
         </div>
       </footer>
 
