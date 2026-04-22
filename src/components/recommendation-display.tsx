@@ -7,11 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  Activity, Footprints, Moon, Heart, Droplet, 
+  Activity, Footprints, Moon, Heart, 
   MessageSquare, ShieldCheck,
   Smartphone, Database, LayoutGrid, FlaskConical
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
 
 interface RecommendationDisplayProps {
@@ -28,7 +27,6 @@ interface RecommendationDisplayProps {
 
 export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
   const [mounted, setMounted] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -40,107 +38,67 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'dashboard') {
     return (
-      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-lg mx-auto">
-        {/* Header Branding */}
-        <div className="flex items-center justify-between px-2">
-           <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary neo-glow" />
-              <h1 className="text-sm font-black tracking-widest text-primary/80 uppercase">PRO SEBYA: Ваш цифровой двойник</h1>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-2xl mx-auto overflow-visible pb-20">
+        {/* Header Status */}
+        <div className="flex items-center justify-between px-6">
+           <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h1 className="text-[10px] font-black tracking-[0.3em] text-primary/80 uppercase">SYSTEM STATUS: OPTIMAL</h1>
            </div>
-           <ShieldCheck className="h-4 w-4 text-primary/40" />
+           <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[8px] font-black tracking-widest px-3 py-1 uppercase">
+             Bio-Sync Active
+           </Badge>
         </div>
 
         {/* Bio-Score Central Hub */}
-        <div className="relative pt-6">
-           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-[80px] -z-10" />
-           <div className="flex flex-col items-center">
-              <div className="relative w-40 h-40">
-                <svg className="w-full h-full -rotate-90">
-                  <circle cx="50%" cy="50%" r="45%" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-                  <circle 
-                    cx="50%" cy="50%" r="45%" fill="none" stroke="currentColor" strokeWidth="8" 
-                    strokeDasharray="100 100" strokeDashoffset={100 - bioScore} 
-                    pathLength="100" strokeLinecap="round" className="text-primary transition-all duration-1000 ease-out neo-glow" 
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-xs font-black text-primary/60 uppercase tracking-tighter">Bio-Score 4.0:</span>
-                  <span className="text-5xl font-black text-white neo-glow">{bioScore}</span>
-                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">/ 100</span>
-                </div>
-              </div>
+        <div className="text-center py-4 relative">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-primary/10 rounded-full blur-[80px] -z-10" />
+           <div className="inline-flex flex-col items-center">
+              <span className="text-[8px] font-black text-primary/60 uppercase tracking-[0.5em] mb-2">Health Index</span>
+              <span className="text-7xl font-black text-white neo-glow-strong leading-none">{bioScore}</span>
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-2">v4.0.2 Protocol</span>
            </div>
         </div>
 
-        {/* Holographic Twin Visualizer with KBJU Rings */}
+        {/* The 3D Digital Twin Visualizer with side rings */}
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
           macros={macros}
         />
 
-        {/* Quick Access Grid */}
-        <div className="grid grid-cols-1 gap-4 px-2">
-           <Card className="cyber-card p-5 flex items-center justify-between group">
+        {/* Quick Insights Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 pt-10">
+           <Card className="cyber-card p-6 flex items-center justify-between border-white/5 hover:border-primary/40 group cursor-pointer">
               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
-                    <MessageSquare className="h-6 w-6" />
-                 </div>
-                 <div>
-                    <h3 className="text-sm font-black tracking-tight">Мой Чат:</h3>
-                    <p className="text-[10px] text-primary/60 uppercase font-bold">Ассистент AVITA</p>
-                 </div>
-              </div>
-              <Button variant="ghost" size="icon" className="text-primary/40"><LayoutGrid className="h-4 w-4" /></Button>
-           </Card>
-
-           <Card className="cyber-card p-5 flex items-center justify-between group">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
-                    <Database className="h-6 w-6" />
-                 </div>
-                 <div>
-                    <h3 className="text-sm font-black tracking-tight">Smart Inventory:</h3>
-                    <p className="text-[10px] text-primary/60 uppercase font-bold">Холодильник</p>
-                 </div>
-              </div>
-              <Button variant="ghost" size="icon" className="text-primary/40"><LayoutGrid className="h-4 w-4" /></Button>
-           </Card>
-
-           <Card className="cyber-card p-5 flex items-center justify-between group">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
+                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all shadow-[0_0_15px_rgba(14,165,233,0.1)]">
                     <FlaskConical className="h-6 w-6" />
                  </div>
                  <div>
-                    <h3 className="text-sm font-black tracking-tight">Расшифровка</h3>
-                    <p className="text-[10px] text-primary/60 uppercase font-bold">LabScan AI</p>
+                    <h3 className="text-xs font-black tracking-tight text-white uppercase">LabScan AI</h3>
+                    <p className="text-[9px] text-white/40 font-medium">Анализ маркеров крови</p>
                  </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-primary/40"><LayoutGrid className="h-4 w-4" /></Button>
+              <LayoutGrid className="h-4 w-4 text-white/20 group-hover:text-primary transition-colors" />
            </Card>
 
-           <Card className="cyber-card p-5 flex items-center justify-between group">
+           <Card className="cyber-card p-6 flex items-center justify-between border-white/5 hover:border-primary/40 group cursor-pointer">
               <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
-                    <Smartphone className="h-6 w-6" />
+                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all shadow-[0_0_15px_rgba(14,165,233,0.1)]">
+                    <Database className="h-6 w-6" />
                  </div>
                  <div>
-                    <h3 className="text-sm font-black tracking-tight">Синхронизация гаджетов</h3>
-                    <div className="flex gap-2 mt-1 opacity-60">
-                       <Footprints className="h-3 w-3" />
-                       <Heart className="h-3 w-3" />
-                       <Moon className="h-3 w-3" />
-                    </div>
+                    <h3 className="text-xs font-black tracking-tight text-white uppercase">Bio-Архив</h3>
+                    <p className="text-[9px] text-white/40 font-medium">История и рекомендации</p>
                  </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-primary/40"><LayoutGrid className="h-4 w-4" /></Button>
+              <LayoutGrid className="h-4 w-4 text-white/20 group-hover:text-primary transition-colors" />
            </Card>
         </div>
 
-        {/* Footer Info */}
-        <div className="text-center pb-10">
-           <p className="text-[8px] font-black uppercase tracking-[0.4em] text-primary/30">Holographic Biometric Interface v4.0</p>
+        {/* Footer Brand */}
+        <div className="text-center pt-8 opacity-20">
+           <p className="text-[6px] font-black uppercase tracking-[1.2em]">PRO SEBYA DIGITAL TWIN INTERFACE</p>
         </div>
       </div>
     );
@@ -148,24 +106,33 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-4xl mx-auto py-10">
-       <h2 className="text-2xl font-black text-center text-primary neo-glow tracking-widest">Протокол питания</h2>
+       <div className="text-center space-y-2">
+          <Badge className="bg-primary text-black font-black uppercase text-[10px] px-6 py-1">Nutrition Protocol</Badge>
+          <h2 className="text-3xl font-black text-white neo-glow tracking-tighter uppercase">План оптимизации</h2>
+       </div>
+       
        <div className="grid grid-cols-1 gap-6">
           {data.mealPlan?.[0]?.meals.map((meal, idx) => (
-             <Card key={idx} className="cyber-card overflow-hidden flex flex-col md:flex-row border-white/5">
-                <div className="relative w-full md:w-48 h-48 md:h-auto shrink-0 grayscale hover:grayscale-0 transition-all duration-700">
-                   <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
-                   <div className="absolute inset-0 bg-primary/10 mix-blend-overlay" />
-                   <Badge className="absolute top-4 left-4 bg-primary text-black font-black text-[8px]">{meal.time}</Badge>
+             <Card key={idx} className="cyber-card overflow-hidden flex flex-col md:flex-row border-white/5 hover:border-primary/30 transition-all">
+                <div className="relative w-full md:w-56 h-48 md:h-auto shrink-0 group">
+                   <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-700" unoptimized />
+                   <div className="absolute inset-0 bg-primary/10 mix-blend-overlay group-hover:bg-transparent" />
+                   <Badge className="absolute top-4 left-4 bg-primary text-black font-black text-[9px] px-3">{meal.time}</Badge>
                 </div>
-                <div className="p-8 flex-1 space-y-4">
-                   <h3 className="text-xl font-black tracking-tight">{meal.name}</h3>
-                   <div className="flex gap-4 text-[9px] font-black uppercase text-primary/60">
-                      <span>{meal.calories} Ккал</span>
-                      <span>Б: {meal.protein}г</span>
-                      <span>Ж: {meal.fat}г</span>
-                      <span>У: {meal.carbs}г</span>
+                <div className="p-8 flex-1 space-y-6">
+                   <div className="flex justify-between items-start">
+                      <h3 className="text-2xl font-black tracking-tight text-white">{meal.name}</h3>
+                      <div className="text-right">
+                         <span className="text-xl font-black text-primary">{meal.calories}</span>
+                         <p className="text-[7px] font-black uppercase text-white/40">Ккал</p>
+                      </div>
                    </div>
-                   <p className="text-xs text-muted-foreground leading-relaxed">{meal.description}</p>
+                   <div className="flex gap-6 text-[10px] font-black uppercase text-primary/60 border-t border-white/5 pt-4">
+                      <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Б: {meal.protein}г</span>
+                      <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Ж: {meal.fat}г</span>
+                      <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> У: {meal.carbs}г</span>
+                   </div>
+                   <p className="text-sm text-white/50 leading-relaxed font-medium italic">"{meal.description}"</p>
                 </div>
              </Card>
           ))}

@@ -1,63 +1,25 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from 'react';
 import { 
   generatePersonalizedRecommendations,
   GenerateRecommendationsOutput 
 } from '@/ai/flows/generate-personalized-recommendations';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Loader2, 
   Sparkles, 
-  Scale, 
-  Ruler, 
   Zap,
-  RefreshCw,
-  Footprints,
-  Heart,
-  Moon,
   Activity,
   AlertCircle,
-  Mic
+  ShieldCheck,
+  UserCircle,
+  Database
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
-
-const formSchema = z.object({
-  weight: z.coerce.number().positive('Вес обязателен'),
-  height: z.coerce.number().positive('Рост обязателен'),
-  gender: z.enum(['мужской', 'женский']),
-  activityLevel: z.enum(['minimal', 'low', 'moderate', 'high', 'athlete']),
-  healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']),
-  smoking: z.enum(['да', 'нет']),
-  alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
-  steps: z.coerce.number().optional(),
-  avgHeartRate: z.coerce.number().optional(),
-  sleepDurationHours: z.coerce.number().optional(),
-  bloodPressure: z.string().optional(),
-});
 
 interface RecommendationFormProps {
   onResult: (result: GenerateRecommendationsOutput) => void;
@@ -68,70 +30,14 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const { user } = useUser();
   const { firestore } = useFirestore();
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [isRecordingBP, setIsRecordingBP] = useState(false);
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
+    if (!user || !firestore || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
   const { data: userData } = useDoc<any>(userDocRef);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      gender: 'мужской',
-      weight: 70,
-      height: 175,
-      activityLevel: 'moderate',
-      healthGoal: 'поддержать текущее состояние',
-      smoking: 'нет',
-      alcohol: 'не употребляю',
-      steps: 6500,
-      avgHeartRate: 72,
-      sleepDurationHours: 7.5,
-      bloodPressure: '120/80',
-    },
-  });
-
-  useEffect(() => {
-    if (userData) {
-      form.reset({
-        gender: userData.gender || 'мужской',
-        weight: userData.weight || 70,
-        height: userData.height || 175,
-        activityLevel: userData.activityLevel || 'moderate',
-        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
-        smoking: userData.smoking || 'нет',
-        alcohol: userData.alcohol || 'не употребляю',
-        steps: form.getValues('steps'),
-        avgHeartRate: form.getValues('avgHeartRate'),
-        sleepDurationHours: form.getValues('sleepDurationHours'),
-        bloodPressure: form.getValues('bloodPressure'),
-      });
-    }
-  }, [userData, form]);
-
-  const startVoiceBPInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.onstart = () => setIsRecordingBP(true);
-    recognition.onend = () => setIsRecordingBP(false);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      form.setValue('bloodPressure', transcript);
-      toast({ title: 'Голос распознан' });
-    };
-    recognition.start();
-  };
 
   const calculateAge = (dob: string) => {
     const today = new Date();
@@ -144,181 +50,94 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     return age;
   };
 
-  const simulateSync = async () => {
-    setSyncing(true);
-    await new Promise(r => setTimeout(r, 800));
-    form.setValue('steps', Math.floor(Math.random() * 8000 + 4000));
-    form.setValue('avgHeartRate', Math.floor(Math.random() * 15 + 60));
-    form.setValue('sleepDurationHours', Math.floor(Math.random() * 2 + 6.5));
-    form.setValue('bloodPressure', `${Math.floor(Math.random() * 10 + 115)}/${Math.floor(Math.random() * 10 + 75)}`);
-    setSyncing(false);
-    toast({ title: "Биометрические данные обновлены" });
-  };
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !firestore) {
+  const handleSmartGenerate = async () => {
+    if (!user || !firestore) return;
+    
+    // Проверка наличия данных в профиле
+    if (!userData?.weight || !userData?.height || !userData?.birthDate) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Сервисы Firebase недоступны.',
+        title: 'Данные профиля неполны',
+        description: 'Пожалуйста, заполните вес, рост и дату рождения в разделе Профиль для точного анализа.',
       });
       return;
     }
 
     setLoading(true);
     try {
-      const birthDate = userData?.birthDate || '1990-01-01';
-      const age = calculateAge(birthDate);
-
-      await setDoc(doc(firestore, 'users', user.uid), {
-        id: user.uid,
-        email: (user as any).email || null,
-        ...values,
-        age,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-
-      const { steps, avgHeartRate, sleepDurationHours, bloodPressure, ...biometrics } = values;
-
+      const age = calculateAge(userData.birthDate);
+      
       const result = await generatePersonalizedRecommendations({
-        ...biometrics,
+        weight: userData.weight,
+        height: userData.height,
+        gender: userData.gender || 'мужской',
+        activityLevel: userData.activityLevel || 'moderate',
+        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
+        smoking: userData.smoking || 'нет',
+        alcohol: userData.alcohol || 'не употребляю',
         age,
-        favoriteFoods: userData?.favoriteFoods,
-        dislikedFoods: userData?.dislikedFoods,
+        favoriteFoods: userData.favoriteFoods,
+        dislikedFoods: userData.dislikedFoods,
         targetDate: selectedDate.toISOString(),
         deviceData: {
-          steps: steps || 0,
-          avgHeartRate: avgHeartRate || 0,
-          sleepDurationHours: sleepDurationHours || 0,
-          bloodPressure: bloodPressure || '120/80',
+          steps: 0, // Эти данные подтянутся из dailyLogs в RecommendationDisplay
+          avgHeartRate: 72,
+          sleepDurationHours: 8,
+          bloodPressure: '120/80',
         },
       });
       
       onResult(result);
     } catch (error: any) {
-      console.error('Analysis error:', error);
       toast({ 
         variant: 'destructive', 
-        title: 'Ошибка анализа ИИ',
-        description: error.message || 'Проверьте соединение с интернетом.'
+        title: 'Ошибка анализа',
+        description: error.message || 'Проверьте соединение с ИИ.'
       });
     } finally {
       setLoading(false);
     }
-  }
-
-  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner pr-12";
-  const selectTriggerClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
+  };
 
   return (
-    <Card className="premium-card overflow-hidden">
-      <CardContent className="p-8 md:p-12 space-y-12">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-            <div className="grid gap-6 grid-cols-2 lg:grid-cols-3">
-              <FormField control={form.control} name="gender" render={({ field }) => (
-                <FormItem className="col-span-2 md:col-span-1">
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Пол</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-              {[{ name: 'weight', label: 'Вес (кг)', icon: Scale }, { name: 'height', label: 'Рост (см)', icon: Ruler }].map((m) => (
-                <FormField key={m.name} control={form.control} name={m.name as any} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{m.label}</FormLabel>
-                    <FormControl><Input type="number" {...field} className={inputClasses} /></FormControl>
-                  </FormItem>
-                )} />
-              ))}
-            </div>
+    <Card className="cyber-card max-w-lg mx-auto overflow-hidden border-primary/20 bg-primary/5">
+      <CardContent className="p-10 space-y-8 text-center">
+        <div className="relative">
+           <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+           <ShieldCheck className="h-16 w-16 text-primary mx-auto relative z-10" />
+        </div>
+        
+        <div className="space-y-2">
+           <h3 className="text-xl font-black tracking-tight text-white uppercase">Готов к инициализации</h3>
+           <p className="text-xs text-primary/60 font-medium leading-relaxed">
+             Система автоматически считала ваши биометрические данные из профиля. Мы готовы создать вашу цифровую копию.
+           </p>
+        </div>
 
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-              <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Цель</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
-                      <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
-                      <SelectItem value="поддержать текущее состояние">Баланс</SelectItem>
-                      <SelectItem value="набор массы">Набор массы</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Активность</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl><SelectTrigger className={selectTriggerClasses}><SelectValue /></SelectTrigger></FormControl>
-                    <SelectContent className="rounded-2xl border-none shadow-2xl">
-                      <SelectItem value="minimal">Минимальный (Сидячий)</SelectItem>
-                      <SelectItem value="low">Низкий (Малоподвижный)</SelectItem>
-                      <SelectItem value="moderate">Умеренный (Средний)</SelectItem>
-                      <SelectItem value="high">Высокий (Активный)</SelectItem>
-                      <SelectItem value="athlete">Очень высокий (Спортсмен)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
-            </div>
+        <div className="grid grid-cols-2 gap-3 text-left">
+           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+              <UserCircle className="h-4 w-4 text-primary/40 mb-2" />
+              <p className="text-[8px] font-black uppercase text-white/40">Биометрия</p>
+              <p className="text-xs font-bold text-white">{userData?.weight}кг / {userData?.height}см</p>
+           </div>
+           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+              <Database className="h-4 w-4 text-primary/40 mb-2" />
+              <p className="text-[8px] font-black uppercase text-white/40">Статус</p>
+              <p className="text-xs font-bold text-primary">Активен</p>
+           </div>
+        </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b pb-4">
-                <h4 className="text-xl font-black flex items-center gap-2"><Zap className="h-5 w-5 text-accent" /> Носимые устройства</h4>
-                <Button type="button" onClick={simulateSync} disabled={syncing} className="bg-primary/10 text-primary h-10 px-4 font-black text-[10px] uppercase">
-                  {syncing ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="h-4 w-4 mr-2" />} Синхронизация
-                </Button>
-              </div>
-              <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
-                <FormField control={form.control} name="steps" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Footprints className="h-3 w-3" /> Шаги</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                )} />
-                <FormField control={form.control} name="avgHeartRate" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Heart className="h-3 w-3" /> Пульс</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
-                )} />
-                <FormField control={form.control} name="sleepDurationHours" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Moon className="h-3 w-3" /> Сон (ч)</FormLabel><FormControl><Input type="number" step="0.5" {...field} className={inputClasses} /></FormControl></FormItem>
-                )} />
-                <FormField control={form.control} name="bloodPressure" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Activity className="h-3 w-3" /> Давление</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input placeholder="120/80" {...field} className={inputClasses} />
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={startVoiceBPInput}
-                          className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-sm transition-all",
-                            isRecordingBP ? "bg-red-500 text-white animate-pulse" : "bg-primary/5 text-primary"
-                          )}
-                        >
-                          <Mic className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )} />
-              </div>
-            </div>
+        <Button 
+          onClick={handleSmartGenerate} 
+          disabled={loading} 
+          className="w-full h-16 rounded-2xl bg-primary text-black font-black text-lg shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:scale-105 transition-all"
+        >
+          {loading ? <Loader2 className="mr-3 animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-6 w-6" /> СОЗДАТЬ ДВОЙНИКА</>}
+        </Button>
 
-            {user?.uid === 'public-user' && (
-               <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-2xl flex items-center gap-3">
-                  <AlertCircle className="h-5 w-5 text-secondary" />
-                  <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Вы в тестовом режиме. Данные будут видны всем гостям.</p>
-               </div>
-            )}
-
-            <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20">
-              {loading ? <><Loader2 className="mr-4 animate-spin h-8 w-8" /> Анализ данных...</> : <><Sparkles className="mr-4 h-8 w-8" /> Сформировать био-отчет</>}
-            </Button>
-          </form>
-        </Form>
+        <p className="text-[8px] font-black uppercase tracking-widest text-white/20">
+          Neural Sync Protocol Active v4.0.2
+        </p>
       </CardContent>
     </Card>
   );
