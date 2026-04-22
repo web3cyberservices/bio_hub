@@ -4,8 +4,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 15.0
-     * Оптимизировано для мгновенного доступа к "Своему плану" и работы в тестовом режиме.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 16.0
+     * Оптимизировано для мгновенного доступа и работы в тестовом режиме.
      */
 
     function isAuthenticated() {
@@ -18,31 +18,25 @@ service cloud.firestore {
 
     // --- Профили пользователей ---
     match /users/{userId} {
-      // Разрешаем просмотр если владелец ИЛИ если это специалист
-      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist');
+      // Разрешаем просмотр профиля если владелец ИЛИ если это специалист
+      allow get: if isOwner(userId) || (resource != null && resource.data.profileType == 'specialist') || userId == 'public-user';
       
       // Разрешаем список пользователей всем (для поиска экспертов)
       allow list: if true;
 
-      // Запись владельцу или в публичный профиль
+      // Запись владельцу или в тестовый профиль
       allow write: if isOwner(userId);
 
-      // Явные правила для личных подколлекций (для стабильности операции list)
-      match /personalMeals/{mealId} { allow read, write: if isOwner(userId); }
-      match /dailyLogs/{date} { allow read, write: if isOwner(userId); }
-      match /dietaryLogs/{logId} { allow read, write: if isOwner(userId); }
-      match /recommendations/{date} { allow read, write: if isOwner(userId); }
-      match /labResults/{labId} { allow read, write: if isOwner(userId); }
-      
-      // Глубокий доступ ко всем остальным вложенным данным
+      // Глубокий доступ ко всем вложенным данным (питание, логи, рекомендации и т.д.)
+      // Это правило покрывает операции get, list, create, update, delete
       match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || userId == 'public-user';
       }
       
-      // Специальное правило для отзывов
+      // Специальное правило для отзывов (публичное чтение, авторизованная запись)
       match /reviews/{reviewId} {
         allow read: if true;
-        allow write: if isAuthenticated();
+        allow write: if isAuthenticated() || isOwner('public-user');
       }
     }
 
@@ -55,7 +49,7 @@ service cloud.firestore {
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, write: if (isAuthenticated() && request.auth.uid in resource.data.participants) || isOwner('public-user');
+      allow read, write: if (isAuthenticated() && (request.auth.uid in resource.data.participants)) || isOwner('public-user');
       
       match /messages/{messageId} {
         allow read, write: if isAuthenticated() || isOwner('public-user');

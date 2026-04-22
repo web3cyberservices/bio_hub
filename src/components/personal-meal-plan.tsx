@@ -59,26 +59,21 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const mealsQuery = useMemoFirebase(() => {
-    // Ждем, пока пользователь определится (даже если это public-user)
+    // Важно: не создаем запрос, пока firestore или пользователь не готовы
     if (!firestore || !user?.uid) return null;
     
-    try {
-      return query(
-        collection(firestore, 'users', user.uid, 'personalMeals'),
-        where('date', '==', dateKey),
-        orderBy('createdAt', 'asc')
-      );
-    } catch (e) {
-      console.error("Query creation error:", e);
-      return null;
-    }
+    return query(
+      collection(firestore, 'users', user.uid, 'personalMeals'),
+      where('date', '==', dateKey),
+      orderBy('createdAt', 'asc')
+    );
   }, [firestore, user?.uid, dateKey]);
 
   const { data: meals, isLoading: mealsLoading } = useCollection<any>(mealsQuery);
 
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !firestore || !name) {
+    if (!user?.uid || !firestore || !name) {
       toast({ variant: 'destructive', title: 'Ошибка', description: 'Заполните название блюда' });
       return;
     }
@@ -100,6 +95,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAdding(false);
     } catch (error: any) {
+      console.error("Add meal error:", error);
       toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проблема с доступом к базе данных.' });
     } finally {
       setLoading(false);
@@ -107,7 +103,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleDeleteMeal = async (id: string) => {
-    if (!user || !firestore) return;
+    if (!user?.uid || !firestore) return;
     try {
       await deleteDoc(doc(firestore, 'users', user.uid, 'personalMeals', id));
       toast({ title: 'Блюдо удалено' });
