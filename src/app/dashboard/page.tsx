@@ -159,11 +159,6 @@ export default function DashboardPage() {
                   mode="dashboard" 
                   deviceData={dailyLogDoc} 
                 />
-                {!recommendationDoc?.data && !viewingPatientId && (
-                  <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-[60] w-full max-w-xs px-4">
-                     <RecommendationForm onResult={handleResult} selectedDate={selectedDate || startOfToday()} />
-                  </div>
-                )}
               </TabsContent>
 
               <TabsContent value="meals" className="mt-0">
