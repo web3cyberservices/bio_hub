@@ -96,29 +96,31 @@ export type GenerateRecommendationsOutput = z.infer<typeof GenerateRecommendatio
 export type ReplaceMealInput = z.infer<typeof ReplaceMealInputSchema>;
 
 const IMAGE_ID_PROMPT = `
-ПРАВИЛА ДЛЯ imageUrl:
+ПРАВИЛА ДЛЯ imageUrl (КРИТИЧНО):
 Для каждого блюда ОБЯЗАТЕЛЬНО верните ПОЛНУЮ валидную ссылку Unsplash: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
-Используйте ОДИН из этих ID в зависимости от типа блюда (выбирайте максимально подходящий по смыслу):
-- Овсянка/Каша/Завтрак: 1517673400267-0251440c45dc
-- Омлет/Яйца: 1525351484163-7529414344d8
-- Смузи/Боул: 1505252585461-04db1eb84625
+Используйте ОДИН из этих ID строго по смыслу:
+- Овсяная каша: 1517673400267-0251440c45dc
+- Омлет/Яичница: 1525351484163-7529414344d8
+- Смузи: 1505252585461-04db1eb84625
 - Творог/Йогурт: 1481931098708-28308112ef81
-- Суп/Крем-суп: 1547592166903-89826d2d82bb
-- Салат/Зелень/Цезарь: 1512621776951-a57141f2eefd
-- Рыба/Лосось/Семга: 1467003909585-2f8a72700288
-- Стейк/Мясо/Говядина: 1600891964092-4316c2850dbc
-- Курица/Птица/Индейка: 1632778149955-e80f8ceca23b
-- Паста/Макароны/Спагетти: 1473093226724-4e24059a9742
+- Суп/Борщ: 1547592166903-89826d2d82bb
+- Салат овощной: 1512621776951-a57141f2eefd
+- Лосось/Семга: 1467003909585-2f8a72700288
+- Стейк/Говядина: 1600891964092-4316c2850dbc
+- Куриная грудка: 1632778149955-e80f8ceca23b
+- Паста/Макароны: 1473093226724-4e24059a9742
 - Рис/Плов: 1512058560367-0035672fb799
-- Яблоко/Фрукты: 1567306226416-28f0efdc88ce
-- Орехи/Перекус: 1536592248-b0a688680074
-- Авокадо-тост/Сэндвич: 1525351484163-7529414344d8
-- Твердый сыр: 1486297678142-f87ea97a03f0
+- Фрукты/Яблоко: 1567306226416-28f0efdc88ce
+- Орехи: 1536592248-b0a688680074
+- Авокадо тост: 1525351484163-7529414344d8
+- Гречка/Крупа: 1500315331676-957a82b3b5c8
+- Индейка: 1604908176997-125c9306b3a2
+- Морепродукты: 1514362545818-201c4d699ac2
+- Сыр/Закуски: 1486297678142-f87ea97a03f0
 `;
 
 /**
  * Вспомогательная функция для повторных попыток.
- * Ограничена временем, чтобы не вызывать тайм-аут Server Action (10-15 сек).
  */
 export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1500): Promise<T> {
   const actionStartTime = Date.now();
@@ -127,33 +129,13 @@ export async function runWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, init
       return await fn();
     } catch (error: any) {
       const errorMsg = (error.message || '').toUpperCase();
-      const status = error.status || '';
-      
-      // Если общее время выполнения превысило 10 секунд, прекращаем попытки
-      if (Date.now() - actionStartTime > 10000) throw new Error('Превышено время ожидания. Пожалуйста, попробуйте позже.');
-
-      const isTransient = errorMsg.includes('503') || 
-                          errorMsg.includes('UNAVAILABLE') || 
-                          errorMsg.includes('429') ||
-                          errorMsg.includes('RESOURCE_EXHAUSTED') ||
-                          status === 'RESOURCE_EXHAUSTED' ||
-                          errorMsg.includes('OVERLOADED');
-      
-      if (isTransient && i < maxRetries - 1) {
-        // Если ошибка 429 требует долгого ожидания (> 5 сек), бросаем ошибку сразу
-        const match = errorMsg.match(/RETRY IN ([\d.]+)S/);
-        if (match && parseFloat(match[1]) > 5) {
-          throw new Error('Лимит запросов ИИ временно исчерпан. Пожалуйста, подождите минуту перед следующей попыткой.');
-        }
-
-        let delay = initialDelay * Math.pow(2, i);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      throw error;
+      if (Date.now() - actionStartTime > 12000) throw new Error('Превышено время ожидания ИИ.');
+      let delay = initialDelay * Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      continue;
     }
   }
-  throw new Error('ИИ временно недоступен. Попробуйте еще раз через минуту.');
+  throw new Error('ИИ временно недоступен.');
 }
 
 const recommendationPrompt = ai.definePrompt({
@@ -169,7 +151,7 @@ const recommendationPrompt = ai.definePrompt({
 
 ${IMAGE_ID_PROMPT}
 
-Выдавайте результат СТРОГО в формате JSON, соответствующем схеме.
+Выдавайте результат СТРОГО в формате JSON.
 
 Контекст:
 Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}. Активность: {{activityLevel}}.`,
@@ -187,8 +169,7 @@ const replaceMealPrompt = ai.definePrompt({
 
 ${IMAGE_ID_PROMPT}
 
-Предложите НОВОЕ вкусное блюдо, которое отличается от {{previousMealName}}, но подходит по КБЖУ и времени приема пищи.
-Отвечайте на русском языке. Результат должен быть валидным JSON.`,
+Предложите НОВОЕ вкусное блюдо. Отвечайте на русском языке. Результат должен быть валидным JSON.`,
 });
 
 const generateRecommendationsFlow = ai.defineFlow(

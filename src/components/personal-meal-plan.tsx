@@ -59,7 +59,6 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const mealsQuery = useMemoFirebase(() => {
-    // Важно: не создаем запрос, пока firestore или пользователь не готовы
     if (!firestore || !user?.uid) return null;
     
     return query(
@@ -96,7 +95,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setIsAdding(false);
     } catch (error: any) {
       console.error("Add meal error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проблема с доступом к базе данных.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить блюдо. Проверьте доступ.' });
     } finally {
       setLoading(false);
     }
@@ -119,10 +118,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
           <h3 className="text-3xl font-black tracking-tighter text-foreground">Свой план</h3>
-          <p className="text-muted-foreground text-sm font-medium">Ваш персональный рацион на этот день.</p>
-          {user?.uid === 'public-user' && (
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 text-[8px] uppercase tracking-widest mt-1">Тестовый режим</Badge>
-          )}
+          <p className="text-muted-foreground text-sm font-medium">Ваш персональный рацион на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
         </div>
         <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-4">
            <div className="text-center">
@@ -142,7 +138,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
               <form onSubmit={handleAddMeal} className="space-y-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2 relative">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Название</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Название блюда</label>
                        <div className="relative">
                         <Input placeholder="Напр: Салат с тунцом" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-xl bg-white border-none shadow-inner font-bold pr-14" required />
                         <Button 
@@ -220,7 +216,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                            </div>
                         </div>
                      </div>
-                     <Button variant="ghost" size="icon" onClick={() => handleDeleteMeal(meal.id)} className="rounded-xl h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/5 md:opacity-0 group-hover:opacity-100 transition-all">
+                     <Button variant="ghost" size="icon" onClick={() => handleDeleteMeal(meal.id)} className="rounded-xl h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
                         <Trash2 className="h-5 w-5" />
                      </Button>
                   </Card>
@@ -232,8 +228,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
                <div className="space-y-1">
-                  <p className="text-xl font-black text-foreground/40">План пока пуст</p>
-                  <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Добавляйте свои блюда и контролируйте калории на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+                  <p className="text-xl font-black text-foreground/40">Ваш план пока пуст</p>
+                  <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Добавляйте свои блюда и контролируйте калории в реальном времени.</p>
                </div>
                <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black">
                   <Plus className="h-4 w-4 mr-2" /> Добавить первое блюдо

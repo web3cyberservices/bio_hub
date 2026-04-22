@@ -119,39 +119,38 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
   const getFallbackImage = (mealName: string) => {
     const name = mealName.toLowerCase();
     
-    // Каши и завтраки
-    if (name.includes('каша') || name.includes('овсян') || name.includes('греч')) 
-      return PlaceHolderImages.find(p => p.id === 'breakfast-oatmeal')?.imageUrl;
-    if (name.includes('яйц') || name.includes('омлет') || name.includes('глазунья')) 
-      return PlaceHolderImages.find(p => p.id === 'breakfast-omelette')?.imageUrl;
+    if (name.includes('каша') || name.includes('овсян') || name.includes('овёс') || name.includes('греч')) 
+      return "https://images.unsplash.com/photo-1517673400267-0251440c45dc?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('яйц') || name.includes('омлет') || name.includes('глазунья') || name.includes('пашот')) 
+      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80";
     if (name.includes('смузи') || name.includes('боул')) 
-      return PlaceHolderImages.find(p => p.id === 'breakfast-smoothie')?.imageUrl;
-    if (name.includes('творог') || name.includes('йогурт')) 
-      return PlaceHolderImages.find(p => p.id === 'snack-yogurt')?.imageUrl;
-
-    // Обеды и основные блюда
-    if (name.includes('рыб') || name.includes('лосось') || name.includes('семга') || name.includes('треска')) 
-      return PlaceHolderImages.find(p => p.id === 'lunch-salmon')?.imageUrl;
-    if (name.includes('стейк') || name.includes('говядин') || name.includes('мясо')) 
-      return PlaceHolderImages.find(p => p.id === 'dinner-steak')?.imageUrl;
+      return "https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('творог') || name.includes('йогурт') || name.includes('кефир')) 
+      return "https://images.unsplash.com/photo-1481931098708-28308112ef81?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('рыб') || name.includes('лосось') || name.includes('семга') || name.includes('треска') || name.includes('сибас')) 
+      return "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('стейк') || name.includes('говядин') || name.includes('мясо') || name.includes('баранин')) 
+      return "https://images.unsplash.com/photo-1600891964092-4316c2850dbc?auto=format&fit=crop&w=800&q=80";
     if (name.includes('куриц') || name.includes('индейк') || name.includes('птиц')) 
-      return PlaceHolderImages.find(p => p.id === 'lunch-salad-chicken')?.imageUrl;
-    if (name.includes('суп') || name.includes('борщ') || name.includes('щи')) 
-      return PlaceHolderImages.find(p => p.id === 'lunch-soup')?.imageUrl;
-    if (name.includes('салат') || name.includes('овощ')) 
-      return PlaceHolderImages.find(p => p.id === 'lunch-salad-chicken')?.imageUrl;
-    
-    // Перекусы
-    if (name.includes('орех') || name.includes('миндаль')) 
-      return PlaceHolderImages.find(p => p.id === 'snack-nuts')?.imageUrl;
-    if (name.includes('яблоко') || name.includes('фрукт')) 
-      return PlaceHolderImages.find(p => p.id === 'snack-apple')?.imageUrl;
-    if (name.includes('груша')) 
-      return PlaceHolderImages.find(p => p.id === 'snack-pear')?.imageUrl;
-    if (name.includes('авокадо') || name.includes('тост')) 
-      return PlaceHolderImages.find(p => p.id === 'snack-avocado')?.imageUrl;
+      return "https://images.unsplash.com/photo-1632778149955-e80f8ceca23b?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('суп') || name.includes('борщ') || name.includes('щи') || name.includes('солянка')) 
+      return "https://images.unsplash.com/photo-1547592166903-89826d2d82bb?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('салат') || name.includes('овощ') || name.includes('брокколи')) 
+      return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('паста') || name.includes('макарон') || name.includes('спагетти')) 
+      return "https://images.unsplash.com/photo-1473093226724-4e24059a9742?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('рис') || name.includes('плов')) 
+      return "https://images.unsplash.com/photo-1512058560367-0035672fb799?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('яблоко') || name.includes('фрукт') || name.includes('банан') || name.includes('ягод')) 
+      return "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('орех') || name.includes('миндаль') || name.includes('кешью')) 
+      return "https://images.unsplash.com/photo-1536592248-b0a688680074?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('авокадо') || name.includes('тост') || name.includes('бутерброд')) 
+      return "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80";
+    if (name.includes('сыр')) 
+      return "https://images.unsplash.com/photo-1486297678142-f87ea97a03f0?auto=format&fit=crop&w=800&q=80";
 
-    return PlaceHolderImages[0].imageUrl;
+    return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80";
   };
 
   if (mode === 'dashboard') {
@@ -263,6 +262,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
         <div className="space-y-12 relative">
           {mealPlan && mealPlan.length > 0 && mealPlan[0].meals.map((meal, idx) => {
             const isReplacing = replacingIdx === idx;
+            const finalImageUrl = meal.imageUrl?.startsWith('http') ? meal.imageUrl : getFallbackImage(meal.name);
+            
             return (
               <Card key={idx} className={cn(
                 "premium-card border-none bg-white overflow-hidden flex flex-col xl:flex-row shadow-2xl transition-all relative",
@@ -270,7 +271,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
               )}>
                 <div className="relative w-full xl:w-[400px] h-[300px] xl:h-auto shrink-0 overflow-hidden group bg-muted/20">
                   <Image 
-                    src={meal.imageUrl || getFallbackImage(meal.name)!} 
+                    src={finalImageUrl} 
                     alt={meal.name} 
                     fill 
                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
