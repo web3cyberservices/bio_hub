@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Activity, Footprints, Moon, Heart, 
   MessageSquare, ShieldCheck,
-  Smartphone, Database, LayoutGrid, FlaskConical
+  Smartphone, Database, LayoutGrid, FlaskConical, Zap
 } from 'lucide-react';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
 
@@ -38,29 +38,32 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (mode === 'dashboard') {
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-2xl mx-auto overflow-visible pb-20">
-        {/* Header Status */}
-        <div className="flex items-center justify-between px-6">
-           <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <h1 className="text-[10px] font-black tracking-[0.3em] text-primary/80 uppercase">SYSTEM STATUS: OPTIMAL</h1>
-           </div>
-           <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[8px] font-black tracking-widest px-3 py-1 uppercase">
-             Bio-Sync Active
-           </Badge>
-        </div>
-
-        {/* Bio-Score Central Hub */}
-        <div className="text-center py-4 relative">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-primary/10 rounded-full blur-[80px] -z-10" />
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 max-w-4xl mx-auto overflow-visible pb-32">
+        
+        {/* Bio-Score Central Hub (Matching the photo) */}
+        <div className="text-center py-10 relative z-20">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -z-10" />
            <div className="inline-flex flex-col items-center">
-              <span className="text-[8px] font-black text-primary/60 uppercase tracking-[0.5em] mb-2">Health Index</span>
-              <span className="text-7xl font-black text-white neo-glow-strong leading-none">{bioScore}</span>
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-2">v4.0.2 Protocol</span>
+              <div className="relative w-40 h-40 flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                  <circle cx="50%" cy="50%" r="45%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="4" />
+                  <circle 
+                    cx="50%" cy="50%" r="45%" fill="none" stroke="hsl(var(--primary))" strokeWidth="6" 
+                    strokeDasharray="100" strokeDashoffset={100 - bioScore} pathLength="100" strokeLinecap="round"
+                    className="drop-shadow-[0_0_15px_hsl(var(--primary))]"
+                  />
+                </svg>
+                <div className="text-center">
+                  <span className="text-[10px] font-black text-primary/60 uppercase tracking-[0.3em] block">Bio-Score</span>
+                  <span className="text-6xl font-black text-white neo-glow-strong leading-none">{bioScore}</span>
+                  <span className="text-[9px] font-bold text-white/40 block mt-1">/100</span>
+                </div>
+              </div>
+              <p className="mt-4 text-[10px] font-black tracking-[0.5em] text-primary/80 uppercase">SYSTEM STATUS: OPTIMAL</p>
            </div>
         </div>
 
-        {/* The 3D Digital Twin Visualizer with side rings */}
+        {/* The Holographic Digital Twin Visualizer */}
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
@@ -96,9 +99,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
            </Card>
         </div>
 
-        {/* Footer Brand */}
-        <div className="text-center pt-8 opacity-20">
-           <p className="text-[6px] font-black uppercase tracking-[1.2em]">PRO SEBYA DIGITAL TWIN INTERFACE</p>
+        <div className="text-center pt-10 opacity-20">
+           <p className="text-[6px] font-black uppercase tracking-[1.2em]">PRO SEBYA DIGITAL TWIN INTERFACE V4.0.2</p>
         </div>
       </div>
     );
