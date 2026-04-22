@@ -3,37 +3,40 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 22.0
-     * Полный доступ для владельцев и расширенная песочница для гостей.
-     * Рекурсивные правила устраняют ошибки доступа к спискам (list) в подколлекциях.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ
+     * Обеспечивают полный доступ владельцам данных и открытость для тестового режима.
      */
 
+    // Проверка авторизации
     function isAuthenticated() {
       return request.auth != null;
     }
     
+    // Проверка владения документом или принадлежности к гостевой песочнице
     function isOwner(userId) {
       return (isAuthenticated() && request.auth.uid == userId) || userId == 'public-user';
     }
 
-    // --- Профили пользователей и вложенные данные ---
+    // --- Коллекция пользователей и их данные ---
     match /users/{userId} {
-      // Владелец (или любой гость для public-user) имеет полный доступ к своему профилю
+      // Доступ к самому документу профиля
       allow read, write: if isOwner(userId);
       
-      // РЕКУРСИВНОЕ ПРАВИЛО: Разрешает все операции (включая list) во всех подколлекциях пользователя
-      // Это исправляет ошибку доступа к /personalMeals, /dailyLogs, /dietaryLogs и т.д.
+      // Публичный доступ к базовой информации (нужно для отображения специалистов в ленте)
+      // Разрешаем get и list для всех, чтобы поиск и отображение в ленте работали корректно
+      allow get, list: if true;
+
+      // РЕКУРСИВНОЕ ПРАВИЛО ДЛЯ ВСЕХ ПОДКОЛЛЕКЦИЙ
+      // Это критически важно для работы useCollection (операция list) 
+      // в коллекциях personalMeals, dailyLogs, dietaryLogs и т.д.
       match /{allSubcollections=**} {
         allow read, write: if isOwner(userId);
       }
 
-      // Публичный доступ к базовой информации (нужно для отображения специалистов в ленте)
-      allow get, list: if true;
-
-      // Публичные отзывы (читать могут все, создавать — авторизованные или гости)
+      // Публичные отзывы о специалистах
       match /reviews/{reviewId} { 
         allow read: if true; 
-        allow create: if isAuthenticated() || isOwner('public-user'); 
+        allow create: if isAuthenticated() || userId == 'public-user'; 
       }
     }
 
@@ -46,7 +49,7 @@ service cloud.firestore {
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      // В прототипе разрешаем доступ для упрощения тестирования чатов
+      // В прототипе разрешаем доступ для упрощения тестирования
       allow read, write: if true; 
       
       match /messages/{messageId} {
