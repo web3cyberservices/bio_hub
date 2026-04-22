@@ -77,6 +77,13 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
 
+      {/* Left Protocol Info */}
+      <div className="absolute left-8 top-1/2 -translate-y-1/2 w-48 hidden lg:block z-40">
+         <p className="text-[10px] text-white/40 leading-relaxed font-medium">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do diam eiusmod tempor incididunt ut labore et dolore magna aliquam emvolutat. Ut ulamed ea commodo ustairut nen.rom labret nisi ut aliquip ex consequat.
+         </p>
+      </div>
+
       {/* 3-Column Grid Layout */}
       <div className="relative w-full max-w-5xl mx-auto grid grid-cols-3 items-center px-4 md:px-8 z-30 h-full max-h-[85vh]">
         
@@ -102,7 +109,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
         {/* Center Column (Human Hologram ONLY) */}
         <div className="relative flex flex-col items-center justify-center h-[55vh] w-full">
           <div className="relative w-full h-full flex items-center justify-center">
-            {/* Hologram Image with Max-Height constraint */}
+            {/* Hologram Image */}
             {hologramImg && (
               <div className="relative w-full h-full max-h-[55vh] flex items-center justify-center">
                 <Image
@@ -118,23 +125,29 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: BioT
               </div>
             )}
             
+            {/* Orbital Rings Decorations */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none scale-125">
+               <div className="w-[120%] h-[60%] border border-primary/20 rounded-[100%] rotate-[25deg] absolute opacity-40 shadow-[0_0_15px_rgba(0,255,255,0.1)]" />
+               <div className="w-[130%] h-[50%] border border-primary/10 rounded-[100%] rotate-[-15deg] absolute opacity-30 shadow-[0_0_15px_rgba(0,255,255,0.05)]" />
+            </div>
+
             {/* Vitality Core */}
-            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-4 h-4 bg-primary/40 rounded-full neo-glow animate-ping z-20" />
-            <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full neo-glow z-20" />
+            <div className="absolute top-[35%] left-1/2 -translate-x-1/2 w-4 h-4 bg-primary/40 rounded-full neo-glow animate-ping z-20" />
+            <div className="absolute top-[35%] left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full neo-glow z-20" />
+            <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary/60 rounded-full neo-glow z-20 shadow-[0_0_10px_#00ffff]" />
 
             {/* Scan Line */}
             <div className="scan-line !opacity-30" />
-          </div>
 
-          {/* Floating Bio-Score Tag */}
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-40">
-             <div className="bg-black/60 backdrop-blur-xl px-5 py-1.5 rounded-2xl border border-white/10 flex flex-col items-center gap-0 shadow-2xl">
-                <p className="text-[6px] font-black text-white/40 uppercase tracking-[0.3em]">SYSTEM BIO-SCORE</p>
-                <div className="flex items-center gap-1.5">
-                   <Activity className="h-3 w-3 text-primary animate-pulse" />
-                   <p className="text-xl font-black text-primary neo-glow">{score || 0}</p>
-                </div>
-             </div>
+            {/* Floating Bio-Score Tag */}
+            <div className="absolute top-[25%] left-0 z-40 animate-in slide-in-from-right-4 duration-1000">
+               <div className="bg-black/60 backdrop-blur-xl px-4 py-1.5 rounded-xl border border-white/10 flex flex-col items-center gap-0 shadow-2xl">
+                  <p className="text-[6px] font-black text-white/40 uppercase tracking-[0.3em]">BIO-SCORE 4.0</p>
+                  <div className="flex items-center gap-1.5">
+                     <p className="text-xl font-black text-primary neo-glow">{score || 92}<span className="text-white/30 text-[10px]">/100</span></p>
+                  </div>
+               </div>
+            </div>
           </div>
         </div>
 

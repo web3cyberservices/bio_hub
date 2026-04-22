@@ -96,19 +96,19 @@ export default function DashboardPage() {
     <div className="flex h-screen flex-col bg-[#010409] text-foreground overflow-hidden">
       
       {/* Fixed Header with high z-index */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] w-[95vw] max-w-6xl">
-        <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-8 flex items-center justify-between shadow-2xl">
+      <header className="fixed top-8 left-1/2 -translate-x-1/2 z-[300] w-[95vw] max-w-6xl">
+        <div className="flex items-center justify-between px-8 h-20">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(0,255,255,0.4)]">
               <Activity className="h-6 w-6 text-black" />
             </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO <span className="text-primary">Себя</span></h1>
+            <div className="text-left">
+              <h1 className="text-xl md:text-2xl font-black text-white leading-none tracking-tight">PRO <span className="text-primary">СЕБЯ</span></h1>
               <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
             </div>
           </div>
           <Badge variant="outline" className="h-10 px-6 rounded-full border-primary/20 bg-primary/5 text-primary font-black uppercase text-[10px] tracking-widest gap-2">
-            <Zap className="h-3 w-3" /> БИО-ДАШБОРД
+            <Zap className="h-3 w-3 animate-pulse" /> БИО-ДАШБОРД
           </Badge>
         </div>
       </header>
@@ -183,38 +183,38 @@ export default function DashboardPage() {
               <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
-            {/* Fixed Navigation with high z-index */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] w-[90vw] max-w-xl">
-               <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] h-20 px-4 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
-                  <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'feed' ? "text-primary" : "text-white/30")}>
+            {/* Pill-shaped Fixed Navigation */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] w-[95vw] max-w-2xl">
+               <div className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[3rem] h-20 px-8 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.8)]">
+                  <button onClick={() => setActiveTab('feed')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'feed' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <BookOpen className="h-6 w-6" />
                   </button>
                   
-                  <button onClick={() => setActiveTab('dashboard')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'dashboard' ? "text-primary" : "text-white/30")}>
+                  <button onClick={() => setActiveTab('dashboard')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'dashboard' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <Activity className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('meals')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'meals' ? "text-primary" : "text-white/30")}>
+                  <button onClick={() => setActiveTab('meals')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'meals' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <Utensils className="h-6 w-6" />
                   </button>
 
-                  <div className="relative flex items-center justify-center px-4 -mt-4">
+                  <div className="relative flex items-center justify-center px-2">
                      <UnifiedDataEntry selectedDate={selectedDate || startOfToday()}>
-                        <button className="h-16 w-16 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,255,255,0.5)] hover:scale-110 active:scale-95 transition-all border-4 border-black">
+                        <button className="h-16 w-16 bg-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,255,255,0.6)] hover:scale-110 active:scale-95 transition-all border-4 border-black/20">
                            <Plus className="h-8 w-8 text-black" />
                         </button>
                      </UnifiedDataEntry>
                   </div>
 
-                  <button onClick={() => setActiveTab('chats')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'chats' ? "text-primary" : "text-white/30")}>
+                  <button onClick={() => setActiveTab('chats')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'chats' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <MessageSquare className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('feeling')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'feeling' ? "text-primary" : "text-white/30")}>
+                  <button onClick={() => setActiveTab('feeling')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'feeling' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <Smile className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('profile')} className={cn("flex flex-col items-center justify-center flex-1 h-full rounded-2xl transition-all", activeTab === 'profile' ? "text-primary" : "text-white/30")}>
+                  <button onClick={() => setActiveTab('profile')} className={cn("flex flex-col items-center justify-center transition-all", activeTab === 'profile' ? "text-primary scale-110" : "text-white/30 hover:text-white/50")}>
                     <UserCircle className="h-6 w-6" />
                   </button>
                </div>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
 
           </Tabs>
         )}
-      </main>
+      </header>
     </div>
   );
 }
