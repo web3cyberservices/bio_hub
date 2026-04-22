@@ -101,7 +101,7 @@ export function ProfileCabinet() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore || user.uid === 'public-user') return null;
+    if (!user || !firestore) return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
@@ -237,7 +237,7 @@ export function ProfileCabinet() {
   };
 
   const onSubmit = async (values: ProfileValues) => {
-    if (!user || !firestore || user.uid === 'public-user') return;
+    if (!user || !firestore) return;
     setLoading(true);
     const userRef = doc(firestore, 'users', user.uid);
     const dataToSave = { ...values, id: user.uid, email: (user as any).email || null, updatedAt: new Date().toISOString() };
@@ -283,7 +283,7 @@ export function ProfileCabinet() {
           )}
         </div>
         <div>
-          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground leading-none">Личный кабинет</h2>
+          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground font-headline leading-none">Личный кабинет</h2>
           <p className="text-muted-foreground text-xs md:text-base font-medium">Управление вашим био-аккаунтом.</p>
         </div>
       </div>
