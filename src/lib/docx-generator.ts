@@ -1,6 +1,6 @@
 'use client';
 
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, BorderStyle, WidthType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -16,14 +16,38 @@ interface LabData {
   summary: string;
   markers: LabMarker[];
   recommendations: string[];
-  createdAt: string;
+  createdAt: any; // Может быть строкой или Timestamp
+}
+
+/**
+ * Безопасно преобразует входное значение в объект Date.
+ */
+function toSafeDate(dateValue: any): Date {
+  if (!dateValue) return new Date();
+  
+  try {
+    // Если это Firestore Timestamp
+    if (typeof dateValue.toDate === 'function') {
+      return dateValue.toDate();
+    }
+    
+    const date = new Date(dateValue);
+    // Если дата невалидна, возвращаем текущую
+    if (isNaN(date.getTime())) {
+      return new Date();
+    }
+    return date;
+  } catch (e) {
+    return new Date();
+  }
 }
 
 /**
  * Генерирует и скачивает DOCX файл с результатами анализа.
  */
 export async function downloadLabResultsDocx(data: LabData) {
-  const docDate = format(new Date(data.createdAt), 'dd.MM.yyyy', { locale: ru });
+  const dateObj = toSafeDate(data.createdAt);
+  const docDate = format(dateObj, 'dd.MM.yyyy', { locale: ru });
   
   const doc = new Document({
     sections: [
