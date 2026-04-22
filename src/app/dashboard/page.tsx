@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Смена вкладок при смене роли
+  // Автоматическая смена вкладок при смене роли в профиле
   useEffect(() => {
     if (profileType === 'specialist') {
       if (activeTab === 'dashboard' || activeTab === 'meals') {
@@ -124,9 +124,9 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
       <NavBar />
       
-      <main className="container mx-auto flex-1 px-4 py-6 md:py-10 max-w-6xl pb-32">
+      <main className="container mx-auto flex-1 px-4 py-6 md:py-10 max-w-6xl pb-32" key={profileType}>
         {viewingSpecialistId ? <SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /> : (
-          <Tabs key={profileType} value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
             
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <TabsContent value="feed" className="mt-0 space-y-8">
