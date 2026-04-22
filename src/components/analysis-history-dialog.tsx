@@ -61,7 +61,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="w-[95vw] md:max-w-[700px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] flex flex-col max-h-[85vh]">
+      <DialogContent className="w-[95vw] md:max-w-[700px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] flex flex-col h-[85vh] md:h-[80vh] gap-0">
         <DialogHeader className="p-6 md:p-8 bg-primary text-white shrink-0 relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#163D25] opacity-95" />
           <div className="relative z-10 flex items-center gap-4">
@@ -72,7 +72,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                 className="h-10 w-10 rounded-full text-white hover:bg-white/10"
                 onClick={() => setSelectedLab(null)}
               >
-                <ArrowLeft className="h-6" />
+                <ArrowLeft className="h-6 w-6" />
               </Button>
             )}
             <div>
@@ -87,20 +87,20 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
           {!selectedLab && <History className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 rotate-12" />}
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col bg-[#F0F7F2]/50">
+        <div className="flex-1 min-h-0 overflow-hidden bg-[#F0F7F2]/50">
           {isLoading ? (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+            <div className="h-full flex flex-col items-center justify-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка архива...</p>
             </div>
           ) : !selectedLab ? (
-            <ScrollArea className="flex-1 p-6 md:p-10">
-              <div className="space-y-4">
+            <ScrollArea className="h-full">
+              <div className="p-6 md:p-10 space-y-4">
                 {labs?.map((lab) => (
                   <button
                     key={lab.id}
                     onClick={() => setSelectedLab(lab)}
-                    className="w-full text-left group"
+                    className="w-full text-left group outline-none"
                   >
                     <Card className="premium-card p-6 border-none shadow-md bg-white hover:shadow-xl transition-all flex items-center justify-between">
                        <div className="flex items-center gap-6">
@@ -131,9 +131,9 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
               </div>
             </ScrollArea>
           ) : (
-            <ScrollArea className="flex-1 p-6 md:p-10">
-              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-                <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10">
+            <ScrollArea className="h-full">
+              <div className="p-6 md:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+                <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 shadow-inner">
                   <p className="text-sm md:text-base font-medium leading-relaxed text-foreground/80 italic">
                     "{selectedLab.summary}"
                   </p>
