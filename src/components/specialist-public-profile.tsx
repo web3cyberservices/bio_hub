@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   ArrowLeft, Star, MessageSquare, Users, BookOpen, 
-  ThumbsUp, Calendar, Heart, Share2, Send, Loader2, Plus
+  ThumbsUp, Calendar, Heart, Share2, Send, Loader2, Plus, Mic
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -34,6 +34,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   const specRef = useMemoFirebase(() => {
     if (!firestore || !specialistId) return null;
@@ -61,6 +62,25 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   const { data: specReviews } = useCollection<any>(reviewsQuery);
 
   const isFollowing = specData?.followers?.includes(user?.uid);
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setReviewText(prev => (prev ? prev + ' ' : '') + transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
 
   const handleToggleFollow = () => {
     if (!user || !firestore || !specRef) return;
@@ -92,7 +112,6 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
 
       await addDoc(collection(firestore, 'users', specialistId, 'reviews'), reviewData);
       
-      // Обновляем средний рейтинг (упрощенно)
       const newRating = specReviews 
         ? ((specReviews.reduce((acc, r) => acc + r.rating, 0) + reviewRating) / (specReviews.length + 1)).toFixed(1)
         : reviewRating;
@@ -228,12 +247,26 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                            </button>
                         ))}
                      </div>
-                     <Textarea 
-                        placeholder="Поделитесь вашим мнением..." 
-                        value={reviewText}
-                        onChange={(e) => setReviewText(e.target.value)}
-                        className="bg-white rounded-xl border-none shadow-inner text-xs min-h-[80px]"
-                     />
+                     <div className="relative">
+                        <Textarea 
+                           placeholder="Поделитесь вашим мнением..." 
+                           value={reviewText}
+                           onChange={(e) => setReviewText(e.target.value)}
+                           className="bg-white rounded-xl border-none shadow-inner text-xs min-h-[80px] pr-10"
+                        />
+                        <Button 
+                           type="button" 
+                           variant="ghost" 
+                           size="icon" 
+                           onClick={startVoiceInput}
+                           className={cn(
+                             "absolute right-2 bottom-2 h-8 w-8 rounded-full transition-all",
+                             isRecording ? "bg-red-500 text-white animate-pulse" : "bg-primary/5 text-primary"
+                           )}
+                        >
+                           <Mic className="h-3 w-3" />
+                        </Button>
+                     </div>
                      <Button 
                         onClick={handleSubmitReview}
                         disabled={isSubmittingReview || !reviewText.trim()}

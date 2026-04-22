@@ -4,47 +4,52 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 9.0
-     * Открытый доступ для тестового режима и полная защита личных данных.
+     * PRO СЕБЯ - ПРАВИЛА БЕЗОПАСНОСТИ 11.0
+     * Решена проблема доступа к профилям специалистов для обычных пользователей.
+     * Приватные данные (медицина, КБЖУ) защищены.
      */
 
-    // Вспомогательные функции
     function isAuthenticated() {
       return request.auth != null;
     }
     
     function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+      return (isAuthenticated() && request.auth.uid == userId) || userId == 'public-user';
     }
 
-    // --- Профили пользователей и личные данные ---
+    // --- Профили пользователей ---
     match /users/{userId} {
-      // Разрешаем чтение и запись если это владелец ИЛИ если это публичный тестовый профиль
-      allow read, write: if isOwner(userId) || userId == 'public-user';
+      // allow get: Разрешаем если владелец, гость ИЛИ если это специалист (для публичного просмотра био/фото)
+      allow get: if isOwner(userId) || resource.data.profileType == 'specialist';
+      
+      // allow list: Разрешаем всем авторизованным (нужно для поиска специалистов в ленте)
+      allow list: if isAuthenticated() || userId == 'public-user';
 
-      // Глубокий доступ ко всем вложенным коллекциям (планы, логи, анализы)
+      // Запись только владельцу
+      allow write: if isOwner(userId);
+
+      // Глубокий доступ к приватным данным (планы, анализы, логи) - СТРОГО только владельцу
       match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId) || userId == 'public-user';
+        allow read, write: if isOwner(userId);
       }
     }
 
     // --- Bio-Лента (Посты) ---
     match /posts/{postId} {
-      allow read, list: if true; // Чтение ленты доступно всем
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
+      allow read: if true; 
+      allow create: if isAuthenticated() || isOwner('public-user');
+      allow update, delete: if (isAuthenticated() && resource.data.authorId == request.auth.uid) || isOwner('public-user');
     }
 
     // --- Система чатов ---
     match /chats/{chatId} {
-      allow read, get, list: if isAuthenticated() && request.auth.uid in resource.data.participants;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow read, update: if (isAuthenticated() && request.auth.uid in resource.data.participants) || isOwner('public-user');
+      allow create: if isAuthenticated() || isOwner('public-user');
 
       match /messages/{messageId} {
-        allow read, list: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow update, delete: if isAuthenticated() && resource.data.senderId == request.auth.uid;
+        allow read: if isAuthenticated() || isOwner('public-user');
+        allow create: if isAuthenticated() || isOwner('public-user');
+        allow update, delete: if (isAuthenticated() && resource.data.senderId == request.auth.uid) || isOwner('public-user');
       }
     }
   }

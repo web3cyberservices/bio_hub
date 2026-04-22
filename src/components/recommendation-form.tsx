@@ -36,11 +36,14 @@ import {
   Footprints,
   Heart,
   Moon,
-  Activity
+  Activity,
+  AlertCircle,
+  Mic
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   weight: z.coerce.number().positive('Вес обязателен'),
@@ -66,6 +69,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const { firestore } = useFirestore();
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [isRecordingBP, setIsRecordingBP] = useState(false);
   const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => {
@@ -110,6 +114,25 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }, [userData, form]);
 
+  const startVoiceBPInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setIsRecordingBP(true);
+    recognition.onend = () => setIsRecordingBP(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      form.setValue('bloodPressure', transcript);
+      toast({ title: 'Голос распознан' });
+    };
+    recognition.start();
+  };
+
   const calculateAge = (dob: string) => {
     const today = new Date();
     const birthDate = new Date(dob);
@@ -147,7 +170,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
       const birthDate = userData?.birthDate || '1990-01-01';
       const age = calculateAge(birthDate);
 
-      // Сохраняем биометрию (включая public-user)
       await setDoc(doc(firestore, 'users', user.uid), {
         id: user.uid,
         email: (user as any).email || null,
@@ -185,7 +207,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     }
   }
 
-  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
+  const inputClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner pr-12";
   const selectTriggerClasses = "h-14 rounded-2xl bg-[#E8F5EE] border-none font-black text-foreground px-6 shadow-inner";
 
   return (
@@ -262,7 +284,25 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
                   <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Moon className="h-3 w-3" /> Сон (ч)</FormLabel><FormControl><Input type="number" step="0.5" {...field} className={inputClasses} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="bloodPressure" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Activity className="h-3 w-3" /> Давление</FormLabel><FormControl><Input placeholder="120/80" {...field} className={inputClasses} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase flex gap-2"><Activity className="h-3 w-3" /> Давление</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input placeholder="120/80" {...field} className={inputClasses} />
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={startVoiceBPInput}
+                          className={cn(
+                            "absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-sm transition-all",
+                            isRecordingBP ? "bg-red-500 text-white animate-pulse" : "bg-primary/5 text-primary"
+                          )}
+                        >
+                          <Mic className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </FormControl>
+                  </FormItem>
                 )} />
               </div>
             </div>

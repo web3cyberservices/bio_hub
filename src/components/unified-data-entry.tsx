@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -504,7 +505,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                <div className="text-center space-y-2">
                   <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">AI BioScan Result</Badge>
-                  <div className="relative">
+                  <div className="relative group">
                     <Input 
                       value={editedMeal.mealName} 
                       onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
