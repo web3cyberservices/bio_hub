@@ -19,26 +19,26 @@ interface GaugeProps {
 
 const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProps) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-1.5 group transition-all duration-500", className)}>
+    <div className={cn("flex flex-col items-center justify-center gap-2 group transition-all duration-500", className)}>
       <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="48%" fill="none" stroke="white" strokeOpacity="0.03" strokeWidth="1" />
           <circle 
             cx="50%" cy="50%" r="48%" fill="none" stroke={color} strokeWidth="2.5" 
             strokeDasharray="100" strokeDashoffset={100 - (progress || 0)} pathLength="100" strokeLinecap="round"
-            className="drop-shadow-[0_0_10px_currentColor] transition-all duration-1000"
+            className="drop-shadow-[0_0_12px_currentColor] transition-all duration-1000"
           />
         </svg>
         <div className="text-center flex flex-col items-center">
-          <div className="scale-90 md:scale-100 mb-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+          <div className="scale-110 md:scale-125 mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
             {icon}
           </div>
-          <span className="text-[11px] md:text-sm font-black text-white leading-none block drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
+          <span className="text-xs md:text-sm font-black text-white leading-none block drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
             {value}
           </span>
         </div>
       </div>
-      <span className="text-[8px] md:text-[9px] font-black uppercase text-white/40 tracking-[0.15em] group-hover:text-primary transition-colors">
+      <span className="text-[8px] md:text-[9px] font-black uppercase text-white/40 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -46,13 +46,11 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
 };
 
 export function BioTwinVisualizer({ score, deviceData, macros, className }: any) {
-  // Данные из биометрии
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
   const hrVal = deviceData?.avgHeartRate || 0;
   const bpVal = deviceData?.bloodPressure || '120/80';
   
-  // Данные из макросов
   const kcalVal = macros?.calories || 0;
   const proteinVal = macros?.protein || 0;
   const fatVal = macros?.fat || 0;
@@ -70,10 +68,10 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 2: HUD INTERFACE (GAUGES) */}
-      <div className="relative z-[60] w-full max-w-7xl h-full flex items-center justify-between px-6 md:px-16">
+      <div className="relative z-[60] w-full max-w-7xl h-full flex items-center justify-between px-6 md:px-16 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-5 md:gap-10 items-start justify-center h-full pt-12">
+        <div className="flex flex-col gap-6 md:gap-10 items-start justify-center h-full pt-12 pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal}
             icon={<Footprints className="h-5 w-5 md:h-6 md:w-6 text-[#00ffff]" />} color="#00ffff" 
@@ -97,7 +95,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
 
         {/* RIGHT COLUMN: NUTRITION */}
-        <div className="flex flex-col gap-5 md:gap-10 items-end justify-center h-full pt-12">
+        <div className="flex flex-col gap-6 md:gap-10 items-end justify-center h-full pt-12 pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal}
             icon={<Flame className="h-5 w-5 md:h-6 md:w-6 text-[#FB923C]" />} color="#FB923C" 
@@ -122,16 +120,16 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT - ALIGNED TO CHEST */}
-      <div className="absolute top-[46%] md:top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      <div className="absolute top-[52%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-10 h-10 md:w-14 md:h-14 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
-          <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-[#00ffff] shadow-[0_0_25px_#00ffff] animate-pulse" />
+          <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-[#00ffff] shadow-[0_0_30px_#00ffff] animate-pulse" />
         </div>
       </div>
 
       {/* LAYER 5: THE PERSON (TOP LAYER) */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-[180vw] h-[110vh] md:w-full md:h-[75vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 md:-translate-y-14">
+        <div className="relative w-[220vw] h-[130vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 md:-translate-y-24">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
