@@ -121,8 +121,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT */}
-      {/* Скорректировано положение под новый экстремальный масштаб */}
-      <div className="absolute top-[58%] md:top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      {/* md:top-[36%] смещает точку с шеи на грудь в десктопной версии */}
+      <div className="absolute top-[58%] md:top-[36%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
           <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
