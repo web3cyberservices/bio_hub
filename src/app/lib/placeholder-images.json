@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "digital-twin-hologram",
-      "description": "Центральная голограмма синего человека с детализацией нейросетей и активными био-центрами",
-      "imageUrl": "https://picsum.photos/seed/cyberhologram12/800/1200",
-      "imageHint": "neural network human hologram glow blue heart"
+      "description": "Центральная голограмма синего человека с детализацией нервной системы, мозга и сердца",
+      "imageUrl": "https://picsum.photos/seed/hologram_detailed_12/800/1200",
+      "imageHint": "detailed blue human hologram neural network"
     },
     {
       "id": "breakfast-omelette",
