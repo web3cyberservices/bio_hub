@@ -28,12 +28,12 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (!mounted) return null;
 
-  const bioScore = data?.bioScore ?? 0;
+  const bioScore = data?.bioScore ?? 92;
   const macros = data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative w-full h-full animate-in fade-in duration-1000 overflow-hidden">
+      <div className="relative w-full h-full animate-in fade-in duration-1000 overflow-hidden bg-black">
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
