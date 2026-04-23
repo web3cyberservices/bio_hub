@@ -121,7 +121,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT */}
-      <div className="absolute top-[52%] md:top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      {/* Скорректировано положение под новый экстремальный масштаб */}
+      <div className="absolute top-[58%] md:top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
           <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
@@ -130,7 +131,11 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 5: THE PERSON (TOP LAYER) */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden">
-        <div className="relative w-[600vw] h-[220vh] md:w-full md:h-[75vh] max-w-none md:max-w-7xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-16 md:-translate-y-40 scale-[1.8] md:scale-100">
+        {/* 
+          md:h-[60vh] и md:-translate-y-48 гарантируют, что ноги будут ВЫШЕ нижнего меню на десктопе.
+          scale-[2.8] в мобильной версии делает человечка гигантским.
+        */}
+        <div className="relative w-[600vw] h-[220vh] md:w-full md:h-[60vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-32 md:-translate-y-48 scale-[2.8] md:scale-100">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
