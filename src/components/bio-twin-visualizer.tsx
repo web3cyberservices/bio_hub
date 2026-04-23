@@ -2,8 +2,10 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Droplets, Flame, Moon, Zap, Footprints, Beef, Activity } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface GaugeProps {
   label: string;
@@ -43,6 +45,9 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
 export function BioTwinVisualizer({ score, deviceData, macros, className }: any) {
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
+  // Получаем путь к изображению голограммы. По умолчанию ищем в /public/hologram.png
+  const hologramImage = PlaceHolderImages.find(img => img.id === 'digital-twin-hologram')?.imageUrl || '/hologram.png';
+
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center overflow-hidden bg-black", className)}>
       
@@ -68,7 +73,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* CENTRAL COLUMN: The Actual Human Hologram (SVG) */}
+        {/* CENTRAL COLUMN: The Human Hologram Image */}
         <div className="relative flex items-center justify-center h-full py-10">
           {/* Bio-Score floating badge */}
           <div className="absolute top-20 left-0 z-50">
@@ -79,30 +84,27 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           </div>
           
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
-             {/* GUARANTEED HUMAN SVG SILHOUETTE */}
-             <svg 
-               viewBox="0 0 200 500" 
-               className="h-full w-auto drop-shadow-[0_0_25px_rgba(0,255,255,0.6)]"
-               fill="none" 
-               xmlns="http://www.w3.org/2000/svg"
-             >
-                {/* Body Outline */}
-                <path 
-                  d="M100 20C115 20 125 35 125 50C125 65 115 80 100 80C85 80 75 65 75 50C75 35 85 20 100 20ZM100 90C130 90 145 110 145 150L140 250C140 250 135 260 145 270L160 380C160 380 165 400 150 400C135 400 120 400 120 400L115 480H85L80 400C80 400 65 400 50 400C35 400 40 380 40 380L55 270C65 260 60 250 60 250L55 150C55 110 70 90 100 90Z" 
-                  stroke="#00ffff" 
-                  strokeWidth="1.5" 
-                  className="opacity-40"
-                />
-                {/* Neural Lines */}
-                <path d="M100 80V250M100 120L60 160M100 120L140 160M100 250L70 480M100 250L130 480" stroke="#00ffff" strokeWidth="0.5" className="opacity-20" />
-                
-                {/* Brain Node */}
-                <circle cx="100" cy="45" r="4" fill="#00ffff" className="animate-pulse shadow-[0_0_10px_#00ffff]" />
-                
-                {/* Heart Core Node */}
-                <circle cx="100" cy="140" r="6" fill="#00ffff" className="animate-pulse shadow-[0_0_15px_#00ffff]" />
-                <circle cx="100" cy="140" r="12" stroke="#00ffff" strokeWidth="1" className="animate-ping opacity-30" />
-             </svg>
+             <Image 
+               src={hologramImage}
+               alt="Digital Twin Hologram"
+               fill
+               className="object-contain drop-shadow-[0_0_20px_#00ffff]"
+               priority
+               unoptimized
+             />
+             
+             {/* Heart Core Node - Наложенный элемент поверх изображения */}
+             <div className="absolute top-[35%] left-1/2 -translate-x-1/2 z-40">
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                   <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-30" />
+                   <div className="w-2.5 h-2.5 rounded-full bg-primary neo-glow animate-pulse shadow-[0_0_15px_#00ffff]" />
+                </div>
+             </div>
+
+             {/* Brain Node */}
+             <div className="absolute top-[12%] left-1/2 -translate-x-1/2 z-40">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/60 neo-glow shadow-[0_0_10px_#00ffff] animate-pulse" />
+             </div>
           </div>
         </div>
 
