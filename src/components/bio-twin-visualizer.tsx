@@ -19,7 +19,7 @@ interface GaugeProps {
 
 const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProps) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-2 group transition-all duration-500", className)}>
+    <div className={cn("flex flex-col items-center justify-center gap-4 md:gap-6 group transition-all duration-500", className)}>
       <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="48%" fill="none" stroke="white" strokeOpacity="0.03" strokeWidth="1" />
@@ -30,7 +30,7 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
           />
         </svg>
         <div className="text-center flex flex-col items-center">
-          <div className="scale-110 md:scale-125 mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
+          <div className="scale-125 md:scale-150 mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
             {icon}
           </div>
           <span className="text-xs md:text-sm font-black text-white leading-none block drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
@@ -120,7 +120,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT - ALIGNED TO CHEST */}
-      <div className="absolute top-[52%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      <div className="absolute top-[50%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-10 h-10 md:w-14 md:h-14 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
           <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-[#00ffff] shadow-[0_0_30px_#00ffff] animate-pulse" />
@@ -129,7 +129,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 5: THE PERSON (TOP LAYER) */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-[220vw] h-[130vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 md:-translate-y-24">
+        <div className="relative w-[320vw] h-[160vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 md:-translate-y-24">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
