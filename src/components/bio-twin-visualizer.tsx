@@ -72,7 +72,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-6 md:px-20 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-6 md:gap-8 items-start justify-center h-full pt-24 md:pt-32 pb-24 md:pb-32 pointer-events-auto">
+        <div className="flex flex-col gap-6 md:gap-8 items-start justify-center h-full pt-32 pb-32 pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal}
             icon={<Footprints className="h-6 w-6 md:h-7 md:w-7 text-[#00ffff]" />} color="#00ffff" 
@@ -96,7 +96,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
 
         {/* RIGHT COLUMN: NUTRITION */}
-        <div className="flex flex-col gap-6 md:gap-8 items-end justify-center h-full pt-24 md:pt-32 pb-24 md:pb-32 pointer-events-auto">
+        <div className="flex flex-col gap-6 md:gap-8 items-end justify-center h-full pt-32 pb-32 pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal}
             icon={<Flame className="h-6 w-6 md:h-7 md:w-7 text-[#FB923C]" />} color="#FB923C" 
@@ -121,7 +121,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT */}
-      <div className="absolute top-[48%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      {/* Positioned relative to the scaled hologram for heart alignment */}
+      <div className="absolute top-[44%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
           <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
@@ -129,8 +130,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 5: THE PERSON (TOP LAYER) */}
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden">
-        <div className="relative w-[600vw] h-[220vh] md:w-full md:h-[60vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-32 md:-translate-y-48 scale-[2.8] md:scale-100">
+      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
+        <div className="relative w-[150vw] h-[75vh] md:w-full md:h-[60vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-20 md:-translate-y-48 scale-150 md:scale-100">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
