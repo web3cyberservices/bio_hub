@@ -54,7 +54,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_70%)]" />
+        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
         <div className="scan-line" />
       </div>
 
@@ -101,7 +101,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 4: BIO-CORE HEART BEAT (BEHIND THE HOLOGRAM) */}
+      {/* LAYER 4: BIO-CORE HEART BEAT (STAYS IN THE BACKGROUND) */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
         <div className="relative w-12 h-12 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full animate-ping opacity-60" />
@@ -109,14 +109,14 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 5: THE PERSON (TOP LAYER) - INCREASED SIZE */}
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-full h-[90vh] max-w-5xl animate-hologram flex items-center justify-center transition-all duration-700">
+      {/* LAYER 5: THE PERSON (TOP LAYER) - MAXIMUM SIZE ON MOBILE AND DESKTOP */}
+      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
+        <div className="relative w-[140vw] h-[95vh] md:w-full md:h-[95vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
             fill
-            className="object-contain filter drop-shadow-[0_0_80px_rgba(0,255,255,0.7)]"
+            className="object-contain filter drop-shadow-[0_0_100px_rgba(0,255,255,0.8)]"
             priority
             unoptimized
           />
