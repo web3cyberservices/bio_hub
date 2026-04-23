@@ -281,8 +281,8 @@ export function ProfileCabinet() {
             <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
           )}
         </div>
-        <div>
-          <h2 className="text-xl md:text-5xl font-black tracking-tighter text-white font-headline leading-none uppercase">Личный кабинет</h2>
+        <div className="mt-0">
+          <h2 className="text-xl md:text-5xl font-black tracking-tighter text-white font-headline leading-none uppercase m-0">Личный кабинет</h2>
           <p className="text-white/50 text-[10px] md:text-base font-medium">Управление вашим био-аккаунтом.</p>
         </div>
       </div>
