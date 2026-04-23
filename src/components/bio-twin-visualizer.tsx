@@ -122,8 +122,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        {/* Этот контейнер управляет масштабом и положением всей фигуры */}
-        <div className="relative w-[150vw] h-[75vh] md:w-full md:h-[60vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-20 md:-translate-y-48 scale-150 md:scale-100">
+        {/* Контейнер с точными настройками смещения, чтобы голова не касалась шапки, а ноги - меню */}
+        <div className="relative w-full h-[65vh] md:h-[50vh] max-w-none md:max-w-4xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-10 md:-translate-y-32 scale-150 md:scale-100">
           
           {/* Изображение голограммы */}
           <Image 
@@ -135,8 +135,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
             unoptimized
           />
 
-          {/* BIO-CORE: Теперь точка находится ВНУТРИ контейнера голограммы */}
-          {/* top-[32%] — это анатомический центр груди для большинства изображений человека */}
+          {/* BIO-CORE: Пульсирующая точка сердца (32% сверху изображения) */}
           <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
             <div className="relative w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
               <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
