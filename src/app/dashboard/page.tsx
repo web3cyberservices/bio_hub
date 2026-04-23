@@ -77,7 +77,7 @@ export default function DashboardPage() {
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
       {/* Top Header Bar */}
-      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
+      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -88,7 +88,7 @@ export default function DashboardPage() {
               <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
             </div>
           </div>
-          <Badge variant="outline" className="h-10 px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] tracking-widest gap-2">
+          <Badge variant="outline" className="h-10 px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] tracking-widest gap-2 cursor-pointer hover:bg-[#00ffff]/10 transition-all">
             <Zap className="h-4 w-4 fill-[#00ffff]" /> ВІО-ДАШБОРД
           </Badge>
         </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
         {viewingSpecialistId ? (
-          <div className="mt-28 overflow-y-auto h-full px-4 pb-32">
+          <div className="mt-24 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
             <div className="flex-1 min-h-0 relative">
-              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-32 no-scrollbar">
+              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar">
                  <div className="flex items-center justify-between px-2 max-w-2xl mx-auto">
                     <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                     {profileType === 'specialist' && <CreatePostDialog />}
@@ -139,15 +139,15 @@ export default function DashboardPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar">
+              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar">
                  <div className="max-w-4xl mx-auto space-y-8">
                     <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                  </div>
               </TabsContent>
 
-              <TabsContent value="chats" className="mt-28 h-full px-4 pb-32"><ChatInterface /></TabsContent>
-              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
-              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
+              <TabsContent value="chats" className="mt-28 h-full px-4 pb-40"><ChatInterface /></TabsContent>
+              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
+              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
             {/* Bottom Nav Bar */}
