@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -53,12 +52,12 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center overflow-hidden bg-[#000000]", className)}>
       
-      {/* BACKGROUND IMAGE LAYER (bio-hologram.png) */}
+      {/* BACKGROUND IMAGE LAYER (Ваше изображение bio-hologram.png) */}
       <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
         <div className="relative w-full h-[65vh] animate-hologram">
           <Image 
             src="/bio-hologram.png" 
-            alt="Bio-Hologram Background" 
+            alt="Bio-Hologram" 
             fill 
             className="object-contain filter drop-shadow-[0_0_35px_#00ffff]"
             priority
