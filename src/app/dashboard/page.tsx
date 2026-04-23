@@ -101,14 +101,17 @@ export default function DashboardPage() {
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
-              onStartChat={() => setActiveTab('chats')} 
+              onStartChat={() => {
+                setViewingSpecialistId(null);
+                setActiveTab('chats');
+              }} 
             />
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
             <div className="flex-1 min-h-0 relative">
-              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar">
+              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none">
                  <div className="flex items-center justify-between px-2 max-w-2xl mx-auto">
                     <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                     {profileType === 'specialist' && <CreatePostDialog />}
@@ -132,7 +135,7 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center">
+              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
@@ -140,29 +143,29 @@ export default function DashboardPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar">
+              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
                  <div className="max-w-4xl mx-auto space-y-8">
                     <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                  </div>
               </TabsContent>
 
-              <TabsContent value="chats" className="mt-28 h-full px-4 pb-40"><ChatInterface /></TabsContent>
-              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
-              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ProfileCabinet /></TabsContent>
+              <TabsContent value="chats" className="mt-28 h-full px-4 pb-40 outline-none"><ChatInterface /></TabsContent>
+              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
+              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none"><ProfileCabinet /></TabsContent>
             </div>
 
             {/* Bottom Nav Bar */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[400] w-[95vw] max-w-2xl">
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] w-[95vw] max-w-2xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
-                  <button onClick={() => setActiveTab('feed')} className={cn("transition-all", activeTab === 'feed' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300", activeTab === 'feed' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
                     <BookOpen className="h-6 w-6" />
                   </button>
                   
-                  <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all", activeTab === 'dashboard' ? "text-[#00ffff] scale-125 drop-shadow-[0_0_8px_#00ffff]" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all duration-300", activeTab === 'dashboard' ? "text-[#00ffff] scale-125 drop-shadow-[0_0_8px_#00ffff]" : "text-white/30 hover:text-white/50")}>
                     <HeartPulse className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all", activeTab === 'meals' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all duration-300", activeTab === 'meals' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
                     <Utensils className="h-6 w-6" />
                   </button>
 
@@ -174,15 +177,15 @@ export default function DashboardPage() {
                      </UnifiedDataEntry>
                   </div>
 
-                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all", activeTab === 'chats' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all duration-300", activeTab === 'chats' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
                     <MessageSquare className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('feeling')} className={cn("transition-all", activeTab === 'feeling' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('feeling')} className={cn("transition-all duration-300", activeTab === 'feeling' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
                     <Smile className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all", activeTab === 'profile' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all duration-300", activeTab === 'profile' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
                     <Settings className="h-6 w-6" />
                   </button>
                </div>
