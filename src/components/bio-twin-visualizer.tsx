@@ -122,9 +122,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        <div className="relative w-full h-[65vh] md:h-[50vh] max-w-none md:max-w-4xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-10 md:-translate-y-32 scale-150 md:scale-100">
+        <div className="relative w-full h-[65vh] md:h-[65vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-10 md:-translate-y-20 scale-150 md:scale-125">
           
-          {/* Изображение голограммы с усиленным неоновым свечением по контуру */}
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
               src="/bio-hologram.png" 
