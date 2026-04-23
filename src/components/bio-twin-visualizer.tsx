@@ -123,7 +123,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE - PERFECTLY CENTERED */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-[90%] h-[90%] max-h-[70vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
+        <div className="relative w-[90%] h-[90%] max-h-[75vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 

@@ -8,7 +8,7 @@ import {
   LayoutGrid, Activity, Sparkles
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru } from 'date-fns/locale/ru';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
@@ -109,10 +109,10 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* DOUBLE / HOLOGRAM TAB: Starts from top, padded to clear header */}
+            {/* DOUBLE / HOLOGRAM TAB: Special height and padding to fit human model */}
             <TabsContent 
               value="dashboard" 
-              className="m-0 h-screen w-full overflow-hidden flex items-start justify-center outline-none data-[state=active]:flex pt-[90px] !mt-0"
+              className="m-0 h-[100vh] w-full overflow-hidden flex items-start justify-center outline-none data-[state=active]:flex pt-[10px] !mt-0"
             >
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
@@ -170,7 +170,8 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 mt-20 pt-5 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            {/* PROFILE TAB: margin-top 80px and padding-top 20px */}
+            <TabsContent value="profile" className="flex-1 m-0 mt-[80px] pt-[20px] overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>
