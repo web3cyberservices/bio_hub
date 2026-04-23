@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Droplets, Flame, Moon, Zap, Footprints, Beef, Activity, Heart } from 'lucide-react';
+import { Droplets, Flame, Moon, Zap, Footprints, Beef } from 'lucide-react';
 
 interface GaugeProps {
   label: string;
@@ -16,11 +16,11 @@ interface GaugeProps {
 
 const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProps) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-3 group transition-all duration-500", className)}>
-      <div className="text-white/40 group-hover:text-white transition-colors">
+    <div className={cn("flex flex-col items-center justify-center gap-2 group transition-all duration-500", className)}>
+      <div className="text-white/40 group-hover:text-white transition-colors mb-1">
         {icon}
       </div>
-      <div className="relative w-20 h-20 md:w-28 md:h-28 flex items-center justify-center">
+      <div className="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="42%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
@@ -30,10 +30,10 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
           />
         </svg>
         <div className="text-center">
-          <span className="text-xl md:text-3xl font-black text-white leading-none block">{value}</span>
+          <span className="text-xl md:text-2xl font-black text-white leading-none block">{value}</span>
         </div>
       </div>
-      <span className="text-[10px] md:text-[12px] font-black uppercase text-white/30 tracking-[0.3em] group-hover:text-primary transition-colors">
+      <span className="text-[9px] md:text-[10px] font-black uppercase text-white/30 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -43,111 +43,107 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
 export function BioTwinVisualizer({ score, deviceData, macros, className }: any) {
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
-  // Путь к вашему изображению в папке public/
+  // Путь к изображению в папке public/
   const hologramSrc = "/hologram.png";
 
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center overflow-hidden bg-[#000000]", className)}>
       
-      {/* Background Decorative Layer */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_70%)] opacity-50" />
-      </div>
-
-      {/* 3-COLUMN GRID LAYOUT (3x3 Concept) */}
-      <div className="relative z-30 grid grid-cols-3 w-full max-w-[1400px] h-full items-center px-6 md:px-16">
+      {/* Сетка 3-колонки */}
+      <div className="relative z-30 grid grid-cols-3 w-full max-w-7xl h-full items-center px-4 md:px-10">
         
-        {/* LEFT COLUMN: Water, Calories, Steps */}
-        <div className="flex flex-col gap-10 md:gap-14 items-center justify-center">
+        {/* ЛЕВАЯ КОЛОНКА: Вода, Ккал, Шаги */}
+        <div className="flex flex-col gap-8 md:gap-12 items-center justify-center">
           <NeonGauge 
             label="ВОДА" value={deviceData?.water || 0}
-            icon={<Droplets className="h-6 w-6 text-[#0EA5E9]" />} color="#0EA5E9" 
+            icon={<Droplets className="h-5 w-5 text-[#0EA5E9]" />} color="#0EA5E9" 
             progress={getProgress(deviceData?.water || 0, 2000)}
           />
           <NeonGauge 
             label="ККАЛ" value={macros?.calories || 0}
-            icon={<Flame className="h-6 w-6 text-[#F97316]" />} color="#F97316" 
+            icon={<Flame className="h-5 w-5 text-[#F97316]" />} color="#F97316" 
             progress={getProgress(macros?.calories || 0, 2500)}
           />
           <NeonGauge 
             label="ШАГИ" value={deviceData?.steps || 0}
-            icon={<Footprints className="h-6 w-6 text-[#00ffff]" />} color="#00ffff" 
+            icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" 
             progress={getProgress(deviceData?.steps || 0, 10000)}
           />
         </div>
 
-        {/* CENTRAL COLUMN: The Specific Hologram Image */}
-        <div className="relative flex items-center justify-center h-full py-10">
+        {/* ЦЕНТРАЛЬНАЯ КОЛОНКА: Голограмма */}
+        <div className="relative flex items-center justify-center h-full">
           {/* Bio-Score floating badge */}
-          <div className="absolute top-[15%] -left-[20%] md:-left-[30%] z-50">
-             <div className="bg-black/80 backdrop-blur-2xl px-6 py-3 rounded-2xl border border-[#00ffff]/30 shadow-[0_0_30px_rgba(0,255,255,0.3)] flex flex-col items-start animate-in slide-in-from-left-8 duration-700">
-                <p className="text-[8px] font-black text-[#00ffff]/60 uppercase tracking-[0.4em] mb-1">NEURAL SYNC</p>
-                <p className="text-2xl md:text-4xl font-black text-white leading-none">
-                  {score || 92}<span className="text-[#00ffff]/40 text-[12px] ml-1">/100</span>
+          <div className="absolute top-[10%] -left-[10%] md:-left-[20%] z-50">
+             <div className="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-xl border border-[#00ffff]/20 shadow-lg flex flex-col items-start animate-in slide-in-from-left-8 duration-700">
+                <p className="text-[7px] font-black text-[#00ffff]/60 uppercase tracking-widest mb-1">NEURAL SYNC</p>
+                <p className="text-xl md:text-2xl font-black text-white leading-none">
+                  {score || 92}<span className="text-[#00ffff]/40 text-[10px] ml-1">/100</span>
                 </p>
-                <div className="h-1.5 w-full bg-white/5 rounded-full mt-2 overflow-hidden">
-                   <div className="h-full bg-[#00ffff] w-[92%] shadow-[0_0_15px_#00ffff]" />
-                </div>
              </div>
           </div>
           
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
-             <Image 
-               src={hologramSrc}
-               alt="Neural Digital Twin"
-               fill
-               className="object-contain drop-shadow-[0_0_30px_#00ffff]"
-               priority
-               unoptimized
-             />
+             <div className="relative w-full h-full">
+                <Image 
+                  src={hologramSrc}
+                  alt="Neural Digital Twin"
+                  fill
+                  className="object-contain drop-shadow-[0_0_25px_#00ffff]"
+                  priority
+                  unoptimized
+                />
+             </div>
              
              {/* Pulsing Core Node - Heart Area */}
              <div className="absolute top-[34%] left-1/2 -translate-x-1/2 z-40">
-                <div className="relative w-10 h-10 flex items-center justify-center">
-                   <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-30" />
-                   <div className="w-3.5 h-3.5 rounded-full bg-[#00ffff] shadow-[0_0_25px_#00ffff] animate-pulse" />
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                   <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full animate-ping opacity-40" />
+                   <div className="w-2.5 h-2.5 rounded-full bg-[#00ffff] shadow-[0_0_20px_#00ffff] animate-pulse" />
                 </div>
              </div>
 
              {/* Brain Node Glow */}
-             <div className="absolute top-[10%] left-1/2 -translate-x-1/2 z-40">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#00ffff]/80 shadow-[0_0_20px_#00ffff] animate-pulse" />
+             <div className="absolute top-[12%] left-1/2 -translate-x-1/2 z-40">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00ffff]/60 shadow-[0_0_15px_#00ffff] animate-pulse" />
              </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Fats, Carbs, Proteins */}
-        <div className="flex flex-col gap-10 md:gap-14 items-center justify-center">
+        {/* ПРАВАЯ КОЛОНКА: Жиры, Углеводы, Белки */}
+        <div className="flex flex-col gap-8 md:gap-12 items-center justify-center">
           <NeonGauge 
             label="ЖИРЫ" value={macros?.fat || 0}
-            icon={<Moon className="h-6 w-6 text-[#EAB308]" />} color="#EAB308" 
+            icon={<Moon className="h-5 w-5 text-[#EAB308]" />} color="#EAB308" 
             progress={getProgress(macros?.fat || 0, 80)}
           />
           <NeonGauge 
             label="УГЛЕВОДЫ" value={macros?.carbs || 0}
-            icon={<Zap className="h-6 w-6 text-[#10B981]" />} color="#10B981" 
+            icon={<Zap className="h-5 w-5 text-[#10B981]" />} color="#10B981" 
             progress={getProgress(macros?.carbs || 0, 300)}
           />
           <NeonGauge 
             label="БЕЛКИ" value={macros?.protein || 0}
-            icon={<Beef className="h-6 w-6 text-[#A855F7]" />} color="#A855F7" 
+            icon={<Beef className="h-5 w-5 text-[#A855F7]" />} color="#A855F7" 
             progress={getProgress(macros?.protein || 0, 150)}
           />
         </div>
 
       </div>
 
-      {/* Fixed UI Frame Elements */}
-      <div className="absolute top-28 left-10 hidden xl:block z-40 max-w-[200px] opacity-40">
-         <p className="text-[10px] font-black uppercase text-white/50 tracking-widest leading-relaxed border-l-2 border-[#00ffff]/30 pl-4">
-            SYSTEM PROTOCOL: ACTIVE<br />
-            NEURAL_LINK_V4.0.2<br />
-            STATUS: MONITORING...
+      {/* Информационный текст слева (Protocol Description) */}
+      <div className="absolute bottom-32 left-8 hidden lg:block z-40 max-w-[220px] opacity-40">
+         <p className="text-[9px] font-black uppercase text-white/50 tracking-[0.2em] leading-relaxed border-l-2 border-primary/30 pl-4">
+            SYSTEM_PROTOCOL: ACTIVE<br />
+            NEURAL_LINK_IDENTIFIED<br />
+            BIO_HUB_SYNC_V4.0.2<br />
+            STATUS: MONITORING_BIOMETRICS...
          </p>
       </div>
 
+      {/* Сканирующая линия */}
       <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#00ffff]/40 to-transparent absolute top-1/4 animate-scan shadow-[0_0_10px_#00ffff]" />
+         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#00ffff]/20 to-transparent absolute top-1/4 animate-scan shadow-[0_0_15px_rgba(0,255,255,0.2)]" />
       </div>
 
     </div>
