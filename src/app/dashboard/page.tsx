@@ -96,7 +96,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      <header className="sticky top-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24 shrink-0">
+      <header className="sticky top-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -162,19 +162,19 @@ export default function DashboardPage() {
             </TabsContent>
 
             <TabsContent value="meals" className="flex-1 m-0 !pt-0 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-               <div className="max-w-4xl mx-auto pb-10 mt-6">
+               <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
             <TabsContent value="chats" className="flex-1 m-0 !pt-0 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
-              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10 mt-6">
+              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
             <TabsContent value="feeling" className="flex-1 m-0 !pt-0 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-4xl mx-auto pb-10 mt-6">
+              <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
