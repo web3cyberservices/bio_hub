@@ -97,7 +97,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
         {viewingSpecialistId ? (
-          <div className="mt-24 overflow-y-auto h-full px-4 pb-32">
+          <div className="pt-24 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -110,9 +110,9 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <div className="flex-1 min-h-0 relative">
-              <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none">
-                 <div className="flex items-center justify-between px-2 max-w-2xl mx-auto">
+            <div className="flex-1 min-h-0 relative h-full">
+              <TabsContent value="feed" className="m-0 pt-24 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none">
+                 <div className="flex items-center justify-between px-2 max-w-2xl mx-auto mb-6">
                     <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                     {profileType === 'specialist' && <CreatePostDialog />}
                  </div>
@@ -143,15 +143,29 @@ export default function DashboardPage() {
                 />
               </TabsContent>
 
-              <TabsContent value="meals" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
-                 <div className="max-w-4xl mx-auto space-y-8">
+              <TabsContent value="meals" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
+                 <div className="max-w-4xl mx-auto space-y-8 pt-4">
                     <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                  </div>
               </TabsContent>
 
-              <TabsContent value="chats" className="mt-28 h-full px-4 pb-40 outline-none"><ChatInterface /></TabsContent>
-              <TabsContent value="feeling" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none"><WellBeingStatus deviceData={dailyLogDoc} /></TabsContent>
-              <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none"><ProfileCabinet /></TabsContent>
+              <TabsContent value="chats" className="m-0 pt-24 h-full px-4 pb-40 outline-none">
+                <div className="h-full max-w-6xl mx-auto pt-4">
+                  <ChatInterface />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="feeling" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
+                <div className="max-w-4xl mx-auto pt-4">
+                  <WellBeingStatus deviceData={dailyLogDoc} />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="profile" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
+                <div className="max-w-5xl mx-auto pt-4">
+                  <ProfileCabinet />
+                </div>
+              </TabsContent>
             </div>
 
             {/* Bottom Nav Bar */}
