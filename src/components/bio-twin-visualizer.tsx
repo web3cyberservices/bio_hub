@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -41,7 +42,6 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
 };
 
 export function BioTwinVisualizer({ score, deviceData, macros, className }: any) {
-  // Инициализация значений "0", если данные отсутствуют
   const waterVal = deviceData?.water || 0;
   const kcalVal = macros?.calories || 0;
   const fatVal = macros?.fat || 0;
@@ -53,7 +53,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center overflow-hidden bg-[#000000]", className)}>
       
-      {/* 3-Column Layout */}
+      {/* 3-Column HUD Layout */}
       <div className="relative z-30 grid grid-cols-3 w-full max-w-7xl h-full items-center px-6 md:px-12">
         
         {/* LEFT COLUMN: Water & Kcal */}
@@ -70,7 +70,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* CENTER COLUMN: The Hologram */}
+        {/* CENTER COLUMN: The Requested Hologram Image */}
         <div className="relative flex items-center justify-center h-full">
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
              <div className="relative w-full h-full">
@@ -84,7 +84,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
                 />
              </div>
 
-             {/* Single Cyan Heart Dot */}
+             {/* Single Cyan Core Dot over Heart */}
              <div className="absolute top-[38%] left-1/2 -translate-x-1/2 z-40">
                 <div className="relative w-6 h-6 flex items-center justify-center">
                    <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-50" />
@@ -107,7 +107,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
             progress={getProgress(carbVal, 300)}
           />
           
-          {/* Separate Step Counter */}
+          {/* Step Counter */}
           <div className="absolute bottom-10 right-0 flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl backdrop-blur-md group hover:border-primary/40 transition-all">
              <Footprints className="h-4 w-4 text-[#00ffff] group-hover:scale-110 transition-transform" />
              <span className="text-sm font-black text-white">{stepsVal} <span className="text-[10px] text-white/40 uppercase">STEP</span></span>
@@ -116,10 +116,10 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       </div>
 
-      {/* Background Decor */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
+      {/* Grid Scan Background Effect */}
+      <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
          <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]" />
-         <div className="scan-line opacity-20" />
+         <div className="scan-line" />
       </div>
 
     </div>

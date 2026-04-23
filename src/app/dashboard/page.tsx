@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -84,8 +85,8 @@ export default function DashboardPage() {
               <HeartPulse className="h-7 w-7 text-[#00ffff]" />
             </div>
             <div className="text-left">
-              <h1 className="text-xl md:text-2xl font-black text-white leading-none tracking-tight">PRO <span className="text-[#00ffff]">СЕБЯ</span></h1>
-              <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
+              <h1 className="text-xl md:text-2xl font-black text-white leading-none tracking-tight">PRO <span className="text-white">СЕБЯ</span></h1>
+              <p className="text-[8px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
             </div>
           </div>
           <Badge variant="outline" className="h-10 px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] tracking-widest gap-2 cursor-pointer hover:bg-[#00ffff]/10 transition-all">
@@ -152,7 +153,7 @@ export default function DashboardPage() {
 
             {/* Bottom Nav Bar */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[400] w-[95vw] max-w-2xl">
-               <div className="bg-[#010411]/80 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+               <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all", activeTab === 'feed' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
                     <BookOpen className="h-6 w-6" />
                   </button>
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                     <HeartPulse className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all", activeTab === 'meals' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all", activeTab === 'meals' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
                     <Utensils className="h-6 w-6" />
                   </button>
 
@@ -173,15 +174,15 @@ export default function DashboardPage() {
                      </UnifiedDataEntry>
                   </div>
 
-                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all", activeTab === 'chats' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all", activeTab === 'chats' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
                     <MessageSquare className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('feeling')} className={cn("transition-all", activeTab === 'feeling' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('feeling')} className={cn("transition-all", activeTab === 'feeling' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
                     <Smile className="h-6 w-6" />
                   </button>
 
-                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all", activeTab === 'profile' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all", activeTab === 'profile' ? "text-white/30 hover:text-white/50" : "text-white/30 hover:text-white/50")}>
                     <Settings className="h-6 w-6" />
                   </button>
                </div>
