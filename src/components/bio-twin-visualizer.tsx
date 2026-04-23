@@ -25,7 +25,7 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="45%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
-            cx="50%" cy="50%" r="45%" fill="none" stroke={color} strokeWidth="1.5" 
+            cx="50%" cy="50%" r="45%" fill="none" stroke={color} strokeWidth="1" 
             strokeDasharray="100" strokeDashoffset={100 - (progress || 0)} pathLength="100" strokeLinecap="round"
             className="drop-shadow-[0_0_8px_currentColor] transition-all duration-1000"
           />
@@ -74,9 +74,9 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         <div className="relative flex items-center justify-center h-full">
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
              <div className="relative w-full h-full">
-                {/* The main asset from /hologram.png */}
+                {/* The main asset from /bio-hologram.png */}
                 <Image 
-                  src="/hologram.png" 
+                  src="/bio-hologram.png" 
                   alt="Bio-Hologram" 
                   fill 
                   className="object-contain drop-shadow-[0_0_25px_#00ffff]"
@@ -118,7 +118,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* Grid Scan Background Overlay */}
-      <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
+      <div className="absolute inset-0 z-10 pointer-events-none opacity-10">
          <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]" />
          <div className="scan-line" />
       </div>

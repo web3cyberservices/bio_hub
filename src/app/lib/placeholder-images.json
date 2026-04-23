@@ -1,10 +1,11 @@
+
 {
   "placeholderImages": [
     {
-      "id": "digital-twin-hologram",
+      "id": "bio-hologram",
       "description": "Центральная голограмма высокодетализированного человека с нейронной сетью",
-      "imageUrl": "/hologram.png",
-      "imageHint": "detailed blue human hologram neural network"
+      "imageUrl": "/bio-hologram.png",
+      "imageHint": "blue human hologram neural network"
     },
     {
       "id": "breakfast-omelette",
