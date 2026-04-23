@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -145,7 +146,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const totalCalories = meals?.reduce((acc, m) => acc + (m.calories || 0), 0) || 0;
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
           <h3 className="text-3xl font-black tracking-tighter text-foreground">Свой план</h3>

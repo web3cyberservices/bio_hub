@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -30,7 +31,7 @@ export function WellBeingStatus({ deviceData }: WellBeingStatusProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="text-center space-y-2">
          <Badge variant="outline" className="px-6 py-1 rounded-2xl border-primary/30 text-primary font-black uppercase tracking-[0.3em] text-[9px] bg-primary/5">
             Psycho-Biometric Status
