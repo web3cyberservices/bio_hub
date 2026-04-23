@@ -101,20 +101,16 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 4: BIO-CORE HEART BEAT (STAYS IN THE BACKGROUND) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+      {/* LAYER 4: BIO-CORE HEART BEAT - POSITIONED AT CHEST LEVEL */}
+      <div className="absolute top-[38%] md:top-[36%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
         <div className="relative w-12 h-12 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full animate-ping opacity-60" />
           <div className="w-4 h-4 rounded-full bg-[#00ffff] shadow-[0_0_25px_#00ffff] animate-pulse" />
         </div>
       </div>
 
-      {/* LAYER 5: THE PERSON (TOP LAYER) - OPTIMIZED FOR ALL SCREEN SIZES */}
+      {/* LAYER 5: THE PERSON (TOP LAYER) */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        {/* 
-            Mobile: h-[65vh] and w-[120vw] with -translate-y-4 to clear the header and bottom nav.
-            Desktop (md): h-[68vh] and w-full with -translate-y-14 to clear fixed elements.
-        */}
         <div className="relative w-[120vw] h-[65vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 -translate-y-4 md:-translate-y-14">
           <Image 
             src="/bio-hologram.png" 
