@@ -253,9 +253,9 @@ export function ProfileCabinet() {
       });
   };
 
-  const inputClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 focus:ring-4 focus:ring-primary/10 transition-all pr-14 text-white placeholder:text-white/40";
-  const textareaClasses = "min-h-[120px] rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 py-4 focus:ring-4 focus:ring-primary/10 transition-all resize-none pr-14 text-white placeholder:text-white/40";
-  const selectClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 transition-all text-white";
+  const inputClasses = "h-14 rounded-2xl bg-white/[0.12] backdrop-blur-3xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] font-bold px-6 focus:ring-4 focus:ring-primary/10 transition-all pr-14 text-white placeholder:text-white/40";
+  const textareaClasses = "min-h-[120px] rounded-2xl bg-white/[0.12] backdrop-blur-3xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] font-bold px-6 py-4 focus:ring-4 focus:ring-primary/10 transition-all resize-none pr-14 text-white placeholder:text-white/40";
+  const selectClasses = "h-14 rounded-2xl bg-white/[0.12] backdrop-blur-3xl border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)] font-bold px-6 transition-all text-white";
 
   const VoiceBtn = ({ field }: { field: keyof ProfileValues }) => (
     <Button 
@@ -274,7 +274,7 @@ export function ProfileCabinet() {
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
           {photoUrlValue ? (
             <div className="relative w-full h-full"><Image src={photoUrlValue} alt="Profile" fill className="object-cover" unoptimized /></div>
@@ -291,7 +291,7 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="premium-card border-none shadow-xl bg-white/[0.07] backdrop-blur-3xl overflow-hidden lg:col-span-2">
+            <Card className="premium-card border-none shadow-xl bg-white/[0.1] backdrop-blur-3xl overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Тип аккаунта</h3></div>
                 <div className="grid grid-cols-2 gap-4">
@@ -306,7 +306,7 @@ export function ProfileCabinet() {
             </Card>
 
             {profileTypeValue === 'user' && (
-              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-3xl overflow-hidden flex flex-col justify-center">
+              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/15 to-transparent backdrop-blur-3xl overflow-hidden flex flex-col justify-center">
                 <CardContent className="p-8 text-center space-y-4">
                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
                    <h3 className="font-black text-lg tracking-tight uppercase text-white">Bio-Sync</h3>
@@ -316,7 +316,7 @@ export function ProfileCabinet() {
             )}
           </div>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.1] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -347,11 +347,11 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.1] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Фото профиля</h3></div>
                 <div className="flex flex-col md:flex-row gap-8 items-center">
-                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-primary/5 border-4 border-white/10 shadow-xl flex items-center justify-center shrink-0 overflow-hidden group">
+                   <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white/5 border-4 border-white/10 shadow-xl flex items-center justify-center shrink-0 overflow-hidden group">
                       {photoUrlValue ? (
                         <><Image src={photoUrlValue} alt="Preview" fill className="object-cover" unoptimized /><Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={removePhoto}><X className="h-4 w-4" /></Button></>
                       ) : (
@@ -360,7 +360,7 @@ export function ProfileCabinet() {
                    </div>
                    <div className="flex-1 w-full space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Button type="button" variant="outline" className="h-14 rounded-2xl border-dashed border-2 border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-primary/10 transition-all" onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4" /> Выбрать файл</Button>
+                        <Button type="button" variant="outline" className="h-14 rounded-2xl border-dashed border-2 border-white/20 bg-white/5 text-white font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-white/10 transition-all" onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4" /> Выбрать файл</Button>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                         <p className="text-[10px] text-white/40 font-medium italic md:col-span-2">Квадратное фото до 1 МБ.</p>
                       </div>
@@ -369,7 +369,7 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.1] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
               {profileTypeValue === 'specialist' ? (
                 <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
@@ -461,22 +461,22 @@ export function ProfileCabinet() {
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="premium-card p-8 border-none shadow-xl bg-white/[0.07] backdrop-blur-3xl">
+            <Card className="premium-card p-8 border-none shadow-xl bg-white/[0.1] backdrop-blur-3xl">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Уведомления</h3></div>
               <div className="grid grid-cols-1 gap-4">
                 <Button 
                   variant="outline" 
                   type="button" 
                   onClick={handleConnectTelegram} 
-                  className="h-16 rounded-2xl bg-primary/10 border border-primary/20 flex justify-between px-6 font-black text-primary hover:bg-primary/20 transition-all"
+                  className="h-16 rounded-2xl bg-white/5 border border-white/10 flex justify-between px-6 font-black text-white hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-center gap-3"><Send className="h-5 w-5" /><span className="text-xs uppercase">Telegram</span></div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[7px] border-primary/20 bg-primary/5">Подключить</Badge>
+                    <Badge variant="outline" className="text-[7px] border-white/20 bg-white/5 text-white/60">Подключить</Badge>
                     <ExternalLink className="h-3 w-3 opacity-30" />
                   </div>
                 </Button>
-                <Button variant="outline" type="button" onClick={() => toast({ title: 'WhatsApp привязан' })} className="h-16 rounded-2xl bg-primary/10 border border-primary/20 flex justify-between px-6 font-black text-primary hover:bg-primary/20 transition-all"><div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div><Badge variant="outline" className="text-[7px] border-primary/20 bg-primary/5">Подключить</Badge></Button>
+                <Button variant="outline" type="button" onClick={() => toast({ title: 'WhatsApp привязан' })} className="h-16 rounded-2xl bg-white/5 border border-white/10 flex justify-between px-6 font-black text-white hover:bg-white/10 transition-all"><div className="flex items-center gap-3"><MessageCircle className="h-5 w-5" /><span className="text-xs uppercase">WhatsApp</span></div><Badge variant="outline" className="text-[7px] border-white/20 bg-white/5 text-white/60">Подключить</Badge></Button>
               </div>
             </Card>
 
