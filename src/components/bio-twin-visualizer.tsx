@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Droplets, Flame, Zap, Footprints, Moon, Beef } from 'lucide-react';
+import { Droplets, Flame, Zap, Footprints, Moon } from 'lucide-react';
 
 interface GaugeProps {
   label: string;
@@ -20,7 +20,7 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
       <div className="text-white/40 group-hover:text-white transition-colors">
         {icon}
       </div>
-      <div className="relative w-20 h-20 md:w-28 md:h-28 flex items-center justify-center">
+      <div className="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="48%" fill="none" stroke="white" strokeOpacity="0.03" strokeWidth="1" />
           <circle 
@@ -30,10 +30,10 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
           />
         </svg>
         <div className="text-center">
-          <span className="text-xl md:text-3xl font-black text-white leading-none block drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{value}</span>
+          <span className="text-lg md:text-2xl font-black text-white leading-none block drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{value}</span>
         </div>
       </div>
-      <span className="text-[8px] md:text-[10px] font-black uppercase text-white/30 tracking-[0.2em] group-hover:text-primary transition-colors">
+      <span className="text-[8px] md:text-[9px] font-black uppercase text-white/30 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -45,7 +45,6 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   const kcalVal = deviceData?.calories || 0;
   const fatVal = macros?.fat || 0;
   const carbVal = macros?.carbs || 0;
-  const proteinVal = macros?.protein || 0;
   const stepsVal = deviceData?.steps || 0;
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
@@ -59,11 +58,11 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         <div className="scan-line" />
       </div>
 
-      {/* 2. LAYER: HUD INTERFACE (Gauges) - z-30 */}
-      <div className="relative z-30 w-full max-w-7xl h-full flex items-center px-8 md:px-16">
+      {/* 2. LAYER: HUD INTERFACE - z-30 */}
+      <div className="relative z-30 w-full max-w-6xl h-full flex items-center px-8 md:px-12">
         
-        {/* LEFT COLUMN: Water & Calories & Steps */}
-        <div className="flex flex-col gap-10 md:gap-16 items-start justify-center h-full flex-1">
+        {/* LEFT COLUMN: Water & Calories */}
+        <div className="flex flex-col gap-16 md:gap-24 items-start justify-center h-full flex-1">
           <NeonGauge 
             label="ВОДА" value={waterVal}
             icon={<Droplets className="h-5 w-5 text-[#0EA5E9]" />} color="#0EA5E9" 
@@ -76,8 +75,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* RIGHT COLUMN: Fats & Carbs & Proteins */}
-        <div className="flex flex-col gap-10 md:gap-16 items-end justify-center h-full flex-1">
+        {/* RIGHT COLUMN: Fats & Carbs */}
+        <div className="flex flex-col gap-16 md:gap-24 items-end justify-center h-full flex-1">
           <NeonGauge 
             label="ЖИРЫ" value={fatVal}
             icon={<Moon className="h-5 w-5 text-[#EAB308]" />} color="#EAB308" 
@@ -91,7 +90,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 3. LAYER: STEP COUNTER BLOCK - z-40 */}
+      {/* 3. LAYER: STEP COUNTER - z-40 */}
       <div className="absolute bottom-32 right-12 md:right-24 z-40 flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Footprints className="h-5 w-5 text-[#00ffff]" />
@@ -102,15 +101,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 4. LAYER: BIO-SCORE STATUS - z-40 */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40">
-        <div className="bg-[#00ffff]/10 border border-[#00ffff]/30 px-8 py-2.5 rounded-full backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.15)] flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-[#00ffff] animate-pulse shadow-[0_0_8px_#00ffff]" />
-          <span className="text-[10px] font-black text-white uppercase tracking-[0.4em]">BIO-SCORE 4.0</span>
-        </div>
-      </div>
-
-      {/* 5. LAYER: CENTRAL HEART CORE - z-45 */}
+      {/* 4. LAYER: BIO-CORE - z-45 */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[45] pointer-events-none">
         <div className="relative w-8 h-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full animate-ping opacity-60" />
@@ -118,14 +109,14 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 6. LAYER: THE PERSON HOLOGRAM (TOP LAYER) - z-50 */}
+      {/* 5. LAYER: THE PERSON HOLOGRAM (TOP LAYER) - z-50 */}
       <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="relative w-full max-w-4xl h-[70vh] animate-hologram flex items-center justify-center">
+        <div className="relative w-full max-w-4xl h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
             fill
-            className="object-contain filter drop-shadow-[0_0_50px_#00ffff] opacity-95"
+            className="object-contain filter drop-shadow-[0_0_60px_#00ffff] opacity-95"
             priority
             unoptimized
           />
