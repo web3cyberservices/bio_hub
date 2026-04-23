@@ -120,7 +120,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 4: BIO-CORE HEART BEAT */}
-      <div className="absolute top-[34%] md:top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
+      <div className="absolute top-[40%] md:top-[36%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
         <div className="relative w-10 h-10 md:w-14 md:h-14 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
           <div className="w-3 h-3 md:w-5 md:h-5 rounded-full bg-[#00ffff] shadow-[0_0_30px_#00ffff] animate-pulse" />
