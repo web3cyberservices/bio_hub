@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -182,8 +181,8 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-5xl mx-auto pt-4 pb-10">
+            <TabsContent value="profile" className="flex-1 min-h-0 m-0 pt-20 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+              <div className="max-w-5xl mx-auto pb-10">
                 <ProfileCabinet />
               </div>
             </TabsContent>

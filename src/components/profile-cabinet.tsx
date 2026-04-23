@@ -252,9 +252,9 @@ export function ProfileCabinet() {
       });
   };
 
-  const inputClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 focus:ring-4 focus:ring-primary/10 transition-all pr-14 text-slate-950 placeholder:text-slate-950/40";
-  const textareaClasses = "min-h-[120px] rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 py-4 focus:ring-4 focus:ring-primary/10 transition-all resize-none pr-14 text-slate-950 placeholder:text-slate-950/40";
-  const selectClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 transition-all text-slate-950";
+  const inputClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 focus:ring-4 focus:ring-primary/10 transition-all pr-14 text-white placeholder:text-white/40";
+  const textareaClasses = "min-h-[120px] rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 py-4 focus:ring-4 focus:ring-primary/10 transition-all resize-none pr-14 text-white placeholder:text-white/40";
+  const selectClasses = "h-14 rounded-2xl bg-primary/20 backdrop-blur-md border border-primary/30 shadow-[0_0_15px_rgba(14,165,233,0.1)] font-bold px-6 transition-all text-white";
 
   const VoiceBtn = ({ field }: { field: keyof ProfileValues }) => (
     <Button 
@@ -264,7 +264,7 @@ export function ProfileCabinet() {
       onClick={() => startVoiceInput(field)}
       className={cn(
         "absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full shadow-sm transition-all",
-        recordingField === field ? "bg-red-500 text-white animate-pulse" : "bg-white/80 text-primary hover:bg-white"
+        recordingField === field ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
       )}
     >
       <Mic className="h-4 w-4" />
@@ -272,7 +272,7 @@ export function ProfileCabinet() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
           {photoUrlValue ? (
@@ -282,48 +282,48 @@ export function ProfileCabinet() {
           )}
         </div>
         <div>
-          <h2 className="text-2xl md:text-5xl font-black tracking-tighter text-foreground font-headline leading-none uppercase">Личный кабинет</h2>
-          <p className="text-muted-foreground text-xs md:text-base font-medium">Управление вашим био-аккаунтом.</p>
+          <h2 className="text-xl md:text-5xl font-black tracking-tighter text-white font-headline leading-none uppercase">Личный кабинет</h2>
+          <p className="text-white/50 text-[10px] md:text-base font-medium">Управление вашим био-аккаунтом.</p>
         </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="premium-card border-none shadow-xl bg-white/5 backdrop-blur-md overflow-hidden lg:col-span-2">
+            <Card className="premium-card border-none shadow-xl bg-slate-900/40 backdrop-blur-2xl overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-8">
-                <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Тип аккаунта</h3></div>
+                <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Тип аккаунта</h3></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button type="button" onClick={() => form.setValue('profileType', 'user')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'user' ? "bg-primary text-white border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-primary/5")}><User className="h-5 w-5" /> Пользователь</Button>
-                  <Button type="button" onClick={() => form.setValue('profileType', 'specialist')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'specialist' ? "bg-primary text-white border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-primary/5")}><Stethoscope className="h-5 w-5" /> Специалист</Button>
+                  <Button type="button" onClick={() => form.setValue('profileType', 'user')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'user' ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}><User className="h-5 w-5" /> Пользователь</Button>
+                  <Button type="button" onClick={() => form.setValue('profileType', 'specialist')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'specialist' ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}><Stethoscope className="h-5 w-5" /> Специалист</Button>
                 </div>
               </CardContent>
             </Card>
 
             {profileTypeValue === 'user' && (
-              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md overflow-hidden flex flex-col justify-center">
+              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-2xl overflow-hidden flex flex-col justify-center">
                 <CardContent className="p-8 text-center space-y-4">
                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
-                   <h3 className="font-black text-lg tracking-tight uppercase">Bio-Sync</h3>
-                   <Button type="button" onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary font-black">Синхронизировать</Button>
+                   <h3 className="font-black text-lg tracking-tight uppercase text-white">Bio-Sync</h3>
+                   <Button type="button" onClick={() => toast({ title: 'Синхронизация запущена' })} className="w-full h-12 rounded-xl bg-primary text-slate-950 font-black">Синхронизировать</Button>
                 </CardContent>
               </Card>
             )}
           </div>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/5 backdrop-blur-xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
             <CardContent className="p-8 md:p-12 space-y-8">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Персональные данные</h3></div>
+              <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Имя *</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="firstName" /></div></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Имя *</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="firstName" /></div></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="lastName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Фамилия</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="lastName" /></div></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Фамилия</FormLabel><FormControl><div className="relative"><Input {...field} className={inputClasses} /><VoiceBtn field="lastName" /></div></FormControl></FormItem>
                 )} />
               </div>
               <FormItem>
-                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> Дата рождения</FormLabel>
                 <div className="grid grid-cols-3 gap-3 pt-1.5">
                   <Select value={currentDay} onValueChange={(val) => updateBirthDate(currentYear, currentMonth, val)}>
                     <SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger>
@@ -342,9 +342,9 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/5 backdrop-blur-xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
             <CardContent className="p-8 md:p-12 space-y-6">
-                <div className="flex items-center gap-2 border-b border-white/5 pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Фото профиля</h3></div>
+                <div className="flex items-center gap-2 border-b border-white/5 pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Фото профиля</h3></div>
                 <div className="flex flex-col md:flex-row gap-8 items-center">
                    <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-primary/5 border-4 border-white/10 shadow-xl flex items-center justify-center shrink-0 overflow-hidden group">
                       {photoUrlValue ? (
@@ -357,28 +357,28 @@ export function ProfileCabinet() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Button type="button" variant="outline" className="h-14 rounded-2xl border-dashed border-2 border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest text-[10px] gap-3 hover:bg-primary/10 transition-all" onClick={() => fileInputRef.current?.click()}><Upload className="h-4 w-4" /> Выбрать файл</Button>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                        <p className="text-[10px] text-muted-foreground font-medium italic md:col-span-2">Квадратное фото до 1 МБ.</p>
+                        <p className="text-[10px] text-white/40 font-medium italic md:col-span-2">Квадратное фото до 1 МБ.</p>
                       </div>
                    </div>
                 </div>
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/5 backdrop-blur-xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
             <CardContent className="p-8 md:p-12 space-y-12">
               {profileTypeValue === 'specialist' ? (
                 <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-6">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Briefcase className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Профессиональные данные</h3></div>
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Briefcase className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Профессиональные данные</h3></div>
                     <div className="grid gap-6">
                       <FormField control={form.control} name="specialization" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Специализация</FormLabel><FormControl><div className="relative"><Input placeholder="Например: Нутрициолог..." {...field} className={inputClasses} /><VoiceBtn field="specialization" /></div></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">Специализация</FormLabel><FormControl><div className="relative"><Input placeholder="Например: Нутрициолог..." {...field} className={inputClasses} /><VoiceBtn field="specialization" /></div></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="bio" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">О себе</FormLabel><FormControl><div className="relative"><Textarea placeholder="Ваш опыт..." {...field} className={textareaClasses} /><VoiceBtn field="bio" /></div></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">О себе</FormLabel><FormControl><div className="relative"><Textarea placeholder="Ваш опыт..." {...field} className={textareaClasses} /><VoiceBtn field="bio" /></div></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="instagramUrl" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4 flex items-center gap-2"><Instagram className="h-3 w-3" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/username" {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4 flex items-center gap-2"><Instagram className="h-3 w-3" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/username" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                     </div>
                   </div>
@@ -386,16 +386,16 @@ export function ProfileCabinet() {
               ) : (
                 <div className="space-y-12 animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-6">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Target className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Цели и Активность</h3></div>
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Target className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Цели и Активность</h3></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Основная цель</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Основная цель</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="снизить массу тела">Снизить вес</SelectItem><SelectItem value="поддержать текущее состояние">Поддержать форму</SelectItem><SelectItem value="набор массы">Набор массы</SelectItem></SelectContent></Select>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Уровень активности</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Уровень активности</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="minimal">Минимальный (Сидячий)</SelectItem><SelectItem value="low">Низкий (Малоактивный)</SelectItem><SelectItem value="moderate">Умеренный (Средний)</SelectItem><SelectItem value="high">Высокий (Активный)</SelectItem><SelectItem value="athlete">Атлет (Спортсмен)</SelectItem></SelectContent></Select>
                         </FormItem>
@@ -404,30 +404,30 @@ export function ProfileCabinet() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Биометрия и Привычки</h3></div>
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Биометрия и Привычки</h3></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <FormField control={form.control} name="gender" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Пол</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Пол</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="weight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="height" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField control={form.control} name="smoking" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4 flex items-center gap-2"><Ban className="h-3 w-3" /> Курение</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4 flex items-center gap-2"><Ban className="h-3 w-3" /> Курение</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="alcohol" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-muted-foreground px-4 flex items-center gap-2"><Wine className="h-3 w-3" /> Алкоголь</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4 flex items-center gap-2"><Wine className="h-3 w-3" /> Алкоголь</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select>
                         </FormItem>
@@ -436,13 +436,13 @@ export function ProfileCabinet() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Utensils className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Пищевые предпочтения</h3></div>
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Utensils className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Пищевые предпочтения</h3></div>
                     <div className="grid gap-6">
                       <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Любимые блюда / ингредиенты</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Авокадо, лосось, орехи..." {...field} className={textareaClasses} /><VoiceBtn field="favoriteFoods" /></div></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">Любимые блюда / ингредиенты</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Авокадо, лосось, орехи..." {...field} className={textareaClasses} /><VoiceBtn field="favoriteFoods" /></div></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-4">Исключить из рациона</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Молоко, лук, кинза..." {...field} className={textareaClasses} /><VoiceBtn field="dislikedFoods" /></div></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">Исключить из рациона</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Молоко, лук, кинза..." {...field} className={textareaClasses} /><VoiceBtn field="dislikedFoods" /></div></FormControl></FormItem>
                       )} />
                     </div>
                   </div>
@@ -451,13 +451,13 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary shadow-xl shadow-primary/20">
+          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl text-2xl font-black bg-primary text-slate-950 shadow-xl shadow-primary/20">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-4 h-8 w-8" /> Сохранить профиль</>}
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="premium-card p-8 border-none shadow-xl bg-white/5 backdrop-blur-md">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Уведомления</h3></div>
+            <Card className="premium-card p-8 border-none shadow-xl bg-slate-900/40 backdrop-blur-2xl">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Уведомления</h3></div>
               <div className="grid grid-cols-1 gap-4">
                 <Button 
                   variant="outline" 
@@ -475,10 +475,10 @@ export function ProfileCabinet() {
               </div>
             </Card>
 
-            <Card className="premium-card p-8 border-none shadow-xl bg-gradient-to-br from-primary/5 to-primary/10 backdrop-blur-md">
-               <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><History className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight">Архив здоровья</h3></div>
+            <Card className="premium-card p-8 border-none shadow-xl bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-2xl">
+               <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><History className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Архив здоровья</h3></div>
                <div className="space-y-4">
-                  <p className="text-[10px] text-muted-foreground font-medium px-1">Здесь хранятся все ваши загруженные отчеты, результаты анализов и рекомендации ИИ.</p>
+                  <p className="text-[10px] text-white/50 font-medium px-1">Здесь хранятся все ваши загруженные отчеты, результаты анализов и рекомендации ИИ.</p>
                   <AnalysisHistoryDialog>
                      <Button type="button" className="w-full h-16 rounded-2xl bg-white/5 text-primary border-2 border-primary/20 font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg hover:bg-primary/10 transition-all">
                         <FileText className="h-5 w-5" /> Посмотреть отчеты и анализы
