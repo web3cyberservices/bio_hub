@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -8,6 +7,7 @@ import {
   LayoutGrid, Activity, Sparkles
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
