@@ -273,8 +273,8 @@ export function ProfileCabinet() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center gap-4">
+    <div className="max-w-5xl mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center gap-4 mb-6">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
           {photoUrlValue ? (
             <div className="relative w-full h-full"><Image src={photoUrlValue} alt="Profile" fill className="object-cover" unoptimized /></div>
@@ -291,7 +291,7 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="premium-card border-none shadow-xl bg-slate-900/30 backdrop-blur-3xl overflow-hidden lg:col-span-2">
+            <Card className="premium-card border-none shadow-xl bg-white/[0.07] backdrop-blur-3xl overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Тип аккаунта</h3></div>
                 <div className="grid grid-cols-2 gap-4">
@@ -316,7 +316,7 @@ export function ProfileCabinet() {
             )}
           </div>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -347,7 +347,7 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Фото профиля</h3></div>
                 <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -369,7 +369,7 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/[0.07] backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
               {profileTypeValue === 'specialist' ? (
                 <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
@@ -461,7 +461,7 @@ export function ProfileCabinet() {
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="premium-card p-8 border-none shadow-xl bg-slate-900/30 backdrop-blur-3xl">
+            <Card className="premium-card p-8 border-none shadow-xl bg-white/[0.07] backdrop-blur-3xl">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Уведомления</h3></div>
               <div className="grid grid-cols-1 gap-4">
                 <Button 
