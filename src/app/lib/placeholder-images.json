@@ -1,11 +1,10 @@
-
 {
   "placeholderImages": [
     {
       "id": "digital-twin-hologram",
-      "description": "Голограмма светящегося человека с нервной системой",
-      "imageUrl": "https://picsum.photos/seed/cyberhologram1/800/1200",
-      "imageHint": "hologram human body blue"
+      "description": "Центральная голограмма синего человека с детализацией нейросетей и активными био-центрами",
+      "imageUrl": "https://picsum.photos/seed/cyberhologram12/800/1200",
+      "imageHint": "neural network human hologram glow blue heart"
     },
     {
       "id": "breakfast-omelette",

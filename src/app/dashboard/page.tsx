@@ -83,10 +83,10 @@ export default function DashboardPage() {
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
 
   return (
-    <div className="flex h-screen flex-col bg-[#010411] text-white overflow-hidden">
+    <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      {/* Top Header Bar */}
-      <header className="fixed top-0 left-0 right-0 z-[300] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
+      {/* Top Header Bar - High Priority Layer */}
+      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -104,10 +104,18 @@ export default function DashboardPage() {
       </header>
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
-        {viewingSpecialistId ? <div className="mt-28 overflow-y-auto h-full px-4 pb-32"><SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={() => setActiveTab('chats')} /></div> : (
+        {viewingSpecialistId ? (
+          <div className="mt-28 overflow-y-auto h-full px-4 pb-32">
+            <SpecialistPublicProfile 
+              specialistId={viewingSpecialistId} 
+              onBack={() => setViewingSpecialistId(null)} 
+              onStartChat={() => setActiveTab('chats')} 
+            />
+          </div>
+        ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 relative">
               <TabsContent value="feed" className="mt-28 space-y-8 h-full overflow-y-auto px-4 pb-32 no-scrollbar">
                  <div className="flex items-center justify-between px-2 max-w-2xl mx-auto">
                     <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
@@ -132,7 +140,7 @@ export default function DashboardPage() {
                  </div>
               </TabsContent>
 
-              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center pt-20 pb-20">
+              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center">
                 <RecommendationDisplay 
                   data={recommendationDoc?.data} 
                   mode="dashboard" 
@@ -151,8 +159,8 @@ export default function DashboardPage() {
               <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
-            {/* Bottom Nav Bar Bar */}
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] w-[95vw] max-w-2xl">
+            {/* Bottom Nav Bar - High Priority Layer */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[400] w-[95vw] max-w-2xl">
                <div className="bg-[#010411]/80 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all", activeTab === 'feed' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
                     <BookOpen className="h-6 w-6" />
