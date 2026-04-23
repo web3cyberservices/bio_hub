@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -20,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
 import { downloadLabResultsDocx } from '@/lib/docx-generator';
@@ -189,25 +190,22 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const logId = `${dateKey}_${Date.now()}`;
-      const logRef = doc(firestore, 'users', user.uid, 'dietaryLogs', logId);
       
-      await setDoc(logRef, {
-        id: logId,
-        userId: user.uid,
-        logDate: selectedDate.toISOString(),
-        mealName: data.mealName,
-        calories: data.calories,
-        protein: data.protein,
-        fat: data.fat,
-        carbs: data.carbs,
-        analysis: data.analysis,
-        components: data.components,
-        createdAt: new Date().toISOString()
+      // Сохраняем в personalMeals, чтобы отобразилось во вкладке "Питание" и на Двойнике
+      await addDoc(collection(firestore, 'users', user.uid, 'personalMeals'), {
+        date: dateKey,
+        name: data.mealName,
+        time: 'Обед', // По умолчанию Обед, пользователь может сменить в будущем
+        calories: Number(data.calories) || 0,
+        protein: Number(data.protein) || 0,
+        fat: Number(data.fat) || 0,
+        carbs: Number(data.carbs) || 0,
+        createdAt: new Date().toISOString(),
+        isAiGenerated: true
       });
       
       setIsSuccess(true);
-      toast({ title: 'Запись сохранена', description: `${data.mealName} добавлено в дневник.` });
+      toast({ title: 'Запись сохранена', description: `${data.mealName} добавлено в дневник и на дашборд.` });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
     } finally {

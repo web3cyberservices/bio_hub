@@ -31,7 +31,10 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   // Defaults for dashboard view
   const bioScore = data?.bioScore ?? 92;
-  const macros = data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
+  // Если есть фактические данные (съеденная еда), показываем их. Иначе рекомендации.
+  const macros = actualMacros && actualMacros.calories > 0 
+    ? actualMacros 
+    : (data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 });
 
   if (mode === 'dashboard') {
     return (

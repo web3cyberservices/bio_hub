@@ -63,6 +63,15 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
+  // Запрос фактически съеденной еды для синхронизации с двойником
+  const mealsQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid || !dateKey) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'personalMeals'),
+      where('date', '==', dateKey)
+    );
+  }, [firestore, user?.uid, dateKey]);
+
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -71,6 +80,18 @@ export default function DashboardPage() {
   const { data: recommendationDoc } = useDoc<any>(recommendationRef);
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
   const { data: posts } = useCollection<any>(postsQuery);
+  const { data: consumedMeals } = useCollection<any>(mealsQuery);
+
+  // Агрегация макросов для отображения на двойнике
+  const consumedMacros = useMemo(() => {
+    if (!consumedMeals) return { calories: 0, protein: 0, fat: 0, carbs: 0 };
+    return consumedMeals.reduce((acc: any, meal: any) => ({
+      calories: acc.calories + (meal.calories || 0),
+      protein: acc.protein + (meal.protein || 0),
+      fat: acc.fat + (meal.fat || 0),
+      carbs: acc.carbs + (meal.carbs || 0),
+    }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
+  }, [consumedMeals]);
 
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
 
@@ -139,6 +160,7 @@ export default function DashboardPage() {
                 data={recommendationDoc?.data} 
                 mode="dashboard" 
                 deviceData={dailyLogDoc} 
+                actualMacros={consumedMacros}
               />
             </TabsContent>
 
