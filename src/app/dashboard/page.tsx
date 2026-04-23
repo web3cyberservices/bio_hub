@@ -115,7 +115,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
         {viewingSpecialistId ? (
-          <div className="pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-32">
+          <div className="pt-4 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="feed" className="flex-1 m-0 pt-20 md:pt-24 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
+            <TabsContent value="feed" className="flex-1 m-0 pt-4 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
                <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-6">
                   <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                   {profileType === 'specialist' && <CreatePostDialog />}
@@ -161,25 +161,25 @@ export default function DashboardPage() {
               />
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 m-0 pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="meals" className="flex-1 m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
                <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 m-0 pt-20 md:pt-24 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+            <TabsContent value="chats" className="flex-1 m-0 pt-4 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
               <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 m-0 pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feeling" className="flex-1 m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 pt-20 md:pt-24 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 m-0 pt-4 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>
