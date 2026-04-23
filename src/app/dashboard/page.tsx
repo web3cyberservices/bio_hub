@@ -110,63 +110,61 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <div className="flex-1 min-h-0 relative h-full">
-              <TabsContent value="feed" className="m-0 pt-24 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none">
-                 <div className="flex items-center justify-between px-2 max-w-2xl mx-auto mb-6">
-                    <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
-                    {profileType === 'specialist' && <CreatePostDialog />}
-                 </div>
-                 <div className="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
-                    {posts?.map((post) => (
-                      <Card key={post.id} className="cyber-card p-6 space-y-6">
-                        <button className="flex items-center gap-3 text-left" onClick={() => setViewingSpecialistId(post.authorId)}>
-                           <div className="w-10 h-10 rounded-xl bg-[#00ffff]/10 flex items-center justify-center overflow-hidden border border-[#00ffff]/20">
-                              {post.authorPhoto ? <Image src={post.authorPhoto} alt="Author" width={40} height={40} className="object-cover" /> : <UserCircle className="h-5 w-5 text-[#00ffff]" />}
-                           </div>
-                           <div>
-                              <h4 className="font-black text-sm tracking-tight text-white">{post.authorName}</h4>
-                              <p className="text-[8px] text-[#00ffff]/60 uppercase font-bold">{post.authorRole}</p>
-                           </div>
-                        </button>
-                        <p className="text-xs md:text-sm font-medium leading-relaxed text-white/80">{post.content}</p>
-                        {post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/5"><Image src={post.imageUrl} alt="Post" fill className="object-cover" /></div>}
-                      </Card>
-                    ))}
-                 </div>
-              </TabsContent>
+            <TabsContent value="feed" className="flex-1 min-h-0 m-0 pt-24 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
+               <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-6 shrink-0">
+                  <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
+                  {profileType === 'specialist' && <CreatePostDialog />}
+               </div>
+               <div className="grid grid-cols-1 gap-6 w-full max-w-2xl mx-auto pb-10">
+                  {posts?.map((post) => (
+                    <Card key={post.id} className="cyber-card p-6 space-y-6">
+                      <button className="flex items-center gap-3 text-left" onClick={() => setViewingSpecialistId(post.authorId)}>
+                         <div className="w-10 h-10 rounded-xl bg-[#00ffff]/10 flex items-center justify-center overflow-hidden border border-[#00ffff]/20">
+                            {post.authorPhoto ? <Image src={post.authorPhoto} alt="Author" width={40} height={40} className="object-cover" /> : <UserCircle className="h-5 w-5 text-[#00ffff]" />}
+                         </div>
+                         <div>
+                            <h4 className="font-black text-sm tracking-tight text-white">{post.authorName}</h4>
+                            <p className="text-[8px] text-[#00ffff]/60 uppercase font-bold">{post.authorRole}</p>
+                         </div>
+                      </button>
+                      <p className="text-xs md:text-sm font-medium leading-relaxed text-white/80">{post.content}</p>
+                      {post.imageUrl && <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/5"><Image src={post.imageUrl} alt="Post" fill className="object-cover" /></div>}
+                    </Card>
+                  ))}
+               </div>
+            </TabsContent>
 
-              <TabsContent value="dashboard" className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none">
-                <RecommendationDisplay 
-                  data={recommendationDoc?.data} 
-                  mode="dashboard" 
-                  deviceData={dailyLogDoc} 
-                />
-              </TabsContent>
+            <TabsContent value="dashboard" className="flex-1 min-h-0 m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex">
+              <RecommendationDisplay 
+                data={recommendationDoc?.data} 
+                mode="dashboard" 
+                deviceData={dailyLogDoc} 
+              />
+            </TabsContent>
 
-              <TabsContent value="meals" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
-                 <div className="max-w-4xl mx-auto space-y-8 pt-4">
-                    <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
-                 </div>
-              </TabsContent>
+            <TabsContent value="meals" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+               <div className="max-w-4xl mx-auto space-y-8 pt-4 pb-10">
+                  <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
+               </div>
+            </TabsContent>
 
-              <TabsContent value="chats" className="m-0 pt-24 h-full px-4 pb-40 outline-none">
-                <div className="h-full max-w-6xl mx-auto pt-4">
-                  <ChatInterface />
-                </div>
-              </TabsContent>
+            <TabsContent value="chats" className="flex-1 min-h-0 m-0 pt-24 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 pb-10">
+                <ChatInterface />
+              </div>
+            </TabsContent>
 
-              <TabsContent value="feeling" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
-                <div className="max-w-4xl mx-auto pt-4">
-                  <WellBeingStatus deviceData={dailyLogDoc} />
-                </div>
-              </TabsContent>
+            <TabsContent value="feeling" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+              <div className="max-w-4xl mx-auto pt-4 pb-10">
+                <WellBeingStatus deviceData={dailyLogDoc} />
+              </div>
+            </TabsContent>
 
-              <TabsContent value="profile" className="m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none">
-                <div className="max-w-5xl mx-auto pt-4">
-                  <ProfileCabinet />
-                </div>
-              </TabsContent>
-            </div>
+            <TabsContent value="profile" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+              <div className="max-w-5xl mx-auto pt-4 pb-10">
+                <ProfileCabinet />
+              </div>
+            </TabsContent>
 
             {/* Bottom Nav Bar */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] w-[95vw] max-w-2xl">
