@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Droplets, Flame, Zap, Footprints, Moon } from 'lucide-react';
+import { Droplets, Flame, Zap, Footprints, Moon, Beef } from 'lucide-react';
 
 interface GaugeProps {
   label: string;
@@ -45,6 +45,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   const kcalVal = deviceData?.calories || 0;
   const fatVal = macros?.fat || 0;
   const carbVal = macros?.carbs || 0;
+  const proteinVal = macros?.protein || 0;
   const stepsVal = deviceData?.steps || 0;
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
@@ -52,11 +53,17 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center overflow-hidden bg-[#000000]", className)}>
       
-      {/* 1. HUD LAYER (Gauges) - z-30 */}
+      {/* 1. LAYER: DECORATIVE BACKGROUND - z-10 */}
+      <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
+        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]" />
+        <div className="scan-line" />
+      </div>
+
+      {/* 2. LAYER: HUD INTERFACE (Gauges) - z-30 */}
       <div className="relative z-30 w-full max-w-7xl h-full flex items-center px-8 md:px-16">
         
-        {/* LEFT HUD: Water & Calories */}
-        <div className="flex flex-col gap-12 md:gap-20 items-start justify-center h-full flex-1">
+        {/* LEFT COLUMN: Water & Calories & Steps */}
+        <div className="flex flex-col gap-10 md:gap-16 items-start justify-center h-full flex-1">
           <NeonGauge 
             label="ВОДА" value={waterVal}
             icon={<Droplets className="h-5 w-5 text-[#0EA5E9]" />} color="#0EA5E9" 
@@ -69,8 +76,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* RIGHT HUD: Fats & Carbs */}
-        <div className="flex flex-col gap-12 md:gap-20 items-end justify-center h-full flex-1">
+        {/* RIGHT COLUMN: Fats & Carbs & Proteins */}
+        <div className="flex flex-col gap-10 md:gap-16 items-end justify-center h-full flex-1">
           <NeonGauge 
             label="ЖИРЫ" value={fatVal}
             icon={<Moon className="h-5 w-5 text-[#EAB308]" />} color="#EAB308" 
@@ -84,7 +91,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 2. STEP COUNTER HUD - z-40 */}
+      {/* 3. LAYER: STEP COUNTER BLOCK - z-40 */}
       <div className="absolute bottom-32 right-12 md:right-24 z-40 flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Footprints className="h-5 w-5 text-[#00ffff]" />
@@ -95,7 +102,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 3. BIO-SCORE BADGE - z-40 */}
+      {/* 4. LAYER: BIO-SCORE STATUS - z-40 */}
       <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40">
         <div className="bg-[#00ffff]/10 border border-[#00ffff]/30 px-8 py-2.5 rounded-full backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.15)] flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#00ffff] animate-pulse shadow-[0_0_8px_#00ffff]" />
@@ -103,7 +110,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 4. CENTRAL HEART CORE - z-45 */}
+      {/* 5. LAYER: CENTRAL HEART CORE - z-45 */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[45] pointer-events-none">
         <div className="relative w-8 h-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-[#00ffff]/30 rounded-full animate-ping opacity-60" />
@@ -111,25 +118,18 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* 5. TOP LAYER: MAIN HOLOGRAM - z-50 */}
+      {/* 6. LAYER: THE PERSON HOLOGRAM (TOP LAYER) - z-50 */}
       <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="relative w-full h-[65vh] animate-hologram flex items-center justify-center">
+        <div className="relative w-full max-w-4xl h-[70vh] animate-hologram flex items-center justify-center">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
-            width={800}
-            height={1200}
-            className="object-contain filter drop-shadow-[0_0_40px_#00ffff] opacity-90"
+            fill
+            className="object-contain filter drop-shadow-[0_0_50px_#00ffff] opacity-95"
             priority
             unoptimized
           />
         </div>
-      </div>
-
-      {/* 6. DECORATIVE BACKGROUND - z-10 */}
-      <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]" />
-        <div className="scan-line" />
       </div>
 
     </div>
