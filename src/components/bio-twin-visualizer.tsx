@@ -70,21 +70,22 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* CENTER COLUMN: User Image Base */}
+        {/* CENTER COLUMN: Digital Twin Asset */}
         <div className="relative flex items-center justify-center h-full">
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
              <div className="relative w-full h-full">
+                {/* The main asset from /hologram.png */}
                 <Image 
                   src="/hologram.png" 
                   alt="Bio-Hologram" 
                   fill 
-                  className="object-contain drop-shadow-[0_0_20px_#00ffff]"
+                  className="object-contain drop-shadow-[0_0_25px_#00ffff]"
                   priority
                   unoptimized
                 />
              </div>
 
-             {/* Pulsing Core Dot exactly over Heart area */}
+             {/* Central Heart Pulse Dot */}
              <div className="absolute top-[38%] left-1/2 -translate-x-1/2 z-40">
                 <div className="relative w-6 h-6 flex items-center justify-center">
                    <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-50" />
