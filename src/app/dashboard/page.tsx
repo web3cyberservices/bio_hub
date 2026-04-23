@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -85,8 +86,8 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      {/* Top Header Bar - Fixed Z-Index */}
-      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
+      {/* Top Header Bar */}
+      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -159,7 +160,7 @@ export default function DashboardPage() {
               <TabsContent value="profile" className="mt-28 overflow-y-auto h-full px-4 pb-32 no-scrollbar"><ProfileCabinet /></TabsContent>
             </div>
 
-            {/* Bottom Nav Bar - Fixed Z-Index */}
+            {/* Bottom Nav Bar */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[400] w-[95vw] max-w-2xl">
                <div className="bg-[#010411]/80 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all", activeTab === 'feed' ? "text-white scale-125" : "text-white/30 hover:text-white/50")}>
