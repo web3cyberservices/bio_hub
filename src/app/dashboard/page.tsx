@@ -109,10 +109,10 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* DOUBLE / HOLOGRAM TAB: Custom calculated height */}
+            {/* DOUBLE / HOLOGRAM TAB: Centered vertical layout */}
             <TabsContent 
               value="dashboard" 
-              className="flex-1 m-0 h-[calc(100vh-160px)] w-full overflow-hidden flex flex-col items-center justify-start outline-none data-[state=active]:flex mt-[85px] pt-2.5 md:pt-0"
+              className="flex-1 m-0 h-[calc(100vh-190px)] w-full overflow-hidden flex flex-col items-center justify-center outline-none data-[state=active]:flex mt-[80px]"
             >
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>

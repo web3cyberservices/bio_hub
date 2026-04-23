@@ -60,20 +60,20 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
   return (
-    <div className={cn("relative w-full h-full flex flex-col items-center justify-start overflow-hidden bg-[#000000] touch-none", className)}>
+    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none", className)}>
       
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_40%,rgba(0,255,255,0.25),transparent_70%)]" />
+        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
         <div className="scan-line opacity-30" />
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#00ffff]/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#00ffff]/5 to-transparent pointer-events-none" />
       </div>
 
       {/* LAYER 2: HUD INTERFACE (GAUGES) */}
-      <div className="relative z-[60] w-full h-full flex items-start justify-between px-4 md:px-20 pointer-events-none pt-2 md:pt-10">
+      <div className="relative z-[60] w-full h-full flex items-center justify-between px-4 md:px-20 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-2 md:gap-8 items-start justify-start h-full pointer-events-auto">
+        <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal}
             icon={<Footprints className="h-4 w-4 md:h-7 md:w-7 text-[#00ffff]" />} color="#00ffff" 
@@ -97,7 +97,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
 
         {/* RIGHT COLUMN: NUTRITION */}
-        <div className="flex flex-col gap-2 md:gap-8 items-end justify-start h-full pointer-events-auto">
+        <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal}
             icon={<Flame className="h-4 w-4 md:h-7 md:w-7 text-[#FB923C]" />} color="#FB923C" 
@@ -121,16 +121,16 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE */}
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        <div className="relative w-full h-[65vh] md:h-[75vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-10 md:-translate-y-16 scale-110 md:scale-100">
+      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE - PERFECTLY CENTERED */}
+      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
+        <div className="relative w-[90%] h-[90%] animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
               src="/bio-hologram.png" 
               alt="Bio-Hologram" 
               fill
-              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,1)] drop-shadow-[0_0_45px_rgba(0,255,255,0.6)] drop-shadow-[0_0_90px_rgba(0,255,255,0.4)]"
+              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,1)] drop-shadow-[0_0_45px_rgba(0,255,255,0.6)]"
               priority
               unoptimized
             />
