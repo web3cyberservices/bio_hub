@@ -146,26 +146,26 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const totalCalories = meals?.reduce((acc, m) => acc + (m.calories || 0), 0) || 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h3 className="text-3xl font-black tracking-tighter text-foreground">Свой план</h3>
-          <p className="text-muted-foreground text-sm font-medium">Рацион на {format(selectedDate, 'd MMMM', { locale: ru })}.</p>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="space-y-0.5">
+          <h3 className="text-3xl font-black tracking-tighter text-foreground uppercase leading-none">Свой план</h3>
+          <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">{format(selectedDate, 'd MMMM', { locale: ru })}</p>
         </div>
-        <div className="bg-white/60 backdrop-blur-md px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-4">
+        <div className="bg-white/60 backdrop-blur-md px-6 py-2.5 rounded-2xl border shadow-sm flex items-center gap-4">
            <div className="text-center">
-              <p className="text-[8px] font-black uppercase text-muted-foreground opacity-40">Итого ккал</p>
-              <p className="text-xl font-black text-primary">{totalCalories}</p>
+              <p className="text-[7px] font-black uppercase text-muted-foreground opacity-40">Итого ккал</p>
+              <p className="text-xl font-black text-primary leading-none">{totalCalories}</p>
            </div>
            <div className="w-px h-8 bg-border" />
-           <Button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-12 gap-2 bg-primary font-black shadow-lg">
-             <Plus className="h-4 w-4" /> Добавить блюдо
-           </Button>
+           <button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
+             <Plus className="h-4 w-4 stroke-[3px]" /> Добавить
+           </button>
         </div>
       </div>
 
       {isAdding && (
-        <Card className="premium-card border-none bg-primary/5 shadow-xl animate-in zoom-in-95 duration-300">
+        <Card className="premium-card border-none bg-primary/5 shadow-xl animate-in zoom-in-95 duration-300 mb-6">
            <CardContent className="p-8">
               <form onSubmit={handleAddMeal} className="space-y-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -188,7 +188,6 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                             onClick={() => handleAiCalculate()}
                             disabled={isCalculating || !name.trim()}
                             className="h-10 w-10 rounded-full text-primary hover:bg-primary/10 transition-all"
-                            title="Рассчитать через ИИ"
                           >
                             {isCalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                           </Button>
@@ -245,11 +244,6 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                                 isCalculating && "animate-pulse opacity-50"
                               )} 
                             />
-                            {isCalculating && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <span className="text-[8px] font-bold text-primary animate-bounce uppercase">считаю...</span>
-                              </div>
-                            )}
                           </div>
                        </div>
                     ))}
@@ -258,10 +252,9 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                  <div className="flex gap-4 pt-2">
                     <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-14 rounded-xl font-bold">Отмена</Button>
                     <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl">
-                       {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> Сохранить в план</>}
+                       {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> Сохранить</>}
                     </Button>
                  </div>
-                 <p className="text-[9px] text-center text-muted-foreground/60 italic">ИИ рассчитывает средние значения для порции. Вы можете скорректировать их вручную.</p>
               </form>
            </CardContent>
         </Card>
@@ -271,7 +264,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
          {mealsLoading ? (
             <div className="py-24 text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Синхронизация списка...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка...</p>
             </div>
          ) : meals && meals.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
@@ -306,11 +299,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
                <div className="space-y-1">
-                  <p className="text-xl font-black text-foreground/40">Ваш план пока пуст</p>
-                  <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto">Добавляйте свои блюда и контролируйте калории в реальном времени.</p>
+                  <p className="text-xl font-black text-foreground/40 uppercase">План пуст</p>
                </div>
-               <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black">
-                  <Plus className="h-4 w-4 mr-2" /> Добавить первое блюдо
+               <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px]">
+                  Добавить первое блюдо
                </Button>
             </div>
          )}

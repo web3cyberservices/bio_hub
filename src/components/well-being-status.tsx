@@ -31,15 +31,15 @@ export function WellBeingStatus({ deviceData }: WellBeingStatusProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-2">
-         <Badge variant="outline" className="px-6 py-1 rounded-2xl border-primary/30 text-primary font-black uppercase tracking-[0.3em] text-[9px] bg-primary/5">
+    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="text-center space-y-1 mb-8">
+         <Badge variant="outline" className="px-6 py-0.5 rounded-full border-primary/30 text-primary font-black uppercase tracking-[0.3em] text-[8px] bg-primary/5">
             Psycho-Biometric Status
          </Badge>
-         <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white uppercase leading-none">Самочувствие</h2>
+         <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase leading-none">Самочувствие</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
          {/* Mood Card */}
          <Card className="cyber-card p-10 flex flex-col items-center justify-center text-center gap-6 group">
             <div className="relative">
@@ -77,8 +77,7 @@ export function WellBeingStatus({ deviceData }: WellBeingStatusProps) {
          </Card>
       </div>
 
-      {/* Bio-Rhythms & Fasting Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
          <Card className="cyber-card p-8 md:col-span-2 flex flex-col md:flex-row items-center gap-8 bg-gradient-to-br from-primary/5 to-transparent">
             <div className="w-24 h-24 rounded-full border-4 border-primary/20 flex items-center justify-center relative shrink-0">
                <Timer className="h-10 w-10 text-primary animate-pulse" />
@@ -87,7 +86,7 @@ export function WellBeingStatus({ deviceData }: WellBeingStatusProps) {
             <div className="space-y-4 text-center md:text-left flex-1">
                <div className="space-y-1">
                   <h4 className="text-xl font-black text-white uppercase tracking-tight">Цикл голодания (16:8)</h4>
-                  <p className="text-xs text-white/50 font-medium">Система рассчитывает идеальное окно питания на основе вашего последнего приема пищи.</p>
+                  <p className="text-xs text-white/50 font-medium">Идеальное окно питания на основе вашего последнего приема пищи.</p>
                </div>
                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   <Badge className="bg-white/5 text-white/60 border-none font-bold py-1.5 px-4">Окно: 12:00 - 20:00</Badge>
@@ -109,20 +108,16 @@ export function WellBeingStatus({ deviceData }: WellBeingStatusProps) {
          </Card>
       </div>
 
-      <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/20 flex items-start gap-4">
+      <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/20 flex items-start gap-4 mb-10">
          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
             <Sparkles className="h-5 w-5 text-primary" />
          </div>
          <div className="space-y-1">
             <h5 className="font-black text-sm text-white uppercase">ИИ Инсайт</h5>
             <p className="text-xs text-white/60 leading-relaxed">
-               Ваша энергия коррелирует с уровнем гидратации. Сегодня вы выпили на 300мл меньше нормы, что может вызвать легкую усталость к 18:00. Рекомендуем выпить стакан воды с лимоном прямо сейчас.
+               Ваша энергия коррелирует с уровнем гидратации. Рекомендуем выпить стакан воды с лимоном прямо сейчас.
             </p>
          </div>
-      </div>
-      
-      <div className="text-center opacity-10 pt-10">
-         <p className="text-[6px] font-black uppercase tracking-[1.5em]">Neural Psycho-Sync Protocol v4.0.2</p>
       </div>
     </div>
   );

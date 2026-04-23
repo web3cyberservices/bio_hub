@@ -292,7 +292,7 @@ export function ProfileCabinet() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="premium-card border-none shadow-xl bg-slate-900/30 backdrop-blur-3xl overflow-hidden lg:col-span-2">
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-8 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Тип аккаунта</h3></div>
                 <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => form.setValue('profileType', 'user')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'user' ? "bg-primary text-slate-950 border-primary shadow-lg shadow-primary/20" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}>
@@ -317,7 +317,7 @@ export function ProfileCabinet() {
           </div>
 
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
-            <CardContent className="p-8 md:p-12 space-y-8">
+            <CardContent className="p-8 md:p-12 space-y-6">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
@@ -370,9 +370,9 @@ export function ProfileCabinet() {
           </Card>
 
           <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
-            <CardContent className="p-8 md:p-12 space-y-12">
+            <CardContent className="p-8 md:p-12 space-y-6">
               {profileTypeValue === 'specialist' ? (
-                <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
+                <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Briefcase className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Профессиональные данные</h3></div>
                     <div className="grid gap-6">
@@ -389,7 +389,7 @@ export function ProfileCabinet() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-12 animate-in slide-in-from-top-4 duration-500">
+                <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Target className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Цели и Активность</h3></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
