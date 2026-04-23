@@ -274,7 +274,8 @@ export function ProfileCabinet() {
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 bg-transparent">
-      <div className="flex items-center gap-4 mb-8 mt-0 pt-0">
+      {/* NO TOP PADDING - MARGIN CONTROLLED BY TABSCONTENT IN DASHBOARD */}
+      <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20 shrink-0">
           {photoUrlValue ? (
             <div className="relative w-full h-full"><Image src={photoUrlValue} alt="Profile" fill className="object-cover" unoptimized /></div>
@@ -282,7 +283,7 @@ export function ProfileCabinet() {
             <User className="h-6 w-6 md:h-8 md:w-8 text-primary" />
           )}
         </div>
-        <div className="mt-0">
+        <div>
           <h2 className="text-xl md:text-5xl font-black tracking-tighter text-white font-headline leading-none uppercase m-0">Личный кабинет</h2>
           <p className="text-white/50 text-[10px] md:text-base font-medium">Управление вашим био-аккаунтом.</p>
         </div>

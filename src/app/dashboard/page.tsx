@@ -71,9 +71,10 @@ export default function DashboardPage() {
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-x-hidden">
+    <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen">
       
-      <header className="absolute top-0 left-0 right-0 z-[500] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
+      {/* FIXED HEADER: 80px height */}
+      <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -93,9 +94,9 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      <main className="flex-1 relative w-full flex flex-col">
+      <main className="flex-1 relative w-full overflow-hidden flex flex-col">
         {viewingSpecialistId ? (
-          <div className="pt-24 overflow-y-auto h-full px-4 pb-32">
+          <div className="mt-[90px] overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -108,11 +109,15 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="dashboard" className="flex-1 m-0 h-full w-full overflow-hidden flex flex-col items-center justify-start outline-none data-[state=active]:flex pt-[100px] md:pt-[120px]">
+            {/* DOUBLE / HOLOGRAM TAB: Custom calculated height */}
+            <TabsContent 
+              value="dashboard" 
+              className="flex-1 m-0 h-[calc(100vh-160px)] w-full overflow-hidden flex flex-col items-center justify-start outline-none data-[state=active]:flex mt-[85px] pt-2.5 md:pt-0"
+            >
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            <TabsContent value="feed" className="flex-1 m-0 pt-[100px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feed" className="flex-1 m-0 mt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-3xl mx-auto space-y-8 pb-10">
                 <div className="text-center space-y-2 mb-12">
                    <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -147,30 +152,31 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 m-0 pt-[100px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="meals" className="flex-1 m-0 mt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
                <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 m-0 pt-[100px] h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+            <TabsContent value="chats" className="flex-1 m-0 mt-[90px] h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
               <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 m-0 pt-[100px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feeling" className="flex-1 m-0 mt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 pt-[100px] overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 m-0 mt-[90px] overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>
             </TabsContent>
 
+            {/* NAVIGATION BAR */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   
