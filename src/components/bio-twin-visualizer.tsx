@@ -70,7 +70,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
           />
         </div>
 
-        {/* CENTER COLUMN: The Requested Hologram Image */}
+        {/* CENTER COLUMN: User Image Base */}
         <div className="relative flex items-center justify-center h-full">
           <div className="relative w-full h-[55vh] flex items-center justify-center animate-hologram">
              <div className="relative w-full h-full">
@@ -84,7 +84,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
                 />
              </div>
 
-             {/* Single Cyan Core Dot over Heart */}
+             {/* Pulsing Core Dot exactly over Heart area */}
              <div className="absolute top-[38%] left-1/2 -translate-x-1/2 z-40">
                 <div className="relative w-6 h-6 flex items-center justify-center">
                    <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-50" />
@@ -107,7 +107,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
             progress={getProgress(carbVal, 300)}
           />
           
-          {/* Step Counter */}
+          {/* Step Counter HUD style */}
           <div className="absolute bottom-10 right-0 flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl backdrop-blur-md group hover:border-primary/40 transition-all">
              <Footprints className="h-4 w-4 text-[#00ffff] group-hover:scale-110 transition-transform" />
              <span className="text-sm font-black text-white">{stepsVal} <span className="text-[10px] text-white/40 uppercase">STEP</span></span>
@@ -116,7 +116,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       </div>
 
-      {/* Grid Scan Background Effect */}
+      {/* Grid Scan Background Overlay */}
       <div className="absolute inset-0 z-10 pointer-events-none opacity-20">
          <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.05),transparent_70%)]" />
          <div className="scan-line" />

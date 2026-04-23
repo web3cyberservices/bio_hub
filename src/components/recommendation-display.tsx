@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -28,6 +29,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (!mounted) return null;
 
+  // Defaults for dashboard view
   const bioScore = data?.bioScore ?? 92;
   const macros = data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 };
 
