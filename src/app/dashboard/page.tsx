@@ -60,7 +60,6 @@ export default function DashboardPage() {
 
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
 
-  // Получаем все посты для ленты
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'), limit(20));
@@ -108,11 +107,11 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="dashboard" className="flex-1 m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex">
+            <TabsContent value="dashboard" className="flex-1 m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-2" style={{ paddingTop: '8px' }}>
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            <TabsContent value="feed" className="flex-1 m-0 pt-8 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feed" className="flex-1 m-0 pt-2 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block" style={{ paddingTop: '8px' }}>
               <div className="max-w-3xl mx-auto space-y-8 pb-10">
                 <div className="text-center space-y-2 mb-12">
                    <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -145,25 +144,25 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 m-0 pt-8 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="meals" className="flex-1 m-0 pt-2 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block" style={{ paddingTop: '8px' }}>
                <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 m-0 pt-8 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+            <TabsContent value="chats" className="flex-1 m-0 pt-2 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col" style={{ paddingTop: '8px' }}>
               <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 m-0 pt-8 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feeling" className="flex-1 m-0 pt-2 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block" style={{ paddingTop: '8px' }}>
               <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 pt-8 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 m-0 pt-2 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block" style={{ paddingTop: '8px' }}>
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>
