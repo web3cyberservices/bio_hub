@@ -63,9 +63,9 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.25),transparent_80%)]" />
+        <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.35),transparent_75%)]" />
         <div className="scan-line opacity-40" />
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#00ffff]/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#00ffff]/20 to-transparent pointer-events-none" />
       </div>
 
       {/* LAYER 2: HUD INTERFACE (GAUGES) */}
@@ -122,24 +122,25 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        {/* Контейнер с точными настройками смещения, чтобы голова не касалась шапки, а ноги - меню */}
         <div className="relative w-full h-[65vh] md:h-[50vh] max-w-none md:max-w-4xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-10 md:-translate-y-32 scale-150 md:scale-100">
           
-          {/* Изображение голограммы */}
-          <Image 
-            src="/bio-hologram.png" 
-            alt="Bio-Hologram" 
-            fill
-            className="object-contain filter drop-shadow-[0_0_120px_rgba(0,255,255,0.9)]"
-            priority
-            unoptimized
-          />
+          {/* Изображение голограммы с усиленным неоновым свечением по контуру */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Image 
+              src="/bio-hologram.png" 
+              alt="Bio-Hologram" 
+              fill
+              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,1)] drop-shadow-[0_0_45px_rgba(0,255,255,0.6)] drop-shadow-[0_0_90px_rgba(0,255,255,0.4)]"
+              priority
+              unoptimized
+            />
 
-          {/* BIO-CORE: Пульсирующая точка сердца (32% сверху изображения) */}
-          <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
-            <div className="relative w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
-              <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
+            {/* BIO-CORE: Пульсирующая точка сердца (32% сверху изображения) */}
+            <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
+              <div className="relative w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#00ffff]/60 rounded-full animate-ping opacity-90" />
+                <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
+              </div>
             </div>
           </div>
 
