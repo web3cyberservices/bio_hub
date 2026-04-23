@@ -272,7 +272,7 @@ export function ProfileCabinet() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20">
           {photoUrlValue ? (
@@ -288,20 +288,24 @@ export function ProfileCabinet() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="premium-card border-none shadow-xl bg-slate-900/40 backdrop-blur-2xl overflow-hidden lg:col-span-2">
+            <Card className="premium-card border-none shadow-xl bg-slate-900/30 backdrop-blur-3xl overflow-hidden lg:col-span-2">
               <CardContent className="p-8 space-y-8">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Fingerprint className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Тип аккаунта</h3></div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button type="button" onClick={() => form.setValue('profileType', 'user')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'user' ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}><User className="h-5 w-5" /> Пользователь</Button>
-                  <Button type="button" onClick={() => form.setValue('profileType', 'specialist')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'specialist' ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}><Stethoscope className="h-5 w-5" /> Специалист</Button>
+                  <button type="button" onClick={() => form.setValue('profileType', 'user')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'user' ? "bg-primary text-slate-950 border-primary shadow-lg shadow-primary/20" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}>
+                    <User className="h-5 w-5" /> <span>Пользователь</span>
+                  </button>
+                  <button type="button" onClick={() => form.setValue('profileType', 'specialist')} className={cn("h-20 rounded-2xl border-2 transition-all flex flex-col gap-1 items-center justify-center font-black uppercase tracking-widest text-[10px]", profileTypeValue === 'specialist' ? "bg-primary text-slate-950 border-primary shadow-lg shadow-primary/20" : "bg-white/5 text-primary border-primary/10 hover:bg-white/10")}>
+                    <Stethoscope className="h-5 w-5" /> <span>Специалист</span>
+                  </button>
                 </div>
               </CardContent>
             </Card>
 
             {profileTypeValue === 'user' && (
-              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-2xl overflow-hidden flex flex-col justify-center">
+              <Card className="premium-card border-none shadow-xl bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-3xl overflow-hidden flex flex-col justify-center">
                 <CardContent className="p-8 text-center space-y-4">
                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2"><Smartphone className="h-8 w-8 text-primary" /></div>
                    <h3 className="font-black text-lg tracking-tight uppercase text-white">Bio-Sync</h3>
@@ -311,7 +315,7 @@ export function ProfileCabinet() {
             )}
           </div>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-8">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4"><User className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Персональные данные</h3></div>
               <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -342,7 +346,7 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-6">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-4"><ImageIcon className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Фото профиля</h3></div>
                 <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -364,7 +368,7 @@ export function ProfileCabinet() {
             </CardContent>
           </Card>
 
-          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/40 backdrop-blur-2xl">
+          <Card className="premium-card overflow-hidden border-none shadow-2xl bg-slate-900/30 backdrop-blur-3xl">
             <CardContent className="p-8 md:p-12 space-y-12">
               {profileTypeValue === 'specialist' ? (
                 <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
@@ -456,7 +460,7 @@ export function ProfileCabinet() {
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="premium-card p-8 border-none shadow-xl bg-slate-900/40 backdrop-blur-2xl">
+            <Card className="premium-card p-8 border-none shadow-xl bg-slate-900/30 backdrop-blur-3xl">
               <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><BellRing className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Уведомления</h3></div>
               <div className="grid grid-cols-1 gap-4">
                 <Button 
@@ -475,7 +479,7 @@ export function ProfileCabinet() {
               </div>
             </Card>
 
-            <Card className="premium-card p-8 border-none shadow-xl bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-2xl">
+            <Card className="premium-card p-8 border-none shadow-xl bg-gradient-to-br from-primary/20 to-transparent backdrop-blur-3xl">
                <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-6"><History className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Архив здоровья</h3></div>
                <div className="space-y-4">
                   <p className="text-[10px] text-white/50 font-medium px-1">Здесь хранятся все ваши загруженные отчеты, результаты анализов и рекомендации ИИ.</p>

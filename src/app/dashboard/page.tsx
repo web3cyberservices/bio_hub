@@ -62,7 +62,6 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
-  // Запрос фактически съеденной еды для синхронизации с двойником
   const mealsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
     return query(
@@ -81,7 +80,6 @@ export default function DashboardPage() {
   const { data: posts } = useCollection<any>(postsQuery);
   const { data: consumedMeals } = useCollection<any>(mealsQuery);
 
-  // Агрегация макросов для отображения на двойнике
   const consumedMacros = useMemo(() => {
     if (!consumedMeals) return { calories: 0, protein: 0, fat: 0, carbs: 0 };
     return consumedMeals.reduce((acc: any, meal: any) => ({
@@ -97,7 +95,6 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      {/* Top Header Bar */}
       <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
@@ -117,7 +114,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
         {viewingSpecialistId ? (
-          <div className="pt-24 overflow-y-auto h-full px-4 pb-32">
+          <div className="pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -130,8 +127,8 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="feed" className="flex-1 min-h-0 m-0 pt-24 space-y-8 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
-               <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-6 shrink-0">
+            <TabsContent value="feed" className="flex-1 min-h-0 m-0 pt-20 md:pt-24 space-y-6 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
+               <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-2 shrink-0">
                   <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                   {profileType === 'specialist' && <CreatePostDialog />}
                </div>
@@ -163,31 +160,30 @@ export default function DashboardPage() {
               />
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-               <div className="max-w-4xl mx-auto space-y-8 pt-4 pb-10">
+            <TabsContent value="meals" className="flex-1 min-h-0 m-0 pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+               <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 min-h-0 m-0 pt-24 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
-              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 pb-10">
+            <TabsContent value="chats" className="flex-1 min-h-0 m-0 pt-20 md:pt-24 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 min-h-0 m-0 pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-4xl mx-auto pt-4 pb-10">
+            <TabsContent value="feeling" className="flex-1 min-h-0 m-0 pt-20 md:pt-24 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+              <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 min-h-0 m-0 pt-20 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 min-h-0 m-0 pt-18 md:pt-22 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto pb-10">
                 <ProfileCabinet />
               </div>
             </TabsContent>
 
-            {/* Bottom Nav Bar */}
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] w-[95vw] max-w-2xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300", activeTab === 'feed' ? "text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/30 hover:text-white/50")}>
