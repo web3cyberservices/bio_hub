@@ -60,7 +60,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
   return (
-    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none", className)}>
+    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4 pb-32", className)}>
       
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -121,9 +121,9 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE - PERFECTLY CENTERED */}
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-[90%] h-[90%] max-h-[75vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
+      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE - CENTERING IN SAFE ZONE */}
+      <div className="absolute top-0 bottom-32 left-0 right-0 z-50 pointer-events-none flex items-center justify-center">
+        <div className="relative w-[90%] h-[90%] max-h-[65vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
