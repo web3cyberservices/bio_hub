@@ -1,9 +1,10 @@
+
 {
   "placeholderImages": [
     {
       "id": "digital-twin-hologram",
       "description": "Центральная голограмма синего человека с детализацией нервной системы, мозга и сердца",
-      "imageUrl": "https://picsum.photos/seed/hologram_detailed_12/800/1200",
+      "imageUrl": "https://picsum.photos/seed/hologram_detailed_88/800/1200",
       "imageHint": "detailed blue human hologram neural network"
     },
     {
@@ -59,42 +60,6 @@
       "description": "Тофу с овощами гриль",
       "imageUrl": "https://picsum.photos/seed/tofu9/600/400",
       "imageHint": "tofu stir-fry"
-    },
-    {
-      "id": "snack-nuts",
-      "description": "Горсть орехов и сухофруктов",
-      "imageUrl": "https://picsum.photos/seed/nuts10/600/400",
-      "imageHint": "mixed nuts"
-    },
-    {
-      "id": "snack-yogurt",
-      "description": "Греческий йогурт с ягодами",
-      "imageUrl": "https://picsum.photos/seed/yogurt11/600/400",
-      "imageHint": "yogurt berries"
-    },
-    {
-      "id": "snack-avocado",
-      "description": "Авокадо-тост",
-      "imageUrl": "https://picsum.photos/seed/avocado12/600/400",
-      "imageHint": "avocado toast"
-    },
-    {
-      "id": "snack-fruit",
-      "description": "Нарезка свежих фруктов",
-      "imageUrl": "https://picsum.photos/seed/fruits13/600/400",
-      "imageHint": "fruit platter"
-    },
-    {
-      "id": "snack-apple",
-      "description": "Свежее яблоко",
-      "imageUrl": "https://picsum.photos/seed/apple14/600/400",
-      "imageHint": "fresh apple"
-    },
-    {
-      "id": "snack-pear",
-      "description": "Спелая груша",
-      "imageUrl": "https://picsum.photos/seed/pear15/600/400",
-      "imageHint": "ripe pear"
     }
   ]
 }
