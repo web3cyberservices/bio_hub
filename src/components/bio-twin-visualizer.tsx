@@ -120,18 +120,12 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 4: BIO-CORE HEART BEAT */}
-      {/* Positioned relative to the scaled hologram for heart alignment */}
-      <div className="absolute top-[44%] md:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] pointer-events-none">
-        <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-          <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
-          <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
-        </div>
-      </div>
-
-      {/* LAYER 5: THE PERSON (TOP LAYER) */}
+      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
+        {/* Этот контейнер управляет масштабом и положением всей фигуры */}
         <div className="relative w-[150vw] h-[75vh] md:w-full md:h-[60vh] max-w-none md:max-w-5xl animate-hologram flex items-center justify-center transition-all duration-1000 -translate-y-20 md:-translate-y-48 scale-150 md:scale-100">
+          
+          {/* Изображение голограммы */}
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
@@ -140,6 +134,16 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
             priority
             unoptimized
           />
+
+          {/* BIO-CORE: Теперь точка находится ВНУТРИ контейнера голограммы */}
+          {/* top-[32%] — это анатомический центр груди для большинства изображений человека */}
+          <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
+            <div className="relative w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#00ffff]/50 rounded-full animate-ping opacity-80" />
+              <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
+            </div>
+          </div>
+
         </div>
       </div>
 
