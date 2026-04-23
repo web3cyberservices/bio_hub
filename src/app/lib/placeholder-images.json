@@ -1,9 +1,8 @@
-
 {
   "placeholderImages": [
     {
       "id": "digital-twin-hologram",
-      "description": "Центральная голограмма синего человека с детализацией нервной системы, мозга и сердца",
+      "description": "Центральная голограмма высокодетализированного человека с нейронной сетью",
       "imageUrl": "/hologram.png",
       "imageHint": "detailed blue human hologram neural network"
     },
