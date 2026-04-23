@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -94,7 +95,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden flex flex-col">
         {viewingSpecialistId ? (
-          <div className="pt-[90px] overflow-y-auto h-full px-4 pb-32">
+          <div className="pt-24 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -107,11 +108,11 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="dashboard" className="flex-1 m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-[90px]">
+            <TabsContent value="dashboard" className="flex-1 m-0 h-full w-full overflow-hidden flex flex-col items-center justify-start outline-none data-[state=active]:flex pt-12 md:pt-[60px]">
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            <TabsContent value="feed" className="flex-1 m-0 pt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feed" className="flex-1 m-0 pt-12 md:pt-[60px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-3xl mx-auto space-y-8 pb-10">
                 <div className="text-center space-y-2 mb-12">
                    <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -144,25 +145,25 @@ export default function DashboardPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 m-0 pt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="meals" className="flex-1 m-0 pt-12 md:pt-[60px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
                <div className="max-w-4xl mx-auto pb-10">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 m-0 pt-[90px] h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+            <TabsContent value="chats" className="flex-1 m-0 pt-12 md:pt-[60px] h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
               <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 m-0 pt-[90px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="feeling" className="flex-1 m-0 pt-12 md:pt-[60px] overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-4xl mx-auto pb-10">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 pt-[90px] overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 m-0 pt-12 md:pt-[60px] overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -393,13 +394,13 @@ export function ProfileCabinet() {
                     <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Target className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Цели и Активность</h3></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Основная цель</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Основная цель *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="снизить массу тела">Снизить вес</SelectItem><SelectItem value="поддержать текущее состояние">Поддержать форму</SelectItem><SelectItem value="набор массы">Набор массы</SelectItem></SelectContent></Select>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Уровень активности</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Уровень активности *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="minimal">Минимальный (Сидячий)</SelectItem><SelectItem value="low">Низкий (Малоактивный)</SelectItem><SelectItem value="moderate">Умеренный (Средний)</SelectItem><SelectItem value="high">Высокий (Активный)</SelectItem><SelectItem value="athlete">Атлет (Спортсмен)</SelectItem></SelectContent></Select>
                         </FormItem>
@@ -411,16 +412,16 @@ export function ProfileCabinet() {
                     <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Activity className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Биометрия и Привычки</h3></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <FormField control={form.control} name="gender" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Пол</FormLabel>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Пол *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className={selectClasses}><SelectValue /></SelectTrigger></FormControl>
                           <SelectContent className="rounded-2xl"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select>
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="weight" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Вес (кг) *</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="height" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Рост (см)</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase text-white/50 px-4">Рост (см) *</FormLabel><FormControl><Input type="number" {...field} className={inputClasses} /></FormControl></FormItem>
                       )} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
