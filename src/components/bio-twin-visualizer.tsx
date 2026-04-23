@@ -111,7 +111,11 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 5: THE PERSON (TOP LAYER) - OPTIMIZED FOR ALL SCREEN SIZES */}
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-visible">
-        <div className="relative w-[140vw] h-[90vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 md:-translate-y-14">
+        {/* 
+            Mobile: h-[65vh] and w-[120vw] with -translate-y-4 to clear the header and bottom nav.
+            Desktop (md): h-[68vh] and w-full with -translate-y-14 to clear fixed elements.
+        */}
+        <div className="relative w-[120vw] h-[65vh] md:w-full md:h-[68vh] max-w-none md:max-w-6xl animate-hologram flex items-center justify-center transition-all duration-700 -translate-y-4 md:-translate-y-14">
           <Image 
             src="/bio-hologram.png" 
             alt="Bio-Hologram" 
