@@ -96,7 +96,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24">
+      <header className="sticky top-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 md:h-24 shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -115,7 +115,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full h-full overflow-hidden">
         {viewingSpecialistId ? (
-          <div className="pt-4 overflow-y-auto h-full px-4 pb-32">
+          <div className="pt-0 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
@@ -128,8 +128,8 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            <TabsContent value="feed" className="flex-1 m-0 pt-4 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
-               <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-6">
+            <TabsContent value="feed" className="flex-1 m-0 !pt-0 h-full overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:flex flex-col">
+               <div className="flex items-center justify-between px-2 w-full max-w-2xl mx-auto mb-6 mt-6">
                   <h2 className="text-xl font-black tracking-widest text-[#00ffff] uppercase">Bio-Лента</h2>
                   {profileType === 'specialist' && <CreatePostDialog />}
                </div>
@@ -161,25 +161,25 @@ export default function DashboardPage() {
               />
             </TabsContent>
 
-            <TabsContent value="meals" className="flex-1 m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-               <div className="max-w-4xl mx-auto pb-10">
+            <TabsContent value="meals" className="flex-1 m-0 !pt-0 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+               <div className="max-w-4xl mx-auto pb-10 mt-6">
                   <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                </div>
             </TabsContent>
 
-            <TabsContent value="chats" className="flex-1 m-0 pt-4 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
-              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
+            <TabsContent value="chats" className="flex-1 m-0 !pt-0 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
+              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10 mt-6">
                 <ChatInterface />
               </div>
             </TabsContent>
 
-            <TabsContent value="feeling" className="flex-1 m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-4xl mx-auto pb-10">
+            <TabsContent value="feeling" className="flex-1 m-0 !pt-0 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+              <div className="max-w-4xl mx-auto pb-10 mt-6">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="flex-1 m-0 pt-4 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
+            <TabsContent value="profile" className="flex-1 m-0 !pt-0 overflow-y-auto px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
               <div className="max-w-5xl mx-auto">
                 <ProfileCabinet />
               </div>

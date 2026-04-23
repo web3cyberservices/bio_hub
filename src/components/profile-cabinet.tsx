@@ -274,7 +274,7 @@ export function ProfileCabinet() {
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 pt-0 mt-0">
-      <div className="flex items-center gap-4 mb-8 mt-0 !important">
+      <div className="flex items-center gap-4 mb-8 mt-0 pt-[10px]">
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/20 shrink-0">
           {photoUrlValue ? (
             <div className="relative w-full h-full"><Image src={photoUrlValue} alt="Profile" fill className="object-cover" unoptimized /></div>
