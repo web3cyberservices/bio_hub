@@ -96,7 +96,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-[#000000] text-white overflow-hidden">
       
-      <header className="sticky top-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 shrink-0">
+      <header className="fixed top-0 left-0 right-0 z-[400] bg-[#010411]/70 backdrop-blur-xl border-b border-white/5 h-20 shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         </div>
       </header>
       
-      <main className="flex-1 relative w-full h-full overflow-hidden">
+      <main className="flex-1 relative w-full h-full overflow-hidden pt-20 flex flex-col">
         {viewingSpecialistId ? (
           <div className="pt-0 overflow-y-auto h-full px-4 pb-32">
             <SpecialistPublicProfile 
