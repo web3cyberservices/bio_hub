@@ -32,7 +32,6 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
-  const [viewingPatientId, setViewingPatientId] = useState<string | null>(null);
 
   const { isSyncing: aggregatorSyncing } = useHealthAggregator();
 
@@ -56,20 +55,13 @@ export default function DashboardPage() {
 
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
-    const targetUid = viewingPatientId || user.uid;
-    return doc(firestore, 'users', targetUid, 'recommendations', dateKey);
-  }, [firestore, user?.uid, dateKey, viewingPatientId]);
+    return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+  }, [firestore, user?.uid, dateKey]);
 
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
-    const targetUid = viewingPatientId || user.uid;
-    return doc(firestore, 'users', targetUid, 'dailyLogs', dateKey);
-  }, [firestore, user?.uid, dateKey, viewingPatientId]);
-
-  const patientsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'users'), where('sharedWith', 'array-contains', user.uid));
-  }, [firestore, user?.uid]);
+    return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+  }, [firestore, user?.uid, dateKey]);
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -79,7 +71,6 @@ export default function DashboardPage() {
   const { data: recommendationDoc } = useDoc<any>(recommendationRef);
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
   const { data: posts } = useCollection<any>(postsQuery);
-  const { data: patients } = useCollection<any>(patientsQuery);
 
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
 
