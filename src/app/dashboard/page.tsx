@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -278,7 +277,7 @@ export default function DashboardPage() {
 
                   <button onClick={() => handleTabChange('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
                     {profileType === 'specialist' ? <BarChart3 className="h-5 w-5 md:h-6 md:w-6" /> : <Activity className="h-5 w-5 md:h-6 md:w-6" />}
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Аналитика' : 'Двойник'}</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Приёмы' : 'Двойник'}</span>
                   </button>
 
                   <div className="relative flex items-center justify-center px-2">

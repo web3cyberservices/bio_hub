@@ -91,7 +91,7 @@ export function SpecialistBookingManager() {
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
       <div className="text-center md:text-left space-y-2">
          <Badge className="bg-primary text-black font-black uppercase text-[10px] px-4">Bio-Scheduler Pro</Badge>
-         <h2 className="text-4xl font-black tracking-tighter text-white uppercase leading-none">Управление расписанием</h2>
+         <h2 className="text-4xl font-black tracking-tighter text-white uppercase leading-none">График приёмов</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
