@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
- * Оптимизирован для предотвращения ошибок структуры JSON.
+ * Оптимизирован для предотвращения ошибок структуры JSON и обеспечения научной точности расчетов.
  */
 
 import {ai} from '@/ai/genkit';
@@ -12,7 +12,7 @@ import {runWithRetry} from '@/ai/utils';
 const MealSchema = z.object({
   time: z.string().describe('Время приема пищи.'),
   name: z.string().describe('Название блюда.'),
-  description: z.string().describe('Польза.'),
+  description: z.string().describe('Польза и краткое описание.'),
   calories: z.number().describe('Ккал.'),
   protein: z.number().describe('Белки.'),
   fat: z.number().describe('Жиры.'),
@@ -77,15 +77,33 @@ const recommendationPrompt = ai.definePrompt({
   name: 'personalizedRecommendationPrompt',
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
-  prompt: `Вы — ИИ-нутрициолог. Создайте план питания и отчет.
-ОТВЕЧАЙТЕ НА РУССКОМ ЯЗЫКЕ.
+  prompt: `Вы — ведущий мировой ИИ-нутрициолог и биохакер. 
+ВАША ЗАДАЧА: Рассчитать точные КБЖУ и составить план питания на основе научно доказанных формул (Mifflin-St Jeor) и предоставленных данных.
+
+КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ:
+- Пол: {{gender}}
+- Вес: {{weight}} кг
+- Рост: {{height}} см
+- Возраст: {{age}} лет
+- Активность: {{activityLevel}}
+- Цель: {{healthGoal}}
+- Курение: {{smoking}}, Алкоголь: {{alcohol}}
+- Любит: {{favoriteFoods}}, Не любит: {{dislikedFoods}}
+
+{{#if deviceData}}
+БИОМЕТРИЯ СЕГОДНЯ:
+- Шаги: {{deviceData.steps}}
+- Сон: {{deviceData.sleepDurationHours}}ч
+{{/if}}
 
 ${IMAGE_ID_PROMPT}
 
-Контекст:
-Вес: {{weight}}кг, Рост: {{height}}см, Возраст: {{age}} лет. Цель: {{healthGoal}}.
-Биометрия: {{#if deviceData}}Шаги: {{deviceData.steps}}, Сон: {{deviceData.sleepDurationHours}}ч{{/if}}
-Любит: {{favoriteFoods}}, Не любит: {{dislikedFoods}}`,
+ПРАВИЛА РАСЧЕТА:
+1. Рассчитайте TDEE максимально точно для этого конкретного человека.
+2. Распределите макронутриенты: Белки (1.8-2.2г на кг текущего веса), Жиры (0.8-1.0г на кг), остальное — Углеводы.
+3. BioScore (0-100): Рассчитайте индекс здоровья на основе ИМТ, вредных привычек и биометрии.
+4. План питания должен СТРОГО соответствовать рассчитанным макросам.
+5. Ответ СТРОГО на русском языке.`,
 });
 
 export async function generatePersonalizedRecommendations(input: GenerateRecommendationsInput): Promise<GenerateRecommendationsOutput> {

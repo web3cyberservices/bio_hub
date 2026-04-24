@@ -1,7 +1,6 @@
-
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { 
@@ -55,24 +54,56 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
+  // Динамический расчет целей на основе профиля, если ИИ еще не выдал план
+  const calculatedGoals = useMemo(() => {
+    if (goals && goals.calories > 0) return goals;
+
+    if (!profileData?.weight || !profileData?.height || !profileData?.birthDate) {
+      return { calories: 2500, protein: 150, fat: 80, carbs: 300 };
+    }
+
+    const weight = profileData.weight;
+    const height = profileData.height;
+    const gender = profileData.gender || 'мужской';
+    const activityLevel = profileData.activityLevel || 'moderate';
+    const healthGoal = profileData.healthGoal || 'поддержать текущее состояние';
+
+    // Расчет возраста
+    const birthDate = new Date(profileData.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+
+    // Формула Миффлина-Сан Жеора
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    bmr = gender === 'мужской' ? bmr + 5 : bmr - 161;
+
+    const multipliers: Record<string, number> = {
+      minimal: 1.2, low: 1.375, moderate: 1.55, high: 1.725, athlete: 1.9
+    };
+
+    let tdee = bmr * (multipliers[activityLevel] || 1.55);
+
+    if (healthGoal === 'снизить массу тела') tdee -= 500;
+    if (healthGoal === 'набор массы') tdee += 500;
+
+    const protein = Math.round(weight * 2.0); // 2г на кг
+    const fat = Math.round(weight * 0.9);    // 0.9г на кг
+    const carbs = Math.round((tdee - (protein * 4) - (fat * 9)) / 4);
+
+    return { calories: Math.round(tdee), protein, fat, carbs };
+  }, [goals, profileData]);
+
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
   const hrVal = deviceData?.avgHeartRate || 0;
-  
-  // Вес берем либо из дневника на сегодня, либо из основного профиля
   const weightVal = deviceData?.weight || profileData?.weight || 0;
   
-  // Фактическое потребление (macros)
   const kcalVal = macros?.calories || 0;
   const proteinVal = macros?.protein || 0;
   const fatVal = macros?.fat || 0;
   const carbVal = macros?.carbs || 0;
-
-  // Цели (из ИИ-плана или дефолты)
-  const kcalGoal = goals?.calories || 2500;
-  const proteinGoal = goals?.protein || 150;
-  const fatGoal = goals?.fat || 80;
-  const carbGoal = goals?.carbs || 300;
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
@@ -89,16 +120,12 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Health Assessment</div>
       </div>
 
-      {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
         <div className="scan-line opacity-30" />
       </div>
 
-      {/* LAYER 2: HUD INTERFACE (GAUGES) */}
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
-        
-        {/* LEFT COLUMN: VITALITY */}
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-start pt-14 h-full pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal} goal={10000}
@@ -122,35 +149,32 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
           />
         </div>
 
-        {/* RIGHT COLUMN: NUTRITION (КБЖУ) */}
         <div className="flex flex-col gap-4 md:gap-8 items-end justify-start pt-14 h-full pointer-events-auto">
           <NeonGauge 
-            label="ККАЛ" value={kcalVal} goal={kcalGoal}
+            label="ККАЛ" value={kcalVal} goal={calculatedGoals.calories}
             icon={<Flame className="h-4 w-4 md:h-6 md:w-6 text-[#FB923C]" />} color="#FB923C" 
-            progress={getProgress(kcalVal, kcalGoal)}
+            progress={getProgress(kcalVal, calculatedGoals.calories)}
           />
           <NeonGauge 
-            label="БЕЛКИ" value={`${proteinVal}г`} goal={`${proteinGoal}г`}
+            label="БЕЛКИ" value={`${proteinVal}г`} goal={`${calculatedGoals.protein}г`}
             icon={<Beef className="h-4 w-4 md:h-6 md:w-6 text-[#F87171]" />} color="#F87171" 
-            progress={getProgress(proteinVal, proteinGoal)}
+            progress={getProgress(proteinVal, calculatedGoals.protein)}
           />
           <NeonGauge 
-            label="ЖИРЫ" value={`${fatVal}г`} goal={`${fatGoal}г`}
+            label="ЖИРЫ" value={`${fatVal}г`} goal={`${calculatedGoals.fat}г`}
             icon={<Droplet className="h-4 w-4 md:h-6 md:w-6 text-[#FACC15]" />} color="#FACC15" 
-            progress={getProgress(fatVal, fatGoal)}
+            progress={getProgress(fatVal, calculatedGoals.fat)}
           />
           <NeonGauge 
-            label="УГЛЕВ" value={`${carbVal}г`} goal={`${carbGoal}г`}
+            label="УГЛЕВ" value={`${carbVal}г`} goal={`${calculatedGoals.carbs}г`}
             icon={<Zap className="h-4 w-4 md:h-6 md:w-6 text-[#4ADE80]" />} color="#4ADE80" 
-            progress={getProgress(carbVal, carbGoal)}
+            progress={getProgress(carbVal, calculatedGoals.carbs)}
           />
         </div>
       </div>
 
-      {/* LAYER 3: HOLOGRAM - CENTERED VERTICALLY IN VISIBLE AREA */}
       <div className="absolute top-0 left-0 right-0 bottom-24 md:bottom-32 z-50 pointer-events-none flex items-center justify-center p-4">
         <div className="relative w-full h-full max-h-[55vh] md:max-h-[75vh] animate-hologram flex items-center justify-center transition-all duration-1000">
-          
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
               src="/bio-hologram.png" 
@@ -160,8 +184,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
               priority
               unoptimized
             />
-
-            {/* BIO-CORE */}
             <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
               <div className="relative w-6 h-6 md:w-10 md:h-10 flex items-center justify-center">
                 <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
@@ -169,10 +191,8 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
               </div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 }
