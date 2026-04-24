@@ -75,7 +75,7 @@ export function useCollection<T = any>(
       (err: FirestoreError) => {
         // Если это НЕ ошибка прав доступа, выводим её как есть (например, ошибка индекса)
         if (err.code !== 'permission-denied') {
-          console.error("Firestore Query Error:", err);
+          console.error("Firestore Query Error:", err.message, err.code);
           setError(err);
           setData(null);
           setIsLoading(false);
@@ -84,9 +84,9 @@ export function useCollection<T = any>(
 
         // Извлекаем путь для детального отчета об ошибке прав доступа
         const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
+          memoizedTargetRefOrQuery && memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+            : (memoizedTargetRefOrQuery as unknown as InternalQuery)?._query?.path?.canonicalString() || 'unknown-path';
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',

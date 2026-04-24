@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ПОЛНЫЙ ДОСТУП ДЛЯ ТЕСТИРОВАНИЯ
-    // Разрешаем чтение и запись для всех коллекций и вложенных документов
+    // Это правило разрешает любые операции чтения и записи без ограничений.
     match /{allPaths=**} {
       allow read, write: if true;
     }

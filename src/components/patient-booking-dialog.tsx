@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -19,6 +18,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
 
 interface PatientBookingDialogProps {
   specialistId: string;
@@ -37,18 +38,24 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
+  // Упрощенный запрос без orderBy, чтобы не требовать создания индексов вручную
   const slotsQuery = useMemoFirebase(() => {
     if (!firestore || !specialistId) return null;
     return query(
       collection(firestore, 'appointments'),
       where('specialistId', '==', specialistId),
       where('date', '==', dateKey),
-      where('status', '==', 'available'),
-      orderBy('time', 'asc')
+      where('status', '==', 'available')
     );
   }, [firestore, specialistId, dateKey]);
 
-  const { data: availableSlots, isLoading: slotsLoading } = useCollection<any>(slotsQuery);
+  const { data: rawSlots, isLoading: slotsLoading } = useCollection<any>(slotsQuery);
+
+  // Сортируем слоты на клиенте
+  const availableSlots = useMemo(() => {
+    if (!rawSlots) return [];
+    return [...rawSlots].sort((a, b) => a.time.localeCompare(b.time));
+  }, [rawSlots]);
 
   const handleBook = async () => {
     if (!firestore || !user?.uid || !selectedSlotId) return;
@@ -100,7 +107,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                   <h4 className="text-[10px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
                      <CalendarDays className="h-4 w-4" /> 1. Выберите дату
                   </h4>
-                  <Card className="p-4 border-white/10 bg-white/5 rounded-3xl shadow-inner">
+                  <div className="p-4 border border-white/10 bg-white/5 rounded-3xl shadow-inner">
                      <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -108,7 +115,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                         locale={ru}
                         className="w-full"
                      />
-                  </Card>
+                  </div>
                </div>
 
                <div className="space-y-6">
@@ -139,7 +146,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                         ) : (
                           <div className="col-span-full py-20 text-center space-y-4 opacity-30">
                              <Clock className="h-12 w-12 mx-auto" />
-                             <p className="text-[10px] font-black uppercase tracking-widest">Нет доступных слотов на эту дату</p>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-white">Нет доступных слотов на эту дату</p>
                           </div>
                         )}
                      </div>
