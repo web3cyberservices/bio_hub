@@ -21,9 +21,9 @@ interface GaugeProps {
 
 const NeonGauge = ({ label, value, goal, icon, color, progress, className }: GaugeProps) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-1 md:gap-4 group transition-all duration-500", className)}>
-      {/* Увеличенный размер на мобильных: w-20 h-20 (80px), на десктопе: w-28 h-28 (112px) */}
-      <div className="relative w-20 h-20 md:w-28 md:h-28 flex items-center justify-center">
+    <div className={cn("flex flex-col items-center justify-center gap-1.5 md:gap-4 group transition-all duration-500", className)}>
+      {/* Увеличенный размер на мобильных: w-24 h-24 (96px), на десктопе: w-28 h-28 (112px) */}
+      <div className="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="46%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
@@ -33,22 +33,22 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
           />
         </svg>
         <div className="text-center flex flex-col items-center px-1">
-          <div className="scale-[0.8] md:scale-125 mb-1 opacity-90 group-hover:opacity-100 transition-all">
+          <div className="scale-[0.9] md:scale-125 mb-1 opacity-90 group-hover:opacity-100 transition-all">
             {icon}
           </div>
           <div className="flex flex-col items-center leading-none">
-            <span className="text-[10px] md:text-sm font-black text-white block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+            <span className="text-[12px] md:text-sm font-black text-white block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
               {value}
             </span>
             {goal && (
-              <span className="text-[7px] md:text-[9px] font-bold text-white/30 mt-0.5 border-t border-white/5 pt-0.5">
+              <span className="text-[9px] md:text-[10px] font-bold text-white/30 mt-1 border-t border-white/5 pt-0.5">
                 / {goal}
               </span>
             )}
           </div>
         </div>
       </div>
-      <span className="text-[6px] md:text-[9px] font-black uppercase text-white/40 tracking-[0.2em] group-hover:text-primary transition-colors">
+      <span className="text-[8px] md:text-[9px] font-black uppercase text-white/40 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -98,7 +98,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, goals, className 
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-3 md:gap-8 items-start justify-start pt-10 h-full pointer-events-auto">
+        <div className="flex flex-col gap-4 md:gap-8 items-start justify-start pt-14 h-full pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal} goal={10000}
             icon={<Footprints className="h-4 w-4 md:h-6 md:w-6 text-[#00ffff]" />} color="#00ffff" 
@@ -122,7 +122,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, goals, className 
         </div>
 
         {/* RIGHT COLUMN: NUTRITION (КБЖУ) */}
-        <div className="flex flex-col gap-3 md:gap-8 items-end justify-start pt-10 h-full pointer-events-auto">
+        <div className="flex flex-col gap-4 md:gap-8 items-end justify-start pt-14 h-full pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal} goal={kcalGoal}
             icon={<Flame className="h-4 w-4 md:h-6 md:w-6 text-[#FB923C]" />} color="#FB923C" 
