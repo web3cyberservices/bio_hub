@@ -6,9 +6,9 @@
   :root {
     --background: 222 47% 2%; /* Deep Space Black */
     --foreground: 210 40% 98%;
-    --card: 222 47% 4%;
+    --card: 222 47% 10%; /* More visible Blue-Black */
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 4%;
+    --popover: 222 47% 12%; /* Distinct Blue for popups */
     --popover-foreground: 210 40% 98%;
     --primary: 191 91% 50%; /* Electric Cyan */
     --primary-foreground: 222 47% 2%;
@@ -20,7 +20,7 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 17%;
+    --border: 217 32% 25%; /* Brighter border for visibility */
     --input: 217 32% 17%;
     --ring: 191 91% 50%;
     --radius: 1.5rem;
@@ -45,11 +45,11 @@
 }
 
 .cyber-card {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] rounded-[2rem] transition-all duration-500 hover:border-primary/40 hover:shadow-[0_0_30px_-5px_rgba(14,165,233,0.2)];
+  @apply bg-blue-950/40 backdrop-blur-xl border border-blue-500/20 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] rounded-[2rem] transition-all duration-500 hover:border-primary/40 hover:shadow-[0_0_30px_-5px_rgba(14,165,233,0.2)];
 }
 
 .glass-panel {
-  @apply bg-slate-950/40 backdrop-blur-2xl border border-white/5 shadow-2xl rounded-[3rem];
+  @apply bg-blue-900/20 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[3rem];
 }
 
 .neo-glow {
