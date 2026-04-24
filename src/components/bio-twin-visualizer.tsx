@@ -20,7 +20,7 @@ interface GaugeProps {
 const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProps) => {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-1 md:gap-4 group transition-all duration-500", className)}>
-      <div className="relative w-12 h-12 md:w-24 md:h-24 flex items-center justify-center">
+      <div className="relative w-16 h-16 md:w-24 md:h-24 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="48%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
@@ -30,15 +30,15 @@ const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProp
           />
         </svg>
         <div className="text-center flex flex-col items-center">
-          <div className="scale-[0.6] md:scale-150 mb-0 md:mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
+          <div className="scale-[0.8] md:scale-150 mb-0 md:mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
             {icon}
           </div>
-          <span className="text-[7px] md:text-sm font-black text-white leading-none block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+          <span className="text-[9px] md:text-sm font-black text-white leading-none block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
             {value}
           </span>
         </div>
       </div>
-      <span className="text-[5px] md:text-[10px] font-black uppercase text-white/50 tracking-[0.2em] group-hover:text-primary transition-colors">
+      <span className="text-[6px] md:text-[10px] font-black uppercase text-white/50 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -61,6 +61,16 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   return (
     <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4 pb-24 md:pb-32", className)}>
       
+      {/* LAYER 0: BIO-SCORE TOP INDICATOR */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="px-6 py-2 rounded-full border border-[#00ffff]/30 bg-[#00ffff]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] flex items-center gap-3">
+          <Activity className="h-4 w-4 text-[#00ffff] animate-pulse" />
+          <span className="text-[10px] font-black text-white tracking-widest uppercase">Bio-Score</span>
+          <span className="text-xl font-black text-[#00ffff] drop-shadow-[0_0_8px_#00ffff]">{score || 92}</span>
+        </div>
+        <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Health Assessment</div>
+      </div>
+
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
@@ -72,7 +82,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-3 md:gap-8 items-start justify-center h-full pointer-events-auto">
+        <div className="flex flex-col gap-2 md:gap-8 items-start justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal}
             icon={<Footprints className="h-4 w-4 md:h-7 md:w-7 text-[#00ffff]" />} color="#00ffff" 
@@ -96,7 +106,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
 
         {/* RIGHT COLUMN: NUTRITION */}
-        <div className="flex flex-col gap-3 md:gap-8 items-end justify-center h-full pointer-events-auto">
+        <div className="flex flex-col gap-2 md:gap-8 items-end justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal}
             icon={<Flame className="h-4 w-4 md:h-7 md:w-7 text-[#FB923C]" />} color="#FB923C" 
@@ -122,7 +132,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
 
       {/* LAYER 3: HOLOGRAM - PERFECTLY CENTERED FOR MOBILE */}
       <div className="absolute top-0 bottom-24 md:bottom-32 left-0 right-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        <div className="relative w-full h-full max-h-[55vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
+        <div className="relative w-full h-full max-h-[50vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
