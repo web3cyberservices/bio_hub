@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Plus, Trash2, Loader2, Utensils, Clock, Flame, 
-  Beef, Droplet, Zap, Save, Calendar, Mic, Sparkles
+  Beef, Droplet, Zap, Save, Calendar, Mic, Sparkles,
+  ShoppingBasket, ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { analyzeMeal } from '@/ai/flows/analyze-meal';
+import { ProductsMenuGenerator } from './products-menu-generator';
 
 interface PersonalMealPlanProps {
   selectedDate: Date;
@@ -28,6 +29,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
+  const [isScanningRef, setIsScanningRef] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -141,6 +143,17 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     }
   };
 
+  if (isScanningRef) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => setIsScanningRef(false)} className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all">
+          <ArrowLeft className="h-4 w-4" /> Назад к списку
+        </Button>
+        <ProductsMenuGenerator />
+      </div>
+    );
+  }
+
   const totalCalories = meals?.reduce((acc, m) => acc + (m.calories || 0), 0) || 0;
 
   return (
@@ -150,15 +163,23 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
           <h3 className="text-3xl font-black tracking-tighter text-white uppercase leading-none">Свой план</h3>
           <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">{format(selectedDate, 'd MMMM', { locale: ru })}</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-2xl border border-white/5 shadow-sm flex items-center gap-4">
-           <div className="text-center">
+        <div className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-2.5 rounded-2xl border border-white/5 shadow-sm flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar max-w-full">
+           <div className="text-center shrink-0">
               <p className="text-[7px] font-black uppercase text-white/40">Итого ккал</p>
               <p className="text-xl font-black text-primary leading-none">{totalCalories}</p>
            </div>
-           <div className="w-px h-8 bg-white/10" />
-           <button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
-             <Plus className="h-4 w-4 stroke-[3px]" /> Добавить
-           </button>
+           <div className="w-px h-8 bg-white/10 shrink-0" />
+           <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsScanningRef(true)} 
+                className="rounded-xl h-10 px-4 bg-primary/20 text-primary border border-primary/30 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg transition-all hover:bg-primary/30"
+              >
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Скан холодильника
+              </button>
+              <button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
+                <Plus className="h-4 w-4 stroke-[3px]" /> Добавить
+              </button>
+           </div>
         </div>
       </div>
 
@@ -299,9 +320,14 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                <div className="space-y-1">
                   <p className="text-xl font-black text-white/40 uppercase">План пуст</p>
                </div>
-               <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px]">
-                  Добавить первое блюдо
-               </Button>
+               <div className="flex flex-col gap-3 items-center">
+                  <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px]">
+                    Добавить первое блюдо
+                  </Button>
+                  <Button variant="ghost" onClick={() => setIsScanningRef(true)} className="rounded-xl text-primary/60 hover:text-primary font-black uppercase text-[9px] gap-2">
+                    <Sparkles className="h-3 w-3" /> Просканировать холодильник
+                  </Button>
+               </div>
             </div>
          )}
       </div>
