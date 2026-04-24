@@ -3,11 +3,36 @@ service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * ГЛОБАЛЬНЫЙ ДОСТУП (DEVELOPMENT MODE)
-     * Разрешаем абсолютно любые операции чтения и записи для всех документов и их подколлекций.
-     * Это необходимо для беспрепятственной разработки и тестирования функционала записей, чатов и логов.
+     * Разрешаем любые операции чтения и записи для всех документов и их подколлекций.
+     * Мы используем двойную маску для гарантии доступа как к корневым документам, так и к вложенным путям.
      */
+    
+    // Правило для абсолютно всех путей (рекурсивно)
     match /{allPaths=**} {
       allow read, write: if true;
+    }
+
+    // Явные правила для ключевых коллекций (для стабильности некоторых версий SDK)
+    match /users/{userId} {
+      allow read, write: if true;
+      match /{allSubPaths=**} {
+        allow read, write: if true;
+      }
+    }
+
+    match /appointments/{appointmentId} {
+      allow read, write: if true;
+    }
+
+    match /posts/{postId} {
+      allow read, write: if true;
+    }
+
+    match /chats/{chatId} {
+      allow read, write: if true;
+      match /{allSubPaths=**} {
+        allow read, write: if true;
+      }
     }
   }
 }
