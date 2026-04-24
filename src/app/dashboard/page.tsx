@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -30,6 +29,7 @@ import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -225,7 +225,11 @@ export default function DashboardPage() {
 
             {activeTab === 'meals' && (
                <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                 <MealsHub selectedDate={selectedDate} />
+                 {profileType === 'specialist' ? (
+                   <SpecialistPatientsView />
+                 ) : (
+                   <MealsHub selectedDate={selectedDate} />
+                 )}
                </div>
             )}
 
@@ -283,7 +287,7 @@ export default function DashboardPage() {
                   </button>
 
                   <button onClick={() => handleTabChange('feeling')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feeling' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Smile className="h-5 w-5 md:h-6 md:w-6" />
+                    <Smile className="h-5 w-5 md:h-6 md:u-6" />
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Статус</span>
                   </button>
 
