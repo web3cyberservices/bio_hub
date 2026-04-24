@@ -7,6 +7,7 @@ import { RecommendationForm } from './recommendation-form';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Utensils, Sparkles, Stethoscope, Loader2, Info, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,7 @@ export function MealsHub({ selectedDate }: MealsHubProps) {
                  <div className="bg-primary/10 border border-primary/20 rounded-3xl p-6 flex items-start gap-4 mx-4">
                     <Info className="h-6 w-6 text-primary shrink-0" />
                     <div className="space-y-1">
-                       <p className="text-sm font-bold text-white uppercase tracking-tight">Ваш био-рацион на {format(selectedDate, 'd MMMM', { locale: (require('date-fns/locale').ru) })}</p>
+                       <p className="text-sm font-bold text-white uppercase tracking-tight">Ваш био-рацион на {format(selectedDate, 'd MMMM', { locale: ru })}</p>
                        <p className="text-xs text-white/60 font-medium">Это меню сформировано ИИ на основе вашего текущего веса, целей и последних загруженных анализов.</p>
                     </div>
                  </div>
@@ -116,7 +117,7 @@ export function MealsHub({ selectedDate }: MealsHubProps) {
                 <div className="bg-white/5 p-6 rounded-2xl border border-white/5 text-left flex items-start gap-4">
                    <MessageSquare className="h-5 w-5 text-primary shrink-0" />
                    <p className="text-xs text-white/60 font-medium">
-                      Вы можете отправить свои био-данные и результаты анализов специалисту в разделе <strong>Профиль -> Архив здоровья</strong> и запросить консультацию в чате.
+                      Вы можете отправить свои био-данные и результаты анализов специалисту в разделе <strong>Профиль -&gt; Архив здоровья</strong> и запросить консультацию в чате.
                    </p>
                 </div>
              </div>
