@@ -29,12 +29,9 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
 
   if (!mounted) return null;
 
-  // Defaults for dashboard view
+  // Defaults for dashboard view (Goals)
   const bioScore = data?.bioScore ?? 92;
-  // Если есть фактические данные (съеденная еда), показываем их. Иначе рекомендации.
-  const macros = actualMacros && actualMacros.calories > 0 
-    ? actualMacros 
-    : (data?.macros ?? { calories: 0, protein: 0, fat: 0, carbs: 0 });
+  const targetMacros = data?.macros ?? { calories: 2500, protein: 150, fat: 80, carbs: 300 };
 
   if (mode === 'dashboard') {
     return (
@@ -42,7 +39,8 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
-          macros={macros}
+          macros={actualMacros || { calories: 0, protein: 0, fat: 0, carbs: 0 }}
+          goals={targetMacros}
           className="w-full h-full"
         />
       </div>
