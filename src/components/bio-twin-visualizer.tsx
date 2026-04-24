@@ -146,9 +146,9 @@ export function BioTwinVisualizer({ score, deviceData, macros, goals, className 
         </div>
       </div>
 
-      {/* LAYER 3: HOLOGRAM - CENTERED VERTICALLY */}
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        <div className="relative w-full h-full max-h-[60vh] md:max-h-[75vh] animate-hologram flex items-center justify-center transition-all duration-1000">
+      {/* LAYER 3: HOLOGRAM - CENTERED VERTICALLY IN VISIBLE AREA */}
+      <div className="absolute top-0 left-0 right-0 bottom-24 md:bottom-32 z-50 pointer-events-none flex items-center justify-center p-4">
+        <div className="relative w-full h-full max-h-[55vh] md:max-h-[75vh] animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
