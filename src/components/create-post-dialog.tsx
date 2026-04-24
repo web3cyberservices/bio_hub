@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -84,14 +85,14 @@ export function CreatePostDialog() {
           <Plus className="h-4 w-4" /> Новый пост
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-0 overflow-hidden border border-white/10 shadow-2xl bg-[#010411]">
+      <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-0 overflow-hidden border border-blue-900/30 shadow-2xl bg-[#010411]">
         <DialogHeader className="p-8 bg-primary text-white relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#00ffff]/80 opacity-90" />
           <DialogTitle className="text-2xl font-black flex items-center gap-2 relative z-10 text-slate-950">
             <Sparkles className="h-6 w-6 text-slate-950/60" /> Создать публикацию
           </DialogTitle>
         </DialogHeader>
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-6 bg-blue-950/40 backdrop-blur-3xl">
           <div className="space-y-4 relative">
             <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Текст сообщения</label>
             <div className="relative">
@@ -99,7 +100,7 @@ export function CreatePostDialog() {
                 placeholder="Поделитесь знаниями или советом..." 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[150px] rounded-2xl bg-white/5 border border-white/10 p-6 text-lg font-medium resize-none shadow-inner pr-14 text-white placeholder:text-white/20"
+                className="min-h-[150px] rounded-2xl bg-slate-200/10 border border-white/10 p-6 text-lg font-medium resize-none shadow-inner pr-14 text-white placeholder:text-white/20"
               />
               <Button 
                 type="button" 
@@ -124,7 +125,7 @@ export function CreatePostDialog() {
                placeholder="https://images.unsplash.com/..." 
                value={imageUrl}
                onChange={(e) => setImageUrl(e.target.value)}
-               className="h-14 rounded-2xl bg-white/5 border border-white/10 px-6 font-bold text-white placeholder:text-white/20 shadow-inner"
+               className="h-14 rounded-2xl bg-slate-200/10 border border-white/10 px-6 font-bold text-white placeholder:text-white/20 shadow-inner"
              />
           </div>
 
@@ -134,7 +135,7 @@ export function CreatePostDialog() {
             </div>
           )}
         </div>
-        <DialogFooter className="p-8 bg-white/5 border-t border-white/5 flex flex-col sm:flex-row gap-4">
+        <DialogFooter className="p-8 bg-blue-950/60 border-t border-white/5 flex flex-col sm:flex-row gap-4">
            <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-bold text-white/60">Отмена</Button>
            <Button 
              onClick={handleSubmit} 

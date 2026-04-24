@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -343,12 +344,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     </Button>
   );
 
-  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-white/5 border border-white/10 shadow-inner font-black text-white text-xl md:text-2xl placeholder:text-white/20 focus:ring-4 focus:ring-primary/10 transition-all px-6 md:px-8 pr-14";
+  const inputClasses = "h-14 md:h-18 rounded-2xl md:rounded-[2rem] bg-slate-200/10 border border-white/10 shadow-inner font-black text-white text-xl md:text-2xl placeholder:text-white/20 focus:ring-4 focus:ring-primary/10 transition-all px-6 md:px-8 pr-14";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[95vw] md:max-w-[700px] lg:max-w-[800px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border border-white/10 shadow-2xl max-h-[90vh] flex flex-col z-[1001] bg-[#010411]">
+      <DialogContent className="w-[95vw] md:max-w-[700px] lg:max-w-[800px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border border-blue-900/30 shadow-2xl max-h-[90vh] flex flex-col z-[1001] bg-[#010411]">
         <DialogHeader className="p-5 md:p-8 bg-primary text-white relative overflow-hidden shrink-0 border-b border-white/5">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-90" />
           <div className="relative z-10 space-y-0.5">
@@ -358,7 +359,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           <Zap className="absolute -right-6 -bottom-6 h-24 w-24 text-slate-950/10 rotate-12" />
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar bg-[#010411]">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar bg-blue-950/40 backdrop-blur-3xl">
           {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-white/5 p-1.5 mb-6 md:mb-10 shadow-inner">
@@ -375,7 +376,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     placeholder="Что вы съели?" 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)} 
-                    className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-white/5 backdrop-blur-md border border-white/10 p-6 md:p-8 text-lg md:text-xl font-bold resize-none shadow-inner pr-16 text-white placeholder:text-white/20" 
+                    className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-slate-200/10 backdrop-blur-md border border-white/10 p-6 md:p-8 text-lg md:text-xl font-bold resize-none shadow-inner pr-16 text-white placeholder:text-white/20" 
                   />
                   <div className="absolute right-4 top-4">
                     <Button 
@@ -567,7 +568,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     <Input 
                       value={editedMeal.mealName} 
                       onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
-                      className="text-2xl md:text-3xl font-black text-center border border-white/10 bg-white/5 backdrop-blur-md rounded-2xl h-auto focus-visible:ring-0 pr-12 text-white py-4 shadow-inner"
+                      className="text-2xl md:text-3xl font-black text-center border border-white/10 bg-slate-200/10 backdrop-blur-md rounded-2xl h-auto focus-visible:ring-0 pr-12 text-white py-4 shadow-inner"
                     />
                     <VoiceBtn field="editedMealName" setter={(val) => setEditedMeal({...editedMeal, mealName: val})} />
                   </div>
@@ -586,7 +587,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         type="number" 
                         value={stat.val} 
                         onChange={e => setEditedMeal({...editedMeal, [stat.field]: Number(e.target.value)})}
-                        className={cn("h-14 rounded-2xl border text-center font-black text-xl text-white shadow-inner", stat.color)}
+                        className={cn("h-14 rounded-2xl border text-center font-black text-xl text-white shadow-inner bg-slate-200/10", stat.color)}
                       />
                     </div>
                   ))}
@@ -695,18 +696,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                       </div>
                     );
                   })}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Рекомендации</label>
-                <div className="grid gap-3">
-                  {labResult.recommendations.map((rec, i) => (
-                    <div key={i} className="flex gap-3 items-start p-4 bg-white/5 rounded-2xl border border-white/5">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      <p className="text-xs font-medium text-white/80">{rec}</p>
-                    </div>
-                  ))}
                 </div>
               </div>
 
