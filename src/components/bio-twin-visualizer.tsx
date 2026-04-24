@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { 
   Droplet, Flame, Zap, Footprints, Moon, 
-  Heart, Activity, Beef
+  Heart, Activity, Beef, Scale
 } from 'lucide-react';
 
 interface GaugeProps {
@@ -22,7 +22,6 @@ interface GaugeProps {
 const NeonGauge = ({ label, value, goal, icon, color, progress, className }: GaugeProps) => {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-1.5 md:gap-4 group transition-all duration-500", className)}>
-      {/* Увеличенный размер на мобильных: w-24 h-24 (96px), на десктопе: w-28 h-28 (112px) */}
       <div className="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="46%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
@@ -55,11 +54,13 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
   );
 };
 
-export function BioTwinVisualizer({ score, deviceData, macros, goals, className }: any) {
+export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
   const hrVal = deviceData?.avgHeartRate || 0;
-  const bpVal = deviceData?.bloodPressure || '120/80';
+  
+  // Вес берем либо из дневника на сегодня, либо из основного профиля
+  const weightVal = deviceData?.weight || profileData?.weight || 0;
   
   // Фактическое потребление (macros)
   const kcalVal = macros?.calories || 0;
@@ -115,8 +116,8 @@ export function BioTwinVisualizer({ score, deviceData, macros, goals, className 
             progress={getProgress(hrVal, 100)}
           />
           <NeonGauge 
-            label="АД" value={bpVal}
-            icon={<Activity className="h-4 w-4 md:h-6 md:w-6 text-[#F472B6]" />} color="#F472B6" 
+            label="ВЕС" value={`${weightVal}кг`}
+            icon={<Scale className="h-4 w-4 md:h-6 md:w-6 text-[#F472B6]" />} color="#F472B6" 
             progress={100}
           />
         </div>

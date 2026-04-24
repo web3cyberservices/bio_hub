@@ -168,6 +168,7 @@ export default function DashboardPage() {
                    <RecommendationDisplay 
                     mode="dashboard" 
                     deviceData={dailyLogDoc} 
+                    profileData={userData}
                     data={recData?.data}
                     actualMacros={actualMacros}
                   />
@@ -176,7 +177,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'feed' && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-3xl mx-auto space-y-8 pb-10">
                   <div className="text-center space-y-2 mb-12">
                      <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -213,13 +214,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'meals' && (
-               <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                  <MealsHub selectedDate={selectedDate} />
                </div>
             )}
 
-            {activeTab === 'chats' && (
-              <div className="m-0 pt-4 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
+            {activeTab === 'chats' && (activeTab === 'chats') && (
+              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
                 <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                   <ChatInterface />
                 </div>
@@ -227,13 +228,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'feeling' && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             )}
 
-            {activeTab === 'profile' && (activeTab === 'profile') && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+            {activeTab === 'profile' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-5xl mx-auto">
                   <ProfileCabinet />
                 </div>

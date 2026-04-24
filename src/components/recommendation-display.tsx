@@ -18,9 +18,10 @@ interface RecommendationDisplayProps {
   };
   mode?: 'dashboard' | 'meals';
   deviceData?: any;
+  profileData?: any;
 }
 
-export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData }: RecommendationDisplayProps) {
+export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', deviceData, profileData }: RecommendationDisplayProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function RecommendationDisplay({ data, actualMacros, mode = 'dashboard', 
         <BioTwinVisualizer 
           score={bioScore} 
           deviceData={deviceData} 
+          profileData={profileData}
           macros={actualMacros || { calories: 0, protein: 0, fat: 0, carbs: 0 }}
           goals={targetMacros}
           className="w-full h-full"
