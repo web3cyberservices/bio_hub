@@ -63,7 +63,13 @@ export function SpecialistPatientsView() {
             <ArrowLeft className="h-4 w-4" /> Вернуться к списку
           </Button>
         </div>
-        <PatientDataViewer patient={selectedPatient} />
+        <PatientDataViewer 
+          patient={selectedPatient} 
+          onStartChat={(id, name) => {
+            // В будущем можно прокинуть логику открытия конкретного чата
+            console.log('Starting chat with', name);
+          }} 
+        />
       </div>
     );
   }

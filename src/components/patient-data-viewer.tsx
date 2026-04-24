@@ -6,13 +6,16 @@ import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Activity, Utensils, FlaskConical, 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight,
   Flame, Beef, Droplet, Zap, History, Loader2,
-  TrendingUp, TrendingDown, CheckCircle2, Download
+  TrendingUp, TrendingDown, CheckCircle2, Download,
+  User, Target, Ban, Wine, Heart, Scale, Info, MessageSquare,
+  ArrowUpRight
 } from 'lucide-react';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, differenceInYears } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { BioTwinVisualizer } from './bio-twin-visualizer';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,12 +24,13 @@ import { downloadLabResultsDocx } from '@/lib/docx-generator';
 
 interface PatientDataViewerProps {
   patient: any;
+  onStartChat?: (id: string, name: string, photo: string) => void;
 }
 
-export function PatientDataViewer({ patient }: PatientDataViewerProps) {
+export function PatientDataViewer({ patient, onStartChat }: PatientDataViewerProps) {
   const { firestore } = useFirestore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'meals' | 'labs'>('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'dashboard' | 'meals' | 'labs'>('profile');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
@@ -78,8 +82,24 @@ export function PatientDataViewer({ patient }: PatientDataViewerProps) {
     }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
   }, [meals]);
 
+  const age = useMemo(() => {
+    if (!patient?.birthDate) return '—';
+    try {
+      return differenceInYears(new Date(), new Date(patient.birthDate));
+    } catch (e) {
+      return '—';
+    }
+  }, [patient?.birthDate]);
+
   const handlePrevDay = () => setSelectedDate(subDays(selectedDate, 1));
   const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
+
+  const stats = [
+    { label: 'Возраст', value: `${age} лет`, icon: User, color: 'text-blue-400' },
+    { label: 'Рост', value: `${patient.height || '—'} см`, icon: Activity, color: 'text-emerald-400' },
+    { label: 'Вес (текущий)', value: `${patient.weight || '—'} кг`, icon: Scale, color: 'text-primary' },
+    { label: 'Пол', value: patient.gender || '—', icon: User, color: 'text-indigo-400' },
+  ];
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-32">
@@ -92,9 +112,14 @@ export function PatientDataViewer({ patient }: PatientDataViewerProps) {
            </Avatar>
            <div>
               <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{patient.firstName} {patient.lastName}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                 <Badge className="bg-primary text-slate-950 font-black text-[9px] uppercase px-3 py-1">ID: {patient.id?.slice(0, 8)}</Badge>
-                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Client Analysis Card</span>
+              <div className="flex items-center gap-3 mt-1">
+                 <Badge className="bg-primary text-slate-950 font-black text-[9px] uppercase px-3 py-1">Bio-ID: {patient.id?.slice(0, 8)}</Badge>
+                 <button 
+                  onClick={() => onStartChat?.(patient.id, `${patient.firstName} ${patient.lastName}`, patient.photoUrl)}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-primary hover:underline"
+                 >
+                   <MessageSquare className="h-3 w-3" /> Открыть чат
+                 </button>
               </div>
            </div>
         </div>
@@ -113,6 +138,7 @@ export function PatientDataViewer({ patient }: PatientDataViewerProps) {
       <div className="px-4 flex justify-center">
         <div className="inline-flex bg-blue-950/40 backdrop-blur-xl p-1.5 rounded-[1.5rem] border border-white/5 shadow-2xl">
            {[
+             { id: 'profile', label: 'Профиль', icon: User },
              { id: 'dashboard', label: 'Биометрия', icon: Activity },
              { id: 'meals', label: 'Питание', icon: Utensils },
              { id: 'labs', label: 'Анализы', icon: FlaskConical }
@@ -135,6 +161,75 @@ export function PatientDataViewer({ patient }: PatientDataViewerProps) {
 
       {/* Content Area */}
       <div className="px-4 min-h-[500px]">
+        
+        {activeSubTab === 'profile' && (
+          <div className="space-y-8 animate-in fade-in duration-500">
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {stats.map((s, i) => (
+                  <Card key={i} className="cyber-card p-6 border-none bg-blue-950/40 text-center space-y-2">
+                     <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center mx-auto">
+                        <s.icon className={cn("h-5 w-5", s.color)} />
+                     </div>
+                     <div>
+                        <p className="text-[9px] font-black uppercase text-white/30">{s.label}</p>
+                        <p className="text-xl font-black text-white">{s.value}</p>
+                     </div>
+                  </Card>
+                ))}
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="cyber-card p-8 border-none bg-blue-950/40 space-y-6">
+                   <h4 className="text-sm font-black uppercase text-primary flex items-center gap-2">
+                      <Target className="h-4 w-4" /> Цели и привычки
+                   </h4>
+                   <div className="space-y-4">
+                      <div className="flex justify-between items-center py-3 border-b border-white/5">
+                         <span className="text-[10px] font-black uppercase text-white/40">Цель здоровья</span>
+                         <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase px-3">{patient.healthGoal || 'Не указана'}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center py-3 border-b border-white/5">
+                         <span className="text-[10px] font-black uppercase text-white/40">Активность</span>
+                         <Badge variant="outline" className="border-white/10 text-white/60 text-[10px] uppercase">{patient.activityLevel || 'Не указана'}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center py-3 border-b border-white/5">
+                         <span className="text-[10px] font-black uppercase text-white/40">Курение</span>
+                         <span className={cn("text-xs font-bold", patient.smoking === 'да' ? "text-red-400" : "text-emerald-400")}>
+                            {patient.smoking === 'да' ? <div className="flex items-center gap-1"><Ban className="h-3 w-3" /> КУРИТ</div> : "НЕТ"}
+                         </span>
+                      </div>
+                      <div className="flex justify-between items-center py-3">
+                         <span className="text-[10px] font-black uppercase text-white/40">Алкоголь</span>
+                         <span className="text-xs font-bold text-white/80 flex items-center gap-1">
+                            <Wine className="h-3 w-3 text-orange-400" /> {patient.alcohol || '—'}
+                         </span>
+                      </div>
+                   </div>
+                </Card>
+
+                <Card className="cyber-card p-8 border-none bg-blue-950/40 space-y-6">
+                   <h4 className="text-sm font-black uppercase text-primary flex items-center gap-2">
+                      <Utensils className="h-4 w-4" /> Пищевой профиль
+                   </h4>
+                   <div className="space-y-6">
+                      <div className="space-y-2">
+                         <p className="text-[10px] font-black uppercase text-white/40 px-1">Любит / Предпочитает</p>
+                         <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-xs font-medium text-white/70 leading-relaxed min-h-[60px]">
+                            {patient.favoriteFoods || 'Данные не заполнены'}
+                         </div>
+                      </div>
+                      <div className="space-y-2">
+                         <p className="text-[10px] font-black uppercase text-red-400/40 px-1">Исключить / Аллергии</p>
+                         <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 text-xs font-medium text-red-400/70 leading-relaxed min-h-[60px]">
+                            {patient.dislikedFoods || 'Данные не заполнены'}
+                         </div>
+                      </div>
+                   </div>
+                </Card>
+             </div>
+          </div>
+        )}
+
         {activeSubTab === 'dashboard' && (
           <Card className="cyber-card bg-blue-950/40 border-none overflow-hidden h-[600px] relative">
             <BioTwinVisualizer 
