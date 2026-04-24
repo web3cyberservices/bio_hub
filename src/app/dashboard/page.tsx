@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -30,6 +31,7 @@ import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { SpecialistPatientsView } from '@/components/specialist-patients-view';
+import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -167,13 +169,19 @@ export default function DashboardPage() {
             
             {activeTab === 'dashboard' && (
               <div className="h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0">
-                   <RecommendationDisplay 
-                    mode="dashboard" 
-                    deviceData={dailyLogDoc} 
-                    profileData={userData}
-                    data={recData?.data}
-                    actualMacros={actualMacros}
-                  />
+                   {profileType === 'specialist' ? (
+                     <div className="w-full h-full overflow-y-auto p-4 md:p-8 no-scrollbar pb-32">
+                        <SpecialistBookingManager />
+                     </div>
+                   ) : (
+                     <RecommendationDisplay 
+                      mode="dashboard" 
+                      deviceData={dailyLogDoc} 
+                      profileData={userData}
+                      data={recData?.data}
+                      actualMacros={actualMacros}
+                    />
+                   )}
               </div>
             )}
 

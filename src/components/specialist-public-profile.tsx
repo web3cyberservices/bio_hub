@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { PatientBookingDialog } from './patient-booking-dialog';
 
 interface SpecialistPublicProfileProps {
   specialistId: string;
@@ -188,14 +189,17 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                </div>
                
                {user?.uid !== 'public-user' && (
-                  <Button 
-                    onClick={handleToggleShareData} 
-                    disabled={sharingLoading}
-                    variant={isDataShared ? "destructive" : "secondary"}
-                    className="w-full rounded-2xl h-14 font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg"
-                  >
-                    {sharingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isDataShared ? <><ShieldAlert className="h-4 w-4" /> Отозвать доступ к данным</> : <><ShieldCheck className="h-4 w-4" /> Предоставить личные данные</>}
-                  </Button>
+                 <div className="flex flex-col gap-3">
+                    <PatientBookingDialog specialistId={specialistId} specialistName={specData?.firstName || 'Эксперт'} />
+                    <Button 
+                      onClick={handleToggleShareData} 
+                      disabled={sharingLoading}
+                      variant={isDataShared ? "destructive" : "secondary"}
+                      className="w-full rounded-2xl h-14 font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg"
+                    >
+                      {sharingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isDataShared ? <><ShieldAlert className="h-4 w-4" /> Отозвать доступ к данным</> : <><ShieldCheck className="h-4 w-4" /> Предоставить личные данные</>}
+                    </Button>
+                 </div>
                )}
             </div>
           </div>
