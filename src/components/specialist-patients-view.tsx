@@ -9,14 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Users, Search, MessageSquare, Activity, 
-  ArrowUpRight, UserCheck, Loader2
+  ArrowUpRight, UserCheck, Loader2, ArrowLeft
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { PatientDataViewer } from './patient-data-viewer';
 
 export function SpecialistPatientsView() {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const [searchTerm, setSearchText] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
 
   // Запрос на поиск пользователей, которые поделились данными с этим специалистом
   const patientsQuery = useMemoFirebase(() => {
@@ -45,6 +47,23 @@ export function SpecialistPatientsView() {
            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
            <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Синхронизация списка пациентов...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (selectedPatient) {
+    return (
+      <div className="animate-in fade-in duration-500">
+        <div className="max-w-6xl mx-auto px-4 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => setSelectedPatient(null)} 
+            className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" /> Вернуться к списку
+          </Button>
+        </div>
+        <PatientDataViewer patient={selectedPatient} />
       </div>
     );
   }
@@ -88,7 +107,7 @@ export function SpecialistPatientsView() {
                             </Badge>
                          </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 bg-white/5 text-white/20 hover:text-primary transition-all">
+                      <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 bg-white/5 text-white/20 hover:text-primary transition-all" onClick={() => setSelectedPatient(patient)}>
                          <ArrowUpRight className="h-5 w-5" />
                       </Button>
                    </div>
@@ -111,12 +130,15 @@ export function SpecialistPatientsView() {
                          <MessageSquare className="h-3.5 w-3.5 text-slate-950" />
                          <span className="text-[9px] font-black text-slate-950 uppercase tracking-tight">Чат</span>
                       </div>
-                      <div className="flex items-center gap-1.5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity">
+                      <div className="flex items-center gap-1.5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity" onClick={() => setSelectedPatient(patient)}>
                          <Activity className="h-3.5 w-3.5 text-slate-950" />
                          <span className="text-[9px] font-black text-slate-950 uppercase tracking-tight">Данные</span>
                       </div>
                    </div>
-                   <Button className="h-9 rounded-xl bg-slate-950 text-white hover:bg-slate-900 font-black text-[9px] uppercase tracking-widest shadow-xl">
+                   <Button 
+                    className="h-9 rounded-xl bg-slate-950 text-white hover:bg-slate-900 font-black text-[9px] uppercase tracking-widest shadow-xl"
+                    onClick={() => setSelectedPatient(patient)}
+                   >
                       Открыть карту
                    </Button>
                 </div>
