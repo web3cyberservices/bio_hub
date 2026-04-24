@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -133,13 +134,15 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* ТАБ ДВОЙНИКА - С ПРИМИТИВОМ */}
-            <TabsContent 
-              value="dashboard" 
-              className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
-            >
-               <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
-            </TabsContent>
+            {/* ТАБ ДВОЙНИКА - С ПРИМИТИВОМ И УСЛОВНЫМ ОТОБРАЖЕНИЕМ */}
+            {activeTab === 'dashboard' && (
+              <TabsContent 
+                value="dashboard" 
+                className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
+              >
+                 <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
+              </TabsContent>
+            )}
 
             {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ ПРИМИТИВА */}
             
