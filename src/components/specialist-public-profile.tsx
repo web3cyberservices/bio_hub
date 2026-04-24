@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, orderBy, updateDoc, arrayUnion, arrayRemove, addDoc } from 'firebase/firestore';
+import { doc, collection, query, where, orderBy, updateDoc, arrayUnion, arrayRemove, addDoc, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   }, [firestore, specialistId]);
 
   const userRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
@@ -71,27 +71,11 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   const isFollowing = specData?.followers?.includes(user?.uid);
   const isDataShared = currentUserData?.sharedWith?.includes(specialistId);
 
-  const startVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+  const handleToggleFollow = () => {
+    if (!user || user.uid === 'public-user' || !firestore || !specRef) {
+      toast({ variant: 'destructive', title: 'Вход не выполнен', description: 'Подписка доступна только зарегистрированным пользователям.' });
       return;
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setReviewText(prev => (prev ? prev + ' ' : '') + transcript);
-      toast({ title: 'Голос распознан' });
-    };
-    recognition.start();
-  };
-
-  const handleToggleFollow = () => {
-    if (!user || !firestore || !specRef) return;
     const data = { followers: isFollowing ? arrayRemove(user.uid) : arrayUnion(user.uid) };
     updateDoc(specRef, data).then(() => {
       toast({ title: isFollowing ? 'Подписка отменена' : 'Вы подписались!' });
@@ -99,7 +83,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   };
 
   const handleToggleShareData = async () => {
-    if (!user || !firestore || !userRef) return;
+    if (!user || user.uid === 'public-user' || !firestore || !userRef) return;
     setSharingLoading(true);
     try {
       await updateDoc(userRef, {
@@ -118,23 +102,41 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     }
   };
 
-  const handleSubmitReview = async () => {
-    if (!user || !firestore || !reviewText.trim()) return;
-    setIsSubmittingReview(true);
+  const handleCreateChat = async () => {
+    if (!user || user.uid === 'public-user' || !firestore || !specData) return;
+    
     try {
-      await addDoc(collection(firestore, 'users', specialistId, 'reviews'), {
-        authorId: user.uid,
-        authorName: (user as any).displayName || 'Пользователь',
-        rating: reviewRating,
-        comment: reviewText.trim(),
-        createdAt: new Date().toISOString()
+      // Проверяем, существует ли уже чат
+      const chatsQuery = query(
+        collection(firestore, 'chats'),
+        where('participants', 'array-contains', user.uid)
+      );
+      const querySnapshot = await getDocs(chatsQuery);
+      let existingChat = null;
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(specialistId)) {
+          existingChat = { id: doc.id, ...data };
+        }
       });
-      toast({ title: 'Отзыв опубликован' });
-      setReviewText('');
+
+      if (!existingChat) {
+        await addDoc(collection(firestore, 'chats'), {
+          participants: [user.uid, specialistId],
+          participantDetails: {
+            [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || '' },
+            [specialistId]: { name: specData.firstName || 'Специалист', photo: specData.photoUrl || '' }
+          },
+          lastMessage: 'Начат новый диалог со специалистом.',
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      onStartChat(specialistId, specData.firstName, specData.photoUrl);
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Ошибка' });
-    } finally {
-      setIsSubmittingReview(false);
+      toast({ variant: 'destructive', title: 'Ошибка чата' });
     }
   };
 
@@ -142,29 +144,29 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-muted-foreground hover:text-primary transition-all">
+      <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-white/40 hover:text-primary transition-all">
         <ArrowLeft className="h-4 w-4" /> Назад к ленте
       </Button>
 
-      <Card className="premium-card overflow-hidden border-none shadow-2xl bg-white/80 backdrop-blur-xl">
+      <Card className="premium-card overflow-hidden border-none shadow-2xl bg-blue-950/40 backdrop-blur-xl">
         <div className="relative h-48 md:h-64 bg-primary/10 overflow-hidden">
            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/5" />
         </div>
         <CardContent className="px-8 md:px-12 pb-12 relative">
           <div className="flex flex-col md:flex-row gap-8 items-end -mt-16 md:-mt-20">
             <div className="relative">
-               <Avatar className="h-32 w-32 md:h-44 md:w-44 border-8 border-white shadow-2xl rounded-[2.5rem]">
+               <Avatar className="h-32 w-32 md:h-44 md:w-44 border-8 border-black shadow-2xl rounded-[2.5rem]">
                   <AvatarImage src={specData?.photoUrl} className="object-cover" />
                   <AvatarFallback className="bg-primary/5 text-primary text-4xl font-black">{specData?.firstName?.charAt(0)}</AvatarFallback>
                </Avatar>
                {specData?.instagramUrl && (
-                 <a href={specData.instagramUrl} target="_blank" rel="noreferrer" className="absolute -bottom-2 -left-2 bg-[#E1306C] text-white p-3 rounded-2xl shadow-lg border-4 border-white hover:scale-110 transition-transform">
+                 <a href={specData.instagramUrl} target="_blank" rel="noreferrer" className="absolute -bottom-2 -left-2 bg-[#E1306C] text-white p-3 rounded-2xl shadow-lg border-4 border-black hover:scale-110 transition-transform">
                     <Instagram className="h-6 w-6" />
                  </a>
                )}
             </div>
             <div className="flex-1 space-y-2 text-center md:text-left">
-               <h2 className="text-3xl md:text-5xl font-black tracking-tighter">{specData?.firstName} {specData?.lastName}</h2>
+               <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white">{specData?.firstName} {specData?.lastName}</h2>
                <div className="flex flex-wrap justify-center md:justify-start items-center gap-4">
                   <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-black uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-xl">
                      {specData?.specialization || 'Эксперт'}
@@ -177,10 +179,10 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
             </div>
             <div className="flex flex-col gap-3 w-full md:w-auto">
                <div className="flex gap-3">
-                  <Button onClick={handleToggleFollow} className={cn("flex-1 md:flex-none rounded-2xl h-14 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl", isFollowing ? "bg-muted text-muted-foreground" : "bg-primary")}>
+                  <Button onClick={handleToggleFollow} className={cn("flex-1 md:flex-none rounded-2xl h-14 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl", isFollowing ? "bg-white/10 text-white/40" : "bg-primary text-slate-950")}>
                     {isFollowing ? "Вы подписаны" : "Подписаться"}
                   </Button>
-                  <Button onClick={() => onStartChat(specialistId, specData?.firstName, specData?.photoUrl)} variant="outline" className="flex-1 md:flex-none rounded-2xl h-14 px-8 font-black border-2 border-primary/20 text-primary">
+                  <Button onClick={handleCreateChat} variant="outline" className="flex-1 md:flex-none rounded-2xl h-14 px-8 font-black border-2 border-primary/20 text-primary hover:bg-primary/5">
                     Написать
                   </Button>
                </div>
@@ -201,30 +203,36 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-12">
             <div className="lg:col-span-4 space-y-10">
                <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 flex items-center gap-2">О специалисте</h4>
-                  <p className="text-sm font-medium leading-relaxed text-foreground/70">{specData?.bio || 'Описание отсутствует.'}</p>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-2">О специалисте</h4>
+                  <p className="text-sm font-medium leading-relaxed text-white/70">{specData?.bio || 'Описание отсутствует.'}</p>
                </div>
                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 text-center">
                      <p className="text-2xl font-black text-primary">{specData?.followers?.length || 0}</p>
-                     <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">Подписчиков</p>
+                     <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Подписчиков</p>
                   </div>
                   <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 text-center">
                      <p className="text-2xl font-black text-primary">{specPosts?.length || 0}</p>
-                     <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">Постов</p>
+                     <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Постов</p>
                   </div>
                </div>
             </div>
 
             <div className="lg:col-span-8 space-y-8">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 px-2">Публикации</h4>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-2">Публикации</h4>
                <div className="space-y-8">
                   {specPosts?.map((post) => (
-                     <Card key={post.id} className="premium-card overflow-hidden border-none shadow-xl bg-white p-8 space-y-6">
-                        <p className="text-lg font-medium leading-relaxed">{post.content}</p>
-                        {post.imageUrl && <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl"><Image src={post.imageUrl} alt="Post" fill className="object-cover" /></div>}
+                     <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-xl bg-white/5 p-8 space-y-6">
+                        <p className="text-lg font-medium leading-relaxed text-white/90">{post.content}</p>
+                        {post.imageUrl && <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border-4 border-white/5 shadow-2xl"><Image src={post.imageUrl} alt="Post" fill className="object-cover" unoptimized /></div>}
                      </Card>
                   ))}
+                  {(!specPosts || specPosts.length === 0) && (
+                    <div className="py-20 text-center opacity-20">
+                      <BookOpen className="h-12 w-12 mx-auto text-white" />
+                      <p className="text-xs font-black uppercase tracking-widest mt-4">Публикаций пока нет</p>
+                    </div>
+                  )}
                </div>
             </div>
           </div>

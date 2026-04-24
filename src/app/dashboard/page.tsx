@@ -6,7 +6,9 @@ import {
   Utensils, Loader2, Plus, MessageSquare, 
   HeartPulse, Smile, Settings, 
   LayoutGrid, Activity, Calendar as CalendarIcon,
-  ChevronDown
+  ChevronDown,
+  UserCheck,
+  BarChart3
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -64,7 +66,6 @@ export default function DashboardPage() {
 
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
 
-  // Получаем реальные приемы пищи для расчета КБЖУ на дашборде
   const mealsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
     return query(
@@ -98,6 +99,11 @@ export default function DashboardPage() {
   }, [firestore, user?.uid, dateKey]);
 
   const { data: recData } = useDoc<any>(recommendationRef);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setViewingSpecialistId(null);
+  };
 
   if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
 
@@ -138,7 +144,7 @@ export default function DashboardPage() {
             </Popover>
 
             <Badge variant="outline" className="hidden md:flex h-10 px-6 rounded-full border-white/10 bg-white/5 text-white/40 font-black uppercase text-[10px] tracking-widest gap-2">
-              Protocol Active
+              {profileType === 'specialist' ? 'Expert Console' : 'Protocol Active'}
             </Badge>
           </div>
         </div>
@@ -146,11 +152,11 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         {viewingSpecialistId ? (
-          <div className="overflow-y-auto h-full px-4 pb-32 pt-4">
+          <div className="overflow-y-auto h-full px-4 pb-32 pt-4 animate-in fade-in duration-500">
             <SpecialistPublicProfile 
               specialistId={viewingSpecialistId} 
               onBack={() => setViewingSpecialistId(null)} 
-              onStartChat={() => {
+              onStartChat={(id) => {
                 setViewingSpecialistId(null);
                 setActiveTab('chats');
               }} 
@@ -160,11 +166,7 @@ export default function DashboardPage() {
           <div className="w-full h-full flex flex-col overflow-hidden">
             
             {activeTab === 'dashboard' && (
-              <Tabs value="dashboard" className="h-full">
-                <TabsContent 
-                  value="dashboard" 
-                  className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0 !mt-0"
-                >
+              <div className="h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0">
                    <RecommendationDisplay 
                     mode="dashboard" 
                     deviceData={dailyLogDoc} 
@@ -172,8 +174,7 @@ export default function DashboardPage() {
                     data={recData?.data}
                     actualMacros={actualMacros}
                   />
-                </TabsContent>
-              </Tabs>
+              </div>
             )}
 
             {activeTab === 'feed' && (
@@ -184,14 +185,23 @@ export default function DashboardPage() {
                      <h2 className="text-4xl font-black tracking-tighter uppercase">Bio-Лента</h2>
                   </div>
                   {posts?.map((post) => (
-                    <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-2xl bg-white/[0.03] backdrop-blur-xl">
+                    <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-2xl bg-blue-950/40 backdrop-blur-xl">
                       <div className="p-6 md:p-8 space-y-6">
                         <div className="flex items-center justify-between">
-                          <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 group">
+                          <button 
+                            onClick={() => setViewingSpecialistId(post.authorId)} 
+                            className="flex items-center gap-4 group cursor-pointer text-left"
+                          >
                             <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                              {post.authorPhoto ? <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" /> : <div className="w-full h-full bg-primary/10 flex items-center justify-center"><Activity className="h-5 w-5 text-primary" /></div>}
+                              {post.authorPhoto ? (
+                                <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                                  <Activity className="h-5 w-5 text-primary" />
+                                </div>
+                              )}
                             </div>
-                            <div className="text-left">
+                            <div>
                               <p className="font-black text-sm uppercase tracking-tight group-hover:text-primary transition-colors">{post.authorName}</p>
                               <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{post.authorRole}</p>
                             </div>
@@ -219,7 +229,7 @@ export default function DashboardPage() {
                </div>
             )}
 
-            {activeTab === 'chats' && (activeTab === 'chats') && (
+            {activeTab === 'chats' && (
               <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
                 <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                   <ChatInterface />
@@ -244,19 +254,19 @@ export default function DashboardPage() {
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   
-                  <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => handleTabChange('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
                     <LayoutGrid className="h-5 w-5 md:h-6 md:w-6" />
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Лента</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Utensils className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Еда</span>
+                  <button onClick={() => handleTabChange('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                    {profileType === 'specialist' ? <UserCheck className="h-5 w-5 md:h-6 md:w-6" /> : <Utensils className="h-5 w-5 md:h-6 md:w-6" />}
+                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Пациенты' : 'Еда'}</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Activity className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Двойник</span>
+                  <button onClick={() => handleTabChange('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                    {profileType === 'specialist' ? <BarChart3 className="h-5 w-5 md:h-6 md:w-6" /> : <Activity className="h-5 w-5 md:h-6 md:w-6" />}
+                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Аналитика' : 'Двойник'}</span>
                   </button>
 
                   <div className="relative flex items-center justify-center px-2">
@@ -267,17 +277,17 @@ export default function DashboardPage() {
                      </UnifiedDataEntry>
                   </div>
 
-                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => handleTabChange('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
                     <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Чаты</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('feeling')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feeling' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => handleTabChange('feeling')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feeling' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
                     <Smile className="h-5 w-5 md:h-6 md:w-6" />
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Статус</span>
                   </button>
 
-                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                  <button onClick={() => handleTabChange('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
                     <Settings className="h-5 w-5 md:h-6 md:w-6" />
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Профиль</span>
                   </button>
