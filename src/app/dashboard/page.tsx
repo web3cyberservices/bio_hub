@@ -53,22 +53,23 @@ export default function DashboardPage() {
   }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    // Важно: не пытаемся получить док, пока пользователь не определен (не public-user)
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: userData } = useDoc<any>(userDocRef);
+  const { data: userData, isLoading: userDataLoading } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
   const dailyLogRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || !dateKey) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || !dateKey) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
     return query(
       collection(firestore, 'users', user.uid, 'personalMeals'),
       where('date', '==', dateKey)
@@ -95,7 +96,7 @@ export default function DashboardPage() {
   const { data: posts } = useCollection<any>(postsQuery);
 
   const recommendationRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || !dateKey) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
@@ -106,7 +107,10 @@ export default function DashboardPage() {
     setViewingSpecialistId(null);
   };
 
-  if (!isMounted || userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
+  // Ждем монтирования и авторизации
+  if (!isMounted || userLoading || !user) {
+    return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
+  }
 
   return (
     <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
@@ -192,7 +196,7 @@ export default function DashboardPage() {
                      <h2 className="text-4xl font-black tracking-tighter uppercase">Bio-Лента</h2>
                   </div>
                   {posts?.map((post) => (
-                    <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-2xl bg-blue-950/40 backdrop-blur-xl">
+                    <Card key={post.id} className="cyber-card overflow-hidden border border-blue-900/30 shadow-2xl bg-blue-950/40 backdrop-blur-xl">
                       <div className="p-6 md:p-8 space-y-6">
                         <div className="flex items-center justify-between">
                           <button 
@@ -201,7 +205,7 @@ export default function DashboardPage() {
                           >
                             <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
                               {post.authorPhoto ? (
-                                <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" />
+                                <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />
                               ) : (
                                 <div className="w-full h-full bg-primary/10 flex items-center justify-center">
                                   <Activity className="h-5 w-5 text-primary" />

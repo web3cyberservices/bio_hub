@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, User, UserPlus } from 'lucide-react';
+import { Sparkles, Loader2, UserPlus } from 'lucide-react';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -82,8 +82,19 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Добавляем те же доступы, что и на странице входа
+      provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
+      provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
+      provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
+
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
+
+      // Сохраняем токен
+      const credential = GoogleAuthProvider.credentialFromResult(userCredential);
+      if (credential?.accessToken) {
+        sessionStorage.setItem('google_fit_token', credential.accessToken);
+      }
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
       const userDoc = await getDoc(userDocRef);
@@ -96,16 +107,18 @@ export default function RegisterPage() {
           displayName: googleUser.displayName,
           firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
           lastName: googleUser.displayName?.split(' ')[1] || '',
+          photoUrl: googleUser.photoURL || '',
           profileType: 'user',
           createdAt: new Date().toISOString(),
         }, { merge: true });
       }
       toast({ title: 'Вход через Google выполнен' });
     } catch (error: any) {
+      console.error("Google Auth Error:", error);
       toast({
         variant: 'destructive',
         title: 'Ошибка Google входа',
-        description: 'Не удалось войти через Google.',
+        description: 'Не удалось завершить регистрацию через Google.',
       });
     } finally {
       setLoading(false);
@@ -114,25 +127,25 @@ export default function RegisterPage() {
 
   if (userLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F0F7F2]">
+      <div className="flex min-h-screen items-center justify-center bg-black">
         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F0F7F2]">
+    <div className="flex min-h-screen flex-col bg-[#000000]">
       <NavBar />
       <main className="flex flex-1 items-center justify-center p-4">
-        <Card className="mx-auto w-full max-w-md premium-card border-none shadow-2xl overflow-hidden">
-          <CardHeader className="space-y-2 text-center bg-primary text-white p-8">
+        <Card className="mx-auto w-full max-w-md premium-card border border-blue-900/30 shadow-2xl overflow-hidden bg-blue-950/40 backdrop-blur-xl">
+          <CardHeader className="space-y-2 text-center bg-primary text-slate-950 p-8">
             <div className="flex justify-center mb-2">
               <div className="rounded-2xl bg-white p-3 shadow-xl">
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter text-white">Регистрация</CardTitle>
-            <CardDescription className="text-white/70 font-medium text-xs">
+            <CardTitle className="text-3xl font-black tracking-tighter uppercase">Регистрация</CardTitle>
+            <CardDescription className="text-slate-950/70 font-black uppercase text-[10px] tracking-widest">
               Присоединяйтесь к Bio-хабу PRO Себя
             </CardDescription>
           </CardHeader>
@@ -140,7 +153,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline"
-                className="h-14 rounded-xl border-2 border-muted font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-muted/50"
+                className="h-14 rounded-xl border-2 border-white/10 bg-white/5 font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-white/10 text-white"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
@@ -172,59 +185,59 @@ export default function RegisterPage() {
             </div>
 
             <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted" /></div>
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
               <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
-                <span className="bg-white px-4 text-muted-foreground/40">Или регистрация</span>
+                <span className="bg-[#0c1221] px-4 text-white/30">Или регистрация</span>
               </div>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid gap-3">
                 <div className="grid gap-1.5">
-                  <Label htmlFor="name">Имя</Label>
+                  <Label htmlFor="name" className="text-white/50 uppercase text-[9px] font-black px-1">Имя</Label>
                   <Input 
                     id="name" 
                     placeholder="Ваше имя" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-12 rounded-xl"
+                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
                     required
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-white/50 uppercase text-[9px] font-black px-1">Email</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="name@example.com" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 rounded-xl"
+                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
                     required
                   />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="password">Пароль</Label>
+                  <Label htmlFor="password" className="text-white/50 uppercase text-[9px] font-black px-1">Пароль</Label>
                   <Input 
                     id="password" 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 rounded-xl"
+                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
                     required
                   />
                 </div>
               </div>
               <Button 
-                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black shadow-xl mt-2" 
+                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black text-slate-950 shadow-xl mt-2" 
                 type="submit"
                 disabled={loading}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><UserPlus className="h-5 w-5 mr-2" /> Создать аккаунт</div>}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><UserPlus className="h-5 w-5 mr-2" /> СОЗДАТЬ АККАУНТ</div>}
               </Button>
             </form>
 
-            <div className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <div className="text-center text-[10px] font-bold text-white/40 uppercase tracking-widest">
               Уже есть аккаунт?{' '}
               <Link href="/login" className="text-primary hover:underline font-black">
                 Войти
