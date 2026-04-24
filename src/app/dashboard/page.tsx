@@ -3,8 +3,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, Smile, Settings, Heart,
-  LayoutGrid, Activity, Sparkles
+  HeartPulse, Smile, Settings, 
+  LayoutGrid, Activity, Calendar as CalendarIcon,
+  ChevronDown
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -12,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, where, limit } from 'firebase/firestore';
+import { doc, collection, query, orderBy, limit } from 'firebase/firestore';
 import { ProfileCabinet } from '@/components/profile-cabinet';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -24,11 +25,14 @@ import { PersonalMealPlan } from '@/components/personal-meal-plan';
 import { WellBeingStatus } from '@/components/well-being-status';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
@@ -41,7 +45,7 @@ export default function DashboardPage() {
   }, []);
 
   const dateKey = useMemo(() => {
-    if (!selectedDate) return null;
+    if (!selectedDate) return format(new Date(), 'yyyy-MM-dd');
     return format(selectedDate, 'yyyy-MM-dd');
   }, [selectedDate]);
   
@@ -84,9 +88,30 @@ export default function DashboardPage() {
               <p className="text-[8px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {profileType === 'specialist' && <CreatePostDialog />}
-            <Badge variant="outline" className="h-10 px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] tracking-widest gap-2">
+            
+            {/* DATE PICKER (КАЛЕНДАРЬ) */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-10 px-3 md:px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[9px] md:text-[10px] tracking-widest gap-2 hover:bg-[#00ffff]/10">
+                  <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600]" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  locale={ru}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Badge variant="outline" className="hidden md:flex h-10 px-6 rounded-full border-white/10 bg-white/5 text-white/40 font-black uppercase text-[10px] tracking-widest gap-2">
               Protocol Active
             </Badge>
           </div>
@@ -108,7 +133,7 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* ТАБ ДВОЙНИКА - ОСТАВЛЯЕМ TabsContent (единственный системный контейнер) */}
+            {/* ТАБ ДВОЙНИКА - С ПРИМИТИВОМ */}
             <TabsContent 
               value="dashboard" 
               className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
@@ -116,7 +141,7 @@ export default function DashboardPage() {
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ TabsContent (условный рендеринг для плотной верстки) */}
+            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ ПРИМИТИВА */}
             
             {activeTab === 'feed' && (
               <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
@@ -158,7 +183,7 @@ export default function DashboardPage() {
             {activeTab === 'meals' && (
                <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                  <div className="max-w-4xl mx-auto pb-10">
-                    <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
+                    <PersonalMealPlan selectedDate={selectedDate} />
                  </div>
                </div>
             )}
@@ -207,7 +232,7 @@ export default function DashboardPage() {
                   </button>
 
                   <div className="relative flex items-center justify-center px-2">
-                     <UnifiedDataEntry selectedDate={selectedDate || startOfToday()}>
+                     <UnifiedDataEntry selectedDate={selectedDate}>
                         <button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)] hover:scale-110 active:scale-95 transition-all border-4 border-black/30">
                            <Plus className="h-7 w-7 md:h-8 md:w-8 text-white stroke-[3px]" />
                         </button>
