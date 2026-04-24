@@ -20,6 +20,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 interface RecommendationFormProps {
   onResult: (result: GenerateRecommendationsOutput) => void;
@@ -53,7 +54,6 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
   const handleSmartGenerate = async () => {
     if (!user || !firestore) return;
     
-    // Проверка наличия данных в профиле
     if (!userData?.weight || !userData?.height || !userData?.birthDate) {
       toast({
         variant: 'destructive',
@@ -66,6 +66,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
     setLoading(true);
     try {
       const age = calculateAge(userData.birthDate);
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
       
       const result = await generatePersonalizedRecommendations({
         weight: userData.weight,
@@ -80,14 +81,25 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         dislikedFoods: userData.dislikedFoods,
         targetDate: selectedDate.toISOString(),
         deviceData: {
-          steps: 0, // Эти данные подтянутся из dailyLogs в RecommendationDisplay
+          steps: 0,
           avgHeartRate: 72,
           sleepDurationHours: 8,
           bloodPressure: '120/80',
         },
       });
+
+      // Сохраняем рекомендацию в профиль пользователя
+      const recRef = doc(firestore, 'users', user.uid, 'recommendations', dateKey);
+      await setDoc(recRef, {
+        id: dateKey,
+        userId: user.uid,
+        date: dateKey,
+        data: result,
+        createdAt: new Date().toISOString()
+      });
       
       onResult(result);
+      toast({ title: 'План сгенерирован', description: 'Ваше персональное меню на сегодня готово.' });
     } catch (error: any) {
       toast({ 
         variant: 'destructive', 
@@ -108,9 +120,9 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
         </div>
         
         <div className="space-y-2">
-           <h3 className="text-xl font-black tracking-tight text-white uppercase">Готов к инициализации</h3>
+           <h3 className="text-xl font-black tracking-tight text-white uppercase">Инициализация ИИ-Плана</h3>
            <p className="text-xs text-primary/60 font-medium leading-relaxed">
-             Система автоматически считала ваши биометрические данные из профиля. Мы готовы создать вашу цифровую копию.
+             Система проанализирует вашу биометрию, привычки и последние анализы для составления оптимального рациона.
            </p>
         </div>
 
@@ -123,7 +135,7 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
            <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
               <Database className="h-4 w-4 text-primary/40 mb-2" />
               <p className="text-[8px] font-black uppercase text-white/40">Статус</p>
-              <p className="text-xs font-bold text-primary">Активен</p>
+              <p className="text-xs font-bold text-primary">Данные готовы</p>
            </div>
         </div>
 
@@ -132,11 +144,11 @@ export function RecommendationForm({ onResult, selectedDate }: RecommendationFor
           disabled={loading} 
           className="w-full h-16 rounded-2xl bg-primary text-black font-black text-lg shadow-[0_0_30px_rgba(14,165,233,0.4)] hover:scale-105 transition-all"
         >
-          {loading ? <Loader2 className="mr-3 animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-6 w-6" /> СОЗДАТЬ ДВОЙНИКА</>}
+          {loading ? <Loader2 className="mr-3 animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-6 w-6" /> СОСТАВИТЬ МЕНЮ</>}
         </Button>
 
         <p className="text-[8px] font-black uppercase tracking-widest text-white/20">
-          Neural Sync Protocol Active v4.0.2
+          Neural Recommendation Engine v4.0
         </p>
       </CardContent>
     </Card>

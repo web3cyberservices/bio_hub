@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -22,7 +21,7 @@ import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
 import { ChatInterface } from '@/components/chat-interface';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
-import { PersonalMealPlan } from '@/components/personal-meal-plan';
+import { MealsHub } from '@/components/meals-hub';
 import { WellBeingStatus } from '@/components/well-being-status';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
@@ -78,7 +77,7 @@ export default function DashboardPage() {
     <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
       
       {/* FIXED HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
+      <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
@@ -92,14 +91,14 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 md:gap-4">
             {profileType === 'specialist' && <CreatePostDialog />}
             
-            {/* DATE PICKER (КАЛЕНДАРЬ) */}
+            {/* DATE PICKER */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="h-10 px-3 md:px-6 rounded-full border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[9px] md:text-[10px] tracking-widest gap-2 hover:bg-[#00ffff]/10">
+                <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[9px] md:text-[10px] tracking-widest flex items-center gap-2 hover:bg-[#00ffff]/10 transition-all shadow-lg shadow-[#00ffff]/5">
                   <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
                   <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
                   <ChevronDown className="h-3 w-3 opacity-50" />
-                </Button>
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600]" align="end">
                 <Calendar
@@ -132,22 +131,24 @@ export default function DashboardPage() {
             />
           </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+          <div className="w-full h-full flex flex-col overflow-hidden">
             
-            {/* ТАБ ДВОЙНИКА - С ПРИМИТИВОМ И УСЛОВНЫМ ОТОБРАЖЕНИЕМ */}
+            {/* ТАБ ДВОЙНИКА - ЕДИНСТВЕННЫЙ С PRIMITIVE */}
             {activeTab === 'dashboard' && (
-              <TabsContent 
-                value="dashboard" 
-                className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
-              >
-                 <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
-              </TabsContent>
+              <Tabs value="dashboard" className="h-full">
+                <TabsContent 
+                  value="dashboard" 
+                  className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0 !mt-0"
+                >
+                   <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
+                </TabsContent>
+              </Tabs>
             )}
 
-            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ ПРИМИТИВА */}
+            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ PRIMITIVE (УСЛОВНЫЙ РЕНДЕР) */}
             
             {activeTab === 'feed' && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-6 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-3xl mx-auto space-y-8 pb-10">
                   <div className="text-center space-y-2 mb-12">
                      <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -184,15 +185,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'meals' && (
-               <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                 <div className="max-w-4xl mx-auto pb-10">
-                    <PersonalMealPlan selectedDate={selectedDate} />
-                 </div>
+               <div className="m-0 pt-6 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                 <MealsHub selectedDate={selectedDate} />
                </div>
             )}
 
             {activeTab === 'chats' && (
-              <div className="m-0 pt-4 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
+              <div className="m-0 pt-6 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
                 <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                   <ChatInterface />
                 </div>
@@ -200,15 +199,13 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'feeling' && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <div className="max-w-4xl mx-auto pb-10">
-                  <WellBeingStatus deviceData={dailyLogDoc} />
-                </div>
+              <div className="m-0 pt-6 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <WellBeingStatus deviceData={dailyLogDoc} />
               </div>
             )}
 
             {activeTab === 'profile' && (
-              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-6 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-5xl mx-auto">
                   <ProfileCabinet />
                 </div>
@@ -259,7 +256,7 @@ export default function DashboardPage() {
                </div>
             </div>
 
-          </Tabs>
+          </div>
         )}
       </main>
     </div>
