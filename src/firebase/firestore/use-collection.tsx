@@ -73,7 +73,16 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        // Извлекаем путь для детального отчета об ошибке
+        // Если это НЕ ошибка прав доступа, выводим её как есть (например, ошибка индекса)
+        if (err.code !== 'permission-denied') {
+          console.error("Firestore Query Error:", err);
+          setError(err);
+          setData(null);
+          setIsLoading(false);
+          return;
+        }
+
+        // Извлекаем путь для детального отчета об ошибке прав доступа
         const path: string =
           memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -88,7 +97,7 @@ export function useCollection<T = any>(
         setData(null);
         setIsLoading(false);
 
-        // Эмитим ошибку для глобального слушателя
+        // Эмитим ошибку для глобального слушателя только если это реально permission-error
         errorEmitter.emit('permission-error', contextualError);
       }
     );

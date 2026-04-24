@@ -50,6 +50,15 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
+        // Если это не ошибка прав доступа, просто логируем и устанавливаем ошибку
+        if (err.code !== 'permission-denied') {
+          console.error("Firestore Doc Error:", err);
+          setError(err);
+          setData(null);
+          setIsLoading(false);
+          return;
+        }
+
         // Skip errors for public-user document which is known to be blocked by rules
         if (memoizedDocRef.path.includes('/public-user')) {
           setData(null);
