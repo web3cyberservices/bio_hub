@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -73,7 +72,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
       
-      {/* FIXED HEADER: 80px height */}
+      {/* FIXED HEADER */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
@@ -109,7 +108,7 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* ТАБ ДВОЙНИКА - ОСТАВЛЯЕМ TabsContent (primitive.div) */}
+            {/* ТАБ ДВОЙНИКА - ОСТАВЛЯЕМ TabsContent (единственный системный контейнер) */}
             <TabsContent 
               value="dashboard" 
               className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
@@ -117,10 +116,10 @@ export default function DashboardPage() {
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - УСЛОВНЫЙ РЕНДЕРИНГ БЕЗ TabsContent */}
+            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - БЕЗ TabsContent (условный рендеринг для плотной верстки) */}
             
             {activeTab === 'feed' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-3xl mx-auto space-y-8 pb-10">
                   <div className="text-center space-y-2 mb-12">
                      <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
@@ -157,7 +156,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'meals' && (
-               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+               <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                  <div className="max-w-4xl mx-auto pb-10">
                     <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
                  </div>
@@ -165,7 +164,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'chats' && (
-              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
+              <div className="m-0 pt-4 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
                 <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
                   <ChatInterface />
                 </div>
@@ -173,7 +172,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'feeling' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-4xl mx-auto pb-10">
                   <WellBeingStatus deviceData={dailyLogDoc} />
                 </div>
@@ -181,7 +180,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === 'profile' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+              <div className="m-0 pt-4 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-5xl mx-auto">
                   <ProfileCabinet />
                 </div>

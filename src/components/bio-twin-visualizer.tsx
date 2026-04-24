@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -21,25 +20,25 @@ interface GaugeProps {
 const NeonGauge = ({ label, value, icon, color, progress, className }: GaugeProps) => {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-1 md:gap-4 group transition-all duration-500", className)}>
-      <div className="relative w-14 h-14 md:w-24 md:h-24 flex items-center justify-center">
+      <div className="relative w-12 h-12 md:w-24 md:h-24 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="48%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
             cx="50%" cy="50%" r="48%" fill="none" stroke={color} strokeWidth="3" 
             strokeDasharray="100" strokeDashoffset={100 - (progress || 0)} pathLength="100" strokeLinecap="round"
-            className="drop-shadow-[0_0:15px_currentColor] transition-all duration-1000"
+            className="drop-shadow-[0_0_15px_currentColor] transition-all duration-1000"
           />
         </svg>
         <div className="text-center flex flex-col items-center">
-          <div className="scale-75 md:scale-150 mb-0.5 md:mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
+          <div className="scale-[0.6] md:scale-150 mb-0 md:mb-1 opacity-90 group-hover:opacity-100 transition-opacity">
             {icon}
           </div>
-          <span className="text-[8px] md:text-sm font-black text-white leading-none block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+          <span className="text-[7px] md:text-sm font-black text-white leading-none block drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
             {value}
           </span>
         </div>
       </div>
-      <span className="text-[6px] md:text-[10px] font-black uppercase text-white/50 tracking-[0.2em] group-hover:text-primary transition-colors">
+      <span className="text-[5px] md:text-[10px] font-black uppercase text-white/50 tracking-[0.2em] group-hover:text-primary transition-colors">
         {label}
       </span>
     </div>
@@ -60,7 +59,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
   return (
-    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4 pb-32", className)}>
+    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4 pb-24 md:pb-32", className)}>
       
       {/* LAYER 1: BACKGROUND GRID & AMBIENT GLOW */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -70,10 +69,10 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
       </div>
 
       {/* LAYER 2: HUD INTERFACE (GAUGES) */}
-      <div className="relative z-[60] w-full h-full flex items-center justify-between px-4 md:px-20 pointer-events-none">
+      <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         
         {/* LEFT COLUMN: VITALITY */}
-        <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
+        <div className="flex flex-col gap-3 md:gap-8 items-start justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ШАГИ" value={stepsVal}
             icon={<Footprints className="h-4 w-4 md:h-7 md:w-7 text-[#00ffff]" />} color="#00ffff" 
@@ -97,7 +96,7 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
 
         {/* RIGHT COLUMN: NUTRITION */}
-        <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
+        <div className="flex flex-col gap-3 md:gap-8 items-end justify-center h-full pointer-events-auto">
           <NeonGauge 
             label="ККАЛ" value={kcalVal}
             icon={<Flame className="h-4 w-4 md:h-7 md:w-7 text-[#FB923C]" />} color="#FB923C" 
@@ -121,25 +120,25 @@ export function BioTwinVisualizer({ score, deviceData, macros, className }: any)
         </div>
       </div>
 
-      {/* LAYER 3: HOLOGRAM & INTEGRATED BIO-CORE - CENTERING IN SAFE ZONE */}
-      <div className="absolute top-0 bottom-32 left-0 right-0 z-50 pointer-events-none flex items-center justify-center">
-        <div className="relative w-[90%] h-[90%] max-h-[65vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
+      {/* LAYER 3: HOLOGRAM - PERFECTLY CENTERED FOR MOBILE */}
+      <div className="absolute top-0 bottom-24 md:bottom-32 left-0 right-0 z-50 pointer-events-none flex items-center justify-center p-4">
+        <div className="relative w-full h-full max-h-[55vh] md:max-h-none animate-hologram flex items-center justify-center transition-all duration-1000">
           
           <div className="relative w-full h-full flex items-center justify-center">
             <Image 
               src="/bio-hologram.png" 
               alt="Bio-Hologram" 
               fill
-              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,1)] drop-shadow-[0_0_45px_rgba(0,255,255,0.6)]"
+              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]"
               priority
               unoptimized
             />
 
-            {/* BIO-CORE: Пульсирующая точка сердца */}
+            {/* BIO-CORE */}
             <div className="absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
-              <div className="relative w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#00ffff]/60 rounded-full animate-ping opacity-90" />
-                <div className="w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_40px_#00ffff] animate-pulse" />
+              <div className="relative w-6 h-6 md:w-12 md:h-12 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
+                <div className="w-2 h-2 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_30px_#00ffff] animate-pulse" />
               </div>
             </div>
           </div>
