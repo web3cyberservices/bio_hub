@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -81,25 +80,26 @@ export function CreatePostDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-2xl bg-primary gap-2 h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+        <Button className="rounded-2xl bg-primary text-slate-950 gap-2 h-12 px-6 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
           <Plus className="h-4 w-4" /> Новый пост
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader className="p-8 bg-primary text-white">
-          <DialogTitle className="text-2xl font-black flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-accent" /> Создать публикацию
+      <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-0 overflow-hidden border border-white/10 shadow-2xl bg-[#010411]">
+        <DialogHeader className="p-8 bg-primary text-white relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#00ffff]/80 opacity-90" />
+          <DialogTitle className="text-2xl font-black flex items-center gap-2 relative z-10 text-slate-950">
+            <Sparkles className="h-6 w-6 text-slate-950/60" /> Создать публикацию
           </DialogTitle>
         </DialogHeader>
         <div className="p-8 space-y-6">
           <div className="space-y-4 relative">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Текст сообщения</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Текст сообщения</label>
             <div className="relative">
               <Textarea 
                 placeholder="Поделитесь знаниями или советом..." 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[150px] rounded-2xl bg-[#E8F5EE] border-none p-6 text-lg font-medium resize-none shadow-inner pr-14"
+                className="min-h-[150px] rounded-2xl bg-white/5 border border-white/10 p-6 text-lg font-medium resize-none shadow-inner pr-14 text-white placeholder:text-white/20"
               />
               <Button 
                 type="button" 
@@ -108,7 +108,7 @@ export function CreatePostDialog() {
                 onClick={startVoiceInput}
                 className={cn(
                   "absolute right-3 top-3 h-10 w-10 rounded-full shadow-lg transition-all",
-                  isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white text-primary"
+                  isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary"
                 )}
               >
                 <Mic className="h-4 w-4" />
@@ -117,29 +117,29 @@ export function CreatePostDialog() {
           </div>
           
           <div className="space-y-4">
-             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 flex items-center gap-2">
-                <ImageIconLucide className="h-3 w-3" /> Ссылка на изображение (опционально)
+             <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2 flex items-center gap-2">
+                <ImageIconLucide className="h-3 w-3 text-primary" /> Ссылка на изображение (опционально)
              </label>
              <Input 
                placeholder="https://images.unsplash.com/..." 
                value={imageUrl}
                onChange={(e) => setImageUrl(e.target.value)}
-               className="h-14 rounded-2xl bg-[#E8F5EE] border-none px-6 font-bold"
+               className="h-14 rounded-2xl bg-white/5 border border-white/10 px-6 font-bold text-white placeholder:text-white/20 shadow-inner"
              />
           </div>
 
           {imageUrl && (
-            <div className="relative aspect-video rounded-2xl overflow-hidden border-4 border-white shadow-lg">
-               <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+            <div className="relative aspect-video rounded-2xl overflow-hidden border-4 border-white/10 shadow-lg">
+               <Image src={imageUrl} alt="Preview" fill className="object-cover" unoptimized />
             </div>
           )}
         </div>
-        <DialogFooter className="p-8 bg-muted/20 border-t flex flex-col sm:flex-row gap-4">
-           <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-bold">Отмена</Button>
+        <DialogFooter className="p-8 bg-white/5 border-t border-white/5 flex flex-col sm:flex-row gap-4">
+           <Button variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl font-bold text-white/60">Отмена</Button>
            <Button 
              onClick={handleSubmit} 
              disabled={loading || !content.trim()} 
-             className="rounded-xl bg-primary px-8 font-black shadow-xl"
+             className="rounded-xl bg-primary text-slate-950 px-8 font-black shadow-xl"
            >
               {loading ? <Loader2 className="animate-spin h-4 w-4" /> : "Опубликовать"}
            </Button>
