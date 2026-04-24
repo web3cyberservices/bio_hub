@@ -8,7 +8,7 @@ import {
   LayoutGrid, Activity, Sparkles
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
-import { ru } from 'date-fns/locale/ru';
+import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
@@ -109,7 +109,7 @@ export default function DashboardPage() {
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
             
-            {/* DOUBLE / HOLOGRAM TAB - NO EXTRA PADDING */}
+            {/* ТАБ ДВОЙНИКА - ОСТАВЛЯЕМ TabsContent (primitive.div) */}
             <TabsContent 
               value="dashboard" 
               className="m-0 h-full w-full overflow-hidden flex items-center justify-center outline-none data-[state=active]:flex pt-0 !mt-0"
@@ -117,65 +117,76 @@ export default function DashboardPage() {
                <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} />
             </TabsContent>
 
-            <TabsContent value="feed" className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-3xl mx-auto space-y-8 pb-10">
-                <div className="text-center space-y-2 mb-12">
-                   <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
-                   <h2 className="text-4xl font-black tracking-tighter uppercase">Bio-Лента</h2>
-                </div>
-                {posts?.map((post) => (
-                  <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-2xl bg-white/[0.03] backdrop-blur-xl">
-                    <div className="p-6 md:p-8 space-y-6">
-                      <div className="flex items-center justify-between">
-                        <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 group">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                            {post.authorPhoto ? <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" /> : <div className="w-full h-full bg-primary/10 flex items-center justify-center"><Activity className="h-5 w-5 text-primary" /></div>}
-                          </div>
-                          <div className="text-left">
-                            <p className="font-black text-sm uppercase tracking-tight group-hover:text-primary transition-colors">{post.authorName}</p>
-                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{post.authorRole}</p>
-                          </div>
-                        </button>
-                        <Badge variant="outline" className="border-white/10 text-white/30 text-[9px] uppercase font-black">
-                          {post.createdAt && format(new Date(post.createdAt), 'd MMM', { locale: ru })}
-                        </Badge>
-                      </div>
-                      <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
-                      {post.imageUrl && (
-                        <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
-                          <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
+            {/* ОСТАЛЬНЫЕ ВКЛАДКИ - УСЛОВНЫЙ РЕНДЕРИНГ БЕЗ TabsContent */}
+            
+            {activeTab === 'feed' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <div className="max-w-3xl mx-auto space-y-8 pb-10">
+                  <div className="text-center space-y-2 mb-12">
+                     <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
+                     <h2 className="text-4xl font-black tracking-tighter uppercase">Bio-Лента</h2>
+                  </div>
+                  {posts?.map((post) => (
+                    <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-2xl bg-white/[0.03] backdrop-blur-xl">
+                      <div className="p-6 md:p-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 group">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
+                              {post.authorPhoto ? <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" /> : <div className="w-full h-full bg-primary/10 flex items-center justify-center"><Activity className="h-5 w-5 text-primary" /></div>}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-primary transition-colors">{post.authorName}</p>
+                              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{post.authorRole}</p>
+                            </div>
+                          </button>
+                          <Badge variant="outline" className="border-white/10 text-white/30 text-[9px] uppercase font-black">
+                            {post.createdAt && format(new Date(post.createdAt), 'd MMM', { locale: ru })}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                        <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
+                        {post.imageUrl && (
+                          <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
+                            <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="meals" className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-               <div className="max-w-4xl mx-auto pb-10">
-                  <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
+            {activeTab === 'meals' && (
+               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                 <div className="max-w-4xl mx-auto pb-10">
+                    <PersonalMealPlan selectedDate={selectedDate || startOfToday()} />
+                 </div>
                </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="chats" className="m-0 pt-1 h-full px-4 pb-40 outline-none data-[state=active]:flex flex-col">
-              <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
-                <ChatInterface />
+            {activeTab === 'chats' && (
+              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
+                <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
+                  <ChatInterface />
+                </div>
               </div>
-            </TabsContent>
+            )}
 
-            <TabsContent value="feeling" className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-4xl mx-auto pb-10">
-                <WellBeingStatus deviceData={dailyLogDoc} />
+            {activeTab === 'feeling' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <div className="max-w-4xl mx-auto pb-10">
+                  <WellBeingStatus deviceData={dailyLogDoc} />
+                </div>
               </div>
-            </TabsContent>
+            )}
 
-            {/* PROFILE TAB - TIGHT TO HEADER */}
-            <TabsContent value="profile" className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none data-[state=active]:block">
-              <div className="max-w-5xl mx-auto">
-                <ProfileCabinet />
+            {activeTab === 'profile' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <div className="max-w-5xl mx-auto">
+                  <ProfileCabinet />
+                </div>
               </div>
-            </TabsContent>
+            )}
 
             {/* NAVIGATION BAR */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
