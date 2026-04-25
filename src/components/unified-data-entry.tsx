@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -135,7 +136,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
       
-      // Формируем объект данных для сохранения
       const logData: any = {
         date: dateKey,
         updatedAt: serverTimestamp()
@@ -148,14 +148,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       if (mood) logData.mood = mood;
       if (energy && energy.length > 0) logData.energy = energy[0];
 
-      // Сохраняем данные цикла только если вкладка активна или данные были введены
       if (isCycleActive) {
         logData.cycle = {
           intensity: cycleIntensity,
           symptoms: selectedSymptoms,
           energyStatus: energyStatus,
-          isStart: isCycleStart,
-          isEnd: isCycleEnd,
+          isStart: Boolean(isCycleStart),
+          isEnd: Boolean(isCycleEnd),
           notes: cycleSymptomsText
         };
       }

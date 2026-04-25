@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -61,12 +62,10 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос всех логов с данными цикла
+  // Запрос всех логов для расчета цикла
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'dailyLogs')
-    );
+    return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
   }, [firestore, user?.uid]);
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
@@ -75,28 +74,28 @@ export default function DashboardPage() {
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    // 1. Находим все даты начала циклов
+    // Находим все "Начала цикла"
     const starts = allLogs
       .filter(log => log.cycle?.isStart)
       .map(log => ({
-        timestamp: startOfDay(new Date(log.date)).getTime(),
+        timestamp: startOfDay(new Date(log.date + 'T00:00:00')).getTime(),
         dateStr: log.date
       }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
     const map: Record<string, number> = {};
     
-    // 2. Для каждого лога с данными цикла рассчитываем номер дня
     allLogs.forEach(log => {
+      // Если день помечен как активный в цикле
       if (log.cycle) {
-        const currentDate = startOfDay(new Date(log.date));
+        const currentDate = startOfDay(new Date(log.date + 'T00:00:00'));
         const currentTs = currentDate.getTime();
         
-        // Ищем последнее "Начало цикла" перед этой датой или в эту дату
+        // Ищем последнее "Начало" перед этой датой
         const lastStart = [...starts].reverse().find(s => s.timestamp <= currentTs);
         
         if (lastStart) {
-          const diffDays = differenceInDays(currentDate, new Date(lastStart.dateStr));
+          const diffDays = differenceInDays(currentDate, new Date(lastStart.dateStr + 'T00:00:00'));
           map[log.date] = diffDays + 1;
         }
       }
