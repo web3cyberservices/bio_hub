@@ -74,11 +74,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
       const docRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
       
-      // ГАРАНТИРУЕМ ЧИСТЫЕ ДАННЫЕ
       const logData: any = {
         date: dateKey,
         updatedAt: serverTimestamp(),
-        timestamp: Timestamp.fromDate(selectedDate) // Сохраняем как Firebase Timestamp
+        timestamp: Timestamp.fromDate(selectedDate)
       };
 
       if (water) logData.water = Number(water);
@@ -93,8 +92,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           intensity: cycleIntensity,
           symptoms: selectedSymptoms,
           energyStatus: energyStatus,
-          isStart: Boolean(isCycleStart), // Гарантируем Boolean
-          isEnd: Boolean(isCycleEnd),     // Гарантируем Boolean
+          isStart: Boolean(isCycleStart),
+          isEnd: Boolean(isCycleEnd),
           notes: cycleSymptomsText
         };
       }
@@ -261,7 +260,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
                 <TabsContent value="labs" className="space-y-6 outline-none">
                   <label className="cursor-pointer group"><div className="h-48 rounded-[2.5rem] border-dashed border-2 border-white/10 flex flex-col items-center justify-center bg-white/5 hover:border-primary/40 transition-all text-white"><Upload className="h-12 w-12 text-primary mb-3" /><span className="text-sm font-black uppercase tracking-widest text-white/60">ЗАГРУЗИТЬ СКАН АНАЛИЗА</span></div><input type="file" className="hidden" accept="image/*" onChange={e => { const r = new FileReader(); r.onloadend = () => setImage(r.result as string); r.readAsDataURL(e.target.files![0]); }} /></label>
-                  {image && <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white/5"><img src={image} className="w-full h-full object-cover" /><Button variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button></div>}
+                  {image && <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white/5"><img src={image} className="w-full h-full object-cover" alt="Preview" /><Button variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button></div>}
                   <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleAnalyze} disabled={!image || loading}>{loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Activity className="h-6 w-6 mr-3" /> АНАЛИЗИРОВАТЬ ЛАБ</>}</Button>
                 </TabsContent>
               </Tabs>

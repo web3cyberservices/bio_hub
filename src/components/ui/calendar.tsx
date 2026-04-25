@@ -58,7 +58,7 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        // ПЕРЕОПРЕДЕЛЯЕМ DAY ДЛЯ ПРИНУДИТЕЛЬНОЙ ОТРИСОВКИ МАРКЕРОВ
+        // ИСПРАВЛЕНИЕ: Используем <td> для предотвращения ошибки гидратации (div cannot be child of tr)
         Day: ({ day, ...dayProps }: any) => {
           if (!day || !day.date || !isValid(day.date)) return null;
           
@@ -66,48 +66,52 @@ function Calendar({
           const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
           
-          // Проверка на принадлежность текущему месяцу (v9 использует day.outside)
-          if (day.outside && !showOutsideDays) return <div className="h-10 w-9" />;
+          if (day.outside && !showOutsideDays) {
+            return <td className="h-10 w-9" />;
+          }
 
           return (
-            <div 
+            <td 
               {...dayProps}
               className={cn(
                 dayProps.className,
-                "relative h-10 w-9 flex items-center justify-center cursor-pointer rounded-xl transition-all",
-                day.outside && "opacity-20"
+                "relative h-10 w-9 p-0"
               )}
-              style={{ position: 'relative' }}
             >
-              <span className="relative z-10 font-bold">{date.getDate()}</span>
-              
-              {/* ФЛО-ИНДИКАТОР (КОРАЛЛОВЫЙ КРУЖОК) */}
-              {dayNumber !== undefined && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '16px',
-                  height: '16px',
-                  backgroundColor: '#FF7F50', // Coral
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 50,
-                  border: '1.5px solid #010411',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
-                }}>
-                  <span style={{
-                    color: 'white',
-                    fontSize: '8px',
-                    fontWeight: '900',
-                    lineHeight: '1',
-                    pointerEvents: 'none'
-                  }}>{dayNumber}</span>
-                </div>
-              )}
-            </div>
+              <div className={cn(
+                "w-full h-full flex items-center justify-center relative cursor-pointer rounded-xl transition-all",
+                dayNumber !== undefined ? "bg-pink-500/10" : "hover:bg-primary/10"
+              )}>
+                 <span className="relative z-10 font-bold">{date.getDate()}</span>
+                 
+                 {/* ФЛО-ИНДИКАТОР (КОРАЛЛОВЫЙ КРУЖОК) */}
+                 {dayNumber !== undefined && (
+                   <div style={{
+                     position: 'absolute',
+                     top: '-2px',
+                     right: '-2px',
+                     width: '16px',
+                     height: '16px',
+                     backgroundColor: '#FF7F50', // Coral
+                     borderRadius: '50%',
+                     display: 'flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     zIndex: 50,
+                     border: '1.5px solid #010411',
+                     boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
+                   }}>
+                     <span style={{
+                       color: 'white',
+                       fontSize: '8px',
+                       fontWeight: '900',
+                       lineHeight: '1',
+                       pointerEvents: 'none'
+                     }}>{dayNumber}</span>
+                   </div>
+                 )}
+              </div>
+            </td>
           );
         }
       }}
