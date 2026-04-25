@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,14 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
-  Pill, Mic, Briefcase, Info, Image as ImageIcon,
-  CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed
+  Pill, Mic, Briefcase, Info, ImageIcon,
+  CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed,
+  Upload, X, CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
+import Image from 'next/image';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -49,6 +51,7 @@ export function ProfileCabinet() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recordingField, setRecordingField] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
@@ -77,6 +80,7 @@ export function ProfileCabinet() {
   });
 
   const profileType = form.watch('profileType');
+  const currentPhotoUrl = form.watch('photoUrl');
 
   useEffect(() => { 
     if (userData) {
@@ -101,6 +105,27 @@ export function ProfileCabinet() {
       }); 
     } 
   }, [userData, form]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 7 * 1024 * 1024) {
+      toast({
+        variant: 'destructive',
+        title: 'Файл слишком большой',
+        description: 'Максимальный размер фото — 7 МБ.',
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      form.setValue('photoUrl', reader.result as string);
+      toast({ title: 'Фото готово к загрузке' });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = async (values: ProfileValues) => {
     if (!user || !firestore) return;
@@ -157,6 +182,55 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           
+          {/* АВАТАР */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" /> Фото профиля
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="relative group">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
+                    {currentPhotoUrl ? (
+                      <img src={currentPhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="h-12 w-12 text-white/20" />
+                      </div>
+                    )}
+                  </div>
+                  {currentPhotoUrl && (
+                    <button 
+                      type="button" 
+                      onClick={() => form.setValue('photoUrl', '')}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="flex-1 space-y-4 text-center md:text-left">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all group"
+                  >
+                    <Upload className="h-8 w-8 text-primary mx-auto md:mx-0 mb-2 group-hover:scale-110 transition-transform" />
+                    <p className="text-sm font-black text-white uppercase">Загрузить новое фото</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">До 7 МБ (JPG, PNG)</p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleFileChange} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
           {/* ОСНОВНЫЕ ДАННЫЕ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
@@ -184,29 +258,23 @@ export function ProfileCabinet() {
                     <FormControl><Input type="date" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="photoUrl" render={({ field }) => (
+                <FormField control={form.control} name="profileType" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><ImageIcon className="h-3.5 w-3.5" /> Ссылка на аватар</FormLabel>
-                    <FormControl><Input {...field} placeholder="https://..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Роль в системе</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                        <SelectItem value="user">Пользователь (Био-хаб)</SelectItem>
+                        <SelectItem value="specialist">Специалист (Врач/Нутрициолог)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )} />
               </div>
-              <FormField control={form.control} name="profileType" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Роль в системе</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                      <SelectItem value="user">Пользователь (Био-хаб)</SelectItem>
-                      <SelectItem value="specialist">Специалист (Врач/Нутрициолог)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )} />
             </Card>
           </div>
 
@@ -367,18 +435,16 @@ export function ProfileCabinet() {
                   <FormControl>
                     <div className="relative">
                       <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
-                      <Button 
+                      <button 
                         type="button" 
-                        variant="ghost" 
-                        size="icon" 
                         onClick={() => startVoiceInput('medications')} 
                         className={cn(
-                          "absolute right-3 top-3 h-10 w-10 rounded-full shadow-lg transition-all", 
+                          "absolute right-3 top-3 h-10 w-10 rounded-full flex items-center justify-center transition-all", 
                           recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
                         )}
                       >
                         <Mic className="h-4 w-4" />
-                      </Button>
+                      </button>
                     </div>
                   </FormControl>
                 </FormItem>
