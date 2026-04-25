@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,6 +26,7 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Если пользователь авторизован и это не гостевой профиль, перенаправляем в хаб
     if (!userLoading && user && user.uid !== 'public-user') {
       router.replace('/dashboard');
     }
@@ -69,6 +69,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Запрашиваем доступы к Google Fit сразу при входе
       provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
@@ -82,32 +83,38 @@ export default function LoginPage() {
         sessionStorage.setItem('google_fit_token', credential.accessToken);
       }
 
+      // Обновляем или создаем профиль в Firestore
       const userDocRef = doc(firestore, 'users', googleUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: googleUser.uid,
-          id: googleUser.uid,
-          email: googleUser.email,
-          displayName: googleUser.displayName,
-          firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
-          lastName: googleUser.displayName?.split(' ')[1] || '',
-          photoUrl: googleUser.photoURL || '',
-          profileType: 'user',
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-      }
+      
+      await setDoc(userDocRef, {
+        uid: googleUser.uid,
+        id: googleUser.uid,
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
+        lastName: googleUser.displayName?.split(' ')[1] || '',
+        photoUrl: googleUser.photoURL || '',
+        // Не перезаписываем тип профиля, если он уже установлен (например, на специалиста)
+        profileType: 'user', 
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
 
       toast({ 
-        title: 'Вход выполнен', 
-        description: 'Добро пожаловать в Bio-хаб!' 
+        title: 'Вход через Google', 
+        description: 'Синхронизация с Bio-хабом завершена.' 
       });
+      
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось войти через Google.';
-      if (error.code === 'auth/popup-closed-by-user') errorMsg = 'Окно входа было закрыто.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = 'Окно авторизации было закрыто.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMsg = 'Метод Google не включен в Firebase Console.';
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Ошибка авторизации',

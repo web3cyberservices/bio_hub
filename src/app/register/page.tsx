@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -83,29 +82,30 @@ export default function RegisterPage() {
       }
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
-      const userDoc = await getDoc(userDocRef);
+      
+      await setDoc(userDocRef, {
+        uid: googleUser.uid,
+        id: googleUser.uid,
+        email: googleUser.email,
+        displayName: googleUser.displayName,
+        firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
+        lastName: googleUser.displayName?.split(' ')[1] || '',
+        photoUrl: googleUser.photoURL || '',
+        profileType: 'user',
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
 
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: googleUser.uid,
-          id: googleUser.uid,
-          email: googleUser.email,
-          displayName: googleUser.displayName,
-          firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
-          lastName: googleUser.displayName?.split(' ')[1] || '',
-          photoUrl: googleUser.photoURL || '',
-          profileType: 'user',
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-      }
       toast({ title: 'Вход через Google выполнен' });
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Google Auth Error:", error);
+      let errorMsg = 'Не удалось завершить вход через Google.';
+      if (error.code === 'auth/popup-closed-by-user') errorMsg = 'Окно входа было закрыто.';
+      
       toast({
         variant: 'destructive',
         title: 'Ошибка авторизации',
-        description: 'Не удалось завершить вход через Google.',
+        description: errorMsg,
       });
     } finally {
       setLoading(false);
@@ -143,6 +143,7 @@ export default function RegisterPage() {
                 className="h-14 rounded-xl border-2 border-white/10 bg-white/5 font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-white/10 text-white"
                 onClick={handleGoogleLogin}
                 disabled={loading}
+                type="button"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <img src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" className="h-4 w-4" alt="Google" />}
                 Google
