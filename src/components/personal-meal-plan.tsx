@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Plus, Trash2, Loader2, Utensils, Clock, Flame, 
+  Plus, Trash2, Loader2, Utensils, Flame, 
   Beef, Droplet, Zap, Save, Calendar, Mic, Sparkles,
-  ShoppingBasket, ArrowLeft
+  ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -47,7 +47,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Ваш браузер не поддерживает голосовой ввод.' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
       return;
     }
 
@@ -90,7 +90,6 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleNameBlur = () => {
-    // Авто-расчет если введен текст, но пустые макросы
     if (name.trim() && !calories && !protein && !fat && !carbs && !isCalculating) {
       handleAiCalculate();
     }
@@ -109,7 +108,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const handleAddMeal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore || !name || !effectiveUid) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Пожалуйста, введите название блюда.' });
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Введите название блюда.' });
       return;
     }
 
@@ -130,7 +129,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAdding(false);
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Не удалось сохранить запись.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
     }
@@ -140,9 +139,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     if (!firestore || !effectiveUid) return;
     try {
       await deleteDoc(doc(firestore, 'users', effectiveUid, 'personalMeals', id));
-      toast({ title: 'Блюдо удалено' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить запись.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Ошибка' });
     }
   };
 
@@ -166,20 +164,17 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
           <h3 className="text-3xl font-black tracking-tighter text-white uppercase leading-none">Свой план</h3>
           <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">{format(selectedDate, 'd MMMM', { locale: ru })}</p>
         </div>
-        <div className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-2.5 rounded-2xl border border-white/5 shadow-sm flex items-center gap-3 md:gap-4 overflow-x-auto no-scrollbar max-w-full">
+        <div className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-2.5 rounded-2xl border border-white/5 shadow-sm flex items-center gap-3 md:gap-4">
            <div className="text-center shrink-0">
               <p className="text-[7px] font-black uppercase text-white/40">Итого ккал</p>
               <p className="text-xl font-black text-primary leading-none">{totalCalories}</p>
            </div>
            <div className="w-px h-8 bg-white/10 shrink-0" />
            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setIsScanningRef(true)} 
-                className="rounded-xl h-10 px-4 bg-primary/20 text-primary border border-primary/30 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg transition-all hover:bg-primary/30"
-              >
-                <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Скан холодильника
+              <button onClick={() => setIsScanningRef(true)} className="rounded-xl h-10 px-4 bg-primary/20 text-primary border border-primary/30 font-black uppercase text-[10px] flex items-center gap-2 hover:bg-primary/30">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Скан
               </button>
-              <button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 shadow-lg">
+              <button onClick={() => setIsAdding(!isAdding)} className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] flex items-center gap-2">
                 <Plus className="h-4 w-4 stroke-[3px]" /> Добавить
               </button>
            </div>
@@ -213,7 +208,6 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                               "h-10 w-10 rounded-full transition-all",
                               isCalculating ? "bg-primary/20 text-primary animate-spin" : "text-primary hover:bg-white/10"
                             )}
-                            title="Рассчитать через ИИ"
                           >
                             {isCalculating ? <Loader2 className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                           </Button>
@@ -223,7 +217,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                             size="icon" 
                             onClick={startVoiceInput}
                             className={cn(
-                              "h-10 w-10 rounded-full shadow-sm transition-all",
+                              "h-10 w-10 rounded-full transition-all",
                               isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
                             )}
                           >
@@ -259,25 +253,23 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                           <label className="text-[9px] font-black uppercase tracking-widest text-white/50 px-2 flex items-center gap-1">
                             <m.i className={cn("h-2.5 w-2.5", m.c)} /> {m.l}
                           </label>
-                          <div className="relative">
-                            <Input 
-                              type="number" 
-                              placeholder={isCalculating ? "..." : "0"} 
-                              value={m.v} 
-                              onChange={e => m.s(e.target.value)} 
-                              className={cn(
-                                "h-14 rounded-xl bg-white/10 border-none font-black text-center text-white transition-all shadow-inner",
-                                isCalculating && "animate-pulse opacity-50 ring-2 ring-primary/20"
-                              )} 
-                            />
-                          </div>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            value={m.v} 
+                            onChange={e => m.s(e.target.value)} 
+                            className={cn(
+                              "h-14 rounded-xl bg-white/10 border-none font-black text-center text-white shadow-inner",
+                              isCalculating && "animate-pulse opacity-50"
+                            )} 
+                          />
                        </div>
                     ))}
                  </div>
 
                  <div className="flex gap-4 pt-2">
                     <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-14 rounded-xl font-bold text-white/60">Отмена</Button>
-                    <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-[0_0_30px_rgba(0,255,255,0.3)] text-slate-950">
+                    <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black text-slate-950 shadow-xl">
                        {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> Сохранить</>}
                     </Button>
                  </div>
@@ -288,9 +280,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
       <div className="space-y-4">
          {mealsLoading ? (
-            <div className="py-24 text-center space-y-4">
+            <div className="py-24 text-center">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка рациона...</p>
             </div>
          ) : meals && meals.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
@@ -305,7 +296,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                               <h4 className="font-black text-lg text-white leading-tight">{meal.name}</h4>
                               <Badge variant="outline" className="bg-primary/5 border-none text-[8px] uppercase tracking-widest text-primary/60">{meal.time}</Badge>
                            </div>
-                           <div className="flex items-center gap-4 mt-1 text-[10px] font-black uppercase tracking-widest text-white/40">
+                           <div className="flex items-center gap-4 mt-1 text-[10px] font-black uppercase text-white/40">
                               <span className="flex items-center gap-1"><Flame className="h-3 w-3 text-orange-500" /> {meal.calories} Ккал</span>
                               <span className="flex items-center gap-1"><Beef className="h-3 w-3 text-red-400" /> Б:{meal.protein}г</span>
                               <span className="flex items-center gap-1"><Droplet className="h-3 w-3 text-yellow-500" /> Ж:{meal.fat}г</span>
@@ -324,17 +315,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
-               <div className="space-y-1">
-                  <p className="text-xl font-black text-white/40 uppercase">План пуст</p>
-               </div>
-               <div className="flex flex-col gap-3 items-center">
-                  <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10">
-                    Добавить первое блюдо
-                  </Button>
-                  <Button variant="ghost" onClick={() => setIsScanningRef(true)} className="rounded-xl text-primary/60 hover:text-primary font-black uppercase text-[9px] gap-2">
-                    <Sparkles className="h-3 w-3" /> Просканировать холодильник
-                  </Button>
-               </div>
+               <p className="text-xl font-black text-white/40 uppercase">План пуст</p>
+               <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase text-[10px]">
+                 Добавить блюдо
+               </Button>
             </div>
          )}
       </div>

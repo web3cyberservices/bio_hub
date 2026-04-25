@@ -54,7 +54,6 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  // Локальное состояние для голограммы и версии (cache busting)
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
   const [version, setVersion] = useState(Date.now());
 
@@ -68,8 +67,8 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     
     if (newSrc !== hologramSrc) {
       setHologramSrc(newSrc);
-      setVersion(Date.now()); // Обновляем версию для сброса кеша браузера
-      console.log('--- Bio-Twin Sync: Gender updated ->', gender, '-> Image:', newSrc);
+      setVersion(Date.now());
+      console.log('--- Bio-Twin Sync: Gender detected:', gender);
     }
   }, [profileData?.gender, hologramSrc]);
 
@@ -100,13 +99,11 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
 
     const bmr = (bmrMifflin + bmrHarris) / 2;
-
     const multipliers: Record<string, number> = {
       minimal: 1.2, low: 1.375, moderate: 1.55, high: 1.725, athlete: 1.9
     };
 
     let tdee = bmr * (multipliers[activityLevel] || 1.55);
-
     if (healthGoal === 'снизить массу тела') tdee -= 500;
     if (healthGoal === 'набор массы') tdee += 500;
 
@@ -137,7 +134,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
           <span className="text-[10px] font-black text-white tracking-widest uppercase">Bio-Score</span>
           <span className="text-xl font-black text-[#00ffff] drop-shadow-[0_0_8px_#00ffff]">{score || 92}</span>
         </div>
-        <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Metabolism Check</div>
       </div>
       
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -161,7 +157,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       </div>
 
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        {/* Ключ key={hologramSrc-version} заставляет React пересоздавать элемент при смене пола или версии */}
         <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={`${hologramSrc}?v=${version}`} 

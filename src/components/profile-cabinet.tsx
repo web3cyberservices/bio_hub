@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,17 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { 
-  User, Save, Loader2, Activity, Fingerprint, CalendarDays, 
-  Smartphone, Send, ImageIcon, Upload, X, Target, Pill, Mic, ExternalLink
+  User, Loader2, Smartphone, Send, ExternalLink, Activity, Pill, Mic
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import Image from 'next/image';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
 const profileSchema = z.object({
@@ -58,8 +55,22 @@ export function ProfileCabinet() {
     resolver: zodResolver(profileSchema),
     defaultValues: { 
       firstName: '', 
-      profileType: 'user', 
-      gender: 'мужской' 
+      lastName: '',
+      birthDate: '',
+      photoUrl: '',
+      gender: 'мужской',
+      weight: 0,
+      height: 0,
+      activityLevel: 'moderate',
+      healthGoal: 'поддержать текущее состояние',
+      smoking: 'нет',
+      alcohol: 'не употребляю',
+      favoriteFoods: '',
+      dislikedFoods: '',
+      medications: '',
+      profileType: 'user',
+      specialization: '',
+      bio: '',
     },
   });
 
@@ -67,7 +78,24 @@ export function ProfileCabinet() {
     if (userData) {
       form.reset({ 
         ...userData,
-        gender: userData.gender || 'мужской'
+        // Гарантируем, что undefined не попадет в Input
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        birthDate: userData.birthDate || '',
+        photoUrl: userData.photoUrl || '',
+        gender: userData.gender || 'мужской',
+        weight: userData.weight || 0,
+        height: userData.height || 0,
+        activityLevel: userData.activityLevel || 'moderate',
+        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
+        smoking: userData.smoking || 'нет',
+        alcohol: userData.alcohol || 'не употребляю',
+        favoriteFoods: userData.favoriteFoods || '',
+        dislikedFoods: userData.dislikedFoods || '',
+        medications: userData.medications || '',
+        profileType: userData.profileType || 'user',
+        specialization: userData.specialization || '',
+        bio: userData.bio || '',
       }); 
     } 
   }, [userData, form]);
@@ -76,18 +104,16 @@ export function ProfileCabinet() {
     if (!user || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'Ошибка инициализации',
-        description: 'Сервисы Bio-хаба еще не готовы. Попробуйте через секунду.',
+        title: 'Ошибка',
+        description: 'Сервисы Bio-хаба не инициализированы.',
       });
       return;
     }
 
     setLoading(true);
     try {
-      // Принудительно приводим пол к нижнему регистру для стабильности визуализатора
       const finalValues = {
         ...values,
-        gender: values.gender.toLowerCase(),
         id: user.uid,
         updatedAt: new Date().toISOString()
       };
@@ -96,14 +122,14 @@ export function ProfileCabinet() {
       
       toast({ 
         title: 'Профиль обновлен', 
-        description: 'Данные синхронизированы с вашим цифровым двойником.' 
+        description: 'Данные синхронизированы.' 
       });
     } catch (e: any) {
       console.error("Profile Save Error:", e);
       toast({ 
         variant: 'destructive', 
-        title: 'Ошибка записи', 
-        description: e.message || 'Не удалось сохранить изменения. Проверьте интернет.' 
+        title: 'Ошибка сохранения', 
+        description: e.message || 'Проверьте соединение с интернетом.' 
       });
     } finally { 
       setLoading(false); 
@@ -141,7 +167,7 @@ export function ProfileCabinet() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="premium-card bg-blue-950/40 p-8 space-y-8 border-white/5">
+          <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
                   <FormItem>
@@ -262,7 +288,7 @@ export function ProfileCabinet() {
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest">
                   <Smartphone className="h-5 w-5 text-primary" /> Уведомления
                 </h3>
@@ -274,7 +300,7 @@ export function ProfileCabinet() {
                   <Send className="h-4 w-4 text-primary" /> Telegram <ExternalLink className="h-3 w-3 opacity-30" />
                 </Button>
              </Card>
-             <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest">
                   <Activity className="h-5 w-5 text-primary" /> Архив
                 </h3>
