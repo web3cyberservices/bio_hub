@@ -62,26 +62,18 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        Day: (dayProps: DayProps) => {
-          const dateStr = format(dayProps.day.date, 'yyyy-MM-dd');
+        DayContent: ({ date }) => {
+          const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays?.[dateStr];
           
           return (
-            <div className="relative h-10 w-10 flex items-center justify-center">
-              <button 
-                {...dayProps.htmlAttributes}
-                className={cn(
-                  dayProps.htmlAttributes.className,
-                  "w-full h-full flex items-center justify-center relative"
-                )}
-              >
-                {dayProps.day.date.getDate()}
-                {dayNumber !== undefined && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/40 z-[100] animate-in zoom-in-50 duration-300">
-                    <span className="text-[8px] font-black text-white leading-none">{dayNumber}</span>
-                  </div>
-                )}
-              </button>
+            <div className="relative flex items-center justify-center w-full h-full">
+              {date.getDate()}
+              {dayNumber !== undefined && (
+                <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/40 z-[100] animate-in zoom-in-50 duration-300">
+                  <span className="text-[8px] font-black text-white leading-none">{dayNumber}</span>
+                </div>
+              )}
             </div>
           );
         }
