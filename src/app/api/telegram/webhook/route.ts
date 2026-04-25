@@ -1,16 +1,16 @@
+
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 /**
  * @fileOverview Webhook для Telegram-бота @web3cyberservices_bot.
- * Обрабатывает привязку UID приложения к Chat ID Telegram.
+ * Обрабатывает привязку UID приложения к Chat ID Telegram через команду /start.
  */
 
-// Инициализация Admin SDK (используйте переменные окружения для ключей в продакшене)
 if (!getApps().length) {
   initializeApp({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'webcybersecurity',
   });
 }
 
@@ -28,14 +28,14 @@ export async function POST(req: NextRequest) {
     const chatId = message.chat.id.toString();
     const text = message.text;
 
-    // Обработка команды /start [firebase_uid]
+    // Команда /start [UID]
     if (text.startsWith('/start')) {
       const parts = text.split(' ');
       
       if (parts.length > 1) {
         const uid = parts[1];
         
-        // Обновляем профиль пользователя в Firestore
+        // Поиск и обновление профиля в Firestore
         const userRef = db.collection('users').doc(uid);
         const userDoc = await userRef.get();
 
@@ -45,18 +45,20 @@ export async function POST(req: NextRequest) {
             updatedAt: new Date().toISOString(),
           });
 
-          await sendRawTGMessage(chatId, `<b>Успешно!</b>\n\nВаш аккаунт Bio-Tech Hub успешно привязан. Теперь вы будете получать важные уведомления о здоровье, анализах и записях к специалистам здесь.`);
+          await sendRawTGMessage(chatId, 
+            `<b>Успешная синхронизация!</b>\n\n🚀 Ваш аккаунт <b>PRO Себя</b> успешно привязан.\n\nТеперь я буду присылать сюда:\n• Уведомления о новых анализах\n• Подтверждения записей к специалистам\n• Ежедневные ИИ-инсайты по здоровью.`
+          );
         } else {
-          await sendRawTGMessage(chatId, `Ошибка: Пользователь с таким ID не найден. Пожалуйста, перейдите в профиль приложения и нажмите "Подключить Telegram" снова.`);
+          await sendRawTGMessage(chatId, `❌ <b>Ошибка:</b> Пользователь с таким ID не найден. Вернитесь в приложение и попробуйте нажать кнопку привязки снова.`);
         }
       } else {
-        await sendRawTGMessage(chatId, `Добро пожаловать в <b>PRO Себя</b>!\n\nДля активации уведомлений, пожалуйста, используйте кнопку "Подключить" в настройках вашего профиля внутри приложения.`);
+        await sendRawTGMessage(chatId, `Добро пожаловать в <b>PRO Себя</b>!\n\nЧтобы я мог присылать вам уведомления, используйте кнопку "Подключить" в настройках профиля внутри нашего приложения.`);
       }
     }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Webhook Error:", error);
+    console.error("Telegram Webhook Error:", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

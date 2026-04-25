@@ -1,13 +1,15 @@
+
 /**
  * @fileOverview Сервис для работы с Telegram Bot API.
+ * Позволяет отправлять уведомления пользователям PRO Себя.
  */
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 /**
  * Отправляет сообщение пользователю в Telegram.
- * @param chatId ID чата пользователя
- * @param text Текст сообщения (поддерживает HTML)
+ * @param chatId ID чата пользователя (сохраняется в профиле Firestore)
+ * @param text Текст сообщения (поддерживает HTML-разметку)
  */
 export async function sendTelegramNotification(chatId: string, text: string) {
   if (!BOT_TOKEN) {
@@ -28,11 +30,12 @@ export async function sendTelegramNotification(chatId: string, text: string) {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.description || "Failed to send TG message");
+      throw new Error(error.description || "Failed to send Telegram message");
     }
 
     return await response.json();
   } catch (error) {
     console.error("Telegram Notification Error:", error);
+    return null;
   }
 }
