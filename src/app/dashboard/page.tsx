@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
-  // DEBUG: Принудительная строка сегодняшнего дня
+  // DEBUG: Принудительная строка сегодняшнего дня для теста
   const testDate = format(new Date(), 'yyyy-MM-dd');
 
   useHealthAggregator();
@@ -61,7 +61,6 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot через useCollection)
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -69,13 +68,9 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // РАСЧЕТ ПОРЯДКОВЫХ ДНЕЙ ЦИКЛА
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    console.log('[DEBUG] Пересчет periodDaysMap. Логи:', allLogs.length);
-
-    // 1. Находим все точки начала цикла
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -86,7 +81,6 @@ export default function DashboardPage() {
 
     const map: Record<string, number> = {};
     
-    // 2. Для каждого старта генерируем 10 дней
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
       for (let i = 0; i < 10; i++) {
@@ -161,6 +155,7 @@ export default function DashboardPage() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
+                <div className="bg-red-600 text-white text-[10px] font-black p-1 text-center uppercase tracking-widest">ПРОВЕРКА СВЯЗИ - PAGE.TSX</div>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
