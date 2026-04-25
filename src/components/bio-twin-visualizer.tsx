@@ -54,6 +54,11 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
+  const gender = profileData?.gender || 'мужской';
+  
+  // Определяем изображение голограммы в зависимости от пола
+  const hologramSrc = gender === 'женский' ? '/woman_hologram.png' : '/bio-hologram.png';
+
   const calculatedGoals = useMemo(() => {
     if (goals && goals.calories > 0) return goals;
 
@@ -63,7 +68,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     const weight = profileData.weight;
     const height = profileData.height;
-    const gender = profileData.gender || 'мужской';
     const activityLevel = profileData.activityLevel || 'moderate';
     const healthGoal = profileData.healthGoal || 'поддержать текущее состояние';
 
@@ -99,7 +103,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     const carbs = Math.round((tdee - (protein * 4) - (fat * 9)) / 4);
 
     return { calories: Math.round(tdee), protein, fat, carbs };
-  }, [goals, profileData]);
+  }, [goals, profileData, gender]);
 
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
@@ -143,7 +147,14 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       </div>
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
         <div className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
-          <Image src="/bio-hologram.png" alt="Bio-Hologram" fill className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]" priority unoptimized />
+          <Image 
+            src={hologramSrc} 
+            alt="Bio-Hologram" 
+            fill 
+            className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]" 
+            priority 
+            unoptimized 
+          />
         </div>
       </div>
     </div>
