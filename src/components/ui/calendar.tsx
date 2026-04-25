@@ -3,7 +3,7 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
-import { format, isSameDay } from "date-fns"
+import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -59,9 +59,14 @@ function Calendar({
           return <ChevronRight className="h-5 w-5" />;
         },
         DayContent: ({ date }) => {
-          // ИСПОЛЬЗУЕМ СТРОГОЕ СРАВНЕНИЕ СТРОК YYYY-MM-DD
+          // ФОРСИРОВАННОЕ СРАВНЕНИЕ СТРОК YYYY-MM-DD
           const dateStr = format(date, 'yyyy-MM-dd');
-          const dayNumber = periodDays?.[dateStr];
+          const dayNumber = periodDays ? periodDays[dateStr] : undefined;
+          
+          // ДЕБАГ-ЛОГ
+          if (dayNumber !== undefined) {
+            console.log(`[CALENDAR_DEBUG] Найдено совпадение! Дата: ${dateStr}, День цикла: ${dayNumber}`);
+          }
           
           return (
             <div className="relative flex items-center justify-center w-full h-full">

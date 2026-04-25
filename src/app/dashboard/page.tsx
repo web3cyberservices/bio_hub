@@ -58,9 +58,10 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot внутри useCollection)
+  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot)
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    // Обращаемся к правильной коллекции dailyLogs
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
   }, [firestore, user?.uid]);
 
@@ -70,7 +71,9 @@ export default function DashboardPage() {
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    // 1. Находим все "Начала цикла"
+    console.log('[DEBUG] Пересчет periodDaysMap. Всего логов:', allLogs.length);
+
+    // 1. Находим все точки отсчета (Начала цикла)
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -81,20 +84,21 @@ export default function DashboardPage() {
 
     const map: Record<string, number> = {};
     
-    // 2. Для каждого старта разворачиваем 10-дневный период
+    // 2. Для каждого старта разворачиваем 10-дневный период в карте
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
         
-        // Прерываем, если наткнулись на следующий старт
+        // Прерываем период, если наткнулись на следующий явный старт
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         
         map[dStr] = i + 1;
       }
     });
     
+    console.log('[DEBUG] Сгенерированная карта периодов:', map);
     return map;
   }, [allLogs]);
 
@@ -175,12 +179,22 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         {viewingSpecialistId ? (
-          <div className="overflow-y-auto h-full px-4 pb-32 pt-4"><SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} /></div>
+          <div className="overflow-y-auto h-full px-4 pb-32 pt-4">
+            <SpecialistPublicProfile 
+              specialistId={viewingSpecialistId} 
+              onBack={() => setViewingSpecialistId(null)} 
+              onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} 
+            />
+          </div>
         ) : (
           <div className="w-full h-full flex flex-col overflow-hidden">
             {activeTab === 'dashboard' && (
               <div className="h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0">
-                   {profileType === 'specialist' ? (<div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>) : (<RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />)}
+                   {profileType === 'specialist' ? (
+                     <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>
+                   ) : (
+                     <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
+                   )}
               </div>
             )}
             {activeTab === 'feed' && (
@@ -190,21 +204,52 @@ export default function DashboardPage() {
                     <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
                         <div className="flex items-center justify-between">
                           <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 text-left">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">{post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}</div>
-                            <div><p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p><p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p></div>
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">
+                              {post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}
+                            </div>
+                            <div>
+                              <p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p>
+                              <p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p>
+                            </div>
                           </button>
                         </div>
                         <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
-                        {post.imageUrl && (<div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5"><Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized /></div>)}
+                        {post.imageUrl && (
+                          <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
+                            <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
+                          </div>
+                        )}
                     </Card>
                   ))}
                 </div>
               </div>
             )}
-            {activeTab === 'meals' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">{profileType === 'specialist' ? (<SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} />) : (<MealsHub selectedDate={selectedDate} />)}</div>)}
-            {activeTab === 'chats' && (<div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300"><div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10"><ChatInterface initialSpecialistId={directChatRecipientId} /></div></div>)}
-            {activeTab === 'activities' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300"><ActivitiesHub selectedDate={selectedDate} /></div>)}
-            {activeTab === 'profile' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300"><div className="max-w-5xl mx-auto"><ProfileCabinet /></div></div>)}
+            {activeTab === 'meals' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                {profileType === 'specialist' ? (
+                  <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} />
+                ) : (
+                  <MealsHub selectedDate={selectedDate} />
+                )}
+              </div>
+            )}
+            {activeTab === 'chats' && (
+              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
+                <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
+                  <ChatInterface initialSpecialistId={directChatRecipientId} />
+                </div>
+              </div>
+            )}
+            {activeTab === 'activities' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <ActivitiesHub selectedDate={selectedDate} />
+              </div>
+            )}
+            {activeTab === 'profile' && (
+              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
+                <div className="max-w-5xl mx-auto"><ProfileCabinet /></div>
+              </div>
+            )}
 
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
