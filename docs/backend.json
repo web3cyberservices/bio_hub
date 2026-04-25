@@ -34,6 +34,44 @@
       },
       "required": ["id", "firstName", "profileType"]
     },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["physical", "mental"] },
+        "duration": { "type": "number", "description": "Minutes" },
+        "calories": { "type": "number" },
+        "intensity": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "WorkoutPlan": {
+      "title": "WorkoutPlan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "title": { "type": "string" },
+        "notes": { "type": "string" },
+        "exercises": { 
+          "type": "array", 
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "sets": { "type": "number" },
+              "reps": { "type": "string" },
+              "weight": { "type": "string" }
+            }
+          }
+        },
+        "createdBy": { "type": "string" },
+        "status": { "type": "string", "enum": ["planned", "completed"] }
+      }
+    },
     "PersonalMeal": {
       "title": "PersonalMeal",
       "type": "object",
@@ -49,177 +87,12 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "date", "name", "time"]
-    },
-    "SpecialistPost": {
-      "title": "SpecialistPost",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "authorId": { "type": "string" },
-        "authorName": { "type": "string" },
-        "authorRole": { "type": "string" },
-        "authorPhoto": { "type": "string" },
-        "content": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "likes": { "type": "number" },
-        "likedBy": { "type": "array", "items": { "type": "string" } },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "authorId", "content", "createdAt"]
-    },
-    "SpecialistReview": {
-      "title": "SpecialistReview",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "authorId": { "type": "string" },
-        "authorName": { "type": "string" },
-        "rating": { "type": "number" },
-        "comment": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "authorId", "rating", "comment", "createdAt"]
-    },
-    "ChatRoom": {
-      "title": "ChatRoom",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "participants": { "type": "array", "items": { "type": "string" } },
-        "participantDetails": { "type": "object" },
-        "lastMessage": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "participants"]
-    },
-    "ChatMessage": {
-      "title": "ChatMessage",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "senderId": { "type": "string" },
-        "text": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "senderId", "text", "createdAt"]
-    },
-    "DailyLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailyLog",
-      "type": "object",
-      "description": "Daily biometric and lifestyle metrics tracked by the user.",
-      "properties": {
-        "date": { "type": "string" },
-        "water": { "type": "number" },
-        "weight": { "type": "number" },
-        "steps": { "type": "number" },
-        "mood": { "type": "string" },
-        "energy": { "type": "number" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["date"]
-    },
-    "DietaryLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DietaryLog",
-      "type": "object",
-      "description": "Records of specific meals with AI analysis.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "logDate": { "type": "string", "format": "date-time" },
-        "mealName": { "type": "string" },
-        "calories": { "type": "number" },
-        "protein": { "type": "number" },
-        "fat": { "type": "number" },
-        "carbs": { "type": "number" },
-        "analysis": { "type": "string" }
-      },
-      "required": ["id", "userId", "logDate", "mealName"]
-    },
-    "Recommendation": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Recommendation",
-      "type": "object",
-      "description": "AI-generated personalized health recommendations.",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "date": { "type": "string" },
-        "data": { "type": "object" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "date", "data"]
     }
-  },
-  "auth": {
-    "providers": ["password", "anonymous"]
   },
   "firestore": {
     "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": { "$ref": "#/backend/entities/UserProfile" }
-        }
-      },
-      {
-        "path": "/users/{userId}/personalMeals/{mealId}",
-        "definition": {
-          "entityName": "PersonalMeal",
-          "schema": { "$ref": "#/backend/entities/PersonalMeal" }
-        }
-      },
-      {
-        "path": "/users/{userId}/reviews/{reviewId}",
-        "definition": {
-          "entityName": "SpecialistReview",
-          "schema": { "$ref": "#/backend/entities/SpecialistReview" }
-        }
-      },
-      {
-        "path": "/posts/{postId}",
-        "definition": {
-          "entityName": "SpecialistPost",
-          "schema": { "$ref": "#/backend/entities/SpecialistPost" }
-        }
-      },
-      {
-        "path": "/chats/{chatId}",
-        "definition": {
-          "entityName": "ChatRoom",
-          "schema": { "$ref": "#/backend/entities/ChatRoom" }
-        }
-      },
-      {
-        "path": "/chats/{chatId}/messages/{messageId}",
-        "definition": {
-          "entityName": "ChatMessage",
-          "schema": { "$ref": "#/backend/entities/ChatMessage" }
-        }
-      },
-      {
-        "path": "/users/{userId}/dailyLogs/{date}",
-        "definition": {
-          "entityName": "DailyLog",
-          "schema": { "$ref": "#/backend/entities/DailyLog" }
-        }
-      },
-      {
-        "path": "/users/{userId}/dietaryLogs/{dietaryLogId}",
-        "definition": {
-          "entityName": "DietaryLog",
-          "schema": { "$ref": "#/backend/entities/DietaryLog" }
-        }
-      },
-      {
-        "path": "/users/{userId}/recommendations/{date}",
-        "definition": {
-          "entityName": "Recommendation",
-          "schema": { "$ref": "#/backend/entities/Recommendation" }
-        }
-      }
+      { "path": "/users/{userId}/activities/{activityId}", "definition": { "entityName": "ActivityLog" } },
+      { "path": "/users/{userId}/workouts/{workoutId}", "definition": { "entityName": "WorkoutPlan" } }
     ]
   }
 }

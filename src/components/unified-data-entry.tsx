@@ -12,7 +12,8 @@ import {
   CheckCircle2, Timer, Zap, Heart, 
   Footprints, Moon, RefreshCw, 
   Droplet, Scale, Utensils, Smile, Save, MessageSquare,
-  AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic, Download
+  AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic, Download,
+  Brain
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -56,6 +57,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [sleep, setSleep] = useState<string>('');
   const [mood, setMood] = useState<string>('');
   const [energy, setEnergy] = useState<number>(50);
+
+  const [actName, setActName] = useState('');
+  const [actDur, setActDur] = useState('');
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
@@ -291,6 +295,30 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
+  const handleActivitySubmit = async () => {
+    if (!firestore || !user || !actName || !actDur) return;
+    setLoading(true);
+    try {
+      const dateKey = format(selectedDate, 'yyyy-MM-dd');
+      const base = 5; // ккал мин
+      const cals = Math.round(Number(actDur) * base);
+      await addDoc(collection(firestore, 'users', user.uid, 'activities'), {
+        date: dateKey,
+        name: actName,
+        duration: Number(actDur),
+        calories: cals,
+        type: 'physical',
+        createdAt: new Date().toISOString()
+      });
+      setIsSuccess(true);
+      toast({ title: 'Активность записана' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Ошибка' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveLabResultToFirestore = async () => {
     if (!firestore || !user || !labResult) return;
     
@@ -326,6 +354,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const reset = () => {
     setDescription(''); setRefinement(''); setImage(null); setMealResult(null); setEditedMeal(null); setLabResult(null);
     setIsSuccess(false); setWater(''); setWeight(''); setSteps(''); setHeartRate(''); setSleep(''); setMood(''); setEnergy(50);
+    setActName(''); setActDur('');
     stopCamera();
   };
 
@@ -364,9 +393,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-white/5 p-1.5 mb-6 md:mb-10 shadow-inner">
                 <TabsTrigger value="meal" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Utensils className="h-3 w-3" /> ЕДА</TabsTrigger>
-                <TabsTrigger value="feeling" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Smile className="h-3 w-3" /> ДУХ</TabsTrigger>
+                <TabsTrigger value="act" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Zap className="h-3 w-3" /> АКТ</TabsTrigger>
                 <TabsTrigger value="metrics" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Scale className="h-3 w-3" /> ТЕЛО</TabsTrigger>
-                <TabsTrigger value="fasting" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Timer className="h-3 w-3" /> ФАСТ</TabsTrigger>
+                <TabsTrigger value="feeling" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Smile className="h-3 w-3" /> ДУХ</TabsTrigger>
                 <TabsTrigger value="labs" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><FlaskConical className="h-3 w-3" /> ЛАБ</TabsTrigger>
               </TabsList>
 
@@ -430,39 +459,22 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </Button>
               </TabsContent>
 
-              <TabsContent value="feeling" className="space-y-8 outline-none text-white">
-                 <div className="space-y-6">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">Настроение</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                       {['Счастлив', 'Спокоен', 'Устал', 'Раздражен'].map(m => (
-                          <Button 
-                             key={m} 
-                             onClick={() => setMood(m)}
-                             variant={mood === m ? "default" : "outline"}
-                             className={cn("h-14 rounded-[1.2rem] font-black text-xs transition-all", mood === m ? "bg-primary text-slate-950 shadow-lg border-none" : "bg-white/5 border-white/10 text-white hover:bg-white/10")}
-                          >
-                             {m}
-                          </Button>
-                       ))}
+              <TabsContent value="act" className="space-y-6 outline-none text-white">
+                 <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-2 relative">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> Активность</label>
+                       <Input placeholder="Напр: Прогулка, Шахматы..." value={actName} onChange={e => setActName(e.target.value)} className={inputClasses} />
+                       <VoiceBtn field="actName" setter={setActName} />
                     </div>
-                    <div className="space-y-3 pt-4">
-                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2 flex justify-between">
-                          <span>Энергия</span>
-                          <span className="text-primary">{energy}%</span>
-                       </label>
-                       <div className="px-2">
-                          <input 
-                            type="range" 
-                            className="w-full h-2 bg-white/5 rounded-full appearance-none accent-primary cursor-pointer" 
-                            value={energy} 
-                            onChange={(e) => setEnergy(Number(e.target.value))}
-                          />
-                       </div>
+                    <div className="space-y-2 relative">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Timer className="h-3 w-3 text-primary" /> Длительность (мин)</label>
+                       <Input type="number" placeholder="45" value={actDur} onChange={e => setActDur(e.target.value)} className={inputClasses} />
+                       <VoiceBtn field="actDur" setter={setActDur} />
                     </div>
+                    <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-2" onClick={handleActivitySubmit} disabled={loading || !actName || !actDur}>
+                       {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ЗАПИСАТЬ НАГРУЗКУ"}
+                    </Button>
                  </div>
-                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-6 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
-                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ"}
-                 </Button>
               </TabsContent>
 
               <TabsContent value="metrics" className="space-y-6 outline-none text-white">
@@ -518,11 +530,39 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </Button>
               </TabsContent>
 
-              <TabsContent value="fasting" className="space-y-6 outline-none text-white">
-                 <div className="py-20 text-center space-y-6 opacity-30">
-                    <Timer className="h-16 w-16 mx-auto text-primary" />
-                    <p className="font-black uppercase tracking-widest text-[10px]">Интервальное голодание (Coming Soon)</p>
+              <TabsContent value="feeling" className="space-y-8 outline-none text-white">
+                 <div className="space-y-6">
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">Настроение</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                       {['Счастлив', 'Спокоен', 'Устал', 'Раздражен'].map(m => (
+                          <Button 
+                             key={m} 
+                             onClick={() => setMood(m)}
+                             variant={mood === m ? "default" : "outline"}
+                             className={cn("h-14 rounded-[1.2rem] font-black text-xs transition-all", mood === m ? "bg-primary text-slate-950 shadow-lg border-none" : "bg-white/5 border-white/10 text-white hover:bg-white/10")}
+                          >
+                             {m}
+                          </Button>
+                       ))}
+                    </div>
+                    <div className="space-y-3 pt-4">
+                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2 flex justify-between">
+                          <span>Энергия</span>
+                          <span className="text-primary">{energy}%</span>
+                       </label>
+                       <div className="px-2">
+                          <input 
+                            type="range" 
+                            className="w-full h-2 bg-white/5 rounded-full appearance-none accent-primary cursor-pointer" 
+                            value={energy} 
+                            onChange={(e) => setEnergy(Number(e.target.value))}
+                          />
+                       </div>
+                    </div>
                  </div>
+                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-6 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
+                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ"}
+                 </Button>
               </TabsContent>
 
               <TabsContent value="labs" className="space-y-6 outline-none text-white">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -7,7 +8,9 @@ import {
   LayoutGrid, Activity, Calendar as CalendarIcon,
   ChevronDown,
   UserCheck,
-  BarChart3
+  BarChart3,
+  Zap,
+  Dumbbell
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -24,13 +27,13 @@ import { CreatePostDialog } from '@/components/create-post-dialog';
 import { ChatInterface } from '@/components/chat-interface';
 import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { MealsHub } from '@/components/meals-hub';
-import { WellBeingStatus } from '@/components/well-being-status';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
+import { ActivitiesHub } from '@/components/activities-hub';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -53,7 +56,6 @@ export default function DashboardPage() {
   }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
-    // Важно: не пытаемся получить док, пока пользователь не определен (не public-user)
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
@@ -107,7 +109,6 @@ export default function DashboardPage() {
     setViewingSpecialistId(null);
   };
 
-  // Ждем монтирования и авторизации
   if (!isMounted || userLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
   }
@@ -252,9 +253,9 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {activeTab === 'feeling' && (
+            {activeTab === 'activities' && (
               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <WellBeingStatus deviceData={dailyLogDoc} />
+                <ActivitiesHub selectedDate={selectedDate} />
               </div>
             )}
 
@@ -297,9 +298,9 @@ export default function DashboardPage() {
                     <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Чаты</span>
                   </button>
 
-                  <button onClick={() => handleTabChange('feeling')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feeling' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Smile className="h-5 w-5 md:h-6 md:u-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Статус</span>
+                  <button onClick={() => handleTabChange('activities')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
+                    <Zap className="h-5 w-5 md:h-6 md:w-6" />
+                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Актив</span>
                   </button>
 
                   <button onClick={() => handleTabChange('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
