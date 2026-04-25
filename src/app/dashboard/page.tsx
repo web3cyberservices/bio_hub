@@ -75,7 +75,7 @@ export default function DashboardPage() {
     
     // Находим все "Начала цикла"
     const starts = allLogs
-      .filter(log => log.cycle?.isStart)
+      .filter(log => log.cycle?.isStart === true)
       .map(log => ({
         timestamp: startOfDay(new Date(log.date + 'T00:00:00')).getTime(),
         dateStr: log.date
@@ -85,7 +85,7 @@ export default function DashboardPage() {
     const map: Record<string, number> = {};
     
     allLogs.forEach(log => {
-      // Если день помечен как активный в цикле
+      // Если в этот день есть какие-то данные цикла
       if (log.cycle) {
         const currentDate = startOfDay(new Date(log.date + 'T00:00:00'));
         const currentTs = currentDate.getTime();
@@ -95,7 +95,10 @@ export default function DashboardPage() {
         
         if (lastStart) {
           const diffDays = Math.floor((currentTs - lastStart.timestamp) / (1000 * 60 * 60 * 24));
-          map[log.date] = diffDays + 1;
+          // Ограничиваем цикл разумными 10 днями для отображения цифр, если нет "Конца цикла"
+          if (diffDays >= 0 && diffDays < 10) {
+            map[log.date] = diffDays + 1;
+          }
         }
       }
     });
@@ -358,7 +361,7 @@ export default function DashboardPage() {
 
           </div>
         )}
-      </header>
+      </main>
     </div>
   );
 }
