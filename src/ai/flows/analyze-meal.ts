@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Поток Genkit для анализа состава еды по фото.
+ * @fileOverview Оптимизированный анализ еды.
  */
 
 import {ai} from '@/ai/genkit';
@@ -9,28 +9,23 @@ import {z} from 'genkit';
 import {runWithRetry} from '@/ai/utils';
 
 const AnalyzeMealInputSchema = z.object({
-  description: z.string().optional().describe('Текстовое описание приема пищи.'),
-  photoDataUri: z
-    .string()
-    .optional()
-    .describe(
-      "Фото еды в формате data URI. Ожидаемый формат: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
-  refinement: z.string().optional().describe('Уточнение пользователя. Это приоритетная информация.'),
+  description: z.string().optional(),
+  photoDataUri: z.string().optional(),
+  refinement: z.string().optional(),
 });
 export type AnalyzeMealInput = z.infer<typeof AnalyzeMealInputSchema>;
 
 const AnalyzeMealOutputSchema = z.object({
-  mealName: z.string().describe('Название распознанного блюда.'),
-  calories: z.number().describe('Калорийность (ккал).'),
-  protein: z.number().describe('Белки (г).'),
-  fat: z.number().describe('Жиры (г).'),
-  carbs: z.number().describe('Углеводы (г).'),
+  mealName: z.string(),
+  calories: z.number(),
+  protein: z.number(),
+  fat: z.number(),
+  carbs: z.number(),
   components: z.array(z.object({
-    ingredient: z.string().describe('Название ингредиента'),
-    weight: z.string().describe('Приблизительный вес (например, "150г")')
-  })).describe('Разбивка блюда на составляющие ингредиенты с весом.'),
-  analysis: z.string().describe('Комментарий ИИ о составе и коррекции.'),
+    ingredient: z.string(),
+    weight: z.string()
+  })),
+  analysis: z.string().describe('Краткий комментарий на русском'),
 });
 export type AnalyzeMealOutput = z.infer<typeof AnalyzeMealOutputSchema>;
 
@@ -42,18 +37,11 @@ const mealPrompt = ai.definePrompt({
   name: 'analyzeMealPrompt',
   input: {schema: AnalyzeMealInputSchema},
   output: {schema: AnalyzeMealOutputSchema},
-  prompt: `Вы — эксперт-нутрициолог. Ваша задача — максимально точно определить КБЖУ блюда и его детальный состав.
-
-ПРАВИЛА:
-1. Если предоставлено уточнение (refinement), оно является приоритетным.
-2. Оценивайте размер порции по фото.
-3. ОБЯЗАТЕЛЬНО выделите компоненты блюда и их примерный вес.
-4. Отвечайте СТРОГО на русском языке.
-
-Контекст:
-Описание: {{{description}}}
-{{#if refinement}}УТОЧНЕНИЕ: {{{refinement}}}{{/if}}
-{{#if photoDataUri}}Фото: {{media url=photoDataUri}}{{/if}}`,
+  prompt: `Вы — нутрициолог. Определите состав и КБЖУ блюда.
+{{#if refinement}}Уточнение (приоритет): {{{refinement}}}{{/if}}
+{{#if description}}Описание: {{{description}}}{{/if}}
+{{#if photoDataUri}}Фото: {{media url=photoDataUri}}{{/if}}
+Правила: Кратко, точно, на русском.`,
 });
 
 const analyzeMealFlow = ai.defineFlow(
@@ -64,10 +52,8 @@ const analyzeMealFlow = ai.defineFlow(
   },
   async (input) => {
     return runWithRetry(async () => {
-      const {output} = await mealPrompt(input, {
-        model: googleAI.model('gemini-2.5-flash'),
-      });
-      if (!output) throw new Error('Не удалось проанализировать блюдо');
+      const {output} = await mealPrompt(input);
+      if (!output) throw new Error('Ошибка анализа');
       return output;
     });
   }

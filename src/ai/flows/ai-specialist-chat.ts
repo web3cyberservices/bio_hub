@@ -1,6 +1,8 @@
 'use server';
 /**
- * @fileOverview Поток Genkit для чата с ИИ-специалистом.
+ * @fileOverview Оптимизированный поток чата с ИИ-специалистом.
+ * - Ограничение истории до 6 сообщений для экономии токенов.
+ * - Сжатые системные инструкции.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,8 +16,8 @@ const ChatMessageSchema = z.object({
 });
 
 const AISpecialistChatInputSchema = z.object({
-  message: z.string().describe('Сообщение от пользователя.'),
-  history: z.array(ChatMessageSchema).default([]).describe('История переписки.'),
+  message: z.string().describe('Сообщение пользователя'),
+  history: z.array(ChatMessageSchema).default([]),
   userContext: z.object({
     healthGoal: z.string().optional(),
     weight: z.number().optional(),
@@ -25,7 +27,7 @@ const AISpecialistChatInputSchema = z.object({
 export type AISpecialistChatInput = z.infer<typeof AISpecialistChatInputSchema>;
 
 const AISpecialistChatOutputSchema = z.object({
-  text: z.string().describe('Ответ ИИ-специалиста.'),
+  text: z.string().describe('Ответ специалиста'),
 });
 export type AISpecialistChatOutput = z.infer<typeof AISpecialistChatOutputSchema>;
 
@@ -37,26 +39,14 @@ const specialistPrompt = ai.definePrompt({
   name: 'specialistChatPrompt',
   input: {schema: AISpecialistChatInputSchema},
   output: {schema: AISpecialistChatOutputSchema},
-  prompt: `Вы — ИИ-специалист платформы "PRO Себя", эксперт в области биохакинга и нутрициологии.
+  prompt: `Вы — эксперт PRO Себя (биохакинг/нутрициология). 
+Контекст: {{#if userContext}}Цель: {{userContext.healthGoal}}, Вес: {{userContext.weight}}кг, Активность: {{userContext.activityLevel}}{{/if}}
+Правила: Кратко, профессионально, на русском.
 
-КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ:
-{{#if userContext}}
-- Цель: {{userContext.healthGoal}}
-- Вес: {{userContext.weight}} кг
-- Активность: {{userContext.activityLevel}}
-{{/if}}
-
-ПРАВИЛА ОБЩЕНИЯ:
-1. Будьте профессиональны и эмпатичны.
-2. Используйте доказательный подход.
-3. Отвечайте СТРОГО на русском языке.
-
-ИСТОРИЯ ПЕРЕПИСКИ:
+История:
 {{#each history}}
 {{role}}: {{content}}
 {{/each}}
-
-ТЕКУЩЕЕ СООБЩЕНИЕ:
 user: {{message}}`,
 });
 
@@ -67,11 +57,17 @@ const aiSpecialistChatFlow = ai.defineFlow(
     outputSchema: AISpecialistChatOutputSchema,
   },
   async (input) => {
+    // Оптимизация: берем только последние 6 сообщений истории
+    const optimizedHistory = input.history.slice(-6);
+    
     return runWithRetry(async () => {
-      const {output} = await specialistPrompt(input, {
+      const {output} = await specialistPrompt({
+        ...input,
+        history: optimizedHistory
+      }, {
         model: googleAI.model('gemini-2.5-flash'),
       });
-      if (!output) throw new Error('Не удалось получить ответ от специалиста');
+      if (!output) throw new Error('Ошибка связи');
       return output;
     });
   }
