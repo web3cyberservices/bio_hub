@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -55,7 +54,7 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  // Расширенная детекция пола для старых и новых данных
+  // Расширенная детекция пола
   const rawGender = (profileData?.gender || 'мужской').toLowerCase();
   const isFemale = rawGender === 'женский' || rawGender === 'female' || rawGender === 'жен';
   
@@ -150,7 +149,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        {/* Ключевое изменение: key={hologramSrc} форсирует перемонтирование при смене пола */}
         <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={hologramSrc} 

@@ -3,19 +3,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, Smile, Settings, 
+  HeartPulse, Settings, 
   LayoutGrid, Activity, Calendar as CalendarIcon,
   ChevronDown,
   UserCheck,
   BarChart3,
-  Zap,
-  Dumbbell
+  Zap
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { ProfileCabinet } from '@/components/profile-cabinet';
@@ -33,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
 import { ActivitiesHub } from '@/components/activities-hub';
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -60,7 +58,7 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: userData, isLoading: userDataLoading } = useDoc<any>(userDocRef);
+  const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
   const dailyLogRef = useMemoFirebase(() => {
