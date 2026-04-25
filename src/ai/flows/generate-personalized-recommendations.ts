@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Оптимизированная генерация рекомендаций.
+ * @fileOverview Оптимизированная генерация рекомендаций с использованием Mifflin-St Jeor и Harris-Benedict.
  */
 
 import {ai} from '@/ai/genkit';
@@ -56,10 +56,10 @@ const recommendationPrompt = ai.definePrompt({
   input: {schema: GenerateRecommendationsInputSchema},
   output: {schema: GenerateRecommendationsOutputSchema},
   prompt: `Вы — ИИ-диетолог. Рассчитайте КБЖУ и план питания.
-Методы: Mifflin-St Jeor + Harris-Benedict.
-Данные: Пол {{gender}}, {{weight}}кг, {{height}}см, {{age}}л, Активность {{activityLevel}}, Цель {{healthGoal}}, Лекарства: {{medications}}.
+Методы: Mifflin-St Jeor + Harris-Benedict (уточненная Роза-Шизгала).
+Данные: Пол {{gender}}, {{weight}}кг, {{height}}см, {{age}}л, Активность {{activityLevel}}, Цель {{healthGoal}}, Лекарства/БАДы: {{medications}}.
 ${IMAGE_ID_PROMPT}
-Правила: 1. Точные макросы (Белки 1.8-2.2г/кг). 2. BioScore 0-100. 3. На русском.`,
+Правила: 1. Точные макросы (Белки 1.8-2.2г/кг). 2. BioScore 0-100. 3. Учитывайте совместимость БАДов с рационом. 4. На русском.`,
 });
 
 export async function generatePersonalizedRecommendations(input: GenerateRecommendationsInput): Promise<GenerateRecommendationsOutput> {
