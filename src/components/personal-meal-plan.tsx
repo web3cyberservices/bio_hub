@@ -66,7 +66,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
   const handleAiCalculate = async (targetName?: string) => {
     const nameToAnalyze = targetName || name;
-    if (!nameToAnalyze.trim()) return;
+    if (!nameToAnalyze.trim() || isCalculating) return;
 
     setIsCalculating(true);
     try {
@@ -76,9 +76,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
         setProtein(result.protein.toString());
         setFat(result.fat.toString());
         setCarbs(result.carbs.toString());
-        if (!targetName) {
-           toast({ title: 'ИИ рассчитал состав', description: `Данные подобраны для: ${result.mealName}` });
-        }
+        toast({ 
+          title: 'ИИ рассчитал состав', 
+          description: `Данные подобраны: ${result.mealName}` 
+        });
       }
     } catch (error) {
       console.error('AI calculation error:', error);
@@ -198,7 +199,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                           value={name} 
                           onChange={e => setName(e.target.value)} 
                           onBlur={handleNameBlur}
-                          className="h-14 rounded-xl bg-white/10 border-none font-bold pr-24 text-white placeholder:text-white/20" 
+                          className="h-14 rounded-xl bg-white/10 border-none font-bold pr-24 text-white placeholder:text-white/20 shadow-inner" 
                           required 
                         />
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -210,7 +211,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                             disabled={isCalculating || !name.trim()}
                             className={cn(
                               "h-10 w-10 rounded-full transition-all",
-                              isCalculating ? "text-primary animate-spin" : "text-primary hover:bg-white/10"
+                              isCalculating ? "bg-primary/20 text-primary animate-spin" : "text-primary hover:bg-white/10"
                             )}
                             title="Рассчитать через ИИ"
                           >
@@ -234,10 +235,10 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-white/50 px-2">Прием пищи</label>
                        <Select value={time} onValueChange={setTime}>
-                          <SelectTrigger className="h-14 rounded-xl bg-white/10 border-none font-bold text-white">
+                          <SelectTrigger className="h-14 rounded-xl bg-white/10 border-none font-bold text-white shadow-inner">
                              <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl">
+                          <SelectContent className="rounded-xl bg-slate-900 border-white/10 text-white">
                              <SelectItem value="Завтрак">Завтрак</SelectItem>
                              <SelectItem value="Обед">Обед</SelectItem>
                              <SelectItem value="Ужин">Ужин</SelectItem>
@@ -265,8 +266,8 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                               value={m.v} 
                               onChange={e => m.s(e.target.value)} 
                               className={cn(
-                                "h-14 rounded-xl bg-white/10 border-none font-black text-center text-white transition-all",
-                                isCalculating && "animate-pulse opacity-50"
+                                "h-14 rounded-xl bg-white/10 border-none font-black text-center text-white transition-all shadow-inner",
+                                isCalculating && "animate-pulse opacity-50 ring-2 ring-primary/20"
                               )} 
                             />
                           </div>
@@ -276,7 +277,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
 
                  <div className="flex gap-4 pt-2">
                     <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-14 rounded-xl font-bold text-white/60">Отмена</Button>
-                    <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-xl">
+                    <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-xl bg-primary font-black shadow-[0_0_30px_rgba(0,255,255,0.3)] text-slate-950">
                        {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> Сохранить</>}
                     </Button>
                  </div>
@@ -289,19 +290,19 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
          {mealsLoading ? (
             <div className="py-24 text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto opacity-20" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">Загрузка рациона...</p>
             </div>
          ) : meals && meals.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
                {meals.map((meal) => (
                   <Card key={meal.id} className="cyber-card p-6 border-none flex items-center justify-between group">
                      <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
                            <Utensils className="h-6 w-6" />
                         </div>
                         <div>
                            <div className="flex items-center gap-2">
-                              <h4 className="font-black text-lg text-white">{meal.name}</h4>
+                              <h4 className="font-black text-lg text-white leading-tight">{meal.name}</h4>
                               <Badge variant="outline" className="bg-primary/5 border-none text-[8px] uppercase tracking-widest text-primary/60">{meal.time}</Badge>
                            </div>
                            <div className="flex items-center gap-4 mt-1 text-[10px] font-black uppercase tracking-widest text-white/40">
@@ -319,15 +320,15 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                ))}
             </div>
          ) : (
-            <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.03] space-y-4">
-               <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto">
+            <div className="py-24 text-center border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.03] space-y-4 shadow-inner">
+               <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
                <div className="space-y-1">
                   <p className="text-xl font-black text-white/40 uppercase">План пуст</p>
                </div>
                <div className="flex flex-col gap-3 items-center">
-                  <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px]">
+                  <Button variant="outline" onClick={() => setIsAdding(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase tracking-widest text-[10px] hover:bg-primary/10">
                     Добавить первое блюдо
                   </Button>
                   <Button variant="ghost" onClick={() => setIsScanningRef(true)} className="rounded-xl text-primary/60 hover:text-primary font-black uppercase text-[9px] gap-2">
