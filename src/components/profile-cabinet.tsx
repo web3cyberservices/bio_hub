@@ -14,7 +14,7 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
   CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed,
-  Upload, X, CheckCircle2
+  Upload, X, CheckCircle2, Instagram
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -41,6 +41,7 @@ const profileSchema = z.object({
   profileType: z.enum(['user', 'specialist']).default('user'),
   specialization: z.string().optional().default(''),
   bio: z.string().optional().default(''),
+  instagramUrl: z.string().optional().default(''),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -76,6 +77,7 @@ export function ProfileCabinet() {
       profileType: 'user',
       specialization: '',
       bio: '',
+      instagramUrl: '',
     },
   });
 
@@ -102,6 +104,7 @@ export function ProfileCabinet() {
         profileType: userData.profileType || 'user',
         specialization: userData.specialization || '',
         bio: userData.bio || '',
+        instagramUrl: userData.instagramUrl || '',
       }); 
     } 
   }, [userData, form]);
@@ -285,12 +288,22 @@ export function ProfileCabinet() {
                  <Briefcase className="h-4 w-4" /> 1.1 Данные специалиста
                </h3>
                <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
-                  <FormField control={form.control} name="specialization" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Специализация</FormLabel>
-                      <FormControl><Input {...field} placeholder="Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                    </FormItem>
-                  )} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="specialization" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Специализация</FormLabel>
+                        <FormControl><Input {...field} placeholder="Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="instagramUrl" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
+                          <Instagram className="h-3.5 w-3.5" /> Instagram URL
+                        </FormLabel>
+                        <FormControl><Input {...field} placeholder="https://instagram.com/yourname" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                      </FormItem>
+                    )} />
+                  </div>
                   <FormField control={form.control} name="bio" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">О себе / Опыт</FormLabel>
@@ -338,119 +351,123 @@ export function ProfileCabinet() {
                 )} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Target className="h-3.5 w-3.5" /> Цель здоровья</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                       </FormControl>
-                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
-                          <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
-                          <SelectItem value="набор массы">Набор массы</SelectItem>
-                       </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Активность</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                       </FormControl>
-                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="minimal">Минимальная</SelectItem>
-                          <SelectItem value="low">Низкая (1-3 тренировки)</SelectItem>
-                          <SelectItem value="moderate">Средняя (3-5 тренировок)</SelectItem>
-                          <SelectItem value="high">Высокая (каждый день)</SelectItem>
-                          <SelectItem value="athlete">Спортсмен (2 раза в день)</SelectItem>
-                       </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-              </div>
+              {profileType === 'user' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+                  <FormField control={form.control} name="healthGoal" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Target className="h-3.5 w-3.5" /> Цель здоровья</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                         <FormControl>
+                          <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                         </FormControl>
+                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                            <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
+                            <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
+                            <SelectItem value="набор массы">Набор массы</SelectItem>
+                         </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="activityLevel" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Активность</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                         <FormControl>
+                          <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                         </FormControl>
+                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                            <SelectItem value="minimal">Минимальная</SelectItem>
+                            <SelectItem value="low">Низкая (1-3 тренировки)</SelectItem>
+                            <SelectItem value="moderate">Средняя (3-5 тренировок)</SelectItem>
+                            <SelectItem value="high">Высокая (каждый день)</SelectItem>
+                            <SelectItem value="athlete">Спортсмен (2 раза в день)</SelectItem>
+                         </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                </div>
+              )}
             </Card>
           </div>
 
-          {/* ПРИВЫЧКИ И ПИТАНИЕ */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-              <UtensilsCrossed className="h-4 w-4" /> 3. Привычки и Питание
-            </h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="smoking" render={({ field }) => (
+          {/* ПРИВЫЧКИ И ПИТАНИЕ (Только для пользователей) */}
+          {profileType === 'user' && (
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+                <UtensilsCrossed className="h-4 w-4" /> 3. Привычки и Питание
+              </h3>
+              <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="smoking" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Ban className="h-3.5 w-3.5 text-red-500" /> Курение</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                            <SelectItem value="нет">Нет</SelectItem>
+                            <SelectItem value="да">Да</SelectItem>
+                         </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="alcohol" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Wine className="h-3.5 w-3.5 text-orange-400" /> Алкоголь</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                            <SelectItem value="не употребляю">Не употребляю</SelectItem>
+                            <SelectItem value="редко">Редко</SelectItem>
+                            <SelectItem value="умеренно">Умеренно</SelectItem>
+                            <SelectItem value="часто">Часто</SelectItem>
+                         </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Любимые продукты</FormLabel>
+                      <FormControl><Input {...field} placeholder="Что ИИ стоит добавлять в меню?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Исключить из рациона</FormLabel>
+                      <FormControl><Input {...field} placeholder="На что у вас аллергия или неприязнь?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                    </FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="medications" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Ban className="h-3.5 w-3.5 text-red-500" /> Курение</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
-                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="нет">Нет</SelectItem>
-                          <SelectItem value="да">Да</SelectItem>
-                       </SelectContent>
-                    </Select>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
+                      <Pill className="h-3 w-3 text-primary" /> Лекарства и БАДы
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
+                        <button 
+                          type="button" 
+                          onClick={() => startVoiceInput('medications')} 
+                          className={cn(
+                            "absolute right-3 top-3 h-10 w-10 rounded-full flex items-center justify-center transition-all", 
+                            recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
+                          )}
+                        >
+                          <Mic className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </FormControl>
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="alcohol" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Wine className="h-3.5 w-3.5 text-orange-400" /> Алкоголь</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
-                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                          <SelectItem value="редко">Редко</SelectItem>
-                          <SelectItem value="умеренно">Умеренно</SelectItem>
-                          <SelectItem value="часто">Часто</SelectItem>
-                       </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Любимые продукты</FormLabel>
-                    <FormControl><Input {...field} placeholder="Что ИИ стоит добавлять в меню?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Исключить из рациона</FormLabel>
-                    <FormControl><Input {...field} placeholder="На что у вас аллергия или неприязнь?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
-                  </FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="medications" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
-                    <Pill className="h-3 w-3 text-primary" /> Лекарства и БАДы
-                  </FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
-                      <button 
-                        type="button" 
-                        onClick={() => startVoiceInput('medications')} 
-                        className={cn(
-                          "absolute right-3 top-3 h-10 w-10 rounded-full flex items-center justify-center transition-all", 
-                          recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
-                        )}
-                      >
-                        <Mic className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )} />
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
           
           {/* КНОПКА СОХРАНЕНИЯ */}
           <div className="pt-4">
