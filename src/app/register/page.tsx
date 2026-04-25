@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Sparkles, Loader2, UserPlus } from 'lucide-react';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { QuickTestButton } from '@/components/quick-test-button';
 

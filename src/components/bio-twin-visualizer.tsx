@@ -115,87 +115,35 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
   return (
     <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4", className)}>
-      
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-4 duration-1000">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1">
         <div className="px-6 py-2 rounded-full border border-[#00ffff]/30 bg-[#00ffff]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] flex items-center gap-3">
           <Activity className="h-4 w-4 text-[#00ffff] animate-pulse" />
           <span className="text-[10px] font-black text-white tracking-widest uppercase">Bio-Score</span>
           <span className="text-xl font-black text-[#00ffff] drop-shadow-[0_0_8px_#00ffff]">{score || 92}</span>
         </div>
-        <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Health Assessment</div>
+        <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Metabolism Check</div>
       </div>
-
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
         <div className="scan-line opacity-30" />
       </div>
-
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
-          <NeonGauge 
-            label="ШАГИ" value={stepsVal} goal={10000}
-            icon={<Footprints className="h-5 w-5 md:h-6 md:w-6 text-[#00ffff]" />} color="#00ffff" 
-            progress={getProgress(stepsVal, 10000)}
-          />
-          <NeonGauge 
-            label="СОН" value={`${sleepVal}ч`} goal="8ч"
-            icon={<Moon className="h-5 w-5 md:h-6 md:w-6 text-[#818CF8]" />} color="#818CF8" 
-            progress={getProgress(sleepVal, 8)}
-          />
-          <NeonGauge 
-            label="ПУЛЬС" value={hrVal} goal={100}
-            icon={<Heart className="h-5 w-5 md:h-6 md:w-6 text-[#FB7185]" />} color="#FB7185" 
-            progress={getProgress(hrVal, 100)}
-          />
-          <NeonGauge 
-            label="ВЕС" value={`${weightVal}кг`}
-            icon={<Scale className="h-5 w-5 md:h-6 md:w-6 text-[#F472B6]" />} color="#F472B6" 
-            progress={100}
-          />
+          <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} />
+          <NeonGauge label="СОН" value={`${sleepVal}ч`} goal="8ч" icon={<Moon className="h-5 w-5 text-[#818CF8]" />} color="#818CF8" progress={getProgress(sleepVal, 8)} />
+          <NeonGauge label="ПУЛЬС" value={hrVal} goal={100} icon={<Heart className="h-5 w-5 text-[#FB7185]" />} color="#FB7185" progress={getProgress(hrVal, 100)} />
+          <NeonGauge label="ВЕС" value={`${weightVal}кг`} icon={<Scale className="h-5 w-5 text-[#F472B6]" />} color="#F472B6" progress={100} />
         </div>
-
         <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
-          <NeonGauge 
-            label="ККАЛ" value={kcalVal} goal={calculatedGoals.calories}
-            icon={<Flame className="h-5 w-5 md:h-6 md:w-6 text-[#FB923C]" />} color="#FB923C" 
-            progress={getProgress(kcalVal, calculatedGoals.calories)}
-          />
-          <NeonGauge 
-            label="БЕЛКИ" value={`${proteinVal}г`} goal={`${calculatedGoals.protein}г`}
-            icon={<Beef className="h-5 w-5 md:h-6 md:w-6 text-[#F87171]" />} color="#F87171" 
-            progress={getProgress(proteinVal, calculatedGoals.protein)}
-          />
-          <NeonGauge 
-            label="ЖИРЫ" value={`${fatVal}г`} goal={`${calculatedGoals.fat}г`}
-            icon={<Droplet className="h-5 w-5 md:h-6 md:w-6 text-[#FACC15]" />} color="#FACC15" 
-            progress={getProgress(fatVal, calculatedGoals.fat)}
-          />
-          <NeonGauge 
-            label="УГЛЕВ" value={`${carbVal}г`} goal={`${calculatedGoals.carbs}г`}
-            icon={<Zap className="h-5 w-5 md:h-6 md:w-6 text-[#4ADE80]" />} color="#4ADE80" 
-            progress={getProgress(carbVal, calculatedGoals.carbs)}
-          />
+          <NeonGauge label="ККАЛ" value={kcalVal} goal={calculatedGoals.calories} icon={<Flame className="h-5 w-5 text-[#FB923C]" />} color="#FB923C" progress={getProgress(kcalVal, calculatedGoals.calories)} />
+          <NeonGauge label="БЕЛКИ" value={`${proteinVal}г`} goal={`${calculatedGoals.protein}г`} icon={<Beef className="h-5 w-5 text-[#F87171]" />} color="#F87171" progress={getProgress(proteinVal, calculatedGoals.protein)} />
+          <NeonGauge label="ЖИРЫ" value={`${fatVal}г`} goal={`${calculatedGoals.fat}г`} icon={<Droplet className="h-5 w-5 text-[#FACC15]" />} color="#FACC15" progress={getProgress(fatVal, calculatedGoals.fat)} />
+          <NeonGauge label="УГЛЕВ" value={`${carbVal}г`} goal={`${calculatedGoals.carbs}г`} icon={<Zap className="h-5 w-5 text-[#4ADE80]" />} color="#4ADE80" progress={getProgress(carbVal, calculatedGoals.carbs)} />
         </div>
       </div>
-
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        <div className="relative w-full h-full max-h-[65vh] md:max-h-[80vh] animate-hologram flex items-center justify-center transition-all duration-1000 pb-10 md:pb-0">
-          <div className="relative w-full h-full flex items-center justify-center">
-            <Image 
-              src="/bio-hologram.png" 
-              alt="Bio-Hologram" 
-              fill
-              className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]"
-              priority
-              unoptimized
-            />
-            <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[70]">
-              <div className="relative w-6 h-6 md:w-10 md:h-10 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#00ffff]/40 rounded-full animate-ping opacity-70" />
-                <div className="w-2 h-2 md:w-4 md:h-4 rounded-full bg-[#00ffff] shadow-[0_0_30px_#00ffff] animate-pulse" />
-              </div>
-            </div>
-          </div>
+        <div className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
+          <Image src="/bio-hologram.png" alt="Bio-Hologram" fill className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]" priority unoptimized />
         </div>
       </div>
     </div>

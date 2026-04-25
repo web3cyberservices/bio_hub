@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, format } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { Zap, Dumbbell, Calendar, Loader2, Info } from 'lucide-react';
+import { Zap, Calendar, Loader2 } from 'lucide-react';
 import { ActivityLogger } from './activity-logger';
 import { WorkoutScheduler } from './workout-scheduler';
 
