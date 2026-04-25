@@ -1,9 +1,8 @@
-
 "use client"
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker, DayProps } from "react-day-picker"
+import { DayPicker } from "react-day-picker"
 import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
@@ -23,7 +22,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-4 bg-transparent", className)}
+      className={cn("p-4 bg-[#010411]/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-6",
@@ -68,9 +67,11 @@ function Calendar({
           
           return (
             <div className="relative flex items-center justify-center w-full h-full">
-              {date.getDate()}
+              <span className="relative z-10">{date.getDate()}</span>
               {dayNumber !== undefined && (
-                <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/40 z-[100] animate-in zoom-in-50 duration-300">
+                <div 
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/40 z-[100] animate-in zoom-in-50 duration-300"
+                >
                   <span className="text-[8px] font-black text-white leading-none">{dayNumber}</span>
                 </div>
               )}

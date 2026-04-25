@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -91,11 +90,11 @@ export default function DashboardPage() {
         const currentDate = startOfDay(new Date(log.date + 'T00:00:00'));
         const currentTs = currentDate.getTime();
         
-        // Ищем последнее "Начало" перед этой датой
+        // Ищем последнее "Начало" перед этой датой или в эту дату
         const lastStart = [...starts].reverse().find(s => s.timestamp <= currentTs);
         
         if (lastStart) {
-          const diffDays = differenceInDays(currentDate, new Date(lastStart.dateStr + 'T00:00:00'));
+          const diffDays = Math.floor((currentTs - lastStart.timestamp) / (1000 * 60 * 60 * 24));
           map[log.date] = diffDays + 1;
         }
       }
@@ -359,7 +358,7 @@ export default function DashboardPage() {
 
           </div>
         )}
-      </main>
+      </header>
     </div>
   );
 }
