@@ -28,14 +28,14 @@ function Calendar({
         month: "space-y-4",
         month_caption: "flex justify-center pt-1 relative items-center mb-4 min-h-[40px]",
         caption_label: "text-sm font-black tracking-widest text-white uppercase px-12",
-        nav: "flex items-center justify-between absolute inset-x-0 top-1 px-1",
+        nav: "flex items-center justify-between absolute inset-x-0 top-1 px-1 z-50",
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all"
+          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all z-50"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all"
+          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all z-50"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex justify-between mb-2",
@@ -68,7 +68,7 @@ function Calendar({
               <span className="relative z-10">{date.getDate()}</span>
               {dayNumber !== undefined && (
                 <div 
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
+                  className="absolute -top-2 -right-2 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
                 >
                   <span className="text-[8px] font-black text-white leading-none pointer-events-none">{dayNumber}</span>
                 </div>

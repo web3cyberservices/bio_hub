@@ -85,7 +85,7 @@ export default function DashboardPage() {
     const map: Record<string, number> = {};
     
     allLogs.forEach(log => {
-      // Если в этот день есть какие-то данные цикла (симптомы или интенсивность)
+      // Если в этот день есть какие-то данные цикла
       if (log.cycle) {
         const currentDate = startOfDay(new Date(log.date + 'T00:00:00'));
         const currentTs = currentDate.getTime();
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         
         if (lastStart) {
           const diffDays = Math.floor((currentTs - lastStart.timestamp) / (1000 * 60 * 60 * 24));
-          // Ограничиваем порядковый номер здравым смыслом (например, до 10 дней месячных)
+          // Ограничиваем порядковый номер (обычно до 10 дней)
           if (diffDays >= 0 && diffDays < 10) {
             map[log.date] = diffDays + 1;
           }
