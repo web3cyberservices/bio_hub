@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Activity, Loader2, LogIn } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { QuickTestButton } from '@/components/quick-test-button';
 
@@ -83,14 +83,19 @@ export default function LoginPage() {
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
       
+      const fullName = googleUser.displayName || googleUser.email?.split('@')[0] || 'Пользователь';
+      const firstName = fullName.split(' ')[0];
+      const lastName = fullName.split(' ').slice(1).join(' ') || '';
+
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
         email: googleUser.email,
-        displayName: googleUser.displayName,
-        firstName: googleUser.displayName?.split(' ')[0] || googleUser.displayName,
-        lastName: googleUser.displayName?.split(' ')[1] || '',
+        displayName: fullName,
+        firstName,
+        lastName,
         photoUrl: googleUser.photoURL || '',
+        profileType: 'user',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
