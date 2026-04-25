@@ -41,6 +41,9 @@ export default function DashboardPage() {
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
+  // DEBUG: Принудительная строка сегодняшнего дня
+  const testDate = format(new Date(), 'yyyy-MM-dd');
+
   useHealthAggregator();
 
   useEffect(() => {
@@ -58,22 +61,21 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot)
+  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot через useCollection)
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
-    // Обращаемся к правильной коллекции dailyLogs
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
   }, [firestore, user?.uid]);
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // ГЛУБОКИЙ РАСЧЕТ ПОРЯДКОВЫХ ДНЕЙ ЦИКЛА
+  // РАСЧЕТ ПОРЯДКОВЫХ ДНЕЙ ЦИКЛА
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    console.log('[DEBUG] Пересчет periodDaysMap. Всего логов:', allLogs.length);
+    console.log('[DEBUG] Пересчет periodDaysMap. Логи:', allLogs.length);
 
-    // 1. Находим все точки отсчета (Начала цикла)
+    // 1. Находим все точки начала цикла
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -84,21 +86,17 @@ export default function DashboardPage() {
 
     const map: Record<string, number> = {};
     
-    // 2. Для каждого старта разворачиваем 10-дневный период в карте
+    // 2. Для каждого старта генерируем 10 дней
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
-        
-        // Прерываем период, если наткнулись на следующий явный старт
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
-        
         map[dStr] = i + 1;
       }
     });
     
-    console.log('[DEBUG] Сгенерированная карта периодов:', map);
     return map;
   }, [allLogs]);
 
@@ -162,7 +160,7 @@ export default function DashboardPage() {
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600]" align="end">
+              <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -170,6 +168,7 @@ export default function DashboardPage() {
                   initialFocus
                   locale={ru}
                   periodDays={periodDaysMap}
+                  testHighlight={testDate}
                 />
               </PopoverContent>
             </Popover>

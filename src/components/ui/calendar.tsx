@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   periodDays?: Record<string, number>;
+  testHighlight?: string;
 }
 
 function Calendar({
@@ -17,6 +18,7 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   periodDays,
+  testHighlight,
   ...props
 }: CalendarProps) {
   return (
@@ -59,23 +61,43 @@ function Calendar({
           return <ChevronRight className="h-5 w-5" />;
         },
         DayContent: ({ date }) => {
-          // ФОРСИРОВАННОЕ СРАВНЕНИЕ СТРОК YYYY-MM-DD
           const dateStr = format(date, 'yyyy-MM-dd');
+          
+          // 1. ТЕСТОВЫЙ КРАСНЫЙ КВАДРАТ (Debug Mode)
+          const isTestDay = dateStr === testHighlight;
+          
+          // 2. ЛОГИКА ПЕРИОДА
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
           
-          // ДЕБАГ-ЛОГ
-          if (dayNumber !== undefined) {
-            console.log(`[CALENDAR_DEBUG] Найдено совпадение! Дата: ${dateStr}, День цикла: ${dayNumber}`);
+          if (isTestDay || dayNumber !== undefined) {
+            console.log(`[CALENDAR_DEBUG] Рендер дня ${dateStr}: isTest=${isTestDay}, periodDay=${dayNumber}`);
           }
           
           return (
             <div className="relative flex items-center justify-center w-full h-full">
               <span className="relative z-10">{date.getDate()}</span>
+              
+              {/* ПРИНУДИТЕЛЬНЫЙ ТЕСТОВЫЙ МАРКЕР */}
+              {isTestDay && (
+                <div 
+                  style={{ 
+                    position: 'absolute', 
+                    width: '20px', 
+                    height: '20px', 
+                    backgroundColor: 'red', 
+                    zIndex: 200, 
+                    opacity: 0.6,
+                    borderRadius: '2px'
+                  }} 
+                />
+              )}
+
+              {/* КОРАЛЛОВЫЙ ФЛО-ИНДИКАТОР */}
               {dayNumber !== undefined && (
                 <div 
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
+                  className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
                 >
-                  <span className="text-[8px] font-black text-white leading-none pointer-events-none">{dayNumber}</span>
+                  <span className="text-[9px] font-black text-white leading-none pointer-events-none">{dayNumber}</span>
                 </div>
               )}
             </div>
