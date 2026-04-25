@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
-  User, Loader2, Smartphone, Send, ExternalLink, Activity, Pill, Mic, Briefcase, Info
+  User, Loader2, Smartphone, Send, ExternalLink, Activity, 
+  Pill, Mic, Briefcase, Info, Image as ImageIcon,
+  CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -139,62 +141,105 @@ export function ProfileCabinet() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-32 px-4">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30">
-          <User className="h-6 w-6 text-primary" />
+    <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700 pb-32 px-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30 shadow-lg shadow-primary/10">
+            <User className="h-7 w-7 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-4xl font-black uppercase text-white tracking-tighter leading-none">Кабинет</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/40 mt-1">Biometric ID Profile</p>
+          </div>
         </div>
-        <h2 className="text-4xl font-black uppercase text-white tracking-tighter leading-none">Кабинет</h2>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="profileType" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Ваша роль</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl>
-                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                          <SelectValue />
-                        </SelectTrigger>
-                       </FormControl>
-                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="user">Пользователь (Био-хаб)</SelectItem>
-                          <SelectItem value="specialist">Специалист (Врач/Нутрициолог)</SelectItem>
-                       </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          
+          {/* ОСНОВНЫЕ ДАННЫЕ */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <Info className="h-4 w-4" /> 1. Личные данные
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Имя</FormLabel>
                     <FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
                   </FormItem>
                 )} />
-             </div>
+                <FormField control={form.control} name="lastName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Фамилия</FormLabel>
+                    <FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                  </FormItem>
+                )} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="birthDate" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5" /> Дата рождения</FormLabel>
+                    <FormControl><Input type="date" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="photoUrl" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><ImageIcon className="h-3.5 w-3.5" /> Ссылка на аватар</FormLabel>
+                    <FormControl><Input {...field} placeholder="https://..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="profileType" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Роль в системе</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                      <SelectItem value="user">Пользователь (Био-хаб)</SelectItem>
+                      <SelectItem value="specialist">Специалист (Врач/Нутрициолог)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )} />
+            </Card>
+          </div>
 
-             {profileType === 'specialist' && (
-               <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+          {/* ДАННЫЕ СПЕЦИАЛИСТА */}
+          {profileType === 'specialist' && (
+            <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+                 <Briefcase className="h-4 w-4" /> 1.1 Данные специалиста
+               </h3>
+               <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
                   <FormField control={form.control} name="specialization" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-primary/60 tracking-widest px-1 flex items-center gap-2">
-                        <Briefcase className="h-3 w-3" /> Специализация
-                      </FormLabel>
-                      <FormControl><Input {...field} placeholder="Напр: Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-primary/5 border-primary/20 text-white font-bold" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Специализация</FormLabel>
+                      <FormControl><Input {...field} placeholder="Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="bio" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-primary/60 tracking-widest px-1">О себе / Опыт</FormLabel>
-                      <FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-primary/5 border-primary/20 text-white text-lg font-medium resize-none shadow-inner" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">О себе / Опыт</FormLabel>
+                      <FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" /></FormControl>
                     </FormItem>
                   )} />
-               </div>
-             )}
-             
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+               </Card>
+            </div>
+          )}
+
+          {/* БИОМЕТРИЯ */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <Activity className="h-4 w-4" /> 2. Биометрия
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="gender" render={({ field }) => (
                    <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Пол</FormLabel>
@@ -223,12 +268,12 @@ export function ProfileCabinet() {
                     <FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
                   </FormItem>
                 )} />
-             </div>
+              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="healthGoal" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Цель здоровья</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Target className="h-3.5 w-3.5" /> Цель здоровья</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                        <FormControl>
                         <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
@@ -245,7 +290,7 @@ export function ProfileCabinet() {
                 )} />
                 <FormField control={form.control} name="activityLevel" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Уровень активности</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Активность</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                        <FormControl>
                         <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
@@ -253,51 +298,106 @@ export function ProfileCabinet() {
                         </SelectTrigger>
                        </FormControl>
                        <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                          <SelectItem value="minimal">Минимальный (сидячий)</SelectItem>
-                          <SelectItem value="low">Низкий (1-3 тренировки)</SelectItem>
-                          <SelectItem value="moderate">Средний (3-5 тренировок)</SelectItem>
-                          <SelectItem value="high">Высокий (ежедневно)</SelectItem>
-                          <SelectItem value="athlete">Атлет (2 раза в день)</SelectItem>
+                          <SelectItem value="minimal">Минимальная</SelectItem>
+                          <SelectItem value="low">Низкая (1-3 тренировки)</SelectItem>
+                          <SelectItem value="moderate">Средняя (3-5 тренировок)</SelectItem>
+                          <SelectItem value="high">Высокая (каждый день)</SelectItem>
+                          <SelectItem value="athlete">Спортсмен (2 раза в день)</SelectItem>
                        </SelectContent>
                     </Select>
                   </FormItem>
                 )} />
-             </div>
+              </div>
+            </Card>
+          </div>
 
-             <FormField control={form.control} name="medications" render={({ field }) => (
-               <FormItem>
-                <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
-                  <Pill className="h-3 w-3 text-primary" /> Лекарства и БАДы
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => startVoiceInput('medications')} 
-                      className={cn(
-                        "absolute right-3 top-3 h-10 w-10 rounded-full shadow-lg transition-all", 
-                        recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
-                      )}
-                    >
-                      <Mic className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </FormControl>
-               </FormItem>
-             )} />
-          </Card>
+          {/* ПРИВЫЧКИ И ПИТАНИЕ */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <UtensilsCrossed className="h-4 w-4" /> 3. Привычки и Питание
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="smoking" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Ban className="h-3.5 w-3.5 text-red-500" /> Курение</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                          <SelectItem value="нет">Нет</SelectItem>
+                          <SelectItem value="да">Да</SelectItem>
+                       </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="alcohol" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Wine className="h-3.5 w-3.5 text-orange-400" /> Алкоголь</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
+                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                          <SelectItem value="не употребляю">Не употребляю</SelectItem>
+                          <SelectItem value="редко">Редко</SelectItem>
+                          <SelectItem value="умеренно">Умеренно</SelectItem>
+                          <SelectItem value="часто">Часто</SelectItem>
+                       </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Любимые продукты</FormLabel>
+                    <FormControl><Input {...field} placeholder="Что ИИ стоит добавлять в меню?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Исключить из рациона</FormLabel>
+                    <FormControl><Input {...field} placeholder="На что у вас аллергия или неприязнь?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="medications" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
+                    <Pill className="h-3 w-3 text-primary" /> Лекарства и БАДы
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => startVoiceInput('medications')} 
+                        className={cn(
+                          "absolute right-3 top-3 h-10 w-10 rounded-full shadow-lg transition-all", 
+                          recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
+                        )}
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )} />
+            </Card>
+          </div>
           
-          <Button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl shadow-[0_0_40px_rgba(0,255,255,0.3)] hover:scale-[1.01] active:scale-95 transition-all"
-          >
-            {loading ? <Loader2 className="animate-spin h-6 w-6" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}
-          </Button>
+          {/* КНОПКА СОХРАНЕНИЯ */}
+          <div className="pt-4">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all border-4 border-black/20"
+            >
+              {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}
+            </Button>
+          </div>
 
+          {/* ДОПОЛНИТЕЛЬНО */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest">

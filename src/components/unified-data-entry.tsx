@@ -213,7 +213,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
               <TabsContent value="labs" className="space-y-6">
                 <label className="cursor-pointer"><div className="h-32 rounded-3xl border-dashed border-2 border-white/10 flex flex-col items-center justify-center bg-white/5 text-white"><Upload className="h-8 w-8 text-primary mb-2" /><span className="text-xs font-black">ЗАГРУЗИТЬ АНАЛИЗ</span></div><input type="file" className="hidden" onChange={e => { const r = new FileReader(); r.onloadend = () => setImage(r.result as string); r.readAsDataURL(e.target.files![0]); }} /></label>
-                {image && <img src={image} className="rounded-2xl aspect-video object-cover" />}
+                {image && <img src={image} className="rounded-2xl aspect-video object-cover" alt="Lab result" />}
                 <Button className="w-full h-16 rounded-2xl bg-primary text-slate-950 font-black" onClick={handleAnalyze} disabled={!image || loading}>АНАЛИЗИРОВАТЬ ЛАБ</Button>
               </TabsContent>
             </Tabs>

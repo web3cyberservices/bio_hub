@@ -78,7 +78,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
         setCarbs(result.carbs.toString());
         toast({ 
           title: 'ИИ рассчитал состав', 
-          description: `Данные подобраны: ${result.mealName}` 
+          description: `Данные подобраны для: ${result.mealName}` 
         });
       }
     } catch (error) {
@@ -90,6 +90,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   };
 
   const handleNameBlur = () => {
+    // Автоматический расчет при уходе с поля названия, если макросы пустые
     if (name.trim() && !calories && !protein && !fat && !carbs && !isCalculating) {
       handleAiCalculate();
     }
