@@ -26,16 +26,16 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        month_caption: "flex justify-center pt-1 relative items-center mb-4",
-        caption_label: "text-sm font-black tracking-widest text-white uppercase",
-        nav: "flex items-center gap-1",
+        month_caption: "flex justify-center pt-1 relative items-center mb-4 min-h-[40px]",
+        caption_label: "text-sm font-black tracking-widest text-white uppercase px-12",
+        nav: "flex items-center justify-between absolute inset-x-0 top-1 px-1",
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-7 w-7 p-0 opacity-70 hover:opacity-100 rounded-lg hover:bg-white/10 absolute left-1 text-primary"
+          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-7 w-7 p-0 opacity-70 hover:opacity-100 rounded-lg hover:bg-white/10 absolute right-1 text-primary"
+          "h-8 w-8 p-0 opacity-70 hover:opacity-100 rounded-xl hover:bg-white/10 text-primary transition-all"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex justify-between mb-2",
@@ -56,8 +56,8 @@ function Calendar({
       }}
       components={{
         Chevron: ({ orientation }) => {
-          if (orientation === 'left') return <ChevronLeft className="h-4 w-4" />;
-          return <ChevronRight className="h-4 w-4" />;
+          if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
+          return <ChevronRight className="h-5 w-5" />;
         },
         DayContent: ({ date }) => {
           const dateStr = format(date, 'yyyy-MM-dd');
@@ -68,9 +68,9 @@ function Calendar({
               <span className="relative z-10">{date.getDate()}</span>
               {dayNumber !== undefined && (
                 <div 
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF7F50] rounded-full flex items-center justify-center shadow-lg border border-black/50 z-[100] animate-in zoom-in-50 duration-300"
                 >
-                  <span className="text-[8px] font-black text-white leading-none">{dayNumber}</span>
+                  <span className="text-[8px] font-black text-white leading-none pointer-events-none">{dayNumber}</span>
                 </div>
               )}
             </div>
