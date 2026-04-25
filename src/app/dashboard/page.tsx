@@ -41,7 +41,6 @@ export default function DashboardPage() {
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
-  // DEBUG: Принудительная строка сегодняшнего дня для теста
   const testDate = format(new Date(), 'yyyy-MM-dd');
 
   useHealthAggregator();
@@ -155,7 +154,6 @@ export default function DashboardPage() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
-                <div className="bg-red-600 text-white text-[10px] font-black p-1 text-center uppercase tracking-widest">ПРОВЕРКА СВЯЗИ - PAGE.TSX</div>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
