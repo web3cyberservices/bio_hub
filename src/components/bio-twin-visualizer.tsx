@@ -73,8 +73,17 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
 
-    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
-    bmr = gender === 'мужской' ? bmr + 5 : bmr - 161;
+    // 1. Формула Миффлина-Сан Жеора
+    let bmrMifflin = (10 * weight) + (6.25 * height) - (5 * age);
+    bmrMifflin = gender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
+
+    // 2. Формула Харриса-Бенедикта (уточненная Роза-Шизгала)
+    let bmrHarris = gender === 'мужской' 
+      ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+      : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+
+    // Используем среднее значение для повышения точности
+    const bmr = (bmrMifflin + bmrHarris) / 2;
 
     const multipliers: Record<string, number> = {
       minimal: 1.2, low: 1.375, moderate: 1.55, high: 1.725, athlete: 1.9
