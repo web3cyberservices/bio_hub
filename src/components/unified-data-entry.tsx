@@ -58,7 +58,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [isCycleEnd, setIsCycleEnd] = useState(false);
   const [cycleIntensity, setCycleIntensity] = useState('medium');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [energyStatus, setEnergyStatus] = useState('normal'); // бодрое, нормальное, легкая усталость, усталость
+  const [energyStatus, setEnergyStatus] = useState('normal'); 
   const [cycleSymptomsText, setCycleSymptomsText] = useState('');
 
   const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
@@ -134,29 +134,39 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      await setDoc(doc(firestore, 'users', user.uid, 'dailyLogs', dateKey), {
+      
+      // Формируем объект данных для сохранения
+      const logData: any = {
         date: dateKey,
-        water: water ? Number(water) : undefined,
-        weight: weight ? Number(weight) : undefined,
-        steps: steps ? Number(steps) : undefined,
-        sleepDurationHours: sleep ? Number(sleep) : undefined,
-        mood: mood || undefined,
-        energy: energy[0],
-        cycle: isCycleActive ? { 
-          intensity: cycleIntensity, 
+        updatedAt: serverTimestamp()
+      };
+
+      if (water) logData.water = Number(water);
+      if (weight) logData.weight = Number(weight);
+      if (steps) logData.steps = Number(steps);
+      if (sleep) logData.sleepDurationHours = Number(sleep);
+      if (mood) logData.mood = mood;
+      if (energy && energy.length > 0) logData.energy = energy[0];
+
+      // Сохраняем данные цикла только если вкладка активна или данные были введены
+      if (isCycleActive) {
+        logData.cycle = {
+          intensity: cycleIntensity,
           symptoms: selectedSymptoms,
           energyStatus: energyStatus,
           isStart: isCycleStart,
           isEnd: isCycleEnd,
-          notes: cycleSymptomsText 
-        } : null,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
+          notes: cycleSymptomsText
+        };
+      }
+
+      await setDoc(doc(firestore, 'users', user.uid, 'dailyLogs', dateKey), logData, { merge: true });
       
       setIsSuccess(true);
       toast({ title: 'Данные сохранены', description: 'Био-лог обновлен.' });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
+    } catch (e: any) {
+      console.error("Save Daily Log Error:", e);
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: e.message });
     } finally {
       setLoading(false);
     }
@@ -198,7 +208,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           <Zap className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
         
-        <ScrollArea className="max-h-[70vh]">
+        <ScrollArea className="h-[70vh]">
           <div className="p-4 md:p-12 space-y-8 bg-blue-950/40 backdrop-blur-3xl min-h-[500px]">
             {!mealResult && !labResult && !isSuccess ? (
               <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -344,11 +354,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                           {isCycleActive && (
                             <div className="space-y-12 pt-8 border-t border-pink-500/10 animate-in fade-in duration-500 pb-10">
                                
-                               {/* Границы цикла */}
                                <div className="space-y-4">
                                   <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Границы периода</label>
                                   <div className="grid grid-cols-2 gap-4">
                                      <button 
+                                       type="button"
                                        onClick={() => setIsCycleStart(!isCycleStart)}
                                        className={cn(
                                          "h-14 rounded-2xl font-black uppercase text-[10px] transition-all border-2 flex items-center justify-center gap-2",
@@ -358,6 +368,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                         <TrendingUp className="h-4 w-4" /> {isCycleStart ? 'Начало отмечено' : 'Начало цикла'}
                                      </button>
                                      <button 
+                                       type="button"
                                        onClick={() => setIsCycleEnd(!isCycleEnd)}
                                        className={cn(
                                          "h-14 rounded-2xl font-black uppercase text-[10px] transition-all border-2 flex items-center justify-center gap-2",
@@ -369,13 +380,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                   </div>
                                </div>
 
-                               {/* Состояние энергии */}
                                <div className="space-y-4">
                                   <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Ваше состояние</label>
                                   <div className="grid grid-cols-2 gap-3">
                                      {energyStates.map((s) => (
                                         <button 
                                           key={s.id} 
+                                          type="button"
                                           onClick={() => setEnergyStatus(s.id)}
                                           className={cn(
                                             "flex items-center gap-3 p-4 rounded-2xl border-2 transition-all group",
@@ -391,13 +402,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                   </div>
                                </div>
 
-                               {/* Интенсивность */}
                                <div className="space-y-4">
                                   <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Интенсивность выделений</label>
                                   <div className="grid grid-cols-3 gap-3">
                                      {['low', 'medium', 'high'].map((val) => (
                                         <button 
                                           key={val} 
+                                          type="button"
                                           onClick={() => setCycleIntensity(val)}
                                           className={cn(
                                             "h-14 rounded-xl font-black uppercase text-[9px] transition-all border-2",
@@ -412,13 +423,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                   </div>
                                </div>
 
-                               {/* Физические симптомы (Flo Style) */}
                                <div className="space-y-4">
                                   <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Физические симптомы</label>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                      {physicalSymptoms.map((s) => (
                                         <button 
                                           key={s.id} 
+                                          type="button"
                                           onClick={() => toggleSymptom(s.id)}
                                           className={cn(
                                             "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all group",

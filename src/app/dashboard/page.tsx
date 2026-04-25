@@ -61,6 +61,27 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
+  // Запрос для получения дней начала цикла (для подсветки в календаре)
+  const periodStartsQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'dailyLogs'),
+      where('cycle.isStart', '==', true)
+    );
+  }, [firestore, user?.uid]);
+
+  const { data: periodLogs } = useCollection<any>(periodStartsQuery);
+
+  const periodStartDates = useMemo(() => {
+    if (!periodLogs) return [];
+    return periodLogs.map(log => {
+      const d = new Date(log.date);
+      // Устанавливаем время в полночь для корректного сравнения в календаре
+      d.setHours(0, 0, 0, 0);
+      return d;
+    });
+  }, [periodLogs]);
+
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
@@ -144,6 +165,12 @@ export default function DashboardPage() {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   locale={ru}
+                  modifiers={{
+                    periodStart: periodStartDates
+                  }}
+                  modifiersClassNames={{
+                    periodStart: "period-start-day"
+                  }}
                 />
               </PopoverContent>
             </Popover>

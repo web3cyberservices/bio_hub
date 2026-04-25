@@ -109,3 +109,21 @@
 .bio-node-label {
   @apply text-[8px] font-black uppercase tracking-widest text-primary/80 whitespace-nowrap bg-black/40 px-2 py-0.5 rounded-full border border-primary/20 backdrop-blur-sm;
 }
+
+/* Модификатор для календаря: начало цикла */
+.period-start-day {
+  position: relative;
+}
+
+.period-start-day::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #ec4899; /* pink-500 */
+  box-shadow: 0 0 5px #ec4899;
+}
