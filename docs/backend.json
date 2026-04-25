@@ -1,21 +1,19 @@
-
 {
   "entities": {
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Stores core information about a user, including biometrics and habits.",
+      "description": "Stores core information about a user, including biometrics, habits, and medications.",
       "properties": {
         "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "displayName": { "type": "string" },
-        "photoUrl": { "type": "string", "description": "URL of the professional profile photo." },
-        "birthDate": { "type": "string", "format": "date", "description": "User's date of birth." },
+        "photoUrl": { "type": "string" },
+        "birthDate": { "type": "string", "format": "date" },
         "gender": { "type": "string" },
-        "age": { "type": "number" },
         "weight": { "type": "number" },
         "height": { "type": "number" },
         "activityLevel": { "type": "string" },
@@ -23,14 +21,11 @@
         "profileType": { "type": "string", "enum": ["user", "specialist"] },
         "specialization": { "type": "string" },
         "bio": { "type": "string" },
-        "instagramUrl": { "type": "string", "description": "Link to specialist's Instagram profile." },
-        "sharedWith": { "type": "array", "items": { "type": "string" }, "description": "List of specialist UIDs who have access to this user's data." },
-        "rating": { "type": "number" },
-        "followers": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who follow this specialist." },
-        "favoriteFoods": { "type": "string" },
-        "dislikedFoods": { "type": "string" },
-        "medications": { "type": "string", "description": "Medications, tablets, or supplements user is currently taking." },
-        "dateJoined": { "type": "string", "format": "date-time" }
+        "instagramUrl": { "type": "string" },
+        "medications": { "type": "string", "description": "Medications or supplements user is taking." },
+        "sharedWith": { "type": "array", "items": { "type": "string" } },
+        "lastHealthSync": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "firstName", "profileType"]
     },
@@ -42,7 +37,7 @@
         "date": { "type": "string" },
         "name": { "type": "string" },
         "type": { "type": "string", "enum": ["physical", "mental"] },
-        "duration": { "type": "number", "description": "Minutes" },
+        "duration": { "type": "number" },
         "calories": { "type": "number" },
         "intensity": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -55,7 +50,6 @@
         "id": { "type": "string" },
         "date": { "type": "string" },
         "title": { "type": "string" },
-        "notes": { "type": "string" },
         "exercises": { 
           "type": "array", 
           "items": {
@@ -68,31 +62,16 @@
             }
           }
         },
-        "createdBy": { "type": "string" },
-        "status": { "type": "string", "enum": ["planned", "completed"] }
+        "status": { "type": "string", "enum": ["planned", "completed"] },
+        "createdBy": { "type": "string" }
       }
-    },
-    "PersonalMeal": {
-      "title": "PersonalMeal",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "date": { "type": "string" },
-        "name": { "type": "string" },
-        "time": { "type": "string" },
-        "calories": { "type": "number" },
-        "protein": { "type": "number" },
-        "fat": { "type": "number" },
-        "carbs": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "date", "name", "time"]
     }
   },
   "firestore": {
     "structure": [
       { "path": "/users/{userId}/activities/{activityId}", "definition": { "entityName": "ActivityLog" } },
-      { "path": "/users/{userId}/workouts/{workoutId}", "definition": { "entityName": "WorkoutPlan" } }
+      { "path": "/users/{userId}/workouts/{workoutId}", "definition": { "entityName": "WorkoutPlan" } },
+      { "path": "/users/{userId}/dailyLogs/{date}", "definition": { "entityName": "DailyLog" } }
     ]
   }
 }
