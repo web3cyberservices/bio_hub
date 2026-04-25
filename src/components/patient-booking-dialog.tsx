@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { 
   CalendarDays, Clock, CheckCircle2, Loader2, 
-  ArrowRight, ShieldCheck, Zap
+  ArrowRight, ShieldCheck, Zap, User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,6 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
-  // Упрощенный запрос без orderBy, чтобы не требовать создания индексов вручную
   const slotsQuery = useMemoFirebase(() => {
     if (!firestore || !specialistId) return null;
     return query(
@@ -51,7 +50,6 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
 
   const { data: rawSlots, isLoading: slotsLoading } = useCollection<any>(slotsQuery);
 
-  // Сортируем слоты на клиенте
   const availableSlots = useMemo(() => {
     if (!rawSlots) return [];
     return [...rawSlots].sort((a, b) => a.time.localeCompare(b.time));
@@ -65,6 +63,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
       await updateDoc(slotRef, {
         patientId: user.uid,
         patientName: (user as any).displayName || 'Пациент',
+        patientPhoto: (user as any).photoURL || '',
         status: 'pending',
         updatedAt: new Date().toISOString()
       });

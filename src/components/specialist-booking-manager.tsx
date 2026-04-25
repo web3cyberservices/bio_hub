@@ -17,6 +17,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export function SpecialistBookingManager() {
   const { user } = useUser();
@@ -70,7 +71,17 @@ export function SpecialistBookingManager() {
     if (!firestore) return;
     try {
       const appRef = doc(firestore, 'appointments', id);
-      await updateDoc(appRef, { status, updatedAt: new Date().toISOString() });
+      const updates: any = { status, updatedAt: new Date().toISOString() };
+      
+      // Если отклоняем или переводим обратно в доступно, очищаем данные пациента
+      if (status === 'available' || status === 'rejected') {
+        updates.patientId = null;
+        updates.patientName = null;
+        updates.patientPhoto = null;
+        if (status === 'rejected') updates.status = 'available'; // Возвращаем в пул
+      }
+
+      await updateDoc(appRef, updates);
       toast({ title: status === 'confirmed' ? 'Запись подтверждена' : 'Статус обновлен' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Ошибка', description: e.message });
@@ -130,22 +141,23 @@ export function SpecialistBookingManager() {
         <div className="lg:col-span-7 space-y-10">
            {/* Pending Section */}
            {pendingRequests.length > 0 && (
-             <div className="space-y-4">
-                <h3 className="text-xs font-black uppercase text-accent flex items-center gap-2 px-2">
-                   <AlertCircle className="h-4 w-4 animate-pulse" /> Новые заявки ({pendingRequests.length})
+             <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                <h3 className="text-xs font-black uppercase text-[#00ffff] flex items-center gap-2 px-2">
+                   <AlertCircle className="h-4 w-4 animate-pulse" /> Новые запросы ({pendingRequests.length})
                 </h3>
                 <div className="grid gap-4">
                    {pendingRequests.map((req) => (
-                     <Card key={req.id} className="cyber-card p-5 border-accent/30 bg-accent/5 flex items-center justify-between group">
+                     <Card key={req.id} className="cyber-card p-5 border-[#00ffff]/30 bg-[#00ffff]/5 flex items-center justify-between group">
                         <div className="flex items-center gap-4">
-                           <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20">
-                              <User className="h-7 w-7" />
-                           </div>
+                           <Avatar className="h-14 w-14 rounded-2xl border-2 border-[#00ffff]/20">
+                              <AvatarImage src={req.patientPhoto} className="object-cover" />
+                              <AvatarFallback className="bg-[#00ffff]/10 text-[#00ffff] font-black uppercase">{req.patientName?.charAt(0)}</AvatarFallback>
+                           </Avatar>
                            <div>
-                              <p className="font-black text-white text-base uppercase">{req.patientName || 'Анонимный пациент'}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                 <Badge variant="outline" className="text-[9px] border-white/10 text-white/50">{format(new Date(req.date), 'd MMM')}</Badge>
-                                 <Badge className="bg-accent text-black text-[10px] font-black px-3">{req.time}</Badge>
+                              <p className="font-black text-white text-base uppercase leading-tight">{req.patientName || 'Анонимный пациент'}</p>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                 <Badge variant="outline" className="text-[8px] border-white/10 text-white/40 uppercase font-black">{format(new Date(req.date), 'd MMM')}</Badge>
+                                 <Badge className="bg-[#00ffff] text-black text-[10px] font-black px-3">{req.time}</Badge>
                               </div>
                            </div>
                         </div>
@@ -185,7 +197,7 @@ export function SpecialistBookingManager() {
                    <Card key={slot.id} className={cn(
                      "cyber-card p-6 border-none transition-all group relative overflow-hidden",
                      slot.status === 'confirmed' ? "bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]" : 
-                     slot.status === 'pending' ? "bg-accent/10 border-accent/20" : "bg-blue-900/20"
+                     slot.status === 'pending' ? "bg-[#00ffff]/10 border-[#00ffff]/20" : "bg-blue-900/20"
                    )}>
                       <div className="flex items-center justify-between relative z-10">
                          <div className="flex items-center gap-4">
@@ -198,7 +210,7 @@ export function SpecialistBookingManager() {
                             ) : slot.status === 'confirmed' ? (
                                <Badge className="bg-emerald-500 text-white border-none text-[9px] font-black px-3">УТВЕРЖДЕНО</Badge>
                             ) : (
-                               <Badge className="bg-accent text-black border-none text-[9px] font-black px-3">ОЖИДАНИЕ</Badge>
+                               <Badge className="bg-[#00ffff] text-black border-none text-[9px] font-black px-3 animate-pulse">ЗАПРОС</Badge>
                             )}
                             <Button variant="ghost" size="icon" onClick={() => handleDeleteSlot(slot.id)} className="h-9 w-9 rounded-xl opacity-0 group-hover:opacity-100 text-white/30 hover:text-destructive hover:bg-destructive/10 transition-all">
                                <Trash2 className="h-5 w-5" />
@@ -207,9 +219,10 @@ export function SpecialistBookingManager() {
                       </div>
                       {slot.status !== 'available' && (
                         <div className="mt-5 pt-5 border-t border-white/5 flex items-center gap-4 relative z-10">
-                           <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-                              <User className="h-5 w-5 text-white/40" />
-                           </div>
+                           <Avatar className="h-10 w-10 rounded-xl border border-white/10">
+                              <AvatarImage src={slot.patientPhoto} className="object-cover" />
+                              <AvatarFallback className="bg-white/5 text-white/40 font-bold uppercase">{slot.patientName?.charAt(0)}</AvatarFallback>
+                           </Avatar>
                            <div className="flex-1 min-w-0">
                               <p className="text-[11px] font-black text-white/70 truncate uppercase tracking-tight">{slot.patientName || 'Загрузка...'}</p>
                               <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Пациент</p>
