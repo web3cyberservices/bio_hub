@@ -65,11 +65,15 @@ export function ProfileCabinet() {
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), { 
-        ...values, 
-        id: user.uid, 
-        updatedAt: new Date().toISOString() 
-      }, { merge: true });
+      // Принудительно приводим пол к нижнему регистру для стабильности визуализатора
+      const finalValues = {
+        ...values,
+        gender: values.gender.toLowerCase(),
+        id: user.uid,
+        updatedAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(firestore, 'users', user.uid), finalValues, { merge: true });
       toast({ title: 'Профиль обновлен', description: 'Данные синхронизированы с Bio-Twin.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка доступа' });

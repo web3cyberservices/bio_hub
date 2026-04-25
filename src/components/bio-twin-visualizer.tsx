@@ -57,11 +57,19 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
   // Локальное состояние для голограммы, чтобы гарантировать реактивность
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
 
-  // Эффект для моментального переключения при изменении профиля
+  // Эффект для моментального переключения при изменении пола в профиле
   useEffect(() => {
-    const gender = String(profileData?.gender || '').toLowerCase().trim();
+    if (!profileData) return;
+    
+    const gender = String(profileData.gender || 'мужской').toLowerCase().trim();
+    // Поддержка различных вариантов написания пола
     const isFemale = gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
-    setHologramSrc(isFemale ? '/woman_hologram.png' : '/bio-hologram.png');
+    
+    const newSrc = isFemale ? '/woman_hologram.png' : '/bio-hologram.png';
+    setHologramSrc(newSrc);
+    
+    // Лог для отладки
+    console.log('--- Bio-Twin Sync: Gender detected as', gender, '-> Setting hologram:', newSrc);
   }, [profileData?.gender]);
 
   const calculatedGoals = useMemo(() => {
