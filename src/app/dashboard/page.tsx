@@ -89,7 +89,7 @@ export default function DashboardPage() {
     
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      // Рассчитываем 10-дневный прогноз от каждого начала (или до следующего начала)
+      // Рассчитываем 10-дневный прогноз от каждого начала
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');

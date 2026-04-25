@@ -10,7 +10,6 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   periodDays?: Record<string, number>;
-  testHighlight?: string;
 }
 
 function Calendar({
@@ -18,7 +17,6 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   periodDays,
-  testHighlight,
   ...props
 }: CalendarProps) {
   return (
@@ -28,19 +26,19 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
-        month_caption: "flex justify-center pt-2 relative items-center h-12 mb-8 px-12", 
+        month_caption: "flex justify-center pt-2 relative items-center h-12 mb-4 px-10", 
         caption_label: "text-sm font-black tracking-widest text-white uppercase text-center",
         nav: "flex items-center justify-between absolute inset-x-4 top-4 z-[100] w-[calc(100%-2rem)]", 
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center"
         ),
         month_grid: "w-full border-collapse",
-        weekdays: "flex justify-between mb-4",
+        weekdays: "flex justify-between mb-2",
         weekday: "text-primary/50 w-9 font-black text-[9px] uppercase tracking-widest flex items-center justify-center",
         week: "flex w-full mt-2 justify-between",
         day: "h-10 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
@@ -57,20 +55,19 @@ function Calendar({
       }}
       components={{
         Chevron: ({ orientation }) => {
-          if (orientation === 'left') return <ChevronLeft className="h-6 w-6" />;
-          return <ChevronRight className="h-6 w-6" />;
+          if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
+          return <ChevronRight className="h-5 w-5" />;
         },
-        // КАСТОМНЫЙ РЕНДЕР ДНЯ ДЛЯ ОТОБРАЖЕНИЯ МАРКЕРОВ ЦИКЛА
-        Day: ({ day, displayMonth, ...dayProps }: any) => {
+        // ПЕРЕОПРЕДЕЛЯЕМ DAY ДЛЯ ПРИНУДИТЕЛЬНОЙ ОТРИСОВКИ МАРКЕРОВ
+        Day: ({ day, ...dayProps }: any) => {
           if (!day || !day.date || !isValid(day.date)) return null;
           
           const date = day.date;
           const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
           
-          // Проверка на принадлежность текущему месяцу
-          const isOutside = format(date, 'MM') !== format(displayMonth, 'MM');
-          if (isOutside && !showOutsideDays) return <div className="h-10 w-9" />;
+          // Проверка на принадлежность текущему месяцу (v9 использует day.outside)
+          if (day.outside && !showOutsideDays) return <div className="h-10 w-9" />;
 
           return (
             <div 
@@ -78,7 +75,7 @@ function Calendar({
               className={cn(
                 dayProps.className,
                 "relative h-10 w-9 flex items-center justify-center cursor-pointer rounded-xl transition-all",
-                isOutside && "opacity-20"
+                day.outside && "opacity-20"
               )}
               style={{ position: 'relative' }}
             >
@@ -88,22 +85,22 @@ function Calendar({
               {dayNumber !== undefined && (
                 <div style={{
                   position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  width: '18px',
-                  height: '18px',
+                  top: '-2px',
+                  right: '-2px',
+                  width: '16px',
+                  height: '16px',
                   backgroundColor: '#FF7F50', // Coral
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  zIndex: 999,
-                  border: '2px solid #010411',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                  zIndex: 50,
+                  border: '1.5px solid #010411',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
                 }}>
                   <span style={{
                     color: 'white',
-                    fontSize: '9px',
+                    fontSize: '8px',
                     fontWeight: '900',
                     lineHeight: '1',
                     pointerEvents: 'none'
