@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
-  User, Loader2, Smartphone, Send, ExternalLink, Activity, Pill, Mic
+  User, Loader2, Smartphone, Send, ExternalLink, Activity, Pill, Mic, Briefcase, Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -21,9 +21,9 @@ import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
-  lastName: z.string().optional(),
-  birthDate: z.string().optional(),
-  photoUrl: z.string().optional(),
+  lastName: z.string().optional().default(''),
+  birthDate: z.string().optional().default(''),
+  photoUrl: z.string().optional().default(''),
   gender: z.enum(['мужской', 'женский']).default('мужской'),
   weight: z.coerce.number().optional().default(0),
   height: z.coerce.number().optional().default(0),
@@ -31,12 +31,12 @@ const profileSchema = z.object({
   healthGoal: z.enum(['снизить массу тела', 'поддержать текущее состояние', 'набор массы']).default('поддержать текущее состояние'),
   smoking: z.enum(['да', 'нет']).default('нет'),
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).default('не употребляю'),
-  favoriteFoods: z.string().optional(),
-  dislikedFoods: z.string().optional(),
-  medications: z.string().optional(),
+  favoriteFoods: z.string().optional().default(''),
+  dislikedFoods: z.string().optional().default(''),
+  medications: z.string().optional().default(''),
   profileType: z.enum(['user', 'specialist']).default('user'),
-  specialization: z.string().optional(),
-  bio: z.string().optional(),
+  specialization: z.string().optional().default(''),
+  bio: z.string().optional().default(''),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -74,11 +74,11 @@ export function ProfileCabinet() {
     },
   });
 
+  const profileType = form.watch('profileType');
+
   useEffect(() => { 
     if (userData) {
       form.reset({ 
-        ...userData,
-        // Гарантируем, что undefined не попадет в Input
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '',
@@ -101,44 +101,26 @@ export function ProfileCabinet() {
   }, [userData, form]);
 
   const onSubmit = async (values: ProfileValues) => {
-    if (!user || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Сервисы Bio-хаба не инициализированы.',
-      });
-      return;
-    }
+    if (!user || !firestore) return;
 
     setLoading(true);
     try {
-      const finalValues = {
+      await setDoc(doc(firestore, 'users', user.uid), {
         ...values,
         id: user.uid,
         updatedAt: new Date().toISOString()
-      };
-
-      await setDoc(doc(firestore, 'users', user.uid), finalValues, { merge: true });
+      }, { merge: true });
       
-      toast({ 
-        title: 'Профиль обновлен', 
-        description: 'Данные синхронизированы.' 
-      });
+      toast({ title: 'Профиль обновлен', description: 'Данные успешно сохранены.' });
     } catch (e: any) {
-      console.error("Profile Save Error:", e);
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка сохранения', 
-        description: e.message || 'Проверьте соединение с интернетом.' 
+        description: e.message || 'Проверьте соединение с базой данных.' 
       });
     } finally { 
       setLoading(false); 
     }
-  };
-
-  const handleConnectTelegram = () => {
-    if (!user) return;
-    window.open(`https://t.me/web3cyberservices_bot?start=${user.uid}`, '_blank');
   };
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
@@ -157,31 +139,60 @@ export function ProfileCabinet() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-32">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-32 px-4">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30">
           <User className="h-6 w-6 text-primary" />
         </div>
-        <h2 className="text-4xl font-black uppercase text-white tracking-tighter">Кабинет</h2>
+        <h2 className="text-4xl font-black uppercase text-white tracking-tighter leading-none">Кабинет</h2>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="profileType" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Ваша роль</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                       </FormControl>
+                       <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                          <SelectItem value="user">Пользователь (Био-хаб)</SelectItem>
+                          <SelectItem value="specialist">Специалист (Врач/Нутрициолог)</SelectItem>
+                       </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
                 <FormField control={form.control} name="firstName" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Имя</FormLabel>
                     <FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="birthDate" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Дата рождения</FormLabel>
-                    <FormControl><Input type="date" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                  </FormItem>
-                )} />
              </div>
+
+             {profileType === 'specialist' && (
+               <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                  <FormField control={form.control} name="specialization" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-primary/60 tracking-widest px-1 flex items-center gap-2">
+                        <Briefcase className="h-3 w-3" /> Специализация
+                      </FormLabel>
+                      <FormControl><Input {...field} placeholder="Напр: Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-primary/5 border-primary/20 text-white font-bold" /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="bio" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-primary/60 tracking-widest px-1">О себе / Опыт</FormLabel>
+                      <FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-primary/5 border-primary/20 text-white text-lg font-medium resize-none shadow-inner" /></FormControl>
+                    </FormItem>
+                  )} />
+               </div>
+             )}
              
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="gender" render={({ field }) => (
@@ -190,7 +201,7 @@ export function ProfileCabinet() {
                       <Select onValueChange={field.onChange} value={field.value}>
                          <FormControl>
                             <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                               <SelectValue placeholder="Выберите пол" />
+                               <SelectValue />
                             </SelectTrigger>
                          </FormControl>
                          <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
@@ -293,8 +304,9 @@ export function ProfileCabinet() {
                   <Smartphone className="h-5 w-5 text-primary" /> Уведомления
                 </h3>
                 <Button 
+                  type="button"
                   variant="outline" 
-                  onClick={handleConnectTelegram} 
+                  onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} 
                   className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black hover:bg-white/10 transition-all shadow-sm"
                 >
                   <Send className="h-4 w-4 text-primary" /> Telegram <ExternalLink className="h-3 w-3 opacity-30" />
@@ -305,7 +317,7 @@ export function ProfileCabinet() {
                   <Activity className="h-5 w-5 text-primary" /> Архив
                 </h3>
                 <AnalysisHistoryDialog>
-                  <Button className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all shadow-sm">
+                  <Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all shadow-sm">
                     Открыть архив здоровья
                   </Button>
                 </AnalysisHistoryDialog>

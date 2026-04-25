@@ -160,10 +160,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         <div className="p-6 md:p-10 space-y-6 overflow-y-auto no-scrollbar bg-blue-950/40">
           {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className={cn("grid w-full rounded-2xl h-14 bg-white/5 mb-8", isFemale ? "grid-cols-6" : "grid-cols-5")}>
+              <TabsList className={cn("grid w-full rounded-2xl h-14 bg-white/5 mb-8", isFemale ? "grid-cols-5" : "grid-cols-4")}>
                 <TabsTrigger value="meal" className="font-black text-[9px] uppercase"><Utensils className="h-3 w-3 mr-1" /> ЕДА</TabsTrigger>
                 <TabsTrigger value="metrics" className="font-black text-[9px] uppercase"><Scale className="h-3 w-3 mr-1" /> ТЕЛО</TabsTrigger>
-                <TabsTrigger value="feeling" className="font-black text-[9px] uppercase"><Smile className="h-3 w-3 mr-1" /> ДУХ</TabsTrigger>
                 {isFemale && <TabsTrigger value="cycle" className="font-black text-[9px] uppercase"><HeartPulse className="h-3 w-3 mr-1" /> ЦИКЛ</TabsTrigger>}
                 <TabsTrigger value="labs" className="font-black text-[9px] uppercase"><FlaskConical className="h-3 w-3 mr-1" /> ЛАБ</TabsTrigger>
               </TabsList>
