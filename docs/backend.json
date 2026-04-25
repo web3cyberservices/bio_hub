@@ -22,56 +22,13 @@
         "specialization": { "type": "string" },
         "bio": { "type": "string" },
         "instagramUrl": { "type": "string" },
+        "telegramChatId": { "type": "string", "description": "ID чата в Telegram для отправки уведомлений." },
         "medications": { "type": "string", "description": "Medications or supplements user is taking." },
         "sharedWith": { "type": "array", "items": { "type": "string" } },
         "lastHealthSync": { "type": "string", "format": "date-time" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "firstName", "profileType"]
-    },
-    "ActivityLog": {
-      "title": "ActivityLog",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "date": { "type": "string" },
-        "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["physical", "mental"] },
-        "duration": { "type": "number" },
-        "calories": { "type": "number" },
-        "intensity": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
-    },
-    "WorkoutPlan": {
-      "title": "WorkoutPlan",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "date": { "type": "string" },
-        "title": { "type": "string" },
-        "exercises": { 
-          "type": "array", 
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": { "type": "string" },
-              "sets": { "type": "number" },
-              "reps": { "type": "string" },
-              "weight": { "type": "string" }
-            }
-          }
-        },
-        "status": { "type": "string", "enum": ["planned", "completed"] },
-        "createdBy": { "type": "string" }
-      }
     }
-  },
-  "firestore": {
-    "structure": [
-      { "path": "/users/{userId}/activities/{activityId}", "definition": { "entityName": "ActivityLog" } },
-      { "path": "/users/{userId}/workouts/{workoutId}", "definition": { "entityName": "WorkoutPlan" } },
-      { "path": "/users/{userId}/dailyLogs/{date}", "definition": { "entityName": "DailyLog" } }
-    ]
   }
 }
