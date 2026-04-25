@@ -54,15 +54,15 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  // Расширенная и сверхнадежная детекция пола
-  const genderValue = profileData?.gender || 'мужской';
-  const isFemale = useMemo(() => {
-    const g = String(genderValue).toLowerCase().trim();
-    return g === 'женский' || g === 'female' || g === 'жен' || g === 'woman' || g === 'w';
-  }, [genderValue]);
-  
-  // Определяем путь к изображению голограммы
-  const hologramSrc = isFemale ? '/woman_hologram.png' : '/bio-hologram.png';
+  // Локальное состояние для голограммы, чтобы гарантировать реактивность
+  const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
+
+  // Эффект для моментального переключения при изменении профиля
+  useEffect(() => {
+    const gender = String(profileData?.gender || '').toLowerCase().trim();
+    const isFemale = gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
+    setHologramSrc(isFemale ? '/woman_hologram.png' : '/bio-hologram.png');
+  }, [profileData?.gender]);
 
   const calculatedGoals = useMemo(() => {
     if (goals && goals.calories > 0) return goals;
@@ -73,7 +73,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     const weight = profileData.weight;
     const height = profileData.height;
-    const currentGender = isFemale ? 'женский' : 'мужской';
+    const gender = profileData.gender || 'мужской';
     const activityLevel = profileData.activityLevel || 'moderate';
     const healthGoal = profileData.healthGoal || 'поддержать текущее состояние';
 
@@ -85,10 +85,10 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     // 1. Формула Миффлина-Сан Жеора
     let bmrMifflin = (10 * weight) + (6.25 * height) - (5 * age);
-    bmrMifflin = currentGender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
+    bmrMifflin = gender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
 
     // 2. Формула Харриса-Бенедикта (уточненная Роза-Шизгала)
-    let bmrHarris = currentGender === 'мужской' 
+    let bmrHarris = gender === 'мужской' 
       ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
       : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
 
@@ -108,7 +108,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     const carbs = Math.round((tdee - (protein * 4) - (fat * 9)) / 4);
 
     return { calories: Math.round(tdee), protein, fat, carbs };
-  }, [goals, profileData, isFemale]);
+  }, [goals, profileData]);
 
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
@@ -154,7 +154,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       </div>
 
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        {/* Ключ key={hologramSrc} заставляет React пересоздать компонент при смене изображения */}
+        {/* Ключ key={hologramSrc} критически важен: он заставляет React полностью перерисовать изображение при смене пути */}
         <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={hologramSrc} 

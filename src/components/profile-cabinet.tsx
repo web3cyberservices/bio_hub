@@ -70,7 +70,7 @@ export function ProfileCabinet() {
         id: user.uid, 
         updatedAt: new Date().toISOString() 
       }, { merge: true });
-      toast({ title: 'Профиль обновлен', description: 'Ваши биометрические данные сохранены.' });
+      toast({ title: 'Профиль обновлен', description: 'Данные синхронизированы с Bio-Twin.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка доступа' });
     } finally { setLoading(false); }
