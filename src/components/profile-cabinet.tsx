@@ -51,7 +51,8 @@ import {
   FileText,
   History,
   ExternalLink,
-  Instagram
+  Instagram,
+  Pill
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -77,6 +78,7 @@ const profileSchema = z.object({
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']).default('не употребляю'),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
+  medications: z.string().optional(),
   profileType: z.enum(['user', 'specialist']).default('user'),
   specialization: z.string().optional(),
   bio: z.string().optional(),
@@ -123,6 +125,7 @@ export function ProfileCabinet() {
       alcohol: 'не употребляю',
       favoriteFoods: '',
       dislikedFoods: '',
+      medications: '',
       profileType: 'user',
       specialization: '',
       bio: '',
@@ -132,7 +135,7 @@ export function ProfileCabinet() {
 
   const handleConnectTelegram = () => {
     if (!user) return;
-    const botUsername = 'ProSebyaBot'; 
+    const botUsername = 'web3cyberservices_bot'; 
     const link = `https://t.me/${botUsername}?start=${user.uid}`;
     window.open(link, '_blank');
     toast({ title: 'Telegram', description: 'Открываем диалог с ботом для связки аккаунта.' });
@@ -185,6 +188,7 @@ export function ProfileCabinet() {
         alcohol: userData.alcohol || 'не употребляю',
         favoriteFoods: userData.favoriteFoods || '',
         dislikedFoods: userData.dislikedFoods || '',
+        medications: userData.medications || '',
         profileType: userData.profileType || 'user',
         specialization: userData.specialization || '',
         bio: userData.bio || '',
@@ -448,6 +452,28 @@ export function ProfileCabinet() {
                       )} />
                       <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
                         <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">Исключить из рациона</FormLabel><FormControl><div className="relative"><Textarea placeholder="Например: Молоко, лук, кинза..." {...field} className={textareaClasses} /><VoiceBtn field="dislikedFoods" /></div></FormControl></FormItem>
+                      )} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-4"><Pill className="h-5 w-5 text-primary" /><h3 className="text-lg font-black uppercase tracking-tight text-white">Медикаментозная поддержка</h3></div>
+                    <div className="grid gap-6">
+                      <FormField control={form.control} name="medications" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/50 px-4">Лекарства, таблетки, БАДы</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Textarea 
+                                placeholder="Перечислите препараты и дозировки, которые вы принимаете..." 
+                                {...field} 
+                                className={textareaClasses} 
+                              />
+                              <VoiceBtn field="medications" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )} />
                     </div>
                   </div>

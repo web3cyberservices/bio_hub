@@ -29,6 +29,7 @@
         "followers": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who follow this specialist." },
         "favoriteFoods": { "type": "string" },
         "dislikedFoods": { "type": "string" },
+        "medications": { "type": "string", "description": "Medications, tablets, or supplements user is currently taking." },
         "dateJoined": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "firstName", "profileType"]

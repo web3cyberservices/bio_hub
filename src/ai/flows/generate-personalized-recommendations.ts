@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Поток Genkit для генерации персонализированных рекомендаций.
@@ -36,6 +37,7 @@ const GenerateRecommendationsInputSchema = z.object({
   alcohol: z.enum(['не употребляю', 'редко', 'умеренно', 'часто']),
   favoriteFoods: z.string().optional(),
   dislikedFoods: z.string().optional(),
+  medications: z.string().optional().describe('Лекарства или БАДы, которые принимает пользователь.'),
   deviceData: z.object({
     steps: z.number().optional(),
     avgHeartRate: z.number().optional(),
@@ -89,6 +91,9 @@ const recommendationPrompt = ai.definePrompt({
 - Цель: {{healthGoal}}
 - Курение: {{smoking}}, Алкоголь: {{alcohol}}
 - Любит: {{favoriteFoods}}, Не любит: {{dislikedFoods}}
+{{#if medications}}
+- ПРИНИМАЕТ ЛЕКАРСТВА/БАДЫ: {{medications}} (Учтите это, чтобы избежать конфликтов при рекомендации добавок)
+{{/if}}
 
 {{#if deviceData}}
 БИОМЕТРИЯ СЕГОДНЯ:

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -13,7 +14,7 @@ import {
   Flame, Beef, Droplet, Zap, History, Loader2,
   TrendingUp, TrendingDown, CheckCircle2, Download,
   User, Target, Ban, Wine, Heart, Scale, Info, MessageSquare,
-  ArrowUpRight
+  ArrowUpRight, Pill
 } from 'lucide-react';
 import { format, addDays, subDays, differenceInYears } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -224,6 +225,15 @@ export function PatientDataViewer({ patient, onStartChat }: PatientDataViewerPro
                             {patient.dislikedFoods || 'Данные не заполнены'}
                          </div>
                       </div>
+                   </div>
+                </Card>
+
+                <Card className="cyber-card p-8 border-none bg-blue-950/40 space-y-6 md:col-span-2">
+                   <h4 className="text-sm font-black uppercase text-primary flex items-center gap-2">
+                      <Pill className="h-4 w-4" /> Медикаментозная поддержка
+                   </h4>
+                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-sm font-medium text-white/80 leading-relaxed min-h-[80px]">
+                      {patient.medications || 'Информация о приеме лекарств и БАДов не указана.'}
                    </div>
                 </Card>
              </div>
