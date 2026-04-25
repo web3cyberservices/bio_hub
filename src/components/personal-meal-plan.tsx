@@ -82,12 +82,14 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
       }
     } catch (error) {
       console.error('AI calculation error:', error);
+      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось рассчитать КБЖУ.' });
     } finally {
       setIsCalculating(false);
     }
   };
 
   const handleNameBlur = () => {
+    // Авто-расчет если введен текст, но пустые макросы
     if (name.trim() && !calories && !protein && !fat && !carbs && !isCalculating) {
       handleAiCalculate();
     }
@@ -206,9 +208,13 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                             size="icon" 
                             onClick={() => handleAiCalculate()}
                             disabled={isCalculating || !name.trim()}
-                            className="h-10 w-10 rounded-full text-primary hover:bg-white/10 transition-all"
+                            className={cn(
+                              "h-10 w-10 rounded-full transition-all",
+                              isCalculating ? "text-primary animate-spin" : "text-primary hover:bg-white/10"
+                            )}
+                            title="Рассчитать через ИИ"
                           >
-                            {isCalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                            {isCalculating ? <Loader2 className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
                           </Button>
                           <Button 
                             type="button" 

@@ -12,7 +12,7 @@ import {
   Footprints, Moon, RefreshCw, 
   Droplet, Scale, Utensils, Smile, Save, MessageSquare,
   AlertCircle, TrendingUp, TrendingDown, Smartphone, Mic, Download,
-  Brain
+  Brain, HeartPulse
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -25,6 +25,7 @@ import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/fires
 import { cn } from '@/lib/utils';
 import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
 import { downloadLabResultsDocx } from '@/lib/docx-generator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -60,12 +61,18 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [actName, setActName] = useState('');
   const [actDur, setActDur] = useState('');
 
+  // Состояние для цикла (только для женщин)
+  const [isCycleActive, setIsCycleActive] = useState(false);
+  const [cycleIntensity, setCycleIntensity] = useState('medium');
+  const [cycleSymptoms, setCycleSymptoms] = useState('');
+
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
   const { data: userData } = useDoc<any>(userDocRef);
+  const isFemale = String(userData?.gender || '').toLowerCase() === 'женский';
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -161,27 +168,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       setHeartRate(fitData.heartRate.toString());
       setSleep(fitData.sleepHours.toString());
       
-      if (firestore) {
-        const statsRef = doc(firestore, 'users', user.uid, 'personalStats', format(selectedDate, 'yyyy-MM-dd'));
-        await setDoc(statsRef, {
-          userId: user.uid,
-          date: format(selectedDate, 'yyyy-MM-dd'),
-          source: 'Google Fit',
-          raw: fitData,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      }
-
       toast({
         title: 'Google Fit синхронизирован',
-        description: `Импортировано: ${fitData.steps} шагов, пульс ${fitData.heartRate} bpm.`,
+        description: `Импортировано: ${fitData.steps} шагов.`,
       });
     } catch (error: any) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Ошибка Google Fit', 
-        description: error.message || 'Срок действия разрешения истек. Попробуйте войти заново.'
-      });
+      toast({ variant: 'destructive', title: 'Ошибка Google Fit', description: error.message });
     } finally {
       setSyncing(false);
     }
@@ -189,11 +181,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const saveMealToFirestore = async (data: AnalyzeMealOutput) => {
     if (!firestore || !user) return;
-    
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      
       await addDoc(collection(firestore, 'users', user.uid, 'personalMeals'), {
         date: dateKey,
         name: data.mealName,
@@ -205,62 +195,28 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         createdAt: new Date().toISOString(),
         isAiGenerated: true
       });
-      
       setIsSuccess(true);
-      toast({ title: 'Запись сохранена', description: `${data.mealName} добавлено в дневник и на дашборд.` });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleAnalyze = async (isRefinement = false) => {
-    if (!firestore || !user) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Сервисы временно недоступны.' });
-      return;
-    }
-
+    if (!firestore || !user) return;
     setLoading(true);
     try {
       if (activeTab === 'meal') {
-        if (!description && !image && !refinement) {
-          toast({ variant: 'destructive', title: 'Нет данных', description: 'Опишите блюдо или добавьте фото.' });
-          setLoading(false);
-          return;
-        }
-
-        const result = await analyzeMeal({
-          description: description || undefined,
-          photoDataUri: image || undefined,
-          refinement: isRefinement ? refinement : undefined,
-        });
+        const result = await analyzeMeal({ description, photoDataUri: image || undefined, refinement: isRefinement ? refinement : undefined });
         setMealResult(result);
         setEditedMeal(result);
-        if (isRefinement) setRefinement('');
       } else if (activeTab === 'labs') {
-        if (!image) {
-          toast({ variant: 'destructive', title: 'Нет фото', description: 'Сфотографируйте или загрузите результат анализов.' });
-          setLoading(false);
-          return;
-        }
-
-        const result = await analyzeLabResults({
-          photoDataUri: image,
-          userContext: userData ? {
-            age: userData.age,
-            gender: userData.gender
-          } : undefined
-        });
+        const result = await analyzeLabResults({ photoDataUri: image!, userContext: userData ? { age: userData.age, gender: userData.gender } : undefined });
         setLabResult(result);
       }
     } catch (error: any) {
-      console.error("AI Error:", error);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Ошибка анализа ИИ', 
-        description: error.message || 'Не удалось распознать данные. Попробуйте еще раз.' 
-      });
+      toast({ variant: 'destructive', title: 'Ошибка анализа ИИ', description: error.message });
     } finally {
       setLoading(false);
     }
@@ -268,7 +224,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const handleDailyLogSubmit = async () => {
     if (!firestore || !user) return;
-    
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -282,13 +237,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         sleepDurationHours: sleep ? Number(sleep) : undefined,
         mood: mood || undefined,
         energy: energy,
+        // Сохранение данных цикла
+        cycle: isCycleActive ? { intensity: cycleIntensity, symptoms: cycleSymptoms } : null,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      
       setIsSuccess(true);
-      toast({ title: 'Биометрия обновлена' });
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: error.message });
+      toast({ variant: 'destructive', title: 'Ошибка' });
     } finally {
       setLoading(false);
     }
@@ -299,18 +254,15 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const base = 5; // ккал мин
-      const cals = Math.round(Number(actDur) * base);
       await addDoc(collection(firestore, 'users', user.uid, 'activities'), {
         date: dateKey,
         name: actName,
         duration: Number(actDur),
-        calories: cals,
+        calories: Math.round(Number(actDur) * 5),
         type: 'physical',
         createdAt: new Date().toISOString()
       });
       setIsSuccess(true);
-      toast({ title: 'Активность записана' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка' });
     } finally {
@@ -318,42 +270,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
-  const saveLabResultToFirestore = async () => {
-    if (!firestore || !user || !labResult) return;
-    
-    setLoading(true);
-    try {
-      const labId = `lab_${Date.now()}`;
-      const docRef = doc(firestore, 'users', user.uid, 'labResults', labId);
-      const dataToSave = {
-        id: labId,
-        userId: user.uid,
-        date: format(selectedDate, 'yyyy-MM-dd'),
-        ...labResult,
-        createdAt: new Date().toISOString()
-      };
-      await setDoc(docRef, dataToSave);
-      setIsSuccess(true);
-      toast({ title: 'Анализы сохранены' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDownloadDocx = () => {
-    if (!labResult) return;
-    downloadLabResultsDocx({
-      ...labResult,
-      createdAt: new Date().toISOString()
-    });
-  };
-
   const reset = () => {
     setDescription(''); setRefinement(''); setImage(null); setMealResult(null); setEditedMeal(null); setLabResult(null);
     setIsSuccess(false); setWater(''); setWeight(''); setSteps(''); setHeartRate(''); setSleep(''); setMood(''); setEnergy(50);
-    setActName(''); setActDur('');
+    setActName(''); setActDur(''); setIsCycleActive(false); setCycleSymptoms('');
     stopCamera();
   };
 
@@ -377,7 +297,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[95vw] md:max-w-[700px] lg:max-w-[800px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border border-blue-900/30 shadow-2xl max-h-[90vh] flex flex-col z-[1001] bg-[#010411]">
+      <DialogContent className="w-[95vw] md:max-w-[700px] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border border-blue-900/30 shadow-2xl max-h-[90vh] flex flex-col z-[1001] bg-[#010411]">
         <DialogHeader className="p-5 md:p-8 bg-primary text-white relative overflow-hidden shrink-0 border-b border-white/5">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-90" />
           <div className="relative z-10 space-y-0.5">
@@ -390,11 +310,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-6 md:space-y-10 no-scrollbar bg-blue-950/40 backdrop-blur-3xl">
           {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 rounded-[1.5rem] h-14 md:h-16 bg-white/5 p-1.5 mb-6 md:mb-10 shadow-inner">
+              <TabsList className={cn("grid w-full rounded-[1.5rem] h-14 md:h-16 bg-white/5 p-1.5 mb-6 md:mb-10 shadow-inner", isFemale ? "grid-cols-6" : "grid-cols-5")}>
                 <TabsTrigger value="meal" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Utensils className="h-3 w-3" /> ЕДА</TabsTrigger>
                 <TabsTrigger value="act" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Zap className="h-3 w-3" /> АКТ</TabsTrigger>
                 <TabsTrigger value="metrics" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Scale className="h-3 w-3" /> ТЕЛО</TabsTrigger>
                 <TabsTrigger value="feeling" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Smile className="h-3 w-3" /> ДУХ</TabsTrigger>
+                {isFemale && <TabsTrigger value="cycle" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><HeartPulse className="h-3 w-3" /> ЦИКЛ</TabsTrigger>}
                 <TabsTrigger value="labs" className="rounded-[1rem] font-black gap-1 text-[8px] md:text-[9px] uppercase tracking-widest flex-1 h-full data-[state=active]:bg-primary data-[state=active]:text-slate-950"><FlaskConical className="h-3 w-3" /> ЛАБ</TabsTrigger>
               </TabsList>
 
@@ -407,355 +328,88 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                     className="min-h-[120px] md:min-h-[180px] rounded-[1.5rem] md:rounded-[2rem] bg-slate-200/10 backdrop-blur-md border border-white/10 p-6 md:p-8 text-lg md:text-xl font-bold resize-none shadow-inner pr-16 text-white placeholder:text-white/20" 
                   />
                   <div className="absolute right-4 top-4">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => startVoiceInput('description', setDescription)}
-                      className={cn(
-                        "h-12 w-12 rounded-full shadow-lg transition-all",
-                        recordingField === 'description' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary"
-                      )}
-                    >
-                      <Mic className="h-5 w-5" />
-                    </Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('description', setDescription)} className={cn("h-12 w-12 rounded-full shadow-lg transition-all", recordingField === 'description' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary")}><Mic className="h-5 w-5" /></Button>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 md:gap-6">
-                  <Button variant="outline" className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 border-white/10 flex flex-col gap-2 hover:bg-white/5 transition-all bg-white/5 text-white" onClick={startCamera}>
-                    <Camera className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black uppercase tracking-widest text-white/60">КАМЕРА</span>
-                  </Button>
-                  <label className="cursor-pointer">
-                    <div className="h-20 md:h-28 rounded-[1.5rem] border-dashed border-2 border-white/10 flex flex-col gap-2 items-center justify-center hover:bg-white/5 transition-all bg-white/5 text-white">
-                      <Upload className="h-5 w-5 md:h-6 md:u-6 text-primary" /><span className="text-[9px] font-black uppercase tracking-widest text-white/60">ФАЙЛ</span>
-                    </div>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                  </label>
-                </div>
-
-                <div className="flex justify-center w-full">
-                  {showCamera && (
-                    <div className="relative rounded-2xl overflow-hidden bg-black aspect-video w-full max-w-md shadow-2xl border border-white/10">
-                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                        <Button onClick={capturePhoto} className="rounded-full w-12 h-12 bg-white text-primary"><Camera className="h-6 w-6" /></Button>
-                        <Button onClick={stopCamera} variant="destructive" className="rounded-full w-12 h-12"><X className="h-6 w-6" /></Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {image && !showCamera && (
-                    <div className="relative rounded-2xl overflow-hidden aspect-video w-full max-w-md shadow-2xl border-4 border-white/10 flex items-center justify-center bg-black/5">
-                      <img src={image} alt="Preview" className="max-w-full max-h-full object-contain" />
-                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
-                    </div>
-                  )}
-                </div>
-
-                <Button className="w-full h-14 md:h-20 rounded-[1.5rem] md:rounded-[2rem] text-lg md:text-xl font-black bg-primary text-slate-950 shadow-xl shadow-primary/20" onClick={() => handleAnalyze(false)} disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5 md:h-6 text-slate-950" /> РАСПОЗНАТЬ</>}
-                </Button>
+                <div className="grid grid-cols-2 gap-4"><Button variant="outline" className="h-20 rounded-[1.5rem] border-dashed border-2 border-white/10 flex flex-col gap-2 bg-white/5 text-white" onClick={startCamera}><Camera className="h-5 w-5 text-primary" /><span className="text-[9px] font-black uppercase">КАМЕРА</span></Button><label className="cursor-pointer"><div className="h-20 rounded-[1.5rem] border-dashed border-2 border-white/10 flex flex-col gap-2 items-center justify-center bg-white/5 text-white"><Upload className="h-5 w-5 text-primary" /><span className="text-[9px] font-black uppercase">ФАЙЛ</span></div><input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} /></label></div>
+                <Button className="w-full h-14 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950" onClick={() => handleAnalyze()} disabled={loading}>{loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-3 h-5 w-5" /> РАСПОЗНАТЬ</>}</Button>
               </TabsContent>
 
               <TabsContent value="act" className="space-y-6 outline-none text-white">
                  <div className="grid grid-cols-1 gap-6">
-                    <div className="space-y-2 relative">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> Активность</label>
-                       <Input placeholder="Напр: Прогулка, Шахматы..." value={actName} onChange={e => setActName(e.target.value)} className={inputClasses} />
-                       <VoiceBtn field="actName" setter={setActName} />
-                    </div>
-                    <div className="space-y-2 relative">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Timer className="h-3 w-3 text-primary" /> Длительность (мин)</label>
-                       <Input type="number" placeholder="45" value={actDur} onChange={e => setActDur(e.target.value)} className={inputClasses} />
-                       <VoiceBtn field="actDur" setter={setActDur} />
-                    </div>
-                    <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-2" onClick={handleActivitySubmit} disabled={loading || !actName || !actDur}>
-                       {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ЗАПИСАТЬ НАГРУЗКУ"}
-                    </Button>
+                    <div className="space-y-2 relative"><label className="text-[10px] font-black uppercase text-white/30 px-4">Активность</label><Input placeholder="Напр: Прогулка..." value={actName} onChange={e => setActName(e.target.value)} className={inputClasses} /><VoiceBtn field="actName" setter={setActName} /></div>
+                    <div className="space-y-2 relative"><label className="text-[10px] font-black uppercase text-white/30 px-4">Длительность (мин)</label><Input type="number" placeholder="45" value={actDur} onChange={e => setActDur(e.target.value)} className={inputClasses} /><VoiceBtn field="actDur" setter={setActDur} /></div>
+                    <Button className="w-full h-14 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950" onClick={handleActivitySubmit} disabled={loading || !actName || !actDur}>ЗАПИСАТЬ</Button>
                  </div>
               </TabsContent>
 
               <TabsContent value="metrics" className="space-y-6 outline-none text-white">
-                <div className="bg-primary/10 rounded-2xl p-6 border border-primary/20 space-y-4 shadow-lg shadow-primary/5">
-                   <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                         <Smartphone className="h-5 w-5 text-primary" />
-                         <span className="text-sm font-black uppercase tracking-tight text-white">Google Fit Sync</span>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-[9px] font-black uppercase h-8 px-3 bg-primary text-slate-950 hover:bg-primary/90 rounded-lg gap-2"
-                        onClick={handleSmartSync}
-                        disabled={syncing}
-                      >
-                         {syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                         Синхронизировать
-                      </Button>
-                   </div>
-                   <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">Импорт шагов, пульса и сна из вашего Google-аккаунта.</p>
-                </div>
-
+                <div className="bg-primary/10 rounded-2xl p-6 border border-primary/20 flex items-center justify-between"><div className="flex items-center gap-2"><Smartphone className="h-5 w-5 text-primary" /><span className="text-sm font-black uppercase">Google Fit</span></div><Button variant="ghost" size="sm" className="h-8 bg-primary text-slate-950 font-black text-[9px]" onClick={handleSmartSync} disabled={syncing}>{syncing ? <Loader2 className="h-3 w-3 animate-spin" /> : "СИНХРОНИЗИРОВАТЬ"}</Button></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="space-y-2 relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Scale className="h-3 w-3 text-primary" /> Вес (кг)</label>
-                      <Input placeholder="76.2" value={weight} onChange={e => setWeight(e.target.value)} type="number" className={inputClasses} />
-                      <VoiceBtn field="weight" setter={setWeight} />
-                   </div>
-                   <div className="space-y-2 relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Droplet className="h-3 w-3 text-primary" /> Вода (мл)</label>
-                      <Input placeholder="500" value={water} onChange={e => setWater(e.target.value)} type="number" className={inputClasses} />
-                      <VoiceBtn field="water" setter={setWater} />
-                   </div>
-                   <div className="space-y-2 relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Footprints className="h-3 w-3 text-primary" /> Шаги</label>
-                      <Input placeholder="10,000" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} />
-                      <VoiceBtn field="steps" setter={setSteps} />
-                   </div>
-                   <div className="space-y-2 relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Heart className="h-3 w-3 text-primary" /> Пульс (bpm)</label>
-                      <Input placeholder="72" value={heartRate} onChange={e => setHeartRate(e.target.value)} type="number" className={inputClasses} />
-                      <VoiceBtn field="heartRate" setter={setHeartRate} />
-                   </div>
-                   <div className="space-y-2 col-span-full relative">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-4 flex items-center gap-2"><Moon className="h-3 w-3 text-primary" /> Сон (часов)</label>
-                      <Input placeholder="7.5" value={sleep} onChange={e => setSleep(e.target.value)} type="number" step="0.1" className={inputClasses} />
-                      <VoiceBtn field="sleep" setter={setSleep} />
-                   </div>
+                   <div className="relative"><Input placeholder="Вес (кг)" value={weight} onChange={e => setWeight(e.target.value)} type="number" className={inputClasses} /><VoiceBtn field="weight" setter={setWeight} /></div>
+                   <div className="relative"><Input placeholder="Вода (мл)" value={water} onChange={e => setWater(e.target.value)} type="number" className={inputClasses} /><VoiceBtn field="water" setter={setWater} /></div>
+                   <div className="relative"><Input placeholder="Шаги" value={steps} onChange={e => setSteps(e.target.value)} type="number" className={inputClasses} /><VoiceBtn field="steps" setter={setSteps} /></div>
+                   <div className="relative"><Input placeholder="Сон (ч)" value={sleep} onChange={e => setSleep(e.target.value)} type="number" className={inputClasses} /><VoiceBtn field="sleep" setter={setSleep} /></div>
                 </div>
-                <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-2 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
-                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "ОБНОВИТЬ ТЕЛО"}
-                </Button>
+                <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-slate-950 font-black" onClick={handleDailyLogSubmit}>ОБНОВИТЬ</Button>
               </TabsContent>
 
               <TabsContent value="feeling" className="space-y-8 outline-none text-white">
-                 <div className="space-y-6">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">Настроение</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                       {['Счастлив', 'Спокоен', 'Устал', 'Раздражен'].map(m => (
-                          <Button 
-                             key={m} 
-                             onClick={() => setMood(m)}
-                             variant={mood === m ? "default" : "outline"}
-                             className={cn("h-14 rounded-[1.2rem] font-black text-xs transition-all", mood === m ? "bg-primary text-slate-950 shadow-lg border-none" : "bg-white/5 border-white/10 text-white hover:bg-white/10")}
-                          >
-                             {m}
-                          </Button>
-                       ))}
-                    </div>
-                    <div className="space-y-3 pt-4">
-                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2 flex justify-between">
-                          <span>Энергия</span>
-                          <span className="text-primary">{energy}%</span>
-                       </label>
-                       <div className="px-2">
-                          <input 
-                            type="range" 
-                            className="w-full h-2 bg-white/5 rounded-full appearance-none accent-primary cursor-pointer" 
-                            value={energy} 
-                            onChange={(e) => setEnergy(Number(e.target.value))}
-                          />
-                       </div>
-                    </div>
-                 </div>
-                 <Button className="w-full h-14 md:h-18 rounded-[1.5rem] text-lg font-black bg-primary text-slate-950 mt-6 shadow-xl shadow-primary/20" onClick={handleDailyLogSubmit} disabled={loading}>
-                   {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ"}
-                 </Button>
+                 <div className="grid grid-cols-2 gap-3">{['Счастлив', 'Спокоен', 'Устал', 'Раздражен'].map(m => <Button key={m} onClick={() => setMood(m)} variant={mood === m ? "default" : "outline"} className={cn("h-14 rounded-[1.2rem] font-black text-xs", mood === m ? "bg-primary text-slate-950" : "bg-white/5 text-white")}>{m}</Button>)}</div>
+                 <div className="space-y-3"><label className="text-[10px] font-black uppercase text-white/40 flex justify-between"><span>Энергия</span><span>{energy}%</span></label><input type="range" className="w-full h-2 bg-white/5 rounded-full appearance-none accent-primary" value={energy} onChange={(e) => setEnergy(Number(e.target.value))} /></div>
+                 <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-slate-950 font-black" onClick={handleDailyLogSubmit}>СОХРАНИТЬ</Button>
               </TabsContent>
 
-              <TabsContent value="labs" className="space-y-6 outline-none text-white">
-                <div className="space-y-4">
-                  <div className="bg-white/5 p-6 rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center text-center gap-4">
-                    <FlaskConical className="h-10 w-10 text-primary opacity-40" />
-                    <div>
-                      <p className="font-bold text-white uppercase tracking-tight">Анализ документов</p>
-                      <p className="text-[10px] text-white/40 uppercase tracking-widest font-black mt-1">Загрузите фото бланка с результатами анализов</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-16 rounded-xl flex items-center gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10" onClick={startCamera}>
-                      <Camera className="h-5 w-5 text-primary" /> Камера
-                    </Button>
-                    <label className="cursor-pointer">
-                      <div className="h-16 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center gap-2 hover:bg-white/10 transition-colors text-white">
-                        <Upload className="h-5 w-5 text-primary" /> Файл
+              {isFemale && (
+                <TabsContent value="cycle" className="space-y-8 outline-none text-white animate-in slide-in-from-right-4 duration-300">
+                   <div className="bg-pink-500/10 border border-pink-500/30 rounded-[2rem] p-8 space-y-6">
+                      <div className="flex items-center justify-between">
+                         <h4 className="text-xl font-black uppercase text-pink-400 flex items-center gap-2"><HeartPulse className="h-6 w-6" /> Трекер цикла</h4>
+                         <Button onClick={() => setIsCycleActive(!isCycleActive)} variant={isCycleActive ? "default" : "outline"} className={cn("rounded-xl h-10 px-4", isCycleActive ? "bg-pink-500 text-white" : "border-pink-500/30 text-pink-400")}>{isCycleActive ? 'День менструации' : 'Отметить начало'}</Button>
                       </div>
-                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileUpload} />
-                    </label>
-                  </div>
+                      
+                      {isCycleActive && (
+                        <div className="space-y-6 pt-4 border-t border-pink-500/10">
+                           <div className="space-y-2">
+                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2">Интенсивность</label>
+                              <Select value={cycleIntensity} onValueChange={setCycleIntensity}>
+                                 <SelectTrigger className="h-14 rounded-xl bg-white/5 border-pink-500/20 text-white"><SelectValue /></SelectTrigger>
+                                 <SelectContent><SelectItem value="low">Легкая</SelectItem><SelectItem value="medium">Средняя</SelectItem><SelectItem value="high">Сильная</SelectItem></SelectContent>
+                              </Select>
+                           </div>
+                           <div className="space-y-2 relative">
+                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2">Симптомы</label>
+                              <Input placeholder="Напр: тянущие боли, ПМС..." value={cycleSymptoms} onChange={e => setCycleSymptoms(e.target.value)} className="h-14 rounded-xl bg-white/5 border-pink-500/20 text-white pr-14" />
+                              <VoiceBtn field="cycleSymptoms" setter={setCycleSymptoms} />
+                           </div>
+                        </div>
+                      )}
+                      {!isCycleActive && <p className="text-xs text-white/40 font-medium italic">Нажмите кнопку выше, если сегодня первый или очередной день цикла.</p>}
+                   </div>
+                   <Button className="w-full h-14 rounded-[1.5rem] bg-primary text-slate-950 font-black" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ ДАННЫЕ ЦИКЛА</Button>
+                </TabsContent>
+              )}
 
-                  {image && (
-                    <div className="relative rounded-2xl overflow-hidden aspect-video border-4 border-white/10 shadow-lg bg-black/5 flex items-center justify-center">
-                      <img src={image} alt="Lab Preview" className="max-w-full max-h-full object-contain" />
-                      <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full shadow-lg" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button>
-                    </div>
-                  )}
-
-                  <Button className="w-full h-16 rounded-xl bg-primary text-slate-950 font-black shadow-xl shadow-primary/20" onClick={() => handleAnalyze()} disabled={loading || !image}>
-                    {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Sparkles className="mr-2 h-5 w-5" /> АНАЛИЗИРОВАТЬ ИИ</>}
-                  </Button>
-                </div>
+              <TabsContent value="labs" className="space-y-6 outline-none text-white">
+                <div className="grid grid-cols-2 gap-4"><Button variant="outline" className="h-16 rounded-xl bg-white/5 border-white/10 text-white" onClick={startCamera}><Camera className="h-5 w-5 text-primary" /> Камера</Button><label className="cursor-pointer"><div className="h-16 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center gap-2 text-white"><Upload className="h-5 w-5 text-primary" /> Файл</div><input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} /></label></div>
+                {image && <div className="relative rounded-2xl overflow-hidden aspect-video border-4 border-white/10"><img src={image} alt="Lab" className="w-full h-full object-cover" /><Button variant="destructive" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full" onClick={() => setImage(null)}><X className="h-4 w-4" /></Button></div>}
+                <Button className="w-full h-16 rounded-xl bg-primary text-slate-950 font-black" onClick={() => handleAnalyze()} disabled={loading || !image}>АНАЛИЗИРОВАТЬ</Button>
               </TabsContent>
             </Tabs>
           ) : mealResult && editedMeal && !isSuccess ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-               <div className="text-center space-y-2">
-                  <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">AI BioScan Result</Badge>
-                  <div className="relative group">
-                    <Input 
-                      value={editedMeal.mealName} 
-                      onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})}
-                      className="text-2xl md:text-3xl font-black text-center border border-white/10 bg-slate-200/10 backdrop-blur-md rounded-2xl h-auto focus-visible:ring-0 pr-12 text-white py-4 shadow-inner"
-                    />
-                    <VoiceBtn field="editedMealName" setter={(val) => setEditedMeal({...editedMeal, mealName: val})} />
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Ккал', val: editedMeal.calories, field: 'calories', color: 'bg-primary/10 border-primary/20' },
-                    { label: 'Белки (г)', val: editedMeal.protein, field: 'protein', color: 'bg-orange-500/10 border-orange-500/20' },
-                    { label: 'Жиры (г)', val: editedMeal.fat, field: 'fat', color: 'bg-yellow-500/10 border-yellow-500/20' },
-                    { label: 'Углеводы (г)', val: editedMeal.carbs, field: 'carbs', color: 'bg-emerald-500/10 border-emerald-500/20' }
-                  ].map((stat, i) => (
-                    <div key={i} className="space-y-2">
-                      <label className="text-[9px] font-black uppercase text-white/40 text-center block tracking-widest">{stat.label}</label>
-                      <Input 
-                        type="number" 
-                        value={stat.val} 
-                        onChange={e => setEditedMeal({...editedMeal, [stat.field]: Number(e.target.value)})}
-                        className={cn("h-14 rounded-2xl border text-center font-black text-xl text-white shadow-inner bg-slate-200/10", stat.color)}
-                      />
-                    </div>
-                  ))}
-               </div>
-
-               <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 px-2">Приблизительный состав</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     {editedMeal.components?.map((comp, i) => (
-                        <div key={i} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 transition-colors hover:bg-white/10">
-                           <span className="text-base font-bold text-white/80">{comp.ingredient}</span>
-                           <Badge className="bg-primary text-slate-950 font-black px-4 py-2 rounded-xl shadow-lg text-sm border-none">
-                              {comp.weight}
-                           </Badge>
-                        </div>
-                     ))}
-                  </div>
-               </div>
-
-               <div className="bg-primary/5 p-5 rounded-[1.75rem] border border-primary/20">
-                  <p className="text-sm font-medium leading-relaxed italic text-white/60">"{editedMeal.analysis}"</p>
-               </div>
-
-               <div className="space-y-4">
-                  <div className="flex gap-4">
-                     <Button 
-                        variant="outline" 
-                        className="flex-1 h-16 rounded-[1.2rem] font-black uppercase text-[10px] tracking-widest border-white/10 bg-white/5 text-white" 
-                        onClick={() => { setMealResult(null); setEditedMeal(null); }}
-                     >
-                        Переснять
-                     </Button>
-                     <Button 
-                        className="flex-[2] h-16 rounded-[1.2rem] font-black text-lg bg-primary text-slate-950 shadow-xl shadow-primary/20"
-                        onClick={() => saveMealToFirestore(editedMeal)}
-                        disabled={loading}
-                     >
-                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-5 w-5" /> ПОДТВЕРДИТЬ</>}
-                     </Button>
-                  </div>
-               </div>
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="text-center space-y-2"><Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase px-4">AI BioScan Result</Badge><div className="relative"><Input value={editedMeal.mealName} onChange={e => setEditedMeal({...editedMeal, mealName: e.target.value})} className="text-2xl font-black text-center border-white/10 bg-slate-200/10 rounded-2xl h-auto pr-12 text-white py-4 shadow-inner" /><VoiceBtn field="editedMealName" setter={(val) => setEditedMeal({...editedMeal, mealName: val})} /></div></div>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[{ l: 'Ккал', f: 'calories' }, { l: 'Белки', f: 'protein' }, { l: 'Жиры', f: 'fat' }, { l: 'Углеводы', f: 'carbs' }].map((s, i) => <div key={i} className="space-y-2"><label className="text-[9px] font-black uppercase text-white/40 text-center block">{s.l}</label><Input type="number" value={(editedMeal as any)[s.f]} onChange={e => setEditedMeal({...editedMeal, [s.f]: Number(e.target.value)})} className="h-14 rounded-2xl border text-center font-black text-xl text-white bg-slate-200/10" /></div>)}</div>
+               <Button className="w-full h-16 rounded-[1.2rem] font-black text-lg bg-primary text-slate-950 shadow-xl" onClick={() => saveMealToFirestore(editedMeal)}>ПОДТВЕРДИТЬ И ЗАПИСАТЬ</Button>
             </div>
           ) : labResult && !isSuccess ? (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10 text-white">
-              <div className="text-center space-y-2">
-                <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">LabScan AI 1.0</Badge>
-                <div className="flex items-center justify-center gap-4">
-                  <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Результаты анализа</h3>
-                  <Button variant="outline" size="icon" onClick={handleDownloadDocx} className="rounded-full h-10 w-10 text-primary border-primary/20 bg-primary/5">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20">
-                <p className="text-sm font-medium leading-relaxed text-white/80">{labResult.summary}</p>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Обнаруженные маркеры</label>
-                <div className="space-y-3">
-                  {labResult.markers.map((marker, i) => {
-                    const isOffNorm = marker.status !== 'normal';
-                    const cleanRange = marker.referenceRange ? marker.referenceRange.replace(/норма/gi, '').trim() : null;
-                    
-                    return (
-                      <div key={i} className="bg-white/5 border border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-sm text-white">{marker.name}</span>
-                            <Badge 
-                              variant="outline" 
-                              className={cn(
-                                "text-[8px] h-4 px-1 border-none",
-                                marker.status === 'high' ? "bg-red-500/20 text-red-500" : 
-                                marker.status === 'low' ? "bg-yellow-500/20 text-yellow-500" : 
-                                "bg-emerald-500/20 text-emerald-500"
-                              )}
-                            >
-                              {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}
-                            </Badge>
-                          </div>
-                          <div className="mt-0.5">
-                             <p className="text-[10px] text-white/40 font-medium">{marker.interpretation}</p>
-                          </div>
-                        </div>
-                        <div className="text-right flex flex-col items-end">
-                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                             <div className="flex flex-col items-end">
-                                <div className="flex items-center gap-1">
-                                  <p className={cn("font-black text-base md:text-lg leading-none", isOffNorm ? "text-destructive" : "text-white")}>
-                                    {marker.value}
-                                  </p>
-                                  {isOffNorm && (
-                                    marker.status === 'high' ? <TrendingUp className="h-4 w-4 text-red-500" /> : <TrendingDown className="h-4 w-4 text-yellow-500" />
-                                  )}
-                                </div>
-                                {isOffNorm && cleanRange && (
-                                  <p className="text-[10px] md:text-[11px] font-bold text-destructive/80 mt-1 uppercase tracking-tight">
-                                     (норма {cleanRange})
-                                  </p>
-                                )}
-                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Button variant="outline" className="flex-1 h-14 rounded-xl bg-white/5 border-white/10 text-white" onClick={() => setLabResult(null)}>Переснять</Button>
-                <Button className="flex-[2] h-14 rounded-xl bg-primary text-slate-950 font-black shadow-xl shadow-primary/20" onClick={saveLabResultToFirestore} disabled={loading}>
-                  {loading ? <Loader2 className="animate-spin h-6 w-6" /> : "СОХРАНИТЬ В ПРОФИЛЬ"}
-                </Button>
-              </div>
+            <div className="space-y-8 animate-in fade-in duration-500 pb-10 text-white">
+              <h3 className="text-2xl font-black uppercase">Результаты анализа</h3>
+              <div className="bg-primary/5 p-6 rounded-3xl border border-primary/20"><p className="text-sm font-medium leading-relaxed text-white/80">{labResult.summary}</p></div>
+              <Button className="w-full h-16 rounded-xl bg-primary text-slate-950 font-black" onClick={saveLabResultToFirestore}>СОХРАНИТЬ В ПРОФИЛЬ</Button>
             </div>
           ) : (
-            <div className="py-12 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500">
-               <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(0,255,255,0.4)]">
-                  <CheckCircle2 className="h-12 w-12 text-slate-950" />
-               </div>
-               <div className="space-y-2">
-                  <h3 className="text-3xl font-black tracking-tighter text-white uppercase">Синхронизация завершена!</h3>
-                  <p className="text-white/40 font-black uppercase tracking-widest text-[10px]">Ваши биометрические данные успешно записаны в облако.</p>
-               </div>
-               <Button className="w-56 h-14 rounded-[1.2rem] font-black text-lg bg-primary text-slate-950 shadow-lg shadow-primary/20" onClick={reset}>ОТЛИЧНО</Button>
-            </div>
+            <div className="py-12 flex flex-col items-center text-center space-y-6 animate-in zoom-in duration-500"><div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(0,255,255,0.4)]"><CheckCircle2 className="h-12 w-12 text-slate-950" /></div><div className="space-y-2"><h3 className="text-3xl font-black text-white uppercase">Готово!</h3><p className="text-white/40 font-black uppercase text-[10px]">Данные успешно синхронизированы.</p></div><Button className="w-56 h-14 rounded-[1.2rem] font-black bg-primary text-slate-950" onClick={reset}>ОТЛИЧНО</Button></div>
           )}
         </div>
       </DialogContent>
