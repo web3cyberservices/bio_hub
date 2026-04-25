@@ -3,7 +3,7 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -28,16 +28,16 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
-        month_caption: "flex justify-center pt-2 relative items-center h-12 mb-6", // Увеличен отступ снизу
-        caption_label: "text-sm font-black tracking-widest text-white uppercase px-12 text-center",
-        nav: "flex items-center justify-between absolute inset-x-4 top-4 z-[100] pointer-events-none", // Абсолютное позиционирование стрелок
+        month_caption: "flex justify-center pt-2 relative items-center h-12 mb-8 px-12", 
+        caption_label: "text-sm font-black tracking-widest text-white uppercase text-center",
+        nav: "flex items-center justify-between absolute inset-x-4 top-4 z-[100] w-[calc(100%-2rem)]", 
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all pointer-events-auto bg-white/5 border border-white/5"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all pointer-events-auto bg-white/5 border border-white/5"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex justify-between mb-4",
@@ -60,28 +60,31 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-6 w-6" />;
           return <ChevronRight className="h-6 w-6" />;
         },
-        // ПЕРЕОПРЕДЕЛЯЕМ DAY ДЛЯ ПРИНУДИТЕЛЬНОЙ ОТРИСОВКИ МАРКЕРОВ
-        Day: ({ date, displayMonth, ...dayProps }) => {
+        // КАСТОМНЫЙ РЕНДЕР ДНЯ ДЛЯ ОТОБРАЖЕНИЯ МАРКЕРОВ ЦИКЛА
+        Day: ({ day, displayMonth, ...dayProps }: any) => {
+          if (!day || !day.date || !isValid(day.date)) return null;
+          
+          const date = day.date;
           const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
           
-          // Проверяем, находится ли день в текущем месяце
+          // Проверка на принадлежность текущему месяцу
           const isOutside = format(date, 'MM') !== format(displayMonth, 'MM');
-
-          if (isOutside) return <div className="h-10 w-9 opacity-10" />;
+          if (isOutside && !showOutsideDays) return <div className="h-10 w-9" />;
 
           return (
             <div 
               {...dayProps}
               className={cn(
                 dayProps.className,
-                "relative h-10 w-9 flex items-center justify-center cursor-pointer group"
+                "relative h-10 w-9 flex items-center justify-center cursor-pointer rounded-xl transition-all",
+                isOutside && "opacity-20"
               )}
               style={{ position: 'relative' }}
             >
-              <span className="relative z-10">{date.getDate()}</span>
+              <span className="relative z-10 font-bold">{date.getDate()}</span>
               
-              {/* КОРАЛЛОВЫЙ ИНДИКАТОР - ИНЛАЙН СТИЛИ */}
+              {/* ФЛО-ИНДИКАТОР (КОРАЛЛОВЫЙ КРУЖОК) */}
               {dayNumber !== undefined && (
                 <div style={{
                   position: 'absolute',
@@ -89,15 +92,14 @@ function Calendar({
                   right: '-4px',
                   width: '18px',
                   height: '18px',
-                  backgroundColor: '#FF7F50',
+                  backgroundColor: '#FF7F50', // Coral
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   zIndex: 999,
                   border: '2px solid #010411',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                  animation: 'zoomIn 0.3s ease-out'
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.8)',
                 }}>
                   <span style={{
                     color: 'white',

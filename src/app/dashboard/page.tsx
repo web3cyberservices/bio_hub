@@ -10,7 +10,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
-import { format, startOfToday, startOfDay, addDays } from 'date-fns';
+import { format, startOfToday, startOfDay, addDays, isValid } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -41,8 +41,6 @@ export default function DashboardPage() {
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
-  const testDate = format(new Date(), 'yyyy-MM-dd');
-
   useHealthAggregator();
 
   useEffect(() => {
@@ -50,7 +48,13 @@ export default function DashboardPage() {
     setSelectedDate(startOfToday());
   }, []);
 
-  const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const dateKey = useMemo(() => {
+    try {
+      return format(selectedDate, 'yyyy-MM-dd');
+    } catch (e) {
+      return format(new Date(), 'yyyy-MM-dd');
+    }
+  }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -60,6 +64,7 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
+  // РЕАКТИВНЫЙ ЗАПРОС ВСЕХ ЛОГОВ ДЛЯ КАЛЕНДАРЯ
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -67,9 +72,11 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
+  // ЛОГИКА РАСЧЕТА ДНЕЙ ЦИКЛА (FLO-STYLE)
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
+    // Находим все дни, где отмечено начало цикла
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -82,10 +89,14 @@ export default function DashboardPage() {
     
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
+      // Рассчитываем 10-дневный прогноз от каждого начала (или до следующего начала)
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
+        
+        // Если встретили новое начало цикла раньше 10 дней - прерываем текущий
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
+        
         map[dStr] = i + 1;
       }
     });
@@ -161,7 +172,6 @@ export default function DashboardPage() {
                   initialFocus
                   locale={ru}
                   periodDays={periodDaysMap}
-                  testHighlight={testDate}
                 />
               </PopoverContent>
             </Popover>
