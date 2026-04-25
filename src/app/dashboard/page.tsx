@@ -10,7 +10,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
-import { format, startOfToday, startOfDay, differenceInDays } from 'date-fns';
+import { format, startOfToday, startOfDay, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -41,17 +41,14 @@ export default function DashboardPage() {
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
-  const { isSyncing: aggregatorSyncing } = useHealthAggregator();
+  useHealthAggregator();
 
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
   }, []);
 
-  const dateKey = useMemo(() => {
-    if (!selectedDate) return format(new Date(), 'yyyy-MM-dd');
-    return format(selectedDate, 'yyyy-MM-dd');
-  }, [selectedDate]);
+  const dateKey = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -61,7 +58,7 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос всех логов для расчета цикла
+  // РЕАКТИВНЫЙ ЗАПРОС ЛОГОВ (onSnapshot внутри useCollection)
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -69,11 +66,11 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // Карта дней цикла: Дата -> Порядковый номер
+  // ГЛУБОКИЙ РАСЧЕТ ПОРЯДКОВЫХ ДНЕЙ ЦИКЛА
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    // Находим все "Начала цикла"
+    // 1. Находим все "Начала цикла"
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -84,22 +81,17 @@ export default function DashboardPage() {
 
     const map: Record<string, number> = {};
     
-    allLogs.forEach(log => {
-      // Если в этот день есть какие-то данные цикла
-      if (log.cycle) {
-        const currentDate = startOfDay(new Date(log.date + 'T00:00:00'));
-        const currentTs = currentDate.getTime();
+    // 2. Для каждого старта разворачиваем 10-дневный период
+    starts.forEach(start => {
+      const startDate = new Date(start.dateStr + 'T00:00:00');
+      for (let i = 0; i < 10; i++) {
+        const d = addDays(startDate, i);
+        const dStr = format(d, 'yyyy-MM-dd');
         
-        // Ищем ближайшее "Начало" ПЕРЕД этой датой или в эту дату
-        const lastStart = [...starts].reverse().find(s => s.timestamp <= currentTs);
+        // Прерываем, если наткнулись на следующий старт
+        if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         
-        if (lastStart) {
-          const diffDays = Math.floor((currentTs - lastStart.timestamp) / (1000 * 60 * 60 * 24));
-          // Ограничиваем порядковый номер (обычно до 10 дней)
-          if (diffDays >= 0 && diffDays < 10) {
-            map[log.date] = diffDays + 1;
-          }
-        }
+        map[dStr] = i + 1;
       }
     });
     
@@ -107,18 +99,15 @@ export default function DashboardPage() {
   }, [allLogs]);
 
   const dailyLogRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
+    if (!firestore || !user?.uid || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
   const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'personalMeals'),
-      where('date', '==', dateKey)
-    );
+    if (!firestore || !user?.uid || !dateKey) return null;
+    return query(collection(firestore, 'users', user.uid, 'personalMeals'), where('date', '==', dateKey));
   }, [firestore, user?.uid, dateKey]);
 
   const { data: meals } = useCollection<any>(mealsQuery);
@@ -141,17 +130,11 @@ export default function DashboardPage() {
   const { data: posts } = useCollection<any>(postsQuery);
 
   const recommendationRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
+    if (!firestore || !user?.uid || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
   const { data: recData } = useDoc<any>(recommendationRef);
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    setViewingSpecialistId(null);
-    if (tab !== 'chats') setDirectChatRecipientId(null);
-  };
 
   if (!isMounted || userLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
@@ -159,25 +142,18 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
-      
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.2)]">
-              <HeartPulse className="h-7 w-7 text-[#00ffff]" />
-            </div>
-            <div className="text-left">
-              <h1 className="text-xl md:text-2xl font-black text-white leading-none tracking-tight">PRO <span className="text-white">СЕБЯ</span></h1>
-              <p className="text-[8px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em]">BIO-TECH HUB</p>
-            </div>
+            <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
+            <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             {profileType === 'specialist' && <CreatePostDialog />}
-            
             <Popover>
               <PopoverTrigger asChild>
-                <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[9px] md:text-[10px] tracking-widest flex items-center gap-2 hover:bg-[#00ffff]/10 transition-all shadow-lg shadow-[#00ffff]/5">
-                  <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
+                <button className="h-10 px-4 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
                   <ChevronDown className="h-3 w-3 opacity-50" />
                 </button>
@@ -193,172 +169,54 @@ export default function DashboardPage() {
                 />
               </PopoverContent>
             </Popover>
-
-            <Badge variant="outline" className="hidden md:flex h-10 px-6 rounded-full border-white/10 bg-white/5 text-white/40 font-black uppercase text-[10px] tracking-widest gap-2">
-              {profileType === 'specialist' ? 'Expert Console' : 'Protocol Active'}
-            </Badge>
           </div>
         </div>
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         {viewingSpecialistId ? (
-          <div className="overflow-y-auto h-full px-4 pb-32 pt-4 animate-in fade-in duration-500">
-            <SpecialistPublicProfile 
-              specialistId={viewingSpecialistId} 
-              onBack={() => setViewingSpecialistId(null)} 
-              onStartChat={(id) => {
-                setViewingSpecialistId(null);
-                setDirectChatRecipientId(id);
-                setActiveTab('chats');
-              }} 
-            />
-          </div>
+          <div className="overflow-y-auto h-full px-4 pb-32 pt-4"><SpecialistPublicProfile specialistId={viewingSpecialistId} onBack={() => setViewingSpecialistId(null)} onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} /></div>
         ) : (
           <div className="w-full h-full flex flex-col overflow-hidden">
-            
             {activeTab === 'dashboard' && (
               <div className="h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0">
-                   {profileType === 'specialist' ? (
-                     <div className="w-full h-full overflow-y-auto p-4 md:p-8 no-scrollbar pb-32">
-                        <SpecialistBookingManager />
-                     </div>
-                   ) : (
-                     <RecommendationDisplay 
-                      mode="dashboard" 
-                      deviceData={dailyLogDoc} 
-                      profileData={userData}
-                      data={recData?.data}
-                      actualMacros={actualMacros}
-                    />
-                   )}
+                   {profileType === 'specialist' ? (<div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>) : (<RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />)}
               </div>
             )}
-
             {activeTab === 'feed' && (
               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-3xl mx-auto space-y-8 pb-10">
-                  <div className="text-center space-y-2 mb-12">
-                     <Badge className="bg-primary text-black font-black uppercase text-[10px]">Expert Insights</Badge>
-                     <h2 className="text-4xl font-black tracking-tighter uppercase">Bio-Лента</h2>
-                  </div>
                   {posts?.map((post) => (
-                    <Card key={post.id} className="cyber-card overflow-hidden border border-blue-900/30 shadow-2xl bg-blue-950/40 backdrop-blur-xl">
-                      <div className="p-6 md:p-8 space-y-6">
+                    <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
                         <div className="flex items-center justify-between">
-                          <button 
-                            onClick={() => setViewingSpecialistId(post.authorId)} 
-                            className="flex items-center gap-4 group cursor-pointer text-left"
-                          >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors">
-                              {post.authorPhoto ? (
-                                <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />
-                              ) : (
-                                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                                  <Activity className="h-5 w-5 text-primary" />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-black text-sm uppercase tracking-tight group-hover:text-primary transition-colors">{post.authorName}</p>
-                              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{post.authorRole}</p>
-                            </div>
+                          <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 text-left">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">{post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}</div>
+                            <div><p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p><p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p></div>
                           </button>
-                          <Badge variant="outline" className="border-white/10 text-white/30 text-[9px] uppercase font-black">
-                            {post.createdAt && format(new Date(post.createdAt), 'd MMM', { locale: ru })}
-                          </Badge>
                         </div>
                         <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
-                        {post.imageUrl && (
-                          <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
-                            <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
-                          </div>
-                        )}
-                      </div>
+                        {post.imageUrl && (<div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5"><Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized /></div>)}
                     </Card>
                   ))}
                 </div>
               </div>
             )}
-
-            {activeTab === 'meals' && (
-               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                 {profileType === 'specialist' ? (
-                   <SpecialistPatientsView onStartChat={(id) => {
-                     setDirectChatRecipientId(id);
-                     setActiveTab('chats');
-                   }} />
-                 ) : (
-                   <MealsHub selectedDate={selectedDate} />
-                 )}
-               </div>
-            )}
-
-            {activeTab === 'chats' && (
-              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
-                <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
-                  <ChatInterface initialSpecialistId={directChatRecipientId} />
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'activities' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <ActivitiesHub selectedDate={selectedDate} />
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <div className="max-w-5xl mx-auto">
-                  <ProfileCabinet />
-                </div>
-              </div>
-            )}
+            {activeTab === 'meals' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">{profileType === 'specialist' ? (<SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} />) : (<MealsHub selectedDate={selectedDate} />)}</div>)}
+            {activeTab === 'chats' && (<div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300"><div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10"><ChatInterface initialSpecialistId={directChatRecipientId} /></div></div>)}
+            {activeTab === 'activities' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300"><ActivitiesHub selectedDate={selectedDate} /></div>)}
+            {activeTab === 'profile' && (<div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300"><div className="max-w-5xl mx-auto"><ProfileCabinet /></div></div>)}
 
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
-                  
-                  <button onClick={() => handleTabChange('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <LayoutGrid className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Лента</span>
-                  </button>
-
-                  <button onClick={() => handleTabChange('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    {profileType === 'specialist' ? <UserCheck className="h-5 w-5 md:h-6 md:w-6" /> : <Utensils className="h-5 w-5 md:h-6 md:w-6" />}
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Пациенты' : 'Еда'}</span>
-                  </button>
-
-                  <button onClick={() => handleTabChange('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    {profileType === 'specialist' ? <BarChart3 className="h-5 w-5 md:h-6 md:w-6" /> : <Activity className="h-5 w-5 md:h-6 md:w-6" />}
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">{profileType === 'specialist' ? 'Приёмы' : 'Двойник'}</span>
-                  </button>
-
-                  <div className="relative flex items-center justify-center px-2">
-                     <UnifiedDataEntry selectedDate={selectedDate}>
-                        <button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)] hover:scale-110 active:scale-95 transition-all border-4 border-black/30">
-                           <Plus className="h-7 w-7 md:h-8 md:w-8 text-white stroke-[3px]" />
-                        </button>
-                     </UnifiedDataEntry>
-                  </div>
-
-                  <button onClick={() => handleTabChange('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Чаты</span>
-                  </button>
-
-                  <button onClick={() => handleTabChange('activities')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Zap className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Актив</span>
-                  </button>
-
-                  <button onClick={() => handleTabChange('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff] scale-110" : "text-white/30 hover:text-white/50")}>
-                    <Settings className="h-5 w-5 md:h-6 md:w-6" />
-                    <span className="text-[7px] font-black uppercase tracking-widest hidden md:block">Профиль</span>
-                  </button>
+                  <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
+                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}</button>
+                  <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}</button>
+                  <UnifiedDataEntry selectedDate={selectedDate}><button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)]"><Plus className="h-8 w-8 text-white stroke-[3px]" /></button></UnifiedDataEntry>
+                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}><MessageSquare className="h-6 w-6" /></button>
+                  <button onClick={() => setActiveTab('activities')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff]" : "text-white/30")}><Zap className="h-6 w-6" /></button>
+                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-6 w-6" /></button>
                </div>
             </div>
-
           </div>
         )}
       </main>
