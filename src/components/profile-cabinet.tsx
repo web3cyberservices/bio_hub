@@ -65,8 +65,12 @@ export function ProfileCabinet() {
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-      toast({ title: 'Профиль обновлен' });
+      await setDoc(doc(firestore, 'users', user.uid), { 
+        ...values, 
+        id: user.uid, 
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+      toast({ title: 'Профиль обновлен', description: 'Ваши биометрические данные сохранены.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка доступа' });
     } finally { setLoading(false); }
@@ -104,8 +108,11 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="gender" render={({ field }) => (
                    <FormItem><FormLabel>Пол</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue placeholder="Пол" /></SelectTrigger></FormControl>
-                         <SelectContent><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
+                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white"><SelectValue placeholder="Выберите пол" /></SelectTrigger></FormControl>
+                         <SelectContent>
+                            <SelectItem value="мужской">Мужской</SelectItem>
+                            <SelectItem value="женский">Женский</SelectItem>
+                         </SelectContent>
                       </Select>
                    </FormItem>
                 )} />
@@ -117,7 +124,7 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="healthGoal" render={({ field }) => (
                   <FormItem><FormLabel>Цель здоровья</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger></FormControl>
                        <SelectContent>
                           <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
                           <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
@@ -129,7 +136,7 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="activityLevel" render={({ field }) => (
                   <FormItem><FormLabel>Уровень активности</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white"><SelectValue /></SelectTrigger></FormControl>
                        <SelectContent>
                           <SelectItem value="minimal">Минимальный (сидячий)</SelectItem>
                           <SelectItem value="low">Низкий (1-3 тренировки)</SelectItem>
@@ -144,18 +151,22 @@ export function ProfileCabinet() {
 
              <FormField control={form.control} name="medications" render={({ field }) => (
                <FormItem><FormLabel className="flex items-center gap-2"><Pill className="h-4 w-4" /> Лекарства и БАДы</FormLabel>
-                <FormControl><div className="relative"><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /><Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("absolute right-2 top-2 h-10 w-10", recordingField === 'medications' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button></div></FormControl></FormItem>
+                <FormControl><div className="relative"><Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /><Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("absolute right-2 top-2 h-10 w-10", recordingField === 'medications' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button></div></FormControl></FormItem>
              )} />
           </Card>
-          <Button type="submit" disabled={loading} className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl shadow-xl">{loading ? <Loader2 className="animate-spin" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}</Button>
+          
+          <Button type="submit" disabled={loading} className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl shadow-xl shadow-primary/10 hover:scale-[1.01] transition-all">
+            {loading ? <Loader2 className="animate-spin h-6 w-6" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}
+          </Button>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4">
-                <h3 className="font-black uppercase flex items-center gap-2"><Smartphone className="h-5 w-5" /> Уведомления</h3>
-                <Button variant="outline" onClick={handleConnectTelegram} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black"><Send className="h-4 w-4" /> Telegram <ExternalLink className="h-3 w-3" /></Button>
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
+                <Button variant="outline" onClick={handleConnectTelegram} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black hover:bg-white/10 transition-all"><Send className="h-4 w-4 text-primary" /> Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
              </Card>
              <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4">
-                <h3 className="font-black uppercase flex items-center gap-2"><Activity className="h-5 w-5" /> Архив</h3>
-                <AnalysisHistoryDialog><Button className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив здоровья</Button></AnalysisHistoryDialog>
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
+                <AnalysisHistoryDialog><Button className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all">Открыть архив здоровья</Button></AnalysisHistoryDialog>
              </Card>
           </div>
         </form>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { 
@@ -54,11 +54,14 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  // Расширенная детекция пола
-  const rawGender = (profileData?.gender || 'мужской').toLowerCase();
-  const isFemale = rawGender === 'женский' || rawGender === 'female' || rawGender === 'жен';
+  // Расширенная и сверхнадежная детекция пола
+  const genderValue = profileData?.gender || 'мужской';
+  const isFemale = useMemo(() => {
+    const g = String(genderValue).toLowerCase().trim();
+    return g === 'женский' || g === 'female' || g === 'жен' || g === 'woman' || g === 'w';
+  }, [genderValue]);
   
-  // Определяем изображение голограммы
+  // Определяем путь к изображению голограммы
   const hologramSrc = isFemale ? '/woman_hologram.png' : '/bio-hologram.png';
 
   const calculatedGoals = useMemo(() => {
@@ -89,7 +92,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
       : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
 
-    // Используем среднее значение для повышения точности
     const bmr = (bmrMifflin + bmrHarris) / 2;
 
     const multipliers: Record<string, number> = {
@@ -130,10 +132,12 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
         <div className="text-[7px] font-black text-[#00ffff]/40 uppercase tracking-[0.4em] text-center">Neural Metabolism Check</div>
       </div>
+      
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.15),transparent_70%)]" />
         <div className="scan-line opacity-30" />
       </div>
+
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
           <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} />
@@ -148,7 +152,9 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
           <NeonGauge label="УГЛЕВ" value={`${carbVal}г`} goal={`${calculatedGoals.carbs}г`} icon={<Zap className="h-5 w-5 text-[#4ADE80]" />} color="#4ADE80" progress={getProgress(carbVal, calculatedGoals.carbs)} />
         </div>
       </div>
+
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
+        {/* Ключ key={hologramSrc} заставляет React пересоздать компонент при смене изображения */}
         <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={hologramSrc} 
