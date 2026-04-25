@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, Save, Loader2, Activity, Fingerprint, CalendarDays, 
-  Smartphone, Send, ImageIcon, Upload, X, Target, Pill, Mic, ExternalLink
+  Smartphone, Send, ImageIcon, Upload, X, Target, Pill, Mic, ExternalLink,
+  VenetianMask
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -50,24 +51,37 @@ export function ProfileCabinet() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recordingField, setRecordingField] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { firstName: '', profileType: 'user' },
+    defaultValues: { 
+      firstName: '', 
+      profileType: 'user',
+      gender: 'мужской',
+      activityLevel: 'moderate',
+      healthGoal: 'поддержать текущее состояние'
+    },
   });
 
-  useEffect(() => { if (userData) form.reset({ ...userData }); }, [userData, form]);
+  useEffect(() => { 
+    if (userData) {
+      form.reset({ ...userData }); 
+    }
+  }, [userData, form]);
 
   const onSubmit = async (values: ProfileValues) => {
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-      toast({ title: 'Профиль обновлен' });
+      await setDoc(doc(firestore, 'users', user.uid), { 
+        ...values, 
+        id: user.uid, 
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+      toast({ title: 'Профиль обновлен', description: 'Ваши биометрические данные синхронизированы.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка доступа' });
     } finally { setLoading(false); }
@@ -94,30 +108,104 @@ export function ProfileCabinet() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
-      <div className="flex items-center gap-4"><User className="h-12 w-12 text-primary" /><h2 className="text-4xl font-black uppercase text-white">Кабинет</h2></div>
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700 pb-32">
+      <div className="flex items-center gap-4">
+        <User className="h-12 w-12 text-primary" />
+        <h2 className="text-4xl font-black uppercase text-white">Кабинет</h2>
+      </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="premium-card bg-blue-950/40 p-8 space-y-6">
-             <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-             <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+          <Card className="premium-card bg-blue-950/40 p-8 space-y-8">
+             <div className="space-y-4">
+                <h3 className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                   <Fingerprint className="h-4 w-4" /> Основная информация
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <FormField control={form.control} name="firstName" render={({ field }) => (
+                     <FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                   )} />
+                   <FormField control={form.control} name="birthDate" render={({ field }) => (
+                     <FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input type="date" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                   )} />
+                </div>
              </div>
+
+             <div className="space-y-4 pt-4 border-t border-white/5">
+                <h3 className="text-sm font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                   <Activity className="h-4 w-4" /> Биометрический профиль
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <FormField control={form.control} name="gender" render={({ field }) => (
+                     <FormItem><FormLabel>Пол</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                           <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue placeholder="Выберите пол" /></SelectTrigger></FormControl>
+                           <SelectContent><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent>
+                        </Select>
+                     </FormItem>
+                   )} />
+                   <FormField control={form.control} name="weight" render={({ field }) => (
+                     <FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                   )} />
+                   <FormField control={form.control} name="height" render={({ field }) => (
+                     <FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                   )} />
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="healthGoal" render={({ field }) => (
+                  <FormItem><FormLabel>Цель здоровья</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl>
+                       <SelectContent>
+                          <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
+                          <SelectItem value="набор массы">Набор массы</SelectItem>
+                       </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="activityLevel" render={({ field }) => (
+                  <FormItem><FormLabel>Уровень активности</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl>
+                       <SelectContent>
+                          <SelectItem value="minimal">Минимальный (сидячий)</SelectItem>
+                          <SelectItem value="low">Низкий (1-3 тренировки)</SelectItem>
+                          <SelectItem value="moderate">Средний (3-5 тренировок)</SelectItem>
+                          <SelectItem value="high">Высокий (ежедневно)</SelectItem>
+                          <SelectItem value="athlete">Атлет (2 раза в день)</SelectItem>
+                       </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+             </div>
+
              <FormField control={form.control} name="medications" render={({ field }) => (
                <FormItem><FormLabel className="flex items-center gap-2"><Pill className="h-4 w-4" /> Лекарства и БАДы</FormLabel>
-                <FormControl><div className="relative"><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /><Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("absolute right-2 top-2 h-10 w-10", recordingField === 'medications' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button></div></FormControl></FormItem>
+                <FormControl><div className="relative"><Textarea {...field} placeholder="Перечислите препараты, которые вы принимаете..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /><Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("absolute right-2 top-2 h-10 w-10", recordingField === 'medications' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button></div></FormControl></FormItem>
              )} />
           </Card>
-          <Button type="submit" disabled={loading} className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl">{loading ? <Loader2 className="animate-spin" /> : 'СОХРАНИТЬ'}</Button>
+
+          <Button type="submit" disabled={loading} className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+            {loading ? <Loader2 className="animate-spin" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}
+          </Button>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4">
-                <h3 className="font-black uppercase flex items-center gap-2"><Smartphone className="h-5 w-5" /> Уведомления</h3>
-                <Button variant="outline" onClick={handleConnectTelegram} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black"><Send className="h-4 w-4" /> Telegram <ExternalLink className="h-3 w-3" /></Button>
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60"><Smartphone className="h-5 w-5" /> Уведомления</h3>
+                <Button variant="outline" onClick={handleConnectTelegram} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black hover:bg-white/10">
+                   <Send className="h-4 w-4" /> Telegram <ExternalLink className="h-3 w-3" />
+                </Button>
              </Card>
              <Card className="premium-card bg-blue-950/40 p-8 flex flex-col gap-4">
-                <h3 className="font-black uppercase flex items-center gap-2"><Activity className="h-5 w-5" /> Архив</h3>
-                <AnalysisHistoryDialog><Button className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив здоровья</Button></AnalysisHistoryDialog>
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60"><Activity className="h-5 w-5" /> Архив</h3>
+                <AnalysisHistoryDialog>
+                   <Button className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5">
+                      Открыть архив здоровья
+                   </Button>
+                </AnalysisHistoryDialog>
              </Card>
           </div>
         </form>

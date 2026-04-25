@@ -68,6 +68,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     const weight = profileData.weight;
     const height = profileData.height;
+    const currentGender = profileData.gender || 'мужской';
     const activityLevel = profileData.activityLevel || 'moderate';
     const healthGoal = profileData.healthGoal || 'поддержать текущее состояние';
 
@@ -79,10 +80,10 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     // 1. Формула Миффлина-Сан Жеора
     let bmrMifflin = (10 * weight) + (6.25 * height) - (5 * age);
-    bmrMifflin = gender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
+    bmrMifflin = currentGender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
 
     // 2. Формула Харриса-Бенедикта (уточненная Роза-Шизгала)
-    let bmrHarris = gender === 'мужской' 
+    let bmrHarris = currentGender === 'мужской' 
       ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
       : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
 
@@ -146,7 +147,8 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        <div className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
+        {/* Добавляем key={hologramSrc}, чтобы React заменял компонент при смене пути к файлу */}
+        <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={hologramSrc} 
             alt="Bio-Hologram" 
