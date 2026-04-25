@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Zap, HeartPulse, Smartphone, Mic, Utensils, Scale, Smile,
-  Battery, Brain
+  Battery, Brain, Heart, Frown, Thermometer, Ghost
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -50,12 +50,14 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mood, setMood] = useState('Спокойствие');
   const [energy, setEnergy] = useState([50]);
 
-  // Состояние цикла (только для женщин)
+  // Состояние цикла (Flo-style)
   const [isCycleActive, setIsCycleActive] = useState(false);
   const [cycleIntensity, setCycleIntensity] = useState('medium');
-  const [cycleSymptoms, setCycleSymptoms] = useState('');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [selectedCycleMoods, setSelectedCycleMoods] = useState<string[]>([]);
+  const [cycleSymptomsText, setCycleSymptomsText] = useState('');
 
-  const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
+  const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
   const isFemale = String(userData?.gender || '').toLowerCase().trim() === 'женский' || String(userData?.gender || '').toLowerCase().trim() === 'female';
 
@@ -98,7 +100,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   };
 
   const handleAnalyze = async () => {
-    if (!firestore || !user) return;
+    if (!firestore || !user?.uid) return;
     setLoading(true);
     try {
       if (activeTab === 'meal') {
@@ -119,8 +121,16 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
+  const toggleSymptom = (id: string) => {
+    setSelectedSymptoms(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const toggleCycleMood = (id: string) => {
+    setSelectedCycleMoods(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
   const handleDailyLogSubmit = async () => {
-    if (!firestore || !user) return;
+    if (!firestore || !user?.uid) return;
     setLoading(true);
     try {
       const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -132,7 +142,12 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
         sleepDurationHours: sleep ? Number(sleep) : undefined,
         mood: mood || undefined,
         energy: energy[0],
-        cycle: isCycleActive ? { intensity: cycleIntensity, symptoms: cycleSymptoms } : null,
+        cycle: isCycleActive ? { 
+          intensity: cycleIntensity, 
+          symptoms: selectedSymptoms,
+          moods: selectedCycleMoods,
+          notes: cycleSymptomsText 
+        } : null,
         updatedAt: serverTimestamp()
       }, { merge: true });
       
@@ -148,13 +163,30 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const reset = () => {
     setDescription(''); setImage(null); setMealResult(null); setLabResult(null);
     setIsSuccess(false); setWater(''); setWeight(''); setSteps(''); setSleep(''); 
-    setMood('Спокойствие'); setEnergy([50]); setIsCycleActive(false); setCycleSymptoms('');
+    setMood('Спокойствие'); setEnergy([50]); setIsCycleActive(false); setCycleSymptomsText('');
+    setSelectedSymptoms([]); setSelectedCycleMoods([]);
   };
+
+  const physicalSymptoms = [
+    { id: 'cramps', label: 'Тянущая боль', icon: Zap },
+    { id: 'breasts', label: 'Грудь', icon: HeartPulse },
+    { id: 'headache', label: 'Голова', icon: Brain },
+    { id: 'acne', label: 'Акне', icon: Sparkles },
+    { id: 'bloating', label: 'Вздутие', icon: Activity },
+  ];
+
+  const cycleMoodsList = [
+    { id: 'happy', label: 'Счастье', icon: Smile },
+    { id: 'sensitive', label: 'Эмоции', icon: Heart },
+    { id: 'irritated', label: 'Гнев', icon: Zap },
+    { id: 'sad', label: 'Грусть', icon: Frown },
+    { id: 'tired', label: 'Апатия', icon: Ghost },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[98vw] md:max-w-[750px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border border-white/10 shadow-2xl z-[1001] bg-[#010411]">
+      <DialogContent className="w-[98vw] md:max-w-[750px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border border-white/10 shadow-2xl z-[1100] bg-[#010411]">
         <DialogHeader className="p-8 md:p-10 bg-primary text-white shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
           <div className="relative z-10">
@@ -164,29 +196,29 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           <Zap className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
         
-        <div className="p-6 md:p-12 space-y-8 overflow-y-auto no-scrollbar bg-blue-950/40 backdrop-blur-3xl min-h-[500px]">
+        <div className="p-4 md:p-12 space-y-8 overflow-y-auto no-scrollbar bg-blue-950/40 backdrop-blur-3xl min-h-[500px]">
           {!mealResult && !labResult && !isSuccess ? (
             <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className={cn(
-                "grid w-full rounded-2xl md:rounded-3xl h-16 bg-white/5 border border-white/5 p-1 mb-10",
+                "grid w-full rounded-2xl md:rounded-3xl h-16 bg-white/5 border border-white/5 p-1 mb-8",
                 isFemale ? "grid-cols-5" : "grid-cols-4"
               )}>
-                <TabsTrigger value="meal" className="font-black text-[8px] md:text-[10px] uppercase tracking-tighter gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                  <Utensils className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ЕДА</span>
+                <TabsTrigger value="meal" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                  <Utensils className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЕДА</span>
                 </TabsTrigger>
-                <TabsTrigger value="metrics" className="font-black text-[8px] md:text-[10px] uppercase tracking-tighter gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                  <Scale className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ТЕЛО</span>
+                <TabsTrigger value="metrics" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                  <Scale className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ТЕЛО</span>
                 </TabsTrigger>
                 {isFemale && (
-                  <TabsTrigger value="cycle" className="font-black text-[8px] md:text-[10px] uppercase tracking-tighter gap-2 data-[state=active]:bg-pink-500 data-[state=active]:text-white">
-                    <HeartPulse className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ЦИКЛ</span>
+                  <TabsTrigger value="cycle" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-pink-500 data-[state=active]:text-white">
+                    <HeartPulse className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЦИКЛ</span>
                   </TabsTrigger>
                 )}
-                <TabsTrigger value="spirit" className="font-black text-[8px] md:text-[10px] uppercase tracking-tighter gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                  <Smile className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ДУХ</span>
+                <TabsTrigger value="spirit" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                  <Smile className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ДУХ</span>
                 </TabsTrigger>
-                <TabsTrigger value="labs" className="font-black text-[8px] md:text-[10px] uppercase tracking-tighter gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                  <FlaskConical className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ЛАБ</span>
+                <TabsTrigger value="labs" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                  <FlaskConical className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЛАБ</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -249,7 +281,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         <Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" />
                      </div>
                   </div>
-                  <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ МЕТРИКИ</Button>
+                  <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ МЕТРИКИ</Button>
                 </TabsContent>
 
                 <TabsContent value="spirit" className="space-y-10 outline-none">
@@ -281,18 +313,18 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                          </div>
                       </div>
                    </div>
-                   <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ СОСТОЯНИЕ</Button>
+                   <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ СОСТОЯНИЕ</Button>
                 </TabsContent>
 
                 {isFemale && (
                   <TabsContent value="cycle" className="space-y-8 outline-none animate-in slide-in-from-right-4 duration-300">
-                     <div className="bg-pink-500/5 border border-pink-500/20 rounded-[2.5rem] p-10 space-y-8 shadow-inner">
+                     <div className="bg-pink-500/5 border border-pink-500/20 rounded-[2.5rem] p-6 md:p-10 space-y-8 shadow-inner">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
                                  <HeartPulse className="h-6 w-6 text-pink-400" />
                               </div>
-                              <h4 className="text-xl font-black uppercase text-pink-400 tracking-tight">Цикл сегодня</h4>
+                              <h4 className="text-xl font-black uppercase text-pink-400 tracking-tight">Цикл</h4>
                            </div>
                            <Button 
                              onClick={() => setIsCycleActive(!isCycleActive)} 
@@ -307,9 +339,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                         </div>
                         
                         {isCycleActive && (
-                          <div className="space-y-8 pt-8 border-t border-pink-500/10 animate-in fade-in duration-500">
-                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest">Интенсивность</label>
+                          <div className="space-y-10 pt-8 border-t border-pink-500/10 animate-in fade-in duration-500">
+                             
+                             {/* Интенсивность */}
+                             <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Интенсивность выделений</label>
                                 <div className="grid grid-cols-3 gap-3">
                                    {['low', 'medium', 'high'].map((val) => (
                                       <button 
@@ -318,7 +352,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                         className={cn(
                                           "h-14 rounded-xl font-black uppercase text-[9px] transition-all border-2",
                                           cycleIntensity === val 
-                                            ? "bg-pink-500/20 border-pink-500 text-pink-400" 
+                                            ? "bg-pink-500 border-pink-500 text-white shadow-lg shadow-pink-500/20" 
                                             : "bg-white/5 border-white/5 text-white/20 hover:bg-white/10"
                                         )}
                                       >
@@ -327,21 +361,66 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                                    ))}
                                 </div>
                              </div>
+
+                             {/* Физические симптомы (Flo Style) */}
+                             <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Физические симптомы</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                   {physicalSymptoms.map((s) => (
+                                      <button 
+                                        key={s.id} 
+                                        onClick={() => toggleSymptom(s.id)}
+                                        className={cn(
+                                          "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all group",
+                                          selectedSymptoms.includes(s.id)
+                                            ? "bg-pink-500/20 border-pink-500 text-pink-400"
+                                            : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+                                        )}
+                                      >
+                                         <s.icon className={cn("h-6 w-6", selectedSymptoms.includes(s.id) ? "text-pink-400" : "text-white/20 group-hover:text-white/40")} />
+                                         <span className="text-[8px] font-black uppercase leading-tight">{s.label}</span>
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+
+                             {/* Настроение (Flo Style) */}
+                             <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest text-center block">Как ваше настроение?</label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                   {cycleMoodsList.map((m) => (
+                                      <button 
+                                        key={m.id} 
+                                        onClick={() => toggleCycleMood(m.id)}
+                                        className={cn(
+                                          "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all group",
+                                          selectedCycleMoods.includes(m.id)
+                                            ? "bg-pink-500/20 border-pink-500 text-pink-400"
+                                            : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+                                        )}
+                                      >
+                                         <m.icon className={cn("h-6 w-6", selectedCycleMoods.includes(m.id) ? "text-pink-400" : "text-white/20 group-hover:text-white/40")} />
+                                         <span className="text-[8px] font-black uppercase leading-tight">{m.label}</span>
+                                      </button>
+                                   ))}
+                                </div>
+                             </div>
+
                              <div className="relative">
                                 <Textarea 
-                                  placeholder="Симптомы, самочувствие, боли..." 
-                                  value={cycleSymptoms} 
-                                  onChange={e => setCycleSymptoms(e.target.value)} 
-                                  className="min-h-[120px] rounded-2xl bg-white/5 border-pink-500/20 text-white p-6 font-bold text-lg resize-none shadow-inner" 
+                                  placeholder="Дополнительные заметки (боли, ПМС)..." 
+                                  value={cycleSymptomsText} 
+                                  onChange={e => setCycleSymptomsText(e.target.value)} 
+                                  className="min-h-[120px] rounded-2xl bg-white/5 border-pink-500/20 text-white p-6 font-bold text-lg resize-none shadow-inner placeholder:text-white/10" 
                                 />
                                 <Button 
                                   type="button" 
                                   variant="ghost" 
                                   size="icon" 
-                                  onClick={() => startVoiceInput('cycleSymptoms', setCycleSymptoms)} 
+                                  onClick={() => startVoiceInput('cycleSymptomsText', setCycleSymptomsText)} 
                                   className={cn(
                                     "absolute right-4 top-4 h-10 w-10 rounded-full",
-                                    recordingField === 'cycleSymptoms' ? "bg-red-500 text-white animate-pulse" : "bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
+                                    recordingField === 'cycleSymptomsText' ? "bg-red-500 text-white animate-pulse" : "bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
                                   )}
                                 >
                                   <Mic className="h-4 w-4" />
