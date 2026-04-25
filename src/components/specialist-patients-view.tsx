@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, addDoc, getDocs, doc } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,12 +13,27 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PatientDataViewer } from './patient-data-viewer';
+import { useToast } from '@/hooks/use-toast';
 
-export function SpecialistPatientsView() {
+interface SpecialistPatientsViewProps {
+  onStartChat?: (id: string) => void;
+}
+
+export function SpecialistPatientsView({ onStartChat }: SpecialistPatientsViewProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
+  const { toast } = useToast();
   const [searchTerm, setSearchText] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Данные текущего врача
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: userData } = useDoc<any>(userDocRef);
 
   // Запрос на поиск пользователей, которые поделились данными с этим специалистом
   const patientsQuery = useMemoFirebase(() => {
@@ -39,6 +54,47 @@ export function SpecialistPatientsView() {
       p.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [patients, searchTerm]);
+
+  const handleStartChat = async (patient: any) => {
+    if (!user || !firestore || !userData || !patient) return;
+    
+    setChatLoading(true);
+    try {
+      // Проверяем, существует ли уже чат
+      const chatsQuery = query(
+        collection(firestore, 'chats'),
+        where('participants', 'array-contains', user.uid)
+      );
+      const querySnapshot = await getDocs(chatsQuery);
+      let existingChat = null;
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(patient.id)) {
+          existingChat = { id: doc.id, ...data };
+        }
+      });
+
+      if (!existingChat) {
+        await addDoc(collection(firestore, 'chats'), {
+          participants: [user.uid, patient.id],
+          participantDetails: {
+            [user.uid]: { name: userData.firstName || 'Специалист', photo: userData.photoUrl || '' },
+            [patient.id]: { name: (patient.firstName + ' ' + (patient.lastName || '')).trim(), photo: patient.photoUrl || '' }
+          },
+          lastMessage: 'Начат диалог со специалистом.',
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      onStartChat?.(patient.id);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Ошибка чата', description: 'Не удалось инициализировать переписку.' });
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -65,10 +121,7 @@ export function SpecialistPatientsView() {
         </div>
         <PatientDataViewer 
           patient={selectedPatient} 
-          onStartChat={(id, name) => {
-            // В будущем можно прокинуть логику открытия конкретного чата
-            console.log('Starting chat with', name);
-          }} 
+          onStartChat={(id) => handleStartChat(selectedPatient)} 
         />
       </div>
     );
@@ -132,7 +185,10 @@ export function SpecialistPatientsView() {
 
                 <div className="bg-primary p-2 flex items-center justify-between">
                    <div className="flex items-center gap-4 px-4">
-                      <div className="flex items-center gap-1.5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity">
+                      <div 
+                        className="flex items-center gap-1.5 opacity-60 hover:opacity-100 cursor-pointer transition-opacity"
+                        onClick={() => handleStartChat(patient)}
+                      >
                          <MessageSquare className="h-3.5 w-3.5 text-slate-950" />
                          <span className="text-[9px] font-black text-slate-950 uppercase tracking-tight">Чат</span>
                       </div>

@@ -240,7 +240,10 @@ export default function DashboardPage() {
             {activeTab === 'meals' && (
                <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                  {profileType === 'specialist' ? (
-                   <SpecialistPatientsView />
+                   <SpecialistPatientsView onStartChat={(id) => {
+                     setDirectChatRecipientId(id);
+                     setActiveTab('chats');
+                   }} />
                  ) : (
                    <MealsHub selectedDate={selectedDate} />
                  )}
