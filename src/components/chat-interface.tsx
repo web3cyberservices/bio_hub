@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Send, Loader2, MessageSquare, 
   Search, Phone, Video, MoreVertical, CheckCheck, Activity, Bot,
-  Pencil, Trash2, X, Check, Mic, Sparkles
+  Pencil, Trash2, X, Check, Mic, Sparkles, ArrowLeft
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, addDoc, doc, updateDoc, where, limit, deleteDoc } from 'firebase/firestore';
@@ -17,12 +17,14 @@ import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from '@/hooks/use-toast';
 import { AISpecialistChat } from './ai-specialist-chat';
 
-export function ChatInterface() {
+interface ChatInterfaceProps {
+  initialSpecialistId?: string | null;
+}
+
+export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -45,6 +47,17 @@ export function ChatInterface() {
   }, [firestore, user?.uid]);
 
   const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
+
+  // Автоматический выбор чата при наличии initialSpecialistId
+  useEffect(() => {
+    if (chats && initialSpecialistId) {
+      const targetChat = chats.find(c => c.participants.includes(initialSpecialistId));
+      if (targetChat) {
+        setActiveChatId(targetChat.id);
+        setShowAIChat(false);
+      }
+    }
+  }, [chats, initialSpecialistId]);
 
   // Сообщения активного чата
   const messagesQuery = useMemoFirebase(() => {
@@ -86,51 +99,46 @@ export function ChatInterface() {
     recognition.start();
   };
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
 
-    if (editingMessageId) {
-      const msgRef = doc(firestore, 'chats', activeChatId, 'messages', editingMessageId);
-      updateDocumentNonBlocking(msgRef, {
-        text: message.trim(),
-        editedAt: new Date().toISOString(),
-        isEdited: true
-      });
-      setEditingMessageId(null);
-      setMessage('');
-      return;
-    }
-
-    const chatRef = doc(firestore, 'chats', activeChatId);
-    const messagesRef = collection(chatRef, 'messages');
-
-    const newMessage = {
-      senderId: user.uid,
-      text: message.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    addDoc(messagesRef, newMessage).catch(async (err) => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: `${chatRef.path}/messages`,
-        operation: 'create',
-        requestResourceData: newMessage,
-      }));
-    });
-
-    updateDoc(chatRef, {
-      lastMessage: message.trim(),
-      updatedAt: new Date().toISOString()
-    }).catch(async (err) => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: chatRef.path,
-        operation: 'update',
-        requestResourceData: { lastMessage: message.trim() },
-      }));
-    });
-
+    const currentMsg = message.trim();
     setMessage('');
+
+    try {
+      if (editingMessageId) {
+        const msgRef = doc(firestore, 'chats', activeChatId, 'messages', editingMessageId);
+        await updateDoc(msgRef, {
+          text: currentMsg,
+          editedAt: new Date().toISOString(),
+          isEdited: true
+        });
+        setEditingMessageId(null);
+        return;
+      }
+
+      const chatRef = doc(firestore, 'chats', activeChatId);
+      const messagesRef = collection(chatRef, 'messages');
+
+      await addDoc(messagesRef, {
+        senderId: user.uid,
+        text: currentMsg,
+        createdAt: new Date().toISOString(),
+      });
+
+      await updateDoc(chatRef, {
+        lastMessage: currentMsg,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка отправки',
+        description: 'Не удалось отправить сообщение. Проверьте соединение.',
+      });
+      setMessage(currentMsg); // Возвращаем текст при ошибке
+    }
   };
 
   const handleStartEdit = (msg: any) => {
@@ -143,11 +151,15 @@ export function ChatInterface() {
     setMessage('');
   };
 
-  const handleDeleteMessage = (msgId: string) => {
+  const handleDeleteMessage = async (msgId: string) => {
     if (!activeChatId || !firestore) return;
-    const msgRef = doc(firestore, 'chats', activeChatId, 'messages', msgId);
-    deleteDocumentNonBlocking(msgRef);
-    toast({ title: 'Сообщение удалено' });
+    try {
+      const msgRef = doc(firestore, 'chats', activeChatId, 'messages', msgId);
+      await deleteDoc(msgRef);
+      toast({ title: 'Сообщение удалено' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Не удалось удалить сообщение.' });
+    }
   };
 
   const handleOpenAIChat = () => {
@@ -316,7 +328,7 @@ export function ChatInterface() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 px-2">
-                       <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{format(new Date(m.createdAt), 'HH:mm')}</span>
+                       <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">{m.createdAt ? format(new Date(m.createdAt), 'HH:mm') : '--:--'}</span>
                        {m.senderId === user?.uid && <CheckCheck className="h-3 w-3 text-primary/40" />}
                     </div>
                   </div>
@@ -361,7 +373,7 @@ export function ChatInterface() {
                   </div>
                   <Button 
                     type="submit" 
-                    disabled={!message.trim()} 
+                    disabled={!message.trim() || !activeChatId} 
                     className={cn(
                       "h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl shadow-2xl transition-transform hover:scale-105 shrink-0",
                       editingMessageId ? "bg-emerald-500" : "bg-primary"

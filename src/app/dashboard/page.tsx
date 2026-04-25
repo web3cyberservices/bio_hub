@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
   const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
+  const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
   const { isSyncing: aggregatorSyncing } = useHealthAggregator();
 
@@ -106,6 +107,7 @@ export default function DashboardPage() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setViewingSpecialistId(null);
+    if (tab !== 'chats') setDirectChatRecipientId(null);
   };
 
   if (!isMounted || userLoading || !user) {
@@ -163,6 +165,7 @@ export default function DashboardPage() {
               onBack={() => setViewingSpecialistId(null)} 
               onStartChat={(id) => {
                 setViewingSpecialistId(null);
+                setDirectChatRecipientId(id);
                 setActiveTab('chats');
               }} 
             />
@@ -247,7 +250,7 @@ export default function DashboardPage() {
             {activeTab === 'chats' && (
               <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
                 <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
-                  <ChatInterface />
+                  <ChatInterface initialSpecialistId={directChatRecipientId} />
                 </div>
               </div>
             )}
