@@ -10,7 +10,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, startOfDay, differenceInDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -61,26 +61,49 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос для получения дней начала цикла (для подсветки в календаре)
-  const periodStartsQuery = useMemoFirebase(() => {
+  // Запрос всех логов с данными цикла
+  const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(
-      collection(firestore, 'users', user.uid, 'dailyLogs'),
-      where('cycle.isStart', '==', true)
+      collection(firestore, 'users', user.uid, 'dailyLogs')
     );
   }, [firestore, user?.uid]);
 
-  const { data: periodLogs } = useCollection<any>(periodStartsQuery);
+  const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  const periodStartDates = useMemo(() => {
-    if (!periodLogs) return [];
-    return periodLogs.map(log => {
-      const d = new Date(log.date);
-      // Устанавливаем время в полночь для корректного сравнения в календаре
-      d.setHours(0, 0, 0, 0);
-      return d;
+  // Карта дней цикла: Дата -> Порядковый номер
+  const periodDaysMap = useMemo(() => {
+    if (!allLogs || !allLogs.length) return {};
+    
+    // 1. Находим все даты начала циклов
+    const starts = allLogs
+      .filter(log => log.cycle?.isStart)
+      .map(log => ({
+        timestamp: startOfDay(new Date(log.date)).getTime(),
+        dateStr: log.date
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    const map: Record<string, number> = {};
+    
+    // 2. Для каждого лога с данными цикла рассчитываем номер дня
+    allLogs.forEach(log => {
+      if (log.cycle) {
+        const currentDate = startOfDay(new Date(log.date));
+        const currentTs = currentDate.getTime();
+        
+        // Ищем последнее "Начало цикла" перед этой датой или в эту дату
+        const lastStart = [...starts].reverse().find(s => s.timestamp <= currentTs);
+        
+        if (lastStart) {
+          const diffDays = differenceInDays(currentDate, new Date(lastStart.dateStr));
+          map[log.date] = diffDays + 1;
+        }
+      }
     });
-  }, [periodLogs]);
+    
+    return map;
+  }, [allLogs]);
 
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user' || !dateKey) return null;
@@ -165,12 +188,7 @@ export default function DashboardPage() {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   locale={ru}
-                  modifiers={{
-                    periodStart: periodStartDates
-                  }}
-                  modifiersClassNames={{
-                    periodStart: "period-start-day"
-                  }}
+                  periodDays={periodDaysMap}
                 />
               </PopoverContent>
             </Popover>
