@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -54,10 +55,12 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  const gender = profileData?.gender || 'мужской';
+  // Расширенная детекция пола для старых и новых данных
+  const rawGender = (profileData?.gender || 'мужской').toLowerCase();
+  const isFemale = rawGender === 'женский' || rawGender === 'female' || rawGender === 'жен';
   
-  // Определяем изображение голограммы в зависимости от пола
-  const hologramSrc = gender === 'женский' ? '/woman_hologram.png' : '/bio-hologram.png';
+  // Определяем изображение голограммы
+  const hologramSrc = isFemale ? '/woman_hologram.png' : '/bio-hologram.png';
 
   const calculatedGoals = useMemo(() => {
     if (goals && goals.calories > 0) return goals;
@@ -68,7 +71,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
     const weight = profileData.weight;
     const height = profileData.height;
-    const currentGender = profileData.gender || 'мужской';
+    const currentGender = isFemale ? 'женский' : 'мужской';
     const activityLevel = profileData.activityLevel || 'moderate';
     const healthGoal = profileData.healthGoal || 'поддержать текущее состояние';
 
@@ -104,7 +107,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     const carbs = Math.round((tdee - (protein * 4) - (fat * 9)) / 4);
 
     return { calories: Math.round(tdee), protein, fat, carbs };
-  }, [goals, profileData, gender]);
+  }, [goals, profileData, isFemale]);
 
   const stepsVal = deviceData?.steps || 0;
   const sleepVal = deviceData?.sleepDurationHours || 0;
@@ -147,7 +150,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        {/* Добавляем key={hologramSrc}, чтобы React заменял компонент при смене пути к файлу */}
+        {/* Ключевое изменение: key={hologramSrc} форсирует перемонтирование при смене пола */}
         <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
             src={hologramSrc} 

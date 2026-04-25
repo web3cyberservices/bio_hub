@@ -3,9 +3,15 @@
   "placeholderImages": [
     {
       "id": "bio-hologram",
-      "description": "Центральная голограмма высокодетализированного человека с нейронной сетью",
+      "description": "Центральная голограмма высокодетализированного человека (мужчина) с нейронной сетью",
       "imageUrl": "/bio-hologram.png",
       "imageHint": "blue human hologram neural network"
+    },
+    {
+      "id": "woman-hologram",
+      "description": "Центральная голограмма высокодетализированного человека (женщина) с нейронной сетью",
+      "imageUrl": "/woman_hologram.png",
+      "imageHint": "female human hologram neural network"
     },
     {
       "id": "breakfast-omelette",
