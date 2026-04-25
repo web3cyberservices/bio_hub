@@ -54,23 +54,24 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  // Локальное состояние для голограммы, чтобы гарантировать реактивность
+  // Локальное состояние для голограммы и версии (cache busting)
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
+  const [version, setVersion] = useState(Date.now());
 
-  // Эффект для моментального переключения при изменении пола в профиле
   useEffect(() => {
     if (!profileData) return;
     
     const gender = String(profileData.gender || 'мужской').toLowerCase().trim();
-    // Поддержка различных вариантов написания пола
     const isFemale = gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
     
     const newSrc = isFemale ? '/woman_hologram.png' : '/bio-hologram.png';
-    setHologramSrc(newSrc);
     
-    // Лог для отладки
-    console.log('--- Bio-Twin Sync: Gender detected as', gender, '-> Setting hologram:', newSrc);
-  }, [profileData?.gender]);
+    if (newSrc !== hologramSrc) {
+      setHologramSrc(newSrc);
+      setVersion(Date.now()); // Обновляем версию для сброса кеша браузера
+      console.log('--- Bio-Twin Sync: Gender updated ->', gender, '-> Image:', newSrc);
+    }
+  }, [profileData?.gender, hologramSrc]);
 
   const calculatedGoals = useMemo(() => {
     if (goals && goals.calories > 0) return goals;
@@ -91,11 +92,9 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
 
-    // 1. Формула Миффлина-Сан Жеора
     let bmrMifflin = (10 * weight) + (6.25 * height) - (5 * age);
     bmrMifflin = gender === 'мужской' ? bmrMifflin + 5 : bmrMifflin - 161;
 
-    // 2. Формула Харриса-Бенедикта (уточненная Роза-Шизгала)
     let bmrHarris = gender === 'мужской' 
       ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
       : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
@@ -162,13 +161,13 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       </div>
 
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        {/* Ключ key={hologramSrc} критически важен: он заставляет React полностью перерисовать изображение при смене пути */}
-        <div key={hologramSrc} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
+        {/* Ключ key={hologramSrc-version} заставляет React пересоздавать элемент при смене пола или версии */}
+        <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
           <Image 
-            src={hologramSrc} 
+            src={`${hologramSrc}?v=${version}`} 
             alt="Bio-Hologram" 
             fill 
-            className="object-contain filter drop-shadow-[0_0_15px_rgba(0,255,255,0.6)]" 
+            className="object-contain filter drop-shadow-[0_0_35px_rgba(0,255,255,0.8)] brightness-110 contrast-125 transition-all duration-1000" 
             priority 
             unoptimized 
           />
