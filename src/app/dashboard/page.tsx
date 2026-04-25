@@ -95,7 +95,7 @@ export default function DashboardPage() {
         
         if (lastStart) {
           const diffDays = Math.floor((currentTs - lastStart.timestamp) / (1000 * 60 * 60 * 24));
-          // Ограничиваем цикл разумными 10 днями для отображения цифр, если нет "Конца цикла"
+          // Пронумеровываем день (1-й день, 2-й и т.д.)
           if (diffDays >= 0 && diffDays < 10) {
             map[log.date] = diffDays + 1;
           }
