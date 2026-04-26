@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -59,7 +58,6 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        // [ПРИОРИТЕТ] Полное переопределение Day для обхода clipping
         Day: ({ date, displayMonth, ...dayProps }: any) => {
           if (!date || !isValid(date)) return null;
           
@@ -69,10 +67,16 @@ function Calendar({
           const isToday = isSameDay(date, new Date());
           const isOutside = date.getMonth() !== displayMonth.getMonth();
 
+          // [ТУПОЕ СРАВНЕНИЕ ДЛЯ ТЕСТА]
+          const isTesting = dateStr === format(new Date(), "yyyy-MM-dd");
+
           if (isOutside && !showOutsideDays) return <td />;
 
           return (
             <td className="relative p-0 text-center focus-within:relative focus-within:z-20 h-10 w-9 overflow-visible">
+              {/* [DEBUG-ИНЪЕКЦИЯ] Желтая полоска на каждом дне */}
+              <div style={{position:'absolute', top:0, left:0, width:'100%', height:'4px', background:'yellow', zIndex:10000}} />
+
               <button
                 {...dayProps.buttonProps}
                 className={cn(
@@ -80,7 +84,8 @@ function Calendar({
                   "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible",
                   isSelected && "bg-primary text-slate-950 shadow-[0_0_20px_rgba(0,255,255,0.5)] rounded-xl font-black scale-105",
                   isToday && !isSelected && "text-primary font-black after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full",
-                  isOutside && "opacity-10 pointer-events-none"
+                  isOutside && "opacity-10 pointer-events-none",
+                  isTesting && "bg-red-600" // [КРАСНЫЙ ЦВЕТ ДЛЯ ТЕСТА]
                 )}
               >
                 <span className="relative z-10">{date.getDate()}</span>
@@ -124,7 +129,6 @@ function Calendar({
   )
 }
 
-// Хелпер для сравнения дат
 function isSameDay(d1: Date, d2: Date) {
   return (
     d1.getFullYear() === d2.getFullYear() &&

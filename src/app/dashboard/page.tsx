@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -66,13 +65,21 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // [РЕАКТИВНОСТЬ] Запрос логов без ограничений по гендеру
+  // [БЕЗ ОГРАНИЧЕНИЙ] Запрос данных для всех
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
   }, [firestore, user?.uid]);
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
+
+  // [DEBUG] Системный алерт при получении данных
+  useEffect(() => {
+    if (allLogs && allLogs.length > 0) {
+      console.log("ДАННЫЕ ПРИШЛИ (Console):", allLogs.length);
+      // alert("ДАННЫЕ ПРИШЛИ: " + allLogs.length); // Разкомментируйте для шоковой терапии
+    }
+  }, [allLogs]);
 
   // [АЛГОРИТМ] Расчет карты дней цикла
   const periodDaysMap = useMemo(() => {
@@ -98,7 +105,7 @@ export default function DashboardPage() {
       }
     });
     
-    console.log("[BIO-CYCLE-DEBUG] Текущая карта периодов:", map);
+    console.log("ТЕКУЩАЯ КАРТА ПЕРИОДА:", map);
     return map;
   }, [allLogs]);
 
@@ -153,7 +160,6 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Ограничение снято: доступно всем пользователям */}
             {profileType === 'user' && <CycleTrackerDialog selectedDate={selectedDate} />}
 
             <Popover>
@@ -171,7 +177,6 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      // Закрываем поповер через эмуляцию ESC
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}
@@ -196,70 +201,73 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="w-full h-full flex flex-col overflow-hidden">
-            {activeTab === 'dashboard' && (
-              <div className="h-full w-full overflow-hidden flex items-center justify-center outline-none pt-0">
-                   {profileType === 'specialist' ? (
-                     <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>
-                   ) : (
-                     <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
-                   )}
-              </div>
-            )}
-            {activeTab === 'feed' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <div className="max-w-3xl mx-auto space-y-8 pb-10">
-                  <div className="flex justify-end mb-4"><CreatePostDialog /></div>
-                  {posts?.map((post) => (
-                    <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
-                        <div className="flex items-center justify-between">
-                          <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 text-left">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">
-                              {post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}
-                            </div>
-                            <div>
-                              <p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p>
-                              <p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p>
-                            </div>
-                          </button>
-                        </div>
-                        <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
-                        {post.imageUrl && (
-                          <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
-                            <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
+            <div className="flex-1 overflow-hidden relative">
+              {activeTab === 'dashboard' && (
+                <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
+                     {profileType === 'specialist' ? (
+                       <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>
+                     ) : (
+                       <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
+                     )}
+                </div>
+              )}
+              {activeTab === 'feed' && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
+                  <div className="max-w-3xl mx-auto space-y-8 pb-10">
+                    <div className="flex justify-end mb-4 pt-4"><CreatePostDialog /></div>
+                    {posts?.map((post) => (
+                      <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
+                          <div className="flex items-center justify-between">
+                            <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 text-left">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">
+                                {post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}
+                              </div>
+                              <div>
+                                <p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p>
+                                <p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p>
+                              </div>
+                            </button>
                           </div>
-                        )}
-                    </Card>
-                  ))}
+                          <p className="text-lg font-medium leading-relaxed text-white/80">{post.content}</p>
+                          {post.imageUrl && (
+                            <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5">
+                              <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
+                            </div>
+                          )}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {activeTab === 'meals' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                {profileType === 'specialist' ? (
-                  <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} />
-                ) : (
-                  <MealsHub selectedDate={selectedDate} />
-                )}
-              </div>
-            )}
-            {activeTab === 'chats' && (
-              <div className="m-0 pt-1 h-full px-4 pb-40 outline-none flex flex-col animate-in fade-in duration-300">
-                <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10">
-                  <ChatInterface initialSpecialistId={directChatRecipientId} />
+              )}
+              {activeTab === 'meals' && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
+                  {profileType === 'specialist' ? (
+                    <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} />
+                  ) : (
+                    <MealsHub selectedDate={selectedDate} />
+                  )}
                 </div>
-              </div>
-            )}
-            {activeTab === 'activities' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <ActivitiesHub selectedDate={selectedDate} />
-              </div>
-            )}
-            {activeTab === 'profile' && (
-              <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
-                <div className="max-w-5xl mx-auto"><ProfileCabinet /></div>
-              </div>
-            )}
+              )}
+              {activeTab === 'chats' && (
+                <div className="h-full px-4 pb-40 flex flex-col animate-in fade-in duration-300">
+                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10 pt-4">
+                    <ChatInterface initialSpecialistId={directChatRecipientId} />
+                  </div>
+                </div>
+              )}
+              {activeTab === 'activities' && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
+                  <ActivitiesHub selectedDate={selectedDate} />
+                </div>
+              )}
+              {activeTab === 'profile' && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
+                  <div className="max-w-5xl mx-auto pt-4"><ProfileCabinet /></div>
+                </div>
+              )}
+            </div>
 
+            {/* НИЖНЕЕ МЕНЮ (ВСЕГДА ЗАКРЕПЛЕНО) */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
