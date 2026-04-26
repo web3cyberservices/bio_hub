@@ -18,7 +18,7 @@ import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { ProfileCabinet } from '@/components/cabinet/profile-cabinet';
+import { ProfileCabinet } from '@/components/profile-cabinet';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -53,13 +53,11 @@ export default function DashboardPage() {
     setIsMounted(true);
     setSelectedDate(startOfToday());
 
-    // Обработка инвайт-ссылки специалиста
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const spId = params.get('spId');
       if (spId) {
         setViewingSpecialistId(spId);
-        // Очищаем URL от параметра, чтобы не открывать профиль при каждом обновлении
         window.history.replaceState({}, '', window.location.pathname);
       }
     }
@@ -91,8 +89,9 @@ export default function DashboardPage() {
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     const map: Record<string, number> = {};
+    
     const starts = allLogs
-      .filter(log => log.cycle?.isStart === true)
+      .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
       .map(log => {
         let dateObj: Date;
         if (log.timestamp && typeof log.timestamp.toDate === 'function') {
@@ -119,6 +118,8 @@ export default function DashboardPage() {
         map[dStr] = i + 1;
       }
     });
+
+    console.log("ТЕКУЩАЯ КАРТА ЦИКЛА (periodDaysMap):", map);
     return map;
   }, [allLogs]);
 
@@ -189,7 +190,7 @@ export default function DashboardPage() {
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
-            <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
+            <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             <CycleTrackerDialog selectedDate={selectedDate} />
@@ -209,7 +210,6 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}
                   initialFocus
