@@ -89,16 +89,19 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   };
 
   const handleShareToBot = () => {
-    const botLink = `https://t.me/web3cyberservices_bot?start=spec_${specialistId}`;
+    // НОВЫЙ ФОРМАТ DIRECT LINK ДЛЯ MINI APP
+    const botAppName = 'app';
+    const botUsername = 'web3cyberservices_bot';
+    const directLink = `https://t.me/${botUsername}/${botAppName}?startapp=${specialistId}`;
     const shareText = `Посмотрите профиль специалиста ${specData?.firstName || ''} в PRO Себя!`;
-    const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
+    const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
     window.open(fullShareLink, '_blank');
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/specialist/${specialistId}`;
+    const link = `https://t.me/web3cyberservices_bot/app?startapp=${specialistId}`;
     navigator.clipboard.writeText(link).then(() => {
-      toast({ title: 'Ссылка скопирована', description: 'Вы можете поделиться этим профилем с друзьями.' });
+      toast({ title: 'Ссылка скопирована', description: 'Вы можете поделиться этим Direct Link в соцсетях.' });
     });
   };
 
