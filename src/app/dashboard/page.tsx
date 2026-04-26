@@ -105,6 +105,7 @@ export default function DashboardPage() {
       }
     });
     
+    console.log("[CALENDAR_SYNC] Current Cycle Map:", map);
     return map;
   }, [allLogs]);
 

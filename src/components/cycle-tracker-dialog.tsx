@@ -114,7 +114,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
   const symptomList = [
     { id: 'cramps', label: 'Спазмы', icon: Zap },
     { id: 'tender_breasts', label: 'Грудь', icon: HeartPulse },
-    { id: 'headache', label: 'Голова', icon: Brain },
+    { id: 'headache', label: 'Глова', icon: Brain },
     { id: 'acne', label: 'Акне', icon: Sparkles },
     { id: 'bloating', label: 'Вздутие', icon: Activity },
     { id: 'back_pain', label: 'Спина', icon: Wind },
@@ -214,7 +214,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                       {symptomList.map((s) => (
                         <button 
                           key={s.id} 
-                          onClick={() => setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id])}
+                          onClick={() => { setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id]); activateCycle(); }}
                           className={cn(
                             "flex flex-col items-center justify-center gap-3 p-5 rounded-[1.5rem] border-2 transition-all",
                             selectedSymptoms.includes(s.id) ? "bg-pink-500/20 border-pink-500 text-pink-400 shadow-inner" : "bg-white/5 border-white/5 text-white/20"
@@ -235,7 +235,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                       {moodList.map((m) => (
                         <button 
                           key={m.id} 
-                          onClick={() => setMood(prev => prev.includes(m.id) ? prev.filter(i => i !== m.id) : [...prev, m.id])}
+                          onClick={() => { setMood(prev => prev.includes(m.id) ? prev.filter(i => i !== m.id) : [...prev, m.id]); activateCycle(); }}
                           className={cn(
                             "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
                             mood.includes(m.id) ? "bg-pink-500/20 border-pink-500 text-pink-400" : "bg-white/5 border-white/5 text-white/20"
