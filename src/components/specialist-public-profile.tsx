@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
   ArrowLeft, Star, MessageSquare, Users, BookOpen, 
-  ThumbsUp, Calendar, Heart, Share2, Send, Loader2, Plus, Mic, Instagram, ShieldCheck, ShieldAlert
+  ThumbsUp, Calendar, Heart, Share2, Send, Loader2, Plus, Mic, Instagram, ShieldCheck, ShieldAlert, Copy
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -103,25 +103,23 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     }
   };
 
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/dashboard?spId=${specialistId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      toast({ title: 'Ссылка скопирована', description: 'Вы можете поделиться этим профилем с друзьями.' });
+    });
+  };
+
   const handleCreateChat = async () => {
     if (!user || user.uid === 'public-user' || !firestore || !specData) return;
-    
     try {
-      // Проверяем, существует ли уже чат
-      const chatsQuery = query(
-        collection(firestore, 'chats'),
-        where('participants', 'array-contains', user.uid)
-      );
+      const chatsQuery = query(collection(firestore, 'chats'), where('participants', 'array-contains', user.uid));
       const querySnapshot = await getDocs(chatsQuery);
       let existingChat = null;
-      
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.participants.includes(specialistId)) {
-          existingChat = { id: doc.id, ...data };
-        }
+        if (data.participants.includes(specialistId)) existingChat = { id: doc.id, ...data };
       });
-
       if (!existingChat) {
         await addDoc(collection(firestore, 'chats'), {
           participants: [user.uid, specialistId],
@@ -134,20 +132,22 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
           createdAt: new Date().toISOString()
         });
       }
-      
       onStartChat(specialistId, specData.firstName, specData.photoUrl);
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Ошибка чата' });
-    }
+    } catch (e) { toast({ variant: 'destructive', title: 'Ошибка чата' }); }
   };
 
   if (specLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" /></div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-white/40 hover:text-primary transition-all">
-        <ArrowLeft className="h-4 w-4" /> Назад к ленте
-      </Button>
+      <div className="flex items-center justify-between px-2">
+        <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-white/40 hover:text-primary transition-all">
+          <ArrowLeft className="h-4 w-4" /> Назад к ленте
+        </Button>
+        <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all uppercase font-black text-[10px]">
+           <Share2 className="h-4 w-4" /> Поделиться
+        </Button>
+      </div>
 
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-blue-950/40 backdrop-blur-xl">
         <div className="relative h-48 md:h-64 bg-primary/10 overflow-hidden">

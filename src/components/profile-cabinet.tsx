@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -14,7 +15,7 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
   CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed,
-  Upload, X, CheckCircle2, Instagram, Timer, Brain
+  Upload, X, CheckCircle2, Instagram, Timer, Brain, Share2, Copy
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -42,7 +43,6 @@ const profileSchema = z.object({
   specialization: z.string().optional().default(''),
   bio: z.string().optional().default(''),
   instagramUrl: z.string().optional().default(''),
-  // Поля работы
   occupation: z.string().optional().default(''),
   workActivityType: z.enum(['mental', 'physical']).default('mental'),
   workHoursPerDay: z.coerce.number().optional().default(0),
@@ -122,16 +122,10 @@ export function ProfileCabinet() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (file.size > 7 * 1024 * 1024) {
-      toast({
-        variant: 'destructive',
-        title: 'Файл слишком большой',
-        description: 'Максимальный размер фото — 7 МБ.',
-      });
+      toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер фото — 7 МБ.' });
       return;
     }
-
     const reader = new FileReader();
     reader.onloadend = () => {
       form.setValue('photoUrl', reader.result as string);
@@ -142,25 +136,21 @@ export function ProfileCabinet() {
 
   const onSubmit = async (values: ProfileValues) => {
     if (!user || !firestore) return;
-
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), {
-        ...values,
-        id: user.uid,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-      
+      await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
       toast({ title: 'Профиль обновлен', description: 'Данные успешно сохранены.' });
     } catch (e: any) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Ошибка сохранения', 
-        description: e.message || 'Проверьте соединение с базой данных.' 
-      });
-    } finally { 
-      setLoading(false); 
-    }
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: e.message || 'Проверьте соединение с базой данных.' });
+    } finally { setLoading(false); }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!user) return;
+    const link = `${window.location.origin}/dashboard?spId=${user.uid}`;
+    navigator.clipboard.writeText(link).then(() => {
+      toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете приглашать пациентов напрямую в свой профиль.' });
+    });
   };
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
@@ -195,6 +185,40 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           
+          {/* ИНВАЙТ-ССЫЛКА ДЛЯ СПЕЦИАЛИСТА */}
+          {profileType === 'specialist' && (
+            <Card className="cyber-card bg-primary/10 p-8 border-primary/30 space-y-6 animate-in slide-in-from-top-4 duration-500">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                     <Share2 className="h-6 w-6 text-slate-950" />
+                  </div>
+                  <div className="space-y-0.5">
+                     <h3 className="text-xl font-black text-white uppercase tracking-tight leading-none">Приглашение пациентов</h3>
+                     <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Персональная Bio-ссылка</p>
+                  </div>
+               </div>
+               <div className="space-y-4">
+                  <p className="text-sm font-medium text-white/70 leading-relaxed">
+                     Отправьте эту ссылку пациентам. Перейдя по ней, они попадут прямо в ваш профиль и смогут предоставить вам доступ к своим данным или записаться на консультацию.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                     <div className="flex-1 h-14 rounded-2xl bg-black/40 border border-primary/20 px-6 flex items-center overflow-hidden">
+                        <code className="text-[10px] font-mono text-primary/80 truncate w-full">
+                           {typeof window !== 'undefined' ? `${window.location.origin}/dashboard?spId=${user?.uid}` : 'https://prosebya.ai/...'}
+                        </code>
+                     </div>
+                     <Button 
+                       type="button" 
+                       onClick={handleCopyInviteLink} 
+                       className="h-14 px-8 rounded-2xl bg-primary text-slate-950 font-black uppercase text-xs gap-2 shadow-xl hover:scale-105 transition-all"
+                     >
+                        <Copy className="h-4 w-4" /> Копировать ссылку
+                     </Button>
+                  </div>
+               </div>
+            </Card>
+          )}
+
           {/* АВАТАР */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
@@ -404,7 +428,7 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* РАБОТА (Только для пользователей) */}
+          {/* РАБОТА */}
           {profileType === 'user' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
@@ -452,7 +476,7 @@ export function ProfileCabinet() {
             </div>
           )}
 
-          {/* ПРИВЫЧКИ И ПИТАНИЕ (Только для пользователей) */}
+          {/* ПРИВЫЧКИ И ПИТАНИЕ */}
           {profileType === 'user' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">

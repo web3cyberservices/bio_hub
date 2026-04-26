@@ -9,14 +9,16 @@ import {
   ChevronDown,
   UserCheck,
   BarChart3,
-  Zap
+  Zap,
+  ThumbsUp,
+  Share2
 } from 'lucide-react';
 import { format, startOfToday, startOfDay, addDays, isValid, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, limit, where } from 'firebase/firestore';
-import { ProfileCabinet } from '@/components/profile-cabinet';
+import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { ProfileCabinet } from '@/components/cabinet/profile-cabinet';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -33,10 +35,12 @@ import { SpecialistBookingManager } from '@/components/specialist-booking-manage
 import { ActivitiesHub } from '@/components/activities-hub';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
@@ -48,6 +52,17 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
+
+    // Обработка инвайт-ссылки специалиста
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const spId = params.get('spId');
+      if (spId) {
+        setViewingSpecialistId(spId);
+        // Очищаем URL от параметра, чтобы не открывать профиль при каждом обновлении
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
   }, []);
 
   const dateKey = useMemo(() => {
@@ -66,7 +81,6 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос всех логов для расчета цикла
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -74,13 +88,9 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // [АЛГОРИТМ] Расчет карты дней цикла на основе пользовательской длительности
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
-    
     const map: Record<string, number> = {};
-    
-    // Находим все записи, помеченные как "Начало цикла"
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => {
@@ -92,30 +102,23 @@ export default function DashboardPage() {
         } else {
           dateObj = new Date();
         }
-        
         return {
           timestamp: startOfDay(dateObj).getTime(),
           dateStr: format(dateObj, 'yyyy-MM-dd'),
-          duration: log.cycle?.periodDuration || 5 // Используем сохраненную длительность или 5 по умолчанию
+          duration: log.cycle?.periodDuration || 5
         };
       })
       .sort((a, b) => a.timestamp - b.timestamp);
 
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      // Ставим маркеры на указанное количество дней вперёд
       for (let i = 0; i < start.duration; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
-        
-        // Если наткнулись на новое начало цикла раньше времени, прерываем текущий
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
-        
         map[dStr] = i + 1;
       }
     });
-    
-    console.log("[CALENDAR_SYNC] ТЕКУЩАЯ КАРТА ЦИКЛА:", map);
     return map;
   }, [allLogs]);
 
@@ -156,6 +159,25 @@ export default function DashboardPage() {
   }, [firestore, user?.uid, dateKey]);
 
   const { data: recData } = useDoc<any>(recommendationRef);
+
+  const handleToggleLike = async (postId: string, likedBy: string[]) => {
+    if (!user || user.uid === 'public-user') {
+      toast({ variant: 'destructive', title: 'Вход не выполнен', description: 'Лайки доступны только зарегистрированным пользователям.' });
+      return;
+    }
+    
+    const isLiked = likedBy?.includes(user.uid);
+    const postRef = doc(firestore!, 'posts', postId);
+    
+    try {
+      await updateDoc(postRef, {
+        likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
+        likes: isLiked ? Math.max(0, likedBy.length - 1) : (likedBy.length + 1)
+      });
+    } catch (e: any) {
+      console.error("Like error:", e);
+    }
+  };
 
   if (!isMounted || userLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-[#00ffff] opacity-50" /></div>;
@@ -235,6 +257,25 @@ export default function DashboardPage() {
                               <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
                             </div>
                           )}
+                          <div className="flex items-center gap-6 pt-4 border-t border-white/5">
+                            <button 
+                              onClick={() => handleToggleLike(post.id, post.likedBy || [])}
+                              className={cn(
+                                "flex items-center gap-2 transition-all group",
+                                post.likedBy?.includes(user?.uid) ? "text-primary" : "text-white/30 hover:text-white"
+                              )}
+                            >
+                              <ThumbsUp className={cn("h-5 w-5 transition-transform group-active:scale-125", post.likedBy?.includes(user?.uid) && "fill-primary")} />
+                              <span className="font-black text-sm">{post.likes || 0}</span>
+                            </button>
+                            <button 
+                              onClick={() => setViewingSpecialistId(post.authorId)}
+                              className="flex items-center gap-2 text-white/30 hover:text-white transition-all"
+                            >
+                              <MessageSquare className="h-5 w-5" />
+                              <span className="font-black text-[10px] uppercase tracking-widest">Обсудить</span>
+                            </button>
+                          </div>
                       </Card>
                     ))}
                   </div>
