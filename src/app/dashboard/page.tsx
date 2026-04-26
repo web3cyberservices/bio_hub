@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
   HeartPulse, Settings, ShieldCheck,
@@ -18,7 +17,7 @@ import { format, startOfToday, startOfDay, addDays, isValid, isSameDay } from 'd
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { ProfileCabinet } from '@/components/profile-cabinet';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -42,6 +41,8 @@ export default function DashboardPage() {
   const { firestore } = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
@@ -52,7 +53,18 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
-  }, []);
+    
+    // Обработка глубоких ссылок и редиректов
+    const spId = searchParams.get('spId');
+    if (spId) {
+      router.replace(`/specialist/${spId}`);
+    }
+    
+    const activeChat = searchParams.get('activeChat');
+    if (activeChat) {
+      setActiveTab('chats');
+    }
+  }, [searchParams, router]);
 
   const dateKey = useMemo(() => {
     try {
@@ -70,48 +82,42 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  const cycleLogsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
-  }, [firestore, user?.uid]);
+  // ДИНАМИЧЕСКИЙ РАСЧЕТ КАРТЫ ЦИКЛА
+  const [periodDaysMap, setPeriodDaysMap] = useState<Record<string, number>>({});
 
-  const { data: allLogs } = useCollection<any>(cycleLogsQuery);
-
-  const periodDaysMap = useMemo(() => {
-    if (!allLogs || !allLogs.length) return {};
-    const map: Record<string, number> = {};
+  useEffect(() => {
+    if (!firestore || !user?.uid) return;
     
-    const starts = allLogs
-      .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
-      .map(log => {
-        let dateObj: Date;
-        if (log.timestamp && typeof log.timestamp.toDate === 'function') {
-          dateObj = log.timestamp.toDate();
-        } else if (log.date) {
-          dateObj = new Date(log.date + 'T00:00:00');
-        } else {
-          dateObj = new Date();
-        }
-        return {
-          timestamp: startOfDay(dateObj).getTime(),
-          dateStr: format(dateObj, 'yyyy-MM-dd'),
-          duration: log.cycle?.periodDuration || 5
-        };
-      })
-      .sort((a, b) => a.timestamp - b.timestamp);
+    const q = query(collection(firestore, 'users', user.uid, 'dailyLogs'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const map: Record<string, number> = {};
+      
+      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      const starts = logs
+        .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
+        .sort((a, b) => {
+           const da = a.timestamp?.toDate?.() || new Date(a.date);
+           const db = b.timestamp?.toDate?.() || new Date(b.date);
+           return da.getTime() - db.getTime();
+        });
 
-    starts.forEach(start => {
-      const startDate = new Date(start.dateStr + 'T00:00:00');
-      for (let i = 0; i < start.duration; i++) {
-        const d = addDays(startDate, i);
-        const dStr = format(d, 'yyyy-MM-dd');
-        if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
-        map[dStr] = i + 1;
-      }
+      starts.forEach(start => {
+        const startDate = start.timestamp?.toDate?.() || new Date(start.date + 'T00:00:00');
+        const duration = start.cycle?.periodDuration || 5;
+        
+        for (let i = 0; i < duration; i++) {
+          const d = addDays(startDate, i);
+          const dStr = format(d, 'yyyy-MM-dd');
+          map[dStr] = i + 1;
+        }
+      });
+
+      setPeriodDaysMap(map);
     });
 
-    return map;
-  }, [allLogs]);
+    return () => unsubscribe();
+  }, [firestore, user?.uid]);
 
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;

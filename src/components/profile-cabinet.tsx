@@ -154,9 +154,9 @@ export function ProfileCabinet() {
 
   const handleShareToTelegram = () => {
     if (!user) return;
-    // Deep link для Telegram бота с параметром специалиста
+    // Генерируем Deep Link для бота
     const botLink = `https://t.me/web3cyberservices_bot?start=spec_${user.uid}`;
-    const shareText = `Заходите в мой профиль специалиста в приложении PRO Себя!`;
+    const shareText = `Заходите в мой Bio-профиль в PRO Себя!`;
     const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
     window.open(fullShareLink, '_blank');
   };
@@ -206,7 +206,7 @@ export function ProfileCabinet() {
                </div>
                <div className="space-y-4">
                   <p className="text-sm font-medium text-white/70 leading-relaxed">
-                     Отправьте ссылку пациентам. Они смогут открыть ваш профиль напрямую в вебе или через Telegram-бот.
+                     Отправьте ссылку пациентам. При клике в Telegram бот @web3cyberservices_bot покажет вашу визитку и даст ссылку на запись.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                      <div className="flex-1 h-14 rounded-2xl bg-black/40 border border-primary/20 px-6 flex items-center overflow-hidden">
