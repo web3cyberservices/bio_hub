@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // [БЕЗ ОГРАНИЧЕНИЙ] Запрос данных для всех
+  // Запрос всех логов для расчета цикла
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -73,26 +73,30 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // [DEBUG] Системный алерт при получении данных
-  useEffect(() => {
-    if (allLogs && allLogs.length > 0) {
-      console.log("ДАННЫЕ ПРИШЛИ (Console):", allLogs.length);
-      // alert("ДАННЫЕ ПРИШЛИ: " + allLogs.length); // Разкомментируйте для шоковой терапии
-    }
-  }, [allLogs]);
-
-  // [АЛГОРИТМ] Расчет карты дней цикла
+  // [АЛГОРИТМ] Расчет карты дней цикла с использованием жестких ключей yyyy-MM-dd
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
     const map: Record<string, number> = {};
     
     const starts = allLogs
-      .filter(log => log.date && log.cycle?.isStart === true)
-      .map(log => ({
-        timestamp: startOfDay(new Date(log.date + 'T00:00:00')).getTime(),
-        dateStr: log.date
-      }))
+      .filter(log => log.cycle?.isStart === true)
+      .map(log => {
+        let dateObj: Date;
+        // Проверяем наличие Timestamp от Firebase для точности
+        if (log.timestamp && typeof log.timestamp.toDate === 'function') {
+          dateObj = log.timestamp.toDate();
+        } else if (log.date) {
+          dateObj = new Date(log.date + 'T00:00:00');
+        } else {
+          dateObj = new Date();
+        }
+        
+        return {
+          timestamp: startOfDay(dateObj).getTime(),
+          dateStr: format(dateObj, 'yyyy-MM-dd')
+        };
+      })
       .sort((a, b) => a.timestamp - b.timestamp);
 
     starts.forEach(start => {
@@ -100,12 +104,12 @@ export default function DashboardPage() {
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
+        // Если встретили новое начало цикла, прерываем текущую нумерацию
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         map[dStr] = i + 1;
       }
     });
     
-    console.log("ТЕКУЩАЯ КАРТА ПЕРИОДА:", map);
     return map;
   }, [allLogs]);
 
@@ -160,7 +164,7 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            {profileType === 'user' && <CycleTrackerDialog selectedDate={selectedDate} />}
+            <CycleTrackerDialog selectedDate={selectedDate} />
 
             <Popover>
               <PopoverTrigger asChild>
@@ -177,6 +181,7 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
+                      // Закрытие поповера через имитацию нажатия Escape
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}

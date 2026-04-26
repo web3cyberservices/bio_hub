@@ -44,7 +44,7 @@ function Calendar({
         day: "h-10 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible"
+          "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible",
         ),
         selected: "bg-primary text-slate-950 shadow-[0_0_20px_rgba(0,255,255,0.5)] rounded-xl font-black scale-105 z-10",
         today: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full font-black text-primary",
@@ -61,64 +61,50 @@ function Calendar({
         Day: ({ date, displayMonth, ...dayProps }: any) => {
           if (!date || !isValid(date)) return null;
           
-          const dateStr = format(date, 'yyyy-MM-dd');
-          const dayNumber = periodDays ? periodDays[dateStr] : undefined;
+          const currentKey = format(date, 'yyyy-MM-dd');
+          const dayNumber = periodDays ? periodDays[currentKey] : undefined;
+          const isPeriod = dayNumber !== undefined;
           const isSelected = props.selected && isSameDay(date, props.selected as Date);
           const isToday = isSameDay(date, new Date());
           const isOutside = date.getMonth() !== displayMonth.getMonth();
 
-          // [ТУПОЕ СРАВНЕНИЕ ДЛЯ ТЕСТА]
-          const isTesting = dateStr === format(new Date(), "yyyy-MM-dd");
-
           if (isOutside && !showOutsideDays) return <td />;
+
+          // Финальный лог для проверки сопоставления
+          if (isPeriod) {
+            console.log("СРАВНИВАЮ:", currentKey, "РЕЗУЛЬТАТ:", isPeriod);
+          }
 
           return (
             <td className="relative p-0 text-center focus-within:relative focus-within:z-20 h-10 w-9 overflow-visible">
-              {/* [DEBUG-ИНЪЕКЦИЯ] Желтая полоска на каждом дне */}
-              <div style={{position:'absolute', top:0, left:0, width:'100%', height:'4px', background:'yellow', zIndex:10000}} />
-
               <button
                 {...dayProps.buttonProps}
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
                   "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible",
-                  isSelected && "bg-primary text-slate-950 shadow-[0_0_20px_rgba(0,255,255,0.5)] rounded-xl font-black scale-105",
+                  isSelected && "bg-primary text-slate-950 shadow-[0_0_20px_rgba(0,255,255,0.5)] rounded-xl font-black scale-105 z-10",
                   isToday && !isSelected && "text-primary font-black after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full",
-                  isOutside && "opacity-10 pointer-events-none",
-                  isTesting && "bg-red-600" // [КРАСНЫЙ ЦВЕТ ДЛЯ ТЕСТА]
+                  isOutside && "opacity-10 pointer-events-none"
                 )}
               >
-                <span className="relative z-10">{date.getDate()}</span>
-                
-                {/* [МАРКЕР] На самом верхнем слое */}
-                {dayNumber !== undefined && (
+                {/* МАРКЕР ПЕРИОДА НА ВЕРХНЕМ СЛОЕ */}
+                {isPeriod && (
                   <div 
-                    className="pointer-events-none transition-all animate-in zoom-in duration-300"
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      right: '-10px',
-                      width: '22px',
-                      height: '22px',
-                      backgroundColor: '#FF7F50',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 9999,
-                      border: '2.5px solid #010411',
-                      boxShadow: '0 0 15px rgba(255,127,80,0.8), 0 0 5px rgba(255,127,80,0.4)',
-                    }}
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center z-20 transition-all animate-in zoom-in duration-300"
                   >
-                    <span style={{
-                      color: 'white',
-                      fontSize: '11px',
-                      fontWeight: '900',
-                      lineHeight: '1',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                    }}>{dayNumber}</span>
+                    {/* Пульсирующая подложка */}
+                    <div className="w-8 h-8 bg-[#FF7F50]/20 border-2 border-[#FF7F50] rounded-full animate-pulse shadow-[0_0_15px_rgba(255,127,80,0.4)]" />
+                    
+                    {/* Порядковый номер */}
+                    <div 
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-[#FF7F50] rounded-full border-2 border-[#010411] flex items-center justify-center shadow-lg"
+                    >
+                       <span className="text-[10px] font-black text-white">{dayNumber}</span>
+                    </div>
                   </div>
                 )}
+                
+                <span className="relative z-10">{date.getDate()}</span>
               </button>
             </td>
           );
