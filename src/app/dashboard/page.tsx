@@ -58,7 +58,7 @@ export default function DashboardPage() {
   }, [selectedDate]);
   
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    if (!firestore || !user?.uid) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
@@ -70,17 +70,19 @@ export default function DashboardPage() {
     return gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
   }, [userData?.gender]);
 
-  // Запрос всех логов для расчета карты циклов
+  // Запрос всех логов для расчета карты циклов (разрешаем для всех, включая public-user)
   const cycleLogsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
+    if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
   }, [firestore, user?.uid]);
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // Расчет карты дней цикла (1, 2, 3...) от даты старта
+  // Расчет карты дней цикла (1, 2, 3...)
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
+    
+    const map: Record<string, number> = {};
     
     // Находим все записи с флагом "Начало цикла"
     const starts = allLogs
@@ -91,11 +93,9 @@ export default function DashboardPage() {
       }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    const map: Record<string, number> = {};
-    
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      // Авто-заполнение на 10 дней вперед от старта или до следующего старта
+      // Авто-заполнение на 10 дней вперед от каждого старта
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
@@ -105,7 +105,7 @@ export default function DashboardPage() {
       }
     });
     
-    console.log("[CALENDAR_SYNC] Current Cycle Map:", map);
+    console.log("[CALENDAR_SYNC] ТЕКУЩАЯ КАРТА ЦИКЛА:", map);
     return map;
   }, [allLogs]);
 
@@ -177,7 +177,6 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      // Авто-закрытие поповера при клике на день
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}
