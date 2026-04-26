@@ -66,7 +66,7 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос всех логов для расчета цикла (РАЗРЕШЕНО ДЛЯ ВСЕХ)
+  // Запрос всех логов для расчета цикла
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -74,12 +74,13 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // [АЛГОРИТМ] Расчет карты дней цикла
+  // [АЛГОРИТМ] Расчет карты дней цикла на основе пользовательской длительности
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
     const map: Record<string, number> = {};
     
+    // Находим все записи, помеченные как "Начало цикла"
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => {
@@ -94,21 +95,27 @@ export default function DashboardPage() {
         
         return {
           timestamp: startOfDay(dateObj).getTime(),
-          dateStr: format(dateObj, 'yyyy-MM-dd')
+          dateStr: format(dateObj, 'yyyy-MM-dd'),
+          duration: log.cycle?.periodDuration || 5 // Используем сохраненную длительность или 5 по умолчанию
         };
       })
       .sort((a, b) => a.timestamp - b.timestamp);
 
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      for (let i = 0; i < 10; i++) {
+      // Ставим маркеры на указанное количество дней вперёд
+      for (let i = 0; i < start.duration; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
+        
+        // Если наткнулись на новое начало цикла раньше времени, прерываем текущий
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
+        
         map[dStr] = i + 1;
       }
     });
     
+    console.log("[CALENDAR_SYNC] ТЕКУЩАЯ КАРТА ЦИКЛА:", map);
     return map;
   }, [allLogs]);
 
@@ -180,7 +187,6 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      // Закрытие поповера через имитацию нажатия Escape
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}
@@ -195,17 +201,8 @@ export default function DashboardPage() {
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
-        {viewingSpecialistId ? (
-          <div className="overflow-y-auto h-full px-4 pb-32 pt-4">
-            <SpecialistPublicProfile 
-              specialistId={viewingSpecialistId} 
-              onBack={() => setViewingSpecialistId(null)} 
-              onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} 
-            />
-          </div>
-        ) : (
-          <div className="w-full h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative">
+          <div className={cn("w-full h-full flex flex-col transition-all", viewingSpecialistId ? "opacity-0 pointer-events-none" : "opacity-100")}>
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
                      {profileType === 'specialist' ? (
@@ -269,22 +266,31 @@ export default function DashboardPage() {
                   <div className="max-w-5xl mx-auto pt-4"><ProfileCabinet /></div>
                 </div>
               )}
-            </div>
-
-            {/* НИЖНЕЕ МЕНЮ */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
-               <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
-                  <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
-                  <button onClick={() => setActiveTab('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}</button>
-                  <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}</button>
-                  <UnifiedDataEntry selectedDate={selectedDate}><button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)]"><Plus className="h-8 w-8 text-white stroke-[3px]" /></button></UnifiedDataEntry>
-                  <button onClick={() => setActiveTab('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}><MessageSquare className="h-6 w-6" /></button>
-                  <button onClick={() => setActiveTab('activities')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff]" : "text-white/30")}><Zap className="h-6 w-6" /></button>
-                  <button onClick={() => setActiveTab('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-6 w-6" /></button>
-               </div>
-            </div>
           </div>
-        )}
+
+          {viewingSpecialistId && (
+            <div className="absolute inset-0 z-[400] bg-black overflow-y-auto px-4 pb-32 pt-4">
+              <SpecialistPublicProfile 
+                specialistId={viewingSpecialistId} 
+                onBack={() => setViewingSpecialistId(null)} 
+                onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} 
+              />
+            </div>
+          )}
+        </div>
+
+        {/* НИЖНЕЕ МЕНЮ */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
+           <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
+              <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
+              <button onClick={() => setActiveTab('meals')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}</button>
+              <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}</button>
+              <UnifiedDataEntry selectedDate={selectedDate}><button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)]"><Plus className="h-8 w-8 text-white stroke-[3px]" /></button></UnifiedDataEntry>
+              <button onClick={() => setActiveTab('chats')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}><MessageSquare className="h-6 w-6" /></button>
+              <button onClick={() => setActiveTab('activities')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff]" : "text-white/30")}><Zap className="h-6 w-6" /></button>
+              <button onClick={() => setActiveTab('profile')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-6 w-6" /></button>
+           </div>
+        </div>
       </main>
     </div>
   );
