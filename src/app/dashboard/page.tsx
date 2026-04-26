@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -182,7 +183,10 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <CycleTrackerDialog selectedDate={selectedDate} />
+            {/* Кнопка трекера цикла отображается только если пол указан как "женский" */}
+            {userData?.gender === 'женский' && (
+              <CycleTrackerDialog selectedDate={selectedDate} />
+            )}
 
             <Popover>
               <PopoverTrigger asChild>
