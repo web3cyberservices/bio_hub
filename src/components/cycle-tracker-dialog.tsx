@@ -11,7 +11,7 @@ import {
   HeartPulse, Zap, Brain, Activity, Smile, Sun, 
   Moon, Battery, Wind, Sparkles, Loader2, CheckCircle2,
   Droplets, Thermometer, UserCheck, MessageSquare, Flame,
-  CalendarDays, Timer
+  CalendarDays, Timer, Cookie, Pizza, Frown, Meh, Angry, CloudRain, Heart
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -40,6 +40,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
   const [flowIntensity, setFlowIntensity] = useState('medium');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [mood, setMood] = useState<string[]>([]);
+  const [cravings, setCravings] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -56,6 +57,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
       setFlowIntensity(c.intensity || 'medium');
       setSelectedSymptoms(c.symptoms || []);
       setMood(c.mood || []);
+      setCravings(c.cravings || []);
       setNotes(c.notes || '');
     } else {
       setIsCycleActive(false);
@@ -65,6 +67,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
       setFlowIntensity('medium');
       setSelectedSymptoms([]);
       setMood([]);
+      setCravings([]);
       setNotes('');
     }
   }, [existingLog, isOpen]);
@@ -91,6 +94,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
           intensity: isCycleActive ? flowIntensity : null,
           symptoms: selectedSymptoms,
           mood: mood,
+          cravings: cravings,
           notes: notes
         }
       }, { merge: true });
@@ -124,6 +128,22 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
     { id: 'back_pain', label: 'Спина', icon: Wind },
   ];
 
+  const moodList = [
+    { id: 'happy', label: 'Радость', icon: Smile, color: 'text-emerald-400' },
+    { id: 'calm', label: 'Спокойствие', icon: Meh, color: 'text-blue-400' },
+    { id: 'irritable', label: 'Раздражение', icon: Angry, color: 'text-orange-400' },
+    { id: 'sad', label: 'Грусть', icon: CloudRain, color: 'text-indigo-400' },
+    { id: 'sensitive', label: 'Чувствительность', icon: Heart, color: 'text-pink-400' },
+  ];
+
+  const toggleMood = (id: string) => {
+    setMood(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
+  };
+
+  const toggleCraving = (id: string) => {
+    setCravings(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -147,7 +167,6 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
           <div className="p-6 md:p-10 space-y-8 bg-pink-950/20 backdrop-blur-3xl min-h-[500px]">
             {!isSuccess ? (
               <>
-                {/* НАСТРОЙКА ДЛИТЕЛЬНОСТИ */}
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
                     <Timer className="h-3 w-3" /> Продолжительность периода
@@ -200,44 +219,95 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                   </Button>
                 </div>
 
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
-                      <Droplets className="h-3 w-3" /> Интенсивность выделений
-                    </h4>
-                    <div className="grid grid-cols-4 gap-3">
-                      {flowLevels.map((lvl) => (
+                {/* НАСТРОЕНИЕ */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <Smile className="h-3 w-3" /> Ваше настроение
+                   </h4>
+                   <div className="grid grid-cols-5 gap-2">
+                      {moodList.map((m) => (
                         <button 
-                          key={lvl.id} 
-                          onClick={() => { setFlowIntensity(lvl.id); setIsCycleActive(true); }}
+                          key={m.id} 
+                          onClick={() => toggleMood(m.id)}
                           className={cn(
-                            "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
-                            flowIntensity === lvl.id && isCycleActive ? "bg-pink-500/20 border-pink-500 shadow-lg" : "bg-white/5 border-white/5"
+                            "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all",
+                            mood.includes(m.id) ? "bg-pink-500/20 border-pink-500 shadow-inner" : "bg-white/5 border-white/5"
                           )}
                         >
-                          <div className={cn("w-3 h-3 rounded-full shadow-sm", lvl.color)} />
-                          <span className={cn("text-[8px] font-black uppercase", flowIntensity === lvl.id && isCycleActive ? "text-pink-400" : "text-white/30")}>
-                            {lvl.label}
+                          <m.icon className={cn("h-6 w-6", mood.includes(m.id) ? "text-white" : m.color)} />
+                          <span className={cn("text-[7px] font-black uppercase text-center leading-none", mood.includes(m.id) ? "text-white" : "text-white/20")}>
+                            {m.label}
                           </span>
                         </button>
                       ))}
-                    </div>
-                  </div>
+                   </div>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                     <button 
-                       onClick={handleToggleStart} 
-                       className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleStart && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
-                     >
-                       {isCycleStart && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Начало цикла
-                     </button>
-                     <button 
-                       onClick={() => { setIsCycleEnd(!isCycleEnd); setIsCycleActive(true); }} 
-                       className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleEnd && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
-                     >
-                       {isCycleEnd && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Конец цикла
-                     </button>
+                {/* ПИЩЕВЫЕ ТЯГИ */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <Sparkles className="h-3 w-3" /> Тяга к еде
+                   </h4>
+                   <div className="grid grid-cols-2 gap-4">
+                      <button 
+                        onClick={() => toggleCraving('sweet')}
+                        className={cn(
+                          "h-16 rounded-[1.5rem] border-2 flex items-center justify-center gap-3 transition-all",
+                          cravings.includes('sweet') ? "bg-pink-500 border-pink-400 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/40"
+                        )}
+                      >
+                        <Cookie className={cn("h-5 w-5", cravings.includes('sweet') ? "text-white" : "text-orange-300")} />
+                        <span className="text-[10px] font-black uppercase">Сладкое</span>
+                      </button>
+                      <button 
+                        onClick={() => toggleCraving('salty')}
+                        className={cn(
+                          "h-16 rounded-[1.5rem] border-2 flex items-center justify-center gap-3 transition-all",
+                          cravings.includes('salty') ? "bg-pink-500 border-pink-400 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/40"
+                        )}
+                      >
+                        <Pizza className={cn("h-5 w-5", cravings.includes('salty') ? "text-white" : "text-yellow-300")} />
+                        <span className="text-[10px] font-black uppercase">Солёное</span>
+                      </button>
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                    <Droplets className="h-3 w-3" /> Интенсивность выделений
+                  </h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {flowLevels.map((lvl) => (
+                      <button 
+                        key={lvl.id} 
+                        onClick={() => { setFlowIntensity(lvl.id); setIsCycleActive(true); }}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
+                          flowIntensity === lvl.id && isCycleActive ? "bg-pink-500/20 border-pink-500 shadow-lg" : "bg-white/5 border-white/5"
+                        )}
+                      >
+                        <div className={cn("w-3 h-3 rounded-full shadow-sm", lvl.color)} />
+                        <span className={cn("text-[8px] font-black uppercase", flowIntensity === lvl.id && isCycleActive ? "text-pink-400" : "text-white/30")}>
+                          {lvl.label}
+                        </span>
+                      </button>
+                    ))}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <button 
+                     onClick={handleToggleStart} 
+                     className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleStart && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
+                   >
+                     {isCycleStart && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Начало цикла
+                   </button>
+                   <button 
+                     onClick={() => { setIsCycleEnd(!isCycleEnd); setIsCycleActive(true); }} 
+                     className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleEnd && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
+                   >
+                     {isCycleEnd && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Конец цикла
+                   </button>
                 </div>
 
                 <div className="space-y-4">
