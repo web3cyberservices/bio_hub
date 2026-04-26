@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -58,27 +59,30 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        Day: ({ date, displayMonth, ...dayProps }: any) => {
+        Day: ({ day, modifiers, ...dayProps }: any) => {
+          const date = day.date;
           if (!date || !isValid(date)) return null;
           
           const currentKey = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[currentKey] : undefined;
           const isPeriod = dayNumber !== undefined;
-          const isSelected = props.selected && isSameDay(date, props.selected as Date);
-          const isToday = isSameDay(date, new Date());
-          const isOutside = date.getMonth() !== displayMonth.getMonth();
-
-          if (isOutside && !showOutsideDays) return <td />;
-
-          // Финальный лог для проверки сопоставления
+          
+          // Лог сопоставления для отладки
           if (isPeriod) {
             console.log("СРАВНИВАЮ:", currentKey, "РЕЗУЛЬТАТ:", isPeriod);
           }
 
+          const isSelected = modifiers.selected;
+          const isToday = modifiers.today;
+          const isOutside = modifiers.outside;
+
+          if (isOutside && !showOutsideDays) return <td />;
+
           return (
             <td className="relative p-0 text-center focus-within:relative focus-within:z-20 h-10 w-9 overflow-visible">
               <button
-                {...dayProps.buttonProps}
+                type="button"
+                onClick={() => (props as any).onSelect?.(date)}
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
                   "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible",
@@ -87,7 +91,7 @@ function Calendar({
                   isOutside && "opacity-10 pointer-events-none"
                 )}
               >
-                {/* МАРКЕР ПЕРИОДА НА ВЕРХНЕМ СЛОЕ */}
+                {/* МАРКЕР ПЕРИОДА (ВЕРХНИЙ СЛОЙ) */}
                 {isPeriod && (
                   <div 
                     className="pointer-events-none absolute inset-0 flex items-center justify-center z-20 transition-all animate-in zoom-in duration-300"
@@ -104,6 +108,7 @@ function Calendar({
                   </div>
                 )}
                 
+                {/* ЦИФРА ДНЯ (ДОЛЖНА БЫТЬ ВИДНА) */}
                 <span className="relative z-10">{date.getDate()}</span>
               </button>
             </td>
@@ -113,14 +118,6 @@ function Calendar({
       {...props}
     />
   )
-}
-
-function isSameDay(d1: Date, d2: Date) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
 }
 
 Calendar.displayName = "Calendar"

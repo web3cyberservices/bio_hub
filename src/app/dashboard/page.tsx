@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -65,7 +66,7 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // Запрос всех логов для расчета цикла
+  // Запрос всех логов для расчета цикла (РАЗРЕШЕНО ДЛЯ ВСЕХ)
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -73,7 +74,7 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // [АЛГОРИТМ] Расчет карты дней цикла с использованием жестких ключей yyyy-MM-dd
+  // [АЛГОРИТМ] Расчет карты дней цикла
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
@@ -83,7 +84,6 @@ export default function DashboardPage() {
       .filter(log => log.cycle?.isStart === true)
       .map(log => {
         let dateObj: Date;
-        // Проверяем наличие Timestamp от Firebase для точности
         if (log.timestamp && typeof log.timestamp.toDate === 'function') {
           dateObj = log.timestamp.toDate();
         } else if (log.date) {
@@ -104,7 +104,6 @@ export default function DashboardPage() {
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
-        // Если встретили новое начало цикла, прерываем текущую нумерацию
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         map[dStr] = i + 1;
       }
@@ -156,7 +155,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
+    <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden relative h-screen w-screen">
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
@@ -272,7 +271,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* НИЖНЕЕ МЕНЮ (ВСЕГДА ЗАКРЕПЛЕНО) */}
+            {/* НИЖНЕЕ МЕНЮ */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
                <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
                   <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
