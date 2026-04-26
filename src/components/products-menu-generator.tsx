@@ -136,40 +136,40 @@ export function ProductsMenuGenerator() {
 
   if (results) {
     return (
-      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex items-center justify-between">
-           <h3 className="text-2xl font-black tracking-tight">Решения из ваших продуктов</h3>
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+        <div className="flex items-center justify-between px-2">
+           <h3 className="text-2xl font-black tracking-tight text-white uppercase">ИИ-Решения</h3>
            <Button variant="ghost" onClick={() => setResults(null)} className="rounded-xl text-primary font-black uppercase text-[10px]">Изменить выбор</Button>
         </div>
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-6">
            {results.map((meal, i) => (
-             <Card key={i} className="premium-card overflow-hidden border-none flex flex-col md:flex-row">
+             <Card key={i} className="cyber-card overflow-hidden border-none flex flex-col md:flex-row bg-white/5 backdrop-blur-xl">
                 <div className="relative w-full md:w-64 h-48 md:h-auto shrink-0">
                    <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
-                   <Badge className="absolute top-4 left-4 bg-primary text-white border-none font-black text-[9px]">{meal.time}</Badge>
+                   <Badge className="absolute top-4 left-4 bg-primary text-slate-950 border-none font-black text-[9px] uppercase px-3">{meal.time}</Badge>
                 </div>
                 <CardContent className="p-8 flex-1 space-y-6">
                    <div className="flex justify-between items-start">
                       <div>
-                         <h4 className="text-2xl font-black tracking-tight">{meal.name}</h4>
-                         <p className="text-muted-foreground text-sm font-medium italic mt-1">{meal.description}</p>
+                         <h4 className="text-2xl font-black tracking-tight text-white uppercase">{meal.name}</h4>
+                         <p className="text-white/50 text-sm font-medium italic mt-1 leading-relaxed">{meal.description}</p>
                       </div>
                       <div className="text-right">
-                         <p className="text-3xl font-black text-primary">{meal.calories}</p>
-                         <p className="text-[8px] font-black uppercase text-muted-foreground opacity-40">Ккал</p>
+                         <p className="text-3xl font-black text-primary drop-shadow-[0_0_10px_rgba(0,255,255,0.3)]">{meal.calories}</p>
+                         <p className="text-[8px] font-black uppercase text-white/30 tracking-widest mt-1">Ккал</p>
                       </div>
                    </div>
                    <div className="flex flex-wrap gap-2">
                       {meal.components.map((c: any, ci: number) => (
-                        <Badge key={ci} variant="outline" className="rounded-lg border-primary/10 bg-primary/5 text-primary text-[10px] py-1 px-3">
+                        <Badge key={ci} variant="outline" className="rounded-xl border-primary/10 bg-primary/5 text-primary text-[10px] py-1.5 px-4 font-bold">
                            {c.ingredient} ({c.weight})
                         </Badge>
                       ))}
                    </div>
-                   <div className="flex items-center gap-6 pt-4 border-t text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
-                      <div className="flex items-center gap-1.5"><Flame className="h-3 w-3 text-orange-500" /> Б: {meal.protein}г</div>
-                      <div className="flex items-center gap-1.5"><Droplet className="h-3 w-3 text-yellow-500" /> Ж: {meal.fat}г</div>
-                      <div className="flex items-center gap-1.5"><Zap className="h-3 w-3 text-primary" /> У: {meal.carbs}г</div>
+                   <div className="flex items-center gap-6 pt-6 border-t border-white/5 text-[10px] font-black uppercase tracking-widest text-white/40">
+                      <div className="flex items-center gap-2"><Flame className="h-3.5 w-3.5 text-orange-500" /> Б: {meal.protein}г</div>
+                      <div className="flex items-center gap-2"><Droplet className="h-3.5 w-3.5 text-yellow-500" /> Ж: {meal.fat}г</div>
+                      <div className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-primary" /> У: {meal.carbs}г</div>
                    </div>
                 </CardContent>
              </Card>
@@ -180,110 +180,106 @@ export function ProductsMenuGenerator() {
   }
 
   return (
-    <Card className="premium-card overflow-hidden border-none bg-white/60 backdrop-blur-md max-w-3xl mx-auto">
-      <div className="p-8 md:p-12 space-y-10">
-        <div className="text-center space-y-2">
-           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ShoppingBasket className="h-8 w-8 text-primary" />
+    <div className="bg-transparent max-w-4xl mx-auto pb-10">
+      <div className="space-y-10">
+        <div className="text-center space-y-3">
+           <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-4 border border-primary/20 shadow-inner">
+              <ShoppingBasket className="h-10 w-10 text-primary" />
            </div>
-           <h3 className="text-3xl font-black tracking-tight">Создать из продуктов</h3>
-           <p className="text-muted-foreground font-medium text-sm">Впишите голосом, текстом или сфотографируйте холодильник.</p>
+           <h3 className="text-3xl font-black tracking-tighter text-white uppercase">Ваш холодильник</h3>
+           <p className="text-white/40 font-medium text-sm tracking-wide uppercase text-[10px]">Впишите голосом или сфотографируйте продукты</p>
         </div>
 
         <div className="space-y-8">
            <div className="relative group">
               <Textarea 
-                placeholder="Впишите продукты здесь..."
+                placeholder="Напишите список продуктов через запятую..."
                 value={products}
                 onChange={e => setProducts(e.target.value)}
-                className="min-h-[120px] rounded-3xl bg-primary/5 border-none p-6 font-medium text-lg shadow-inner resize-none focus:ring-4 focus:ring-primary/5 transition-all pr-16"
+                className="min-h-[140px] rounded-[2rem] bg-white/5 border-white/10 p-8 font-bold text-xl text-white shadow-inner resize-none focus:ring-4 focus:ring-primary/5 transition-all pr-16"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-                 <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn(
-                      "h-12 w-12 rounded-full shadow-lg transition-all",
-                      isListening ? "bg-red-500 text-white animate-pulse" : "bg-white text-primary"
-                    )} 
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                 <button 
                     onClick={startVoiceInput}
+                    className={cn(
+                      "h-14 w-14 rounded-full shadow-2xl flex items-center justify-center transition-all",
+                      isListening ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
+                    )} 
                  >
-                    <Mic className="h-5 w-5" />
-                 </Button>
+                    <Mic className="h-6 w-6" />
+                 </button>
               </div>
            </div>
 
            {scannedProducts.length > 0 && (
-              <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-                 <div className="flex items-center justify-between px-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-primary">Отсканировано ({scannedProducts.length})</label>
-                    <Button variant="ghost" size="sm" onClick={() => setScannedProducts([])} className="h-6 text-[8px] font-black uppercase text-destructive">Очистить</Button>
+              <div className="space-y-4 animate-in slide-in-from-top-2 duration-300 px-2">
+                 <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/60">Отсканировано ({scannedProducts.length})</label>
+                    <Button variant="ghost" size="sm" onClick={() => setScannedProducts([])} className="h-6 text-[8px] font-black uppercase text-destructive hover:bg-destructive/10">Очистить</Button>
                  </div>
                  <div className="flex flex-wrap gap-2">
                     {scannedProducts.map((p, i) => (
-                       <Badge key={i} className="pl-4 pr-1 py-1 h-10 rounded-xl bg-primary text-white font-black border-none gap-2 text-xs shadow-md">
+                       <Badge key={i} className="pl-4 pr-1 py-1 h-12 rounded-2xl bg-primary text-slate-950 font-black border-none gap-2 text-xs shadow-xl">
                           {p.name}
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-black/10 text-white" onClick={() => removeScannedProduct(i)}>
-                             <X className="h-3 w-3" />
-                          </Button>
+                          <button onClick={() => removeScannedProduct(i)} className="h-8 w-8 rounded-xl hover:bg-black/10 flex items-center justify-center">
+                             <X className="h-4 w-4" />
+                          </button>
                        </Badge>
                     ))}
                  </div>
               </div>
            )}
 
-           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-20 md:h-24 rounded-3xl border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all group" onClick={() => setIsScannerOpen(true)}>
-                <ScanBarcode className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-widest">ШТРИХ-КОД</span>
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              <Button variant="outline" className="h-24 md:h-28 rounded-[2rem] border-dashed border-2 border-white/10 bg-white/5 flex flex-col gap-3 hover:border-primary/40 hover:bg-primary/5 transition-all group" onClick={() => setIsScannerOpen(true)}>
+                <ScanBarcode className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-primary">Штрих-код</span>
               </Button>
-              <Button variant="outline" className="h-20 md:h-24 rounded-3xl border-dashed border-2 flex flex-col gap-2 hover:bg-primary/5 transition-all group" onClick={startCamera}>
-                <Camera className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                <span className="text-[9px] font-black uppercase tracking-widest">ФОТО ЕДЫ</span>
+              <Button variant="outline" className="h-24 md:h-28 rounded-[2rem] border-dashed border-2 border-white/10 bg-white/5 flex flex-col gap-3 hover:border-primary/40 hover:bg-primary/5 transition-all group" onClick={startCamera}>
+                <Camera className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-primary">Фото еды</span>
               </Button>
               <label className="cursor-pointer col-span-2 md:col-span-1">
-                <div className="h-20 md:h-24 rounded-3xl border-dashed border-2 flex flex-col gap-2 items-center justify-center hover:bg-primary/5 transition-all group">
-                  <Upload className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">ФАЙЛЫ</span>
+                <div className="h-24 md:h-28 rounded-[2rem] border-dashed border-2 border-white/10 bg-white/5 flex flex-col gap-3 items-center justify-center hover:border-primary/40 hover:bg-primary/5 transition-all group">
+                  <Upload className="h-7 w-7 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/50 group-hover:text-primary">Файлы</span>
                 </div>
                 <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} />
               </label>
            </div>
 
            {showCamera && (
-             <div className="relative rounded-3xl overflow-hidden bg-black aspect-video shadow-2xl">
+             <div className="relative rounded-[2.5rem] overflow-hidden bg-black aspect-video shadow-2xl border-4 border-white/5">
                 <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-4">
-                   <Button onClick={capturePhoto} className="rounded-full w-14 h-14 bg-white text-primary shadow-xl"><Camera className="h-7 w-7" /></Button>
-                   <Button onClick={() => setShowCamera(false)} variant="destructive" className="rounded-full w-14 h-14 shadow-xl"><X className="h-7 w-7" /></Button>
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-6">
+                   <button onClick={capturePhoto} className="rounded-full h-16 w-16 bg-white text-primary shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center"><Camera className="h-8 w-8" /></button>
+                   <button onClick={() => setShowCamera(false)} className="rounded-full h-16 w-16 bg-red-500 text-white shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center"><X className="h-8 w-8" /></button>
                 </div>
              </div>
            )}
 
            {images.length > 0 && !showCamera && (
-             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 animate-in fade-in duration-500">
+             <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 animate-in fade-in duration-500">
                 {images.map((img, i) => (
-                  <div key={i} className="relative rounded-2xl overflow-hidden aspect-square border-4 border-white shadow-lg group">
+                  <div key={i} className="relative rounded-3xl overflow-hidden aspect-square border-4 border-white/5 shadow-2xl group">
                     <img src={img} alt={`Preview ${i}`} className="w-full h-full object-cover" />
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      className="absolute top-2 right-2 rounded-full h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" 
+                    <button 
                       onClick={() => removeImage(i)}
+                      className="absolute top-3 right-3 rounded-xl h-10 w-10 bg-red-500 text-white shadow-xl opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center"
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
                 ))}
              </div>
            )}
 
            <Button 
-             className="w-full h-16 md:h-24 rounded-3xl md:rounded-[2.5rem] text-xl md:text-2xl font-black bg-primary shadow-[0_20px_50px_rgba(45,122,77,0.3)] hover:scale-[1.02] transition-all"
+             className="w-full h-20 md:h-24 rounded-[2.5rem] text-xl md:text-2xl font-black bg-primary text-slate-950 shadow-[0_20px_50px_rgba(0,255,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all border-4 border-white/10"
              onClick={handleSubmit}
              disabled={loading}
            >
-             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Sparkles className="mr-3 h-7 w-7 text-accent animate-pulse" /> СОСТАВИТЬ МЕНЮ</>}
+             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Sparkles className="mr-3 h-8 w-8 animate-pulse text-white/50" /> СОСТАВИТЬ МЕНЮ</>}
            </Button>
         </div>
       </div>
@@ -293,6 +289,6 @@ export function ProductsMenuGenerator() {
         onOpenChange={setIsScannerOpen} 
         onScan={handleBarcodeScan} 
       />
-    </Card>
+    </div>
   );
 }
