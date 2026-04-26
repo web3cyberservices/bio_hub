@@ -32,11 +32,11 @@ function Calendar({
         nav: "flex items-center justify-between absolute inset-x-4 top-4 z-[100] w-[calc(100%-2rem)]", 
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center absolute left-0"
         ),
         button_next: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center"
+          "h-10 w-10 p-0 opacity-70 hover:opacity-100 rounded-xl text-primary transition-all bg-white/5 border border-white/5 flex items-center justify-center absolute right-0"
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex justify-between mb-2",
@@ -66,31 +66,31 @@ function Calendar({
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
 
           return (
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center overflow-visible">
               <span className="relative z-10">{date.getDate()}</span>
               
               {dayNumber !== undefined && (
                 <div 
-                  className="pointer-events-none"
+                  className="pointer-events-none transition-all animate-in zoom-in duration-300"
                   style={{
                     position: 'absolute',
-                    top: '-4px',
-                    right: '-4px',
-                    width: '18px',
-                    height: '18px',
+                    top: '-8px',
+                    right: '-8px',
+                    width: '20px',
+                    height: '20px',
                     backgroundColor: '#FF7F50',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 50,
+                    zIndex: 9999,
                     border: '2px solid #010411',
-                    boxShadow: '0 0 8px rgba(255,127,80,0.4)',
+                    boxShadow: '0 0 15px rgba(255,127,80,0.6)',
                   }}
                 >
                   <span style={{
                     color: 'white',
-                    fontSize: '9px',
+                    fontSize: '10px',
                     fontWeight: '900',
                     lineHeight: '1',
                   }}>{dayNumber}</span>
