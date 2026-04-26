@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, Settings, 
+  HeartPulse, Settings, ShieldCheck,
   LayoutGrid, Activity, Calendar as CalendarIcon,
   ChevronDown,
   UserCheck,
@@ -183,7 +183,11 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Кнопка трекера цикла отображается только если пол указан как "женский" */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+               <span className="text-[8px] font-black uppercase text-emerald-500/80 tracking-widest">AES-256 Protocol Active</span>
+            </div>
+
             {userData?.gender === 'женский' && (
               <CycleTrackerDialog selectedDate={selectedDate} />
             )}
@@ -303,7 +307,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* НИЖНЕЕ МЕНЮ */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
            <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-6 md:px-10 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-6 w-6" /></button>
