@@ -14,7 +14,7 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
   CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed,
-  Upload, X, CheckCircle2, Instagram
+  Upload, X, CheckCircle2, Instagram, Timer, Brain
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -42,6 +42,10 @@ const profileSchema = z.object({
   specialization: z.string().optional().default(''),
   bio: z.string().optional().default(''),
   instagramUrl: z.string().optional().default(''),
+  // Поля работы
+  occupation: z.string().optional().default(''),
+  workActivityType: z.enum(['mental', 'physical']).default('mental'),
+  workHoursPerDay: z.coerce.number().optional().default(0),
 });
 
 type ProfileValues = z.infer<typeof profileSchema>;
@@ -78,6 +82,9 @@ export function ProfileCabinet() {
       specialization: '',
       bio: '',
       instagramUrl: '',
+      occupation: '',
+      workActivityType: 'mental',
+      workHoursPerDay: 0,
     },
   });
 
@@ -105,6 +112,9 @@ export function ProfileCabinet() {
         specialization: userData.specialization || '',
         bio: userData.bio || '',
         instagramUrl: userData.instagramUrl || '',
+        occupation: userData.occupation || '',
+        workActivityType: userData.workActivityType || 'mental',
+        workHoursPerDay: userData.workHoursPerDay || 0,
       }); 
     } 
   }, [userData, form]);
@@ -394,11 +404,59 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
+          {/* РАБОТА (Только для пользователей) */}
+          {profileType === 'user' && (
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+                <Briefcase className="h-4 w-4" /> 3. Работа
+              </h3>
+              <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="occupation" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Профессия</FormLabel>
+                      <FormControl><Input {...field} placeholder="Напр: Программист, Учитель..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Timer className="h-3.5 w-3.5" /> Часов работы в день</FormLabel>
+                      <FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                    </FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Характер работы</FormLabel>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button 
+                        type="button" 
+                        onClick={() => form.setValue('workActivityType', 'mental')}
+                        variant={field.value === 'mental' ? "default" : "outline"}
+                        className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2", field.value === 'mental' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white/40")}
+                      >
+                         <Brain className="h-4 w-4" /> Умственная
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={() => form.setValue('workActivityType', 'physical')}
+                        variant={field.value === 'physical' ? "default" : "outline"}
+                        className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white/40")}
+                      >
+                         <Activity className="h-4 w-4" /> Физическая
+                      </Button>
+                    </div>
+                  </FormItem>
+                )} />
+              </Card>
+            </div>
+          )}
+
           {/* ПРИВЫЧКИ И ПИТАНИЕ (Только для пользователей) */}
           {profileType === 'user' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-                <UtensilsCrossed className="h-4 w-4" /> 3. Привычки и Питание
+                <UtensilsCrossed className="h-4 w-4" /> 4. Привычки и Питание
               </h3>
               <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
