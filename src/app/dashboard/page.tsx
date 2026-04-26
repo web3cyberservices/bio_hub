@@ -65,13 +65,8 @@ export default function DashboardPage() {
 
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
-  
-  const isFemale = useMemo(() => {
-    const gender = String(userData?.gender || '').toLowerCase().trim();
-    return gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
-  }, [userData?.gender]);
 
-  // Запрос всех логов для расчета карты циклов (разрешаем для всех, включая public-user)
+  // [РЕАКТИВНОСТЬ] Запрос логов без ограничений по гендеру
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -79,13 +74,12 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // Расчет карты дней цикла (1, 2, 3...)
+  // [АЛГОРИТМ] Расчет карты дней цикла
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
     const map: Record<string, number> = {};
     
-    // Находим все записи с флагом "Начало цикла"
     const starts = allLogs
       .filter(log => log.date && log.cycle?.isStart === true)
       .map(log => ({
@@ -96,17 +90,15 @@ export default function DashboardPage() {
 
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      // Авто-заполнение на 10 дней вперед от каждого старта
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
-        // Если через i дней начинается новый цикл - прерываем нумерацию старого
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         map[dStr] = i + 1;
       }
     });
     
-    console.log("[CALENDAR_SYNC] ТЕКУЩАЯ КАРТА ЦИКЛА:", map);
+    console.log("[BIO-CYCLE-DEBUG] Текущая карта периодов:", map);
     return map;
   }, [allLogs]);
 
@@ -161,7 +153,8 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            {profileType === 'user' && isFemale && <CycleTrackerDialog selectedDate={selectedDate} />}
+            {/* Ограничение снято: доступно всем пользователям */}
+            {profileType === 'user' && <CycleTrackerDialog selectedDate={selectedDate} />}
 
             <Popover>
               <PopoverTrigger asChild>
@@ -178,7 +171,7 @@ export default function DashboardPage() {
                   onSelect={(date) => {
                     if (date) {
                       setSelectedDate(date);
-                      // Принудительное закрытие поповера через имитацию клика или стейт
+                      // Закрываем поповер через эмуляцию ESC
                       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
                     }
                   }}
@@ -215,6 +208,7 @@ export default function DashboardPage() {
             {activeTab === 'feed' && (
               <div className="m-0 pt-1 overflow-y-auto h-full px-4 pb-40 no-scrollbar outline-none animate-in fade-in duration-300">
                 <div className="max-w-3xl mx-auto space-y-8 pb-10">
+                  <div className="flex justify-end mb-4"><CreatePostDialog /></div>
                   {posts?.map((post) => (
                     <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
                         <div className="flex items-center justify-between">

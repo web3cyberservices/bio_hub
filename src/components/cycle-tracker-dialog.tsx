@@ -67,9 +67,16 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
     }
   }, [existingLog, isOpen]);
 
-  // Хелпер для авто-активации цикла при выборе любого параметра
-  const activateCycle = () => {
-    if (!isCycleActive) setIsCycleActive(true);
+  // [АВТО-АКТИВАЦИЯ] Принудительно включаем цикл при нажатии на параметры
+  const handleToggleStart = () => {
+    const newState = !isCycleStart;
+    setIsCycleStart(newState);
+    if (newState) setIsCycleActive(true);
+  };
+
+  const handleSetIntensity = (lvl: string) => {
+    setFlowIntensity(lvl);
+    setIsCycleActive(true);
   };
 
   const handleSave = async () => {
@@ -176,7 +183,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                       {flowLevels.map((lvl) => (
                         <button 
                           key={lvl.id} 
-                          onClick={() => { setFlowIntensity(lvl.id); activateCycle(); }}
+                          onClick={() => handleSetIntensity(lvl.id)}
                           className={cn(
                             "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
                             flowIntensity === lvl.id && isCycleActive ? "bg-pink-500/20 border-pink-500 shadow-lg" : "bg-white/5 border-white/5"
@@ -193,13 +200,13 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
 
                   <div className="grid grid-cols-2 gap-4">
                      <button 
-                       onClick={() => { setIsCycleStart(!isCycleStart); activateCycle(); }} 
+                       onClick={handleToggleStart} 
                        className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleStart && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
                      >
                        {isCycleStart && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Начало цикла
                      </button>
                      <button 
-                       onClick={() => { setIsCycleEnd(!isCycleEnd); activateCycle(); }} 
+                       onClick={() => { setIsCycleEnd(!isCycleEnd); setIsCycleActive(true); }} 
                        className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleEnd && isCycleActive ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}
                      >
                        {isCycleEnd && isCycleActive && <CheckCircle2 className="h-4 w-4" />} Конец цикла
@@ -215,7 +222,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                       {symptomList.map((s) => (
                         <button 
                           key={s.id} 
-                          onClick={() => { setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id]); activateCycle(); }}
+                          onClick={() => { setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id]); setIsCycleActive(true); }}
                           className={cn(
                             "flex flex-col items-center justify-center gap-3 p-5 rounded-[1.5rem] border-2 transition-all",
                             selectedSymptoms.includes(s.id) ? "bg-pink-500/20 border-pink-500 text-pink-400 shadow-inner" : "bg-white/5 border-white/5 text-white/20"
@@ -236,7 +243,7 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
                       {moodList.map((m) => (
                         <button 
                           key={m.id} 
-                          onClick={() => { setMood(prev => prev.includes(m.id) ? prev.filter(i => i !== m.id) : [...prev, m.id]); activateCycle(); }}
+                          onClick={() => { setMood(prev => prev.includes(m.id) ? prev.filter(i => i !== m.id) : [...prev, m.id]); setIsCycleActive(true); }}
                           className={cn(
                             "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
                             mood.includes(m.id) ? "bg-pink-500/20 border-pink-500 text-pink-400" : "bg-white/5 border-white/5 text-white/20"
