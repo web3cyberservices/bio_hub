@@ -152,6 +152,15 @@ export function ProfileCabinet() {
     });
   };
 
+  const handleShareToTelegram = () => {
+    if (!user) return;
+    // Deep link для Telegram бота с параметром специалиста
+    const botLink = `https://t.me/web3cyberservices_bot?start=spec_${user.uid}`;
+    const shareText = `Заходите в мой профиль специалиста в приложении PRO Себя!`;
+    const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
+    window.open(fullShareLink, '_blank');
+  };
+
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -184,7 +193,6 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           
-          {/* ИНВАЙТ-ССЫЛКА ДЛЯ СПЕЦИАЛИСТА */}
           {profileType === 'specialist' && (
             <Card className="cyber-card bg-primary/10 p-8 border-primary/30 space-y-6 animate-in slide-in-from-top-4 duration-500">
                <div className="flex items-center gap-4">
@@ -198,27 +206,35 @@ export function ProfileCabinet() {
                </div>
                <div className="space-y-4">
                   <p className="text-sm font-medium text-white/70 leading-relaxed">
-                     Отправьте эту ссылку пациентам. Перейдя по ней, они попадут прямо в ваш профиль и смогут предоставить вам доступ к своим данным или записаться на консультацию.
+                     Отправьте ссылку пациентам. Они смогут открыть ваш профиль напрямую в вебе или через Telegram-бот.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                      <div className="flex-1 h-14 rounded-2xl bg-black/40 border border-primary/20 px-6 flex items-center overflow-hidden">
                         <code className="text-[10px] font-mono text-primary/80 truncate w-full">
-                           {typeof window !== 'undefined' ? `${window.location.origin}/specialist/${user?.uid}` : 'https://prosebya.ai/specialist/...'}
+                           {typeof window !== 'undefined' ? `${window.location.origin}/specialist/${user?.uid}` : '...'}
                         </code>
                      </div>
-                     <Button 
-                       type="button" 
-                       onClick={handleCopyInviteLink} 
-                       className="h-14 px-8 rounded-2xl bg-primary text-slate-950 font-black uppercase text-xs gap-2 shadow-xl hover:scale-105 transition-all"
-                     >
-                        <Copy className="h-4 w-4" /> Копировать ссылку
-                     </Button>
+                     <div className="flex gap-2 shrink-0">
+                        <Button 
+                          type="button" 
+                          onClick={handleCopyInviteLink} 
+                          className="h-14 px-6 rounded-2xl bg-white/10 text-white font-black uppercase text-[10px] gap-2 hover:bg-white/20 transition-all"
+                        >
+                           <Copy className="h-4 w-4" /> Копировать
+                        </Button>
+                        <Button 
+                          type="button" 
+                          onClick={handleShareToTelegram} 
+                          className="h-14 px-6 rounded-2xl bg-[#229ED9] text-white font-black uppercase text-[10px] gap-2 shadow-xl hover:scale-105 transition-all"
+                        >
+                           <Send className="h-4 w-4" /> В Telegram
+                        </Button>
+                     </div>
                   </div>
                </div>
             </Card>
           )}
 
-          {/* АВАТАР */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <ImageIcon className="h-4 w-4" /> Фото профиля
@@ -267,7 +283,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* ОСНОВНЫЕ ДАННЫЕ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Info className="h-4 w-4" /> 1. Личные данные
@@ -314,7 +329,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* ДАННЫЕ СПЕЦИАЛИСТА */}
           {profileType === 'specialist' && (
             <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
@@ -347,7 +361,6 @@ export function ProfileCabinet() {
             </div>
           )}
 
-          {/* БИОМЕТРИЯ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Activity className="h-4 w-4" /> 2. Биометрия
@@ -427,7 +440,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* РАБОТА */}
           {profileType === 'user' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
@@ -475,82 +487,6 @@ export function ProfileCabinet() {
             </div>
           )}
 
-          {/* ПРИВЫЧКИ И ПИТАНИЕ */}
-          {profileType === 'user' && (
-            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-                <UtensilsCrossed className="h-4 w-4" /> 4. Привычки и Питание
-              </h3>
-              <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="smoking" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Ban className="h-3.5 w-3.5 text-red-500" /> Курение</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
-                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                            <SelectItem value="нет">Нет</SelectItem>
-                            <SelectItem value="да">Да</SelectItem>
-                         </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="alcohol" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Wine className="h-3.5 w-3.5 text-orange-400" /> Алкоголь</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                         <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold"><SelectValue /></SelectTrigger></FormControl>
-                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                            <SelectItem value="не употребляю">Не употребляю</SelectItem>
-                            <SelectItem value="редко">Редко</SelectItem>
-                            <SelectItem value="умеренно">Умеренно</SelectItem>
-                            <SelectItem value="часто">Часто</SelectItem>
-                         </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Любимые продукты</FormLabel>
-                      <FormControl><Input {...field} placeholder="Что ИИ стоит добавлять в меню?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Исключить из рациона</FormLabel>
-                      <FormControl><Input {...field} placeholder="На что у вас аллергия или неприязнь?" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
-                    </FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="medications" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
-                      <Pill className="h-3 w-3 text-primary" /> Лекарства и БАДы
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Textarea {...field} placeholder="Какие препараты вы принимаете?" className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" />
-                        <button 
-                          type="button" 
-                          onClick={() => startVoiceInput('medications')} 
-                          className={cn(
-                            "absolute right-3 top-3 h-10 w-10 rounded-full flex items-center justify-center transition-all", 
-                            recordingField === 'medications' ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary hover:bg-white/20"
-                          )}
-                        >
-                          <Mic className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )} />
-              </Card>
-            </div>
-          )}
-          
-          {/* КНОПКА СОХРАНЕНИЯ */}
           <div className="pt-4">
             <Button 
               type="submit" 
@@ -561,7 +497,6 @@ export function ProfileCabinet() {
             </Button>
           </div>
 
-          {/* ДОПОЛНИТЕЛЬНО */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest">

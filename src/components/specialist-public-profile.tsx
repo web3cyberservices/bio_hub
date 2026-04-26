@@ -88,6 +88,13 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     }
   };
 
+  const handleShareToBot = () => {
+    const botLink = `https://t.me/web3cyberservices_bot?start=spec_${specialistId}`;
+    const shareText = `Посмотрите профиль специалиста ${specData?.firstName || ''} в PRO Себя!`;
+    const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
+    window.open(fullShareLink, '_blank');
+  };
+
   const handleCopyLink = () => {
     const link = `${window.location.origin}/specialist/${specialistId}`;
     navigator.clipboard.writeText(link).then(() => {
@@ -131,9 +138,14 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
         <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-white/40 hover:text-primary transition-all">
           <ArrowLeft className="h-4 w-4" /> Назад
         </Button>
-        <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all uppercase font-black text-[10px]">
-           <Share2 className="h-4 w-4" /> Поделиться
-        </Button>
+        <div className="flex gap-2">
+           <Button variant="ghost" onClick={handleShareToBot} className="rounded-xl gap-2 text-[#229ED9] hover:bg-[#229ED9]/10 transition-all uppercase font-black text-[10px]">
+              <Send className="h-4 w-4" /> В Telegram
+           </Button>
+           <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all uppercase font-black text-[10px]">
+              <Share2 className="h-4 w-4" /> Поделиться
+           </Button>
+        </div>
       </div>
 
       <Card className="premium-card overflow-hidden border-none shadow-2xl bg-blue-950/40 backdrop-blur-xl">

@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -67,7 +66,6 @@ function Calendar({
           const dayNumber = periodDays ? periodDays[currentKey] : undefined;
           const isPeriod = dayNumber !== undefined;
           
-          // Лог сопоставления для отладки
           if (isPeriod) {
             console.log("СРАВНИВАЮ:", currentKey, "РЕЗУЛЬТАТ:", isPeriod);
           }
@@ -91,15 +89,11 @@ function Calendar({
                   isOutside && "opacity-10 pointer-events-none"
                 )}
               >
-                {/* МАРКЕР ПЕРИОДА (ВЕРХНИЙ СЛОЙ) */}
                 {isPeriod && (
                   <div 
                     className="pointer-events-none absolute inset-0 flex items-center justify-center z-20 transition-all animate-in zoom-in duration-300"
                   >
-                    {/* Пульсирующая подложка */}
                     <div className="w-8 h-8 bg-[#FF7F50]/20 border-2 border-[#FF7F50] rounded-full animate-pulse shadow-[0_0_15px_rgba(255,127,80,0.4)]" />
-                    
-                    {/* Порядковый номер */}
                     <div 
                       className="absolute -top-2 -right-2 w-5 h-5 bg-[#FF7F50] rounded-full border-2 border-[#010411] flex items-center justify-center shadow-lg"
                     >
@@ -107,8 +101,6 @@ function Calendar({
                     </div>
                   </div>
                 )}
-                
-                {/* ЦИФРА ДНЯ (ДОЛЖНА БЫТЬ ВИДНА) */}
                 <span className="relative z-10">{date.getDate()}</span>
               </button>
             </td>
