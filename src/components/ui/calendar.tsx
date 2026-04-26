@@ -58,15 +58,14 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        // ИСПРАВЛЕНИЕ: Используем <td> для предотвращения ошибки гидратации (div cannot be child of tr)
-        Day: ({ day, ...dayProps }: any) => {
+        Day: ({ day, modifiers, ...dayProps }: any) => {
           if (!day || !day.date || !isValid(day.date)) return null;
           
           const date = day.date;
           const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
           
-          if (day.outside && !showOutsideDays) {
+          if (modifiers.outside && !showOutsideDays) {
             return <td className="h-10 w-9" />;
           }
 
@@ -78,35 +77,39 @@ function Calendar({
                 "relative h-10 w-9 p-0"
               )}
             >
-              <div className={cn(
-                "w-full h-full flex items-center justify-center relative cursor-pointer rounded-xl transition-all",
-                dayNumber !== undefined ? "bg-pink-500/10" : "hover:bg-primary/10"
-              )}>
-                 <span className="relative z-10 font-bold">{date.getDate()}</span>
+              <div 
+                onClick={dayProps.onClick}
+                className={cn(
+                  "w-full h-full flex items-center justify-center relative cursor-pointer rounded-xl transition-all",
+                  modifiers.selected ? "bg-primary text-slate-950 shadow-[0_0_15px_rgba(0,255,255,0.4)]" : "hover:bg-white/10",
+                  dayNumber !== undefined ? "ring-2 ring-pink-500/30 bg-pink-500/5" : ""
+                )}
+              >
+                 <span className={cn("relative z-10 font-bold", modifiers.selected ? "text-slate-950" : "text-white")}>
+                   {date.getDate()}
+                 </span>
                  
-                 {/* ФЛО-ИНДИКАТОР (КОРАЛЛОВЫЙ КРУЖОК) */}
                  {dayNumber !== undefined && (
                    <div style={{
                      position: 'absolute',
-                     top: '-2px',
-                     right: '-2px',
-                     width: '16px',
-                     height: '16px',
-                     backgroundColor: '#FF7F50', // Coral
+                     top: '-4px',
+                     right: '-4px',
+                     width: '18px',
+                     height: '18px',
+                     backgroundColor: '#FF7F50',
                      borderRadius: '50%',
                      display: 'flex',
                      alignItems: 'center',
                      justifyContent: 'center',
                      zIndex: 50,
-                     border: '1.5px solid #010411',
-                     boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
+                     border: '2px solid #010411',
+                     boxShadow: '0 0 8px rgba(255,127,80,0.4)',
                    }}>
                      <span style={{
                        color: 'white',
-                       fontSize: '8px',
+                       fontSize: '9px',
                        fontWeight: '900',
                        lineHeight: '1',
-                       pointerEvents: 'none'
                      }}>{dayNumber}</span>
                    </div>
                  )}

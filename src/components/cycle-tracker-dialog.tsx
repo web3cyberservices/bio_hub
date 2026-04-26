@@ -1,19 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   HeartPulse, Zap, Brain, Activity, Smile, Sun, 
-  Moon, Battery, Wind, Sparkles, Loader2, CheckCircle2 
+  Moon, Battery, Wind, Sparkles, Loader2, CheckCircle2,
+  Droplets, Thermometer, UserCheck, MessageSquare, Flame
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface CycleTrackerDialogProps {
   selectedDate: Date;
@@ -28,64 +31,93 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Состояние цикла
   const [isCycleActive, setIsCycleActive] = useState(false);
   const [isCycleStart, setIsCycleStart] = useState(false);
   const [isCycleEnd, setIsCycleEnd] = useState(false);
-  const [cycleIntensity, setCycleIntensity] = useState('medium');
+  const [flowIntensity, setFlowIntensity] = useState('medium');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [energyStatus, setEnergyStatus] = useState('normal'); 
+  const [mood, setMood] = useState<string[]>([]);
+  const [sexActivity, setSexActivity] = useState<'none' | 'protected' | 'unprotected'>('none');
+  const [notes, setNotes] = useState('');
+
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const logRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid, 'dailyLogs', dateKey) : null, [user?.uid, dateKey]);
+  const { data: existingLog } = useDoc<any>(logRef);
+
+  useEffect(() => {
+    if (existingLog?.cycle) {
+      const c = existingLog.cycle;
+      setIsCycleActive(c.active || false);
+      setIsCycleStart(c.isStart || false);
+      setIsCycleEnd(c.isEnd || false);
+      setFlowIntensity(c.intensity || 'medium');
+      setSelectedSymptoms(c.symptoms || []);
+      setMood(c.mood || []);
+      setSexActivity(c.sex || 'none');
+      setNotes(c.notes || '');
+    } else {
+      // Сброс если данных на этот день нет
+      setIsCycleActive(false);
+      setIsCycleStart(false);
+      setIsCycleEnd(false);
+      setSelectedSymptoms([]);
+    }
+  }, [existingLog, isOpen]);
 
   const handleSave = async () => {
     if (!firestore || !user?.uid) return;
     setLoading(true);
     try {
-      const dateKey = format(selectedDate, 'yyyy-MM-dd');
-      const docRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
-      
-      await setDoc(docRef, {
+      await setDoc(doc(firestore, 'users', user.uid, 'dailyLogs', dateKey), {
         date: dateKey,
         updatedAt: serverTimestamp(),
         timestamp: Timestamp.fromDate(selectedDate),
         cycle: {
-          intensity: cycleIntensity,
+          active: isCycleActive,
+          isStart: isCycleActive ? isCycleStart : false,
+          isEnd: isCycleActive ? isCycleEnd : false,
+          intensity: isCycleActive ? flowIntensity : null,
           symptoms: selectedSymptoms,
-          energyStatus: energyStatus,
-          isStart: Boolean(isCycleStart),
-          isEnd: Boolean(isCycleEnd),
-          active: isCycleActive
+          mood: mood,
+          sex: sexActivity,
+          notes: notes
         }
       }, { merge: true });
       
       setIsSuccess(true);
-      toast({ title: 'Данные цикла сохранены' });
-      
-      // Авто-закрытие через 1.5 сек
+      toast({ title: 'Данные цикла обновлены' });
       setTimeout(() => {
         setIsOpen(false);
         setIsSuccess(false);
       }, 1500);
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: e.message });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: e.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const energyStates = [
-    { id: 'energetic', label: 'Бодрое', icon: Sun, color: 'text-yellow-400' },
-    { id: 'normal', label: 'Нормальное', icon: Smile, color: 'text-emerald-400' },
-    { id: 'light_fatigue', label: 'Лёгкая усталость', icon: Battery, color: 'text-orange-400' },
-    { id: 'fatigue', label: 'Усталость', icon: Moon, color: 'text-blue-400' },
+  const flowLevels = [
+    { id: 'spotting', label: 'Мажущие', color: 'bg-rose-300' },
+    { id: 'light', label: 'Легкие', color: 'bg-rose-400' },
+    { id: 'medium', label: 'Средние', color: 'bg-rose-500' },
+    { id: 'heavy', label: 'Сильные', color: 'bg-rose-700' },
   ];
 
-  const physicalSymptoms = [
-    { id: 'cramps', label: 'Тянущая боль', icon: Zap },
-    { id: 'back_pain', label: 'Поясница', icon: Wind },
-    { id: 'breasts', label: 'Грудь', icon: HeartPulse },
+  const symptomList = [
+    { id: 'cramps', label: 'Спазмы', icon: Zap },
+    { id: 'tender_breasts', label: 'Грудь', icon: HeartPulse },
     { id: 'headache', label: 'Голова', icon: Brain },
     { id: 'acne', label: 'Акне', icon: Sparkles },
     { id: 'bloating', label: 'Вздутие', icon: Activity },
+    { id: 'back_pain', label: 'Спина', icon: Wind },
+  ];
+
+  const moodList = [
+    { id: 'happy', label: 'Радость', icon: Sun },
+    { id: 'irritable', label: 'Гнев', icon: Flame },
+    { id: 'anxious', label: 'Тревога', icon: Activity },
+    { id: 'tired', label: 'Усталость', icon: Moon },
   ];
 
   return (
@@ -95,82 +127,176 @@ export function CycleTrackerDialog({ selectedDate }: CycleTrackerDialogProps) {
           <HeartPulse className="h-5 w-5 group-hover:scale-110 transition-transform" />
         </button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] md:max-w-[500px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
-        <DialogHeader className="p-8 bg-pink-500 text-white shrink-0 relative overflow-hidden">
+      <DialogContent className="w-[98vw] md:max-w-[600px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
+        <DialogHeader className="p-8 md:p-10 bg-pink-500 text-white shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-pink-600 to-rose-400 opacity-95" />
-          <div className="relative z-10">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter leading-none">Трекер цикла</DialogTitle>
-            <p className="text-white/60 font-black uppercase text-[10px] tracking-widest mt-1.5">{format(selectedDate, 'd MMMM yyyy', { locale: ru })}</p>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-3xl font-black uppercase tracking-tighter leading-none">Bio-Cycle Pro</DialogTitle>
+              <p className="text-white/60 font-black uppercase text-[10px] tracking-widest mt-2">{format(selectedDate, 'd MMMM yyyy', { locale: ru })}</p>
+            </div>
+            <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
+               <span className="text-[10px] font-black uppercase text-white">Daily Tracker</span>
+            </div>
           </div>
-          <HeartPulse className="absolute -right-6 -bottom-6 h-24 w-24 text-white/10 rotate-12" />
+          <HeartPulse className="absolute -right-8 -bottom-8 h-32 w-32 text-white/10 rotate-12" />
         </DialogHeader>
 
-        <ScrollArea className="max-h-[70vh]">
-          <div className="p-8 space-y-10 bg-pink-950/20 backdrop-blur-3xl min-h-[400px]">
+        <ScrollArea className="max-h-[75vh]">
+          <div className="p-6 md:p-10 space-y-10 bg-pink-950/20 backdrop-blur-3xl min-h-[500px]">
             {!isSuccess ? (
               <>
-                <div className="flex items-center justify-between bg-white/5 p-5 rounded-2xl border border-white/5 shadow-inner">
-                  <span className="font-black text-[10px] text-pink-200 uppercase tracking-widest">Сегодня день периода?</span>
-                  <Button 
+                {/* ГЛАВНЫЙ ПЕРЕКЛЮЧАТЕЛЬ */}
+                <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 flex items-center justify-between shadow-inner">
+                   <div className="space-y-1">
+                      <p className="text-sm font-black text-white uppercase leading-none">Менструация</p>
+                      <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest">Отметьте день периода</p>
+                   </div>
+                   <Button 
                     onClick={() => setIsCycleActive(!isCycleActive)} 
                     className={cn(
-                      "rounded-xl h-11 px-8 font-black uppercase text-[11px] transition-all border-2",
-                      isCycleActive ? "bg-pink-500 border-pink-400 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/30"
+                      "rounded-2xl h-14 px-10 font-black uppercase transition-all border-4",
+                      isCycleActive ? "bg-pink-500 border-pink-400 text-white shadow-xl scale-105" : "bg-white/5 border-white/5 text-white/20"
                     )}
                   >
-                    {isCycleActive ? 'ДА' : 'НЕТ'}
+                    {isCycleActive ? 'ИДЁТ' : 'НЕТ'}
                   </Button>
                 </div>
 
                 {isCycleActive && (
                   <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
+                    {/* ИНТЕНСИВНОСТЬ */}
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block tracking-widest">Границы периода</label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => setIsCycleStart(!isCycleStart)} className={cn("h-14 rounded-2xl font-black uppercase text-[9px] border-2 transition-all", isCycleStart ? "bg-pink-600 border-pink-400 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/20")}>Начало цикла</button>
-                        <button onClick={() => setIsCycleEnd(!isCycleEnd)} className={cn("h-14 rounded-2xl font-black uppercase text-[9px] border-2 transition-all", isCycleEnd ? "bg-pink-600 border-pink-400 text-white shadow-lg" : "bg-white/5 border-white/5 text-white/20")}>Конец цикла</button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block tracking-widest">Интенсивность</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {['low', 'medium', 'high'].map((val) => (
-                          <button key={val} onClick={() => setCycleIntensity(val)} className={cn("h-12 rounded-xl font-black uppercase text-[8px] border-2 transition-all", cycleIntensity === val ? "bg-pink-500 border-pink-400 text-white shadow-md" : "bg-white/5 border-white/5 text-white/20")}>
-                            {val === 'low' ? 'Легкая' : val === 'medium' ? 'Средняя' : 'Сильная'}
+                      <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                        <Droplets className="h-3 w-3" /> Интенсивность выделений
+                      </h4>
+                      <div className="grid grid-cols-4 gap-3">
+                        {flowLevels.map((lvl) => (
+                          <button 
+                            key={lvl.id} 
+                            onClick={() => setFlowIntensity(lvl.id)}
+                            className={cn(
+                              "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
+                              flowIntensity === lvl.id ? "bg-pink-500/20 border-pink-500 shadow-lg" : "bg-white/5 border-white/5"
+                            )}
+                          >
+                            <div className={cn("w-3 h-3 rounded-full shadow-sm", lvl.color)} />
+                            <span className={cn("text-[8px] font-black uppercase", flowIntensity === lvl.id ? "text-pink-400" : "text-white/30")}>
+                              {lvl.label}
+                            </span>
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block tracking-widest">Физические симптомы</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {physicalSymptoms.map((s) => (
-                          <button key={s.id} onClick={() => setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id])} className={cn("flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all", selectedSymptoms.includes(s.id) ? "bg-pink-500/20 border-pink-500 text-pink-400 shadow-md" : "bg-white/5 border-white/5 text-white/20")}>
-                            <s.icon className={cn("h-5 w-5", selectedSymptoms.includes(s.id) ? "text-pink-400" : "text-white/20")} />
-                            <span className="text-[8px] font-black uppercase text-center leading-tight">{s.label}</span>
-                          </button>
-                        ))}
-                      </div>
+                    {/* ГРАНИЦЫ ЦИКЛА */}
+                    <div className="grid grid-cols-2 gap-4">
+                       <button onClick={() => setIsCycleStart(!isCycleStart)} className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleStart ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}>
+                         {isCycleStart && <CheckCircle2 className="h-4 w-4" />} Начало цикла
+                       </button>
+                       <button onClick={() => setIsCycleEnd(!isCycleEnd)} className={cn("h-16 rounded-2xl font-black uppercase text-[10px] border-2 flex items-center justify-center gap-2 transition-all", isCycleEnd ? "bg-pink-600 border-pink-400 text-white shadow-xl" : "bg-white/5 border-white/5 text-white/20")}>
+                         {isCycleEnd && <CheckCircle2 className="h-4 w-4" />} Конец цикла
+                       </button>
                     </div>
                   </div>
                 )}
 
-                <div className="pt-4">
-                   <Button className="w-full h-18 rounded-2xl bg-pink-500 text-white font-black text-xl shadow-[0_0_30px_rgba(236,72,153,0.3)] hover:scale-[1.02] transition-all" onClick={handleSave} disabled={loading}>
-                     {loading ? <Loader2 className="animate-spin h-6 w-6" /> : 'СОХРАНИТЬ В БАЗУ'}
+                {/* СИМПТОМЫ */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <Thermometer className="h-3 w-3" /> Физические симптомы
+                   </h4>
+                   <div className="grid grid-cols-3 gap-3">
+                      {symptomList.map((s) => (
+                        <button 
+                          key={s.id} 
+                          onClick={() => setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id])}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-3 p-5 rounded-[1.5rem] border-2 transition-all",
+                            selectedSymptoms.includes(s.id) ? "bg-pink-500/20 border-pink-500 text-pink-400 shadow-inner" : "bg-white/5 border-white/5 text-white/20"
+                          )}
+                        >
+                          <s.icon className="h-6 w-6" />
+                          <span className="text-[9px] font-black uppercase text-center leading-none">{s.label}</span>
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* НАСТРОЕНИЕ */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <Smile className="h-3 w-3" /> Эмоции
+                   </h4>
+                   <div className="grid grid-cols-4 gap-3">
+                      {moodList.map((m) => (
+                        <button 
+                          key={m.id} 
+                          onClick={() => setMood(prev => prev.includes(m.id) ? prev.filter(i => i !== m.id) : [...prev, m.id])}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
+                            mood.includes(m.id) ? "bg-pink-500/20 border-pink-500 text-pink-400" : "bg-white/5 border-white/5 text-white/20"
+                          )}
+                        >
+                          <m.icon className="h-5 w-5" />
+                          <span className="text-[8px] font-black uppercase">{m.label}</span>
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* СЕКС */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <UserCheck className="h-3 w-3" /> Сексуальная активность
+                   </h4>
+                   <div className="flex gap-2 bg-white/5 p-2 rounded-2xl">
+                      {['none', 'protected', 'unprotected'].map((type) => (
+                        <button 
+                          key={type}
+                          onClick={() => setSexActivity(type as any)}
+                          className={cn(
+                            "flex-1 h-12 rounded-xl font-black text-[8px] uppercase transition-all",
+                            sexActivity === type ? "bg-pink-500 text-white" : "text-white/20 hover:bg-white/5"
+                          )}
+                        >
+                          {type === 'none' ? 'Нет' : type === 'protected' ? 'Защищенный' : 'БЕЗ защиты'}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+
+                {/* ЗАМЕТКИ */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-[0.2em] flex items-center gap-2">
+                     <MessageSquare className="h-3 w-3" /> Личные заметки
+                   </h4>
+                   <Textarea 
+                    placeholder="Как вы себя чувствуете сегодня? Что необычного заметили?"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/20 text-sm font-medium resize-none shadow-inner"
+                   />
+                </div>
+
+                <div className="pt-6">
+                   <Button 
+                    className="w-full h-20 rounded-3xl bg-pink-500 text-white font-black text-xl shadow-[0_20px_50px_rgba(236,72,153,0.3)] hover:scale-[1.02] transition-all"
+                    onClick={handleSave}
+                    disabled={loading}
+                   >
+                     {loading ? <Loader2 className="animate-spin h-7 w-7" /> : 'СИНХРОНИЗИРОВАТЬ ДАННЫЕ'}
                    </Button>
                 </div>
               </>
             ) : (
-              <div className="py-20 flex flex-col items-center text-center space-y-8 animate-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-pink-500 rounded-[2rem] flex items-center justify-center shadow-[0_0_50px_rgba(236,72,153,0.5)] rotate-3">
-                   <CheckCircle2 className="h-12 w-12 text-white" />
+              <div className="py-24 flex flex-col items-center text-center space-y-8 animate-in zoom-in duration-500">
+                <div className="w-32 h-32 bg-pink-500 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_70px_rgba(236,72,153,0.6)] rotate-3">
+                   <CheckCircle2 className="h-16 w-16 text-white" />
                 </div>
                 <div>
-                   <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Синхронизировано</h3>
-                   <p className="text-pink-200/40 text-[10px] font-black uppercase tracking-widest mt-2 text-center">Neural Cycle Sync v4.1</p>
+                   <h3 className="text-4xl font-black text-white uppercase tracking-tighter">Синхронизировано</h3>
+                   <p className="text-pink-300/40 text-[10px] font-black uppercase tracking-[0.4em] mt-3">Neural Health Interface v4.5</p>
                 </div>
               </div>
             )}

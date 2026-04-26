@@ -10,7 +10,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
-import { format, startOfToday, startOfDay, addDays, isValid } from 'date-fns';
+import { format, startOfToday, startOfDay, addDays, isValid, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
@@ -65,13 +65,11 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
   
-  // Определение женского пола для отображения трекера цикла
   const isFemale = useMemo(() => {
     const gender = String(userData?.gender || '').toLowerCase().trim();
     return gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
   }, [userData?.gender]);
 
-  // РЕАКТИВНЫЙ ЗАПРОС ВСЕХ ЛОГОВ ДЛЯ КАЛЕНДАРЯ
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -79,11 +77,9 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
-  // ЛОГИКА РАСЧЕТА ДНЕЙ ЦИКЛА (FLO-STYLE)
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
-    // Находим все дни, где отмечено начало цикла
     const starts = allLogs
       .filter(log => log.cycle?.isStart === true)
       .map(log => ({
@@ -96,14 +92,10 @@ export default function DashboardPage() {
     
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
-      // Рассчитываем 10-дневный прогноз от каждого начала
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
-        
-        // Если встретили новое начало цикла раньше 10 дней - прерываем текущий
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
-        
         map[dStr] = i + 1;
       }
     });
@@ -154,7 +146,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
+    <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden h-screen w-screen relative">
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
@@ -163,8 +155,6 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             {profileType === 'specialist' && <CreatePostDialog />}
-            
-            {/* ТРЕКЕР ЦИКЛА В ШАПКЕ (Только для женщин) */}
             {profileType === 'user' && isFemale && <CycleTrackerDialog selectedDate={selectedDate} />}
 
             <Popover>
@@ -179,7 +169,13 @@ export default function DashboardPage() {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      // Авто-закрытие поповера при клике на день
+                      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                    }
+                  }}
                   initialFocus
                   locale={ru}
                   periodDays={periodDaysMap}
