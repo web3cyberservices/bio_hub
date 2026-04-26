@@ -1,6 +1,7 @@
 'use client';
 /**
  * @fileOverview Обработчик инициализации Telegram Mini App и глубоких ссылок.
+ * Исправлено: удалена конфликтующая директива 'use server'.
  */
 
 import { useEffect } from 'react';

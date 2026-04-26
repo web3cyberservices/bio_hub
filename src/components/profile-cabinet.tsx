@@ -146,19 +146,16 @@ export function ProfileCabinet() {
 
   const handleCopyInviteLink = () => {
     if (!user) return;
-    const link = `${window.location.origin}/specialist/${user.uid}`;
+    // Используем Direct Link для Mini App как основной метод инвайта
+    const link = `https://t.me/web3cyberservices_bot/app?startapp=${user.uid}`;
     navigator.clipboard.writeText(link).then(() => {
-      toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете приглашать пациентов напрямую в свой профиль.' });
+      toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете приглашать пациентов напрямую в Mini App.' });
     });
   };
 
   const handleShareToTelegram = () => {
     if (!user) return;
-    // ФОРМАТ DIRECT LINK ДЛЯ MINI APP
-    const botAppName = 'app'; // Название Mini App из BotFather
-    const botUsername = 'web3cyberservices_bot';
-    // Telegram автоматически преобразует startapp в start_param внутри Mini App
-    const directLink = `https://t.me/${botUsername}/${botAppName}?startapp=${user.uid}`;
+    const directLink = `https://t.me/web3cyberservices_bot/app?startapp=${user.uid}`;
     const shareText = `Заходите в мой Bio-профиль в PRO Себя!`;
     const fullShareLink = `https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`;
     window.open(fullShareLink, '_blank');
@@ -204,12 +201,12 @@ export function ProfileCabinet() {
                   </div>
                   <div className="space-y-0.5">
                      <h3 className="text-xl font-black text-white uppercase tracking-tight leading-none">Приглашение пациентов</h3>
-                     <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Персональная Direct-ссылка</p>
+                     <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Персональная Direct-ссылка Mini App</p>
                   </div>
                </div>
                <div className="space-y-4">
                   <p className="text-sm font-medium text-white/70 leading-relaxed">
-                     Используйте Direct Link для Telegram Mini App. При клике у пациента сразу откроется ваш профиль внутри мессенджера.
+                     Используйте прямую ссылку для Telegram. При клике у пациента сразу откроется ваш профиль внутри приложения.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                      <div className="flex-1 h-14 rounded-2xl bg-black/40 border border-primary/20 px-6 flex items-center overflow-hidden">
@@ -238,6 +235,7 @@ export function ProfileCabinet() {
             </Card>
           )}
 
+          {/* Фото профиля */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <ImageIcon className="h-4 w-4" /> Фото профиля

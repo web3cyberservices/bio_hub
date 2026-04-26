@@ -4,9 +4,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 /**
  * @fileOverview Webhook для Telegram-бота @web3cyberservices_bot.
- * Обрабатывает:
- * 1. Привязку аккаунта (/start [UID])
- * 2. Глубокие ссылки на специалистов (/start spec_[ID])
+ * Обновлено: теперь кнопки ведут на Direct Link Mini App.
  */
 
 if (!getApps().length) {
@@ -28,11 +26,8 @@ export async function POST(req: NextRequest) {
 
     const chatId = message.chat.id.toString();
     const text = message.text;
-    
-    // Определяем базовый URL приложения для кнопок
-    const protocol = req.headers.get('x-forwarded-proto') || 'https';
-    const host = req.headers.get('host');
-    const baseUrl = `${protocol}://${host}`;
+    const botUsername = 'web3cyberservices_bot';
+    const appName = 'app'; // Название Mini App в BotFather
 
     // Команда /start
     if (text.startsWith('/start')) {
@@ -50,13 +45,13 @@ export async function POST(req: NextRequest) {
           if (specDoc.exists) {
             const data = specDoc.data();
             await sendRawTGMessage(chatId, 
-              `<b>Карточка специалиста</b>\n\n👤 <b>${data?.firstName} ${data?.lastName || ''}</b>\n🧬 Специализация: ${data?.specialization || 'Эксперт BioTech'}\n\nВы можете просмотреть полный профиль, публикации и записаться на прием по кнопке ниже:`,
+              `<b>Карточка специалиста</b>\n\n👤 <b>${data?.firstName} ${data?.lastName || ''}</b>\n🧬 Специализация: ${data?.specialization || 'Эксперт BioTech'}\n\nНажмите кнопку ниже, чтобы открыть профиль прямо в Telegram:`,
               [
-                [{ text: "🧬 Открыть профиль в приложении", url: `${baseUrl}/specialist/${specId}` }]
+                [{ text: "🧬 Открыть профиль", url: `https://t.me/${botUsername}/${appName}?startapp=${specId}` }]
               ]
             );
           } else {
-            await sendRawTGMessage(chatId, `❌ <b>Ошибка:</b> Специалист не найден в базе Bio-хаба.`);
+            await sendRawTGMessage(chatId, `❌ <b>Ошибка:</b> Специалист не найден.`);
           }
         } 
         // Сценарий 2: Привязка UID пользователя
@@ -72,18 +67,18 @@ export async function POST(req: NextRequest) {
             });
 
             await sendRawTGMessage(chatId, 
-              `<b>Успешная синхронизация!</b>\n\n🚀 Ваш аккаунт <b>PRO Себя</b> успешно привязан.\n\nТеперь я буду присылать сюда:\n• Уведомления о новых анализах\n• Подтверждения записей\n• Ежедневные ИИ-инсайты.`,
+              `<b>Успешная синхронизация!</b>\n\n🚀 Ваш аккаунт успешно привязан.\n\nТеперь вы можете перейти в свой дашборд:`,
               [
-                [{ text: "📊 Мой Дашборд", url: `${baseUrl}/dashboard` }]
+                [{ text: "📊 Мой Дашборд", url: `https://t.me/${botUsername}/${appName}` }]
               ]
             );
           } else {
-            await sendRawTGMessage(chatId, `❌ <b>Ошибка:</b> Пользователь с таким ID не найден.`);
+            await sendRawTGMessage(chatId, `❌ <b>Ошибка:</b> Пользователь не найден.`);
           }
         }
       } else {
-        await sendRawTGMessage(chatId, `Добро пожаловать в <b>PRO Себя</b>!\n\nИспользуйте приложение для глубокого анализа вашего здоровья и связи с лучшими экспертами.`, [
-          [{ text: "🚀 Зайти в Bio-хаб", url: baseUrl }]
+        await sendRawTGMessage(chatId, `Добро пожаловать в <b>PRO Себя</b>!\n\nИспользуйте Mini App для глубокого анализа вашего здоровья:`, [
+          [{ text: "🚀 Запустить приложение", url: `https://t.me/${botUsername}/${appName}` }]
         ]);
       }
     }
