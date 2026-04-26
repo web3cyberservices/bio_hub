@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -147,7 +146,7 @@ export function ProfileCabinet() {
 
   const handleCopyInviteLink = () => {
     if (!user) return;
-    const link = `${window.location.origin}/dashboard?spId=${user.uid}`;
+    const link = `${window.location.origin}/specialist/${user.uid}`;
     navigator.clipboard.writeText(link).then(() => {
       toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете приглашать пациентов напрямую в свой профиль.' });
     });
@@ -204,7 +203,7 @@ export function ProfileCabinet() {
                   <div className="flex flex-col sm:flex-row gap-3">
                      <div className="flex-1 h-14 rounded-2xl bg-black/40 border border-primary/20 px-6 flex items-center overflow-hidden">
                         <code className="text-[10px] font-mono text-primary/80 truncate w-full">
-                           {typeof window !== 'undefined' ? `${window.location.origin}/dashboard?spId=${user?.uid}` : 'https://prosebya.ai/...'}
+                           {typeof window !== 'undefined' ? `${window.location.origin}/specialist/${user?.uid}` : 'https://prosebya.ai/specialist/...'}
                         </code>
                      </div>
                      <Button 

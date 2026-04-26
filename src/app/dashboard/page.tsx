@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
   HeartPulse, Settings, 
@@ -24,7 +24,6 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { CreatePostDialog } from '@/components/create-post-dialog';
 import { ChatInterface } from '@/components/chat-interface';
-import { SpecialistPublicProfile } from '@/components/specialist-public-profile';
 import { MealsHub } from '@/components/meals-hub';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
@@ -41,10 +40,10 @@ export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
-  const [viewingSpecialistId, setViewingSpecialistId] = useState<string | null>(null);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
 
   useHealthAggregator();
@@ -52,15 +51,6 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
-
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const spId = params.get('spId');
-      if (spId) {
-        setViewingSpecialistId(spId);
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    }
   }, []);
 
   const dateKey = useMemo(() => {
@@ -119,7 +109,6 @@ export default function DashboardPage() {
       }
     });
 
-    console.log("ТЕКУЩАЯ КАРТА ЦИКЛА (periodDaysMap):", map);
     return map;
   }, [allLogs]);
 
@@ -224,7 +213,7 @@ export default function DashboardPage() {
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         <div className="flex-1 overflow-hidden relative">
-          <div className={cn("w-full h-full flex flex-col transition-all", viewingSpecialistId ? "opacity-0 pointer-events-none" : "opacity-100")}>
+          <div className="w-full h-full flex flex-col">
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
                      {profileType === 'specialist' ? (
@@ -241,7 +230,7 @@ export default function DashboardPage() {
                     {posts?.map((post) => (
                       <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
                           <div className="flex items-center justify-between">
-                            <button onClick={() => setViewingSpecialistId(post.authorId)} className="flex items-center gap-4 text-left">
+                            <button onClick={() => router.push(`/specialist/${post.authorId}`)} className="flex items-center gap-4 text-left">
                               <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">
                                 {post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}
                               </div>
@@ -269,7 +258,7 @@ export default function DashboardPage() {
                               <span className="font-black text-sm">{post.likes || 0}</span>
                             </button>
                             <button 
-                              onClick={() => setViewingSpecialistId(post.authorId)}
+                              onClick={() => router.push(`/specialist/${post.authorId}`)}
                               className="flex items-center gap-2 text-white/30 hover:text-white transition-all"
                             >
                               <MessageSquare className="h-5 w-5" />
@@ -308,16 +297,6 @@ export default function DashboardPage() {
                 </div>
               )}
           </div>
-
-          {viewingSpecialistId && (
-            <div className="absolute inset-0 z-[400] bg-black overflow-y-auto px-4 pb-32 pt-4">
-              <SpecialistPublicProfile 
-                specialistId={viewingSpecialistId} 
-                onBack={() => setViewingSpecialistId(null)} 
-                onStartChat={(id) => { setViewingSpecialistId(null); setDirectChatRecipientId(id); setActiveTab('chats'); }} 
-              />
-            </div>
-          )}
         </div>
 
         {/* НИЖНЕЕ МЕНЮ */}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -17,14 +16,13 @@ import { ru } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PatientBookingDialog } from './patient-booking-dialog';
 
 interface SpecialistPublicProfileProps {
   specialistId: string;
-  onBack: () => void;
+  onBack?: () => void;
   onStartChat: (id: string, name: string, photo: string) => void;
 }
 
@@ -32,10 +30,6 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
-  const [reviewText, setReviewText] = useState('');
-  const [reviewRating, setReviewRating] = useState(5);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
 
   const specRef = useMemoFirebase(() => {
@@ -56,18 +50,9 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     );
   }, [firestore, specialistId]);
 
-  const reviewsQuery = useMemoFirebase(() => {
-    if (!firestore || !specialistId) return null;
-    return query(
-      collection(firestore, 'users', specialistId, 'reviews'),
-      orderBy('createdAt', 'desc')
-    );
-  }, [firestore, specialistId]);
-
   const { data: specData, isLoading: specLoading } = useDoc<any>(specRef);
   const { data: currentUserData } = useDoc<any>(userRef);
   const { data: specPosts } = useCollection<any>(postsQuery);
-  const { data: specReviews } = useCollection<any>(reviewsQuery);
 
   const isFollowing = specData?.followers?.includes(user?.uid);
   const isDataShared = currentUserData?.sharedWith?.includes(specialistId);
@@ -104,7 +89,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/dashboard?spId=${specialistId}`;
+    const link = `${window.location.origin}/specialist/${specialistId}`;
     navigator.clipboard.writeText(link).then(() => {
       toast({ title: 'Ссылка скопирована', description: 'Вы можете поделиться этим профилем с друзьями.' });
     });
@@ -121,7 +106,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
         if (data.participants.includes(specialistId)) existingChat = { id: doc.id, ...data };
       });
       if (!existingChat) {
-        await addDoc(collection(firestore, 'chats'), {
+        const res = await addDoc(collection(firestore, 'chats'), {
           participants: [user.uid, specialistId],
           participantDetails: {
             [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || '' },
@@ -131,8 +116,10 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
           updatedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()
         });
+        onStartChat(res.id, specData.firstName, specData.photoUrl);
+      } else {
+        onStartChat(existingChat.id, specData.firstName, specData.photoUrl);
       }
-      onStartChat(specialistId, specData.firstName, specData.photoUrl);
     } catch (e) { toast({ variant: 'destructive', title: 'Ошибка чата' }); }
   };
 
@@ -142,7 +129,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       <div className="flex items-center justify-between px-2">
         <Button variant="ghost" onClick={onBack} className="rounded-full gap-2 text-white/40 hover:text-primary transition-all">
-          <ArrowLeft className="h-4 w-4" /> Назад к ленте
+          <ArrowLeft className="h-4 w-4" /> Назад
         </Button>
         <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-white/40 hover:text-primary transition-all uppercase font-black text-[10px]">
            <Share2 className="h-4 w-4" /> Поделиться
