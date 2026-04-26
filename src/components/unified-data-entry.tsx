@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -8,14 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
-  CheckCircle2, Zap, HeartPulse, Smartphone, Mic, Utensils, Scale, Smile,
-  Battery, Brain, Heart, Frown, Thermometer, Ghost, Moon, Sun, 
-  Wind, TrendingUp, ChevronDown
+  CheckCircle2, Zap, HeartPulse, Mic, Utensils, Scale, Smile,
+  Battery, Brain, Heart, Sun, Moon
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -52,18 +50,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [mood, setMood] = useState('Спокойствие');
   const [energy, setEnergy] = useState([50]);
 
-  // Состояние цикла (Flo-style)
-  const [isCycleActive, setIsCycleActive] = useState(false);
-  const [isCycleStart, setIsCycleStart] = useState(false);
-  const [isCycleEnd, setIsCycleEnd] = useState(false);
-  const [cycleIntensity, setCycleIntensity] = useState('medium');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [energyStatus, setEnergyStatus] = useState('normal'); 
-  const [cycleSymptomsText, setCycleSymptomsText] = useState('');
-
   const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
-  const isFemale = String(userData?.gender || '').toLowerCase().trim() === 'женский' || String(userData?.gender || '').toLowerCase().trim() === 'female';
 
   const { toast } = useToast();
 
@@ -87,21 +75,10 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       logData.mood = mood;
       logData.energy = energy[0];
 
-      if (isCycleActive) {
-        logData.cycle = {
-          intensity: cycleIntensity,
-          symptoms: selectedSymptoms,
-          energyStatus: energyStatus,
-          isStart: Boolean(isCycleStart),
-          isEnd: Boolean(isCycleEnd),
-          notes: cycleSymptomsText
-        };
-      }
-
       await setDoc(docRef, logData, { merge: true });
       
       setIsSuccess(true);
-      toast({ title: 'Био-данные синхронизированы' });
+      toast({ title: 'Данные обновлены' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения', description: e.message });
     } finally {
@@ -120,17 +97,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     recognition.start();
   };
 
-  const handleSmartSync = async () => {
-    const token = sessionStorage.getItem('google_fit_token');
-    if (!token) return;
-    setSyncing(true);
-    try {
-      const fitData = await syncGoogleFitData(token);
-      setSteps(fitData.steps.toString());
-      setSleep(fitData.sleepHours.toString());
-    } catch (e) { console.error(e); } finally { setSyncing(false); }
-  };
-
   const handleAnalyze = async () => {
     if (!user?.uid) return;
     setLoading(true);
@@ -147,24 +113,8 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const reset = () => {
     setDescription(''); setImage(null); setMealResult(null); setLabResult(null); setIsSuccess(false);
-    setWater(''); setWeight(''); setSteps(''); setSleep(''); setIsCycleActive(false);
+    setWater(''); setWeight(''); setSteps(''); setSleep('');
   };
-
-  const physicalSymptoms = [
-    { id: 'cramps', label: 'Тянущая боль', icon: Zap },
-    { id: 'back_pain', label: 'Поясница', icon: Wind },
-    { id: 'breasts', label: 'Грудь', icon: HeartPulse },
-    { id: 'headache', label: 'Голова', icon: Brain },
-    { id: 'acne', label: 'Акне', icon: Sparkles },
-    { id: 'bloating', label: 'Вздутие', icon: Activity },
-  ];
-
-  const energyStates = [
-    { id: 'energetic', label: 'Бодрое', icon: Sun, color: 'text-yellow-400' },
-    { id: 'normal', label: 'Нормальное', icon: Smile, color: 'text-emerald-400' },
-    { id: 'light_fatigue', label: 'Лёгкая усталость', icon: Battery, color: 'text-orange-400' },
-    { id: 'fatigue', label: 'Усталость', icon: Moon, color: 'text-blue-400' },
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) reset(); }}>
@@ -183,13 +133,9 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           <div className="p-4 md:p-12 space-y-8 bg-blue-950/40 backdrop-blur-3xl min-h-[500px]">
             {!mealResult && !labResult && !isSuccess ? (
               <Tabs defaultValue="meal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={cn(
-                  "grid w-full rounded-2xl md:rounded-3xl h-16 bg-white/5 border border-white/5 p-1 mb-8",
-                  isFemale ? "grid-cols-5" : "grid-cols-4"
-                )}>
+                <TabsList className="grid w-full rounded-2xl md:rounded-3xl h-16 bg-white/5 border border-white/5 p-1 mb-8 grid-cols-4">
                   <TabsTrigger value="meal" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Utensils className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЕДА</span></TabsTrigger>
                   <TabsTrigger value="metrics" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Scale className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ТЕЛО</span></TabsTrigger>
-                  {isFemale && <TabsTrigger value="cycle" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-pink-500 data-[state=active]:text-white"><HeartPulse className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЦИКЛ</span></TabsTrigger>}
                   <TabsTrigger value="spirit" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Smile className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ДУХ</span></TabsTrigger>
                   <TabsTrigger value="labs" className="font-black text-[7px] md:text-[10px] uppercase tracking-tighter gap-1 md:gap-2 data-[state=active]:bg-primary data-[state=active]:text-slate-950"><FlaskConical className="h-3 w-3 md:h-3.5 md:w-3.5" /> <span className="hidden sm:inline">ЛАБ</span></TabsTrigger>
                 </TabsList>
@@ -207,47 +153,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-white/30 px-2">Сон (часов)</label><Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" /></div>
                   </div>
                   <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ МЕТРИКИ</Button>
-                </TabsContent>
-
-                <TabsContent value="cycle" className="space-y-8 outline-none animate-in slide-in-from-right-4 duration-300">
-                   <div className="bg-pink-500/5 border border-pink-500/20 rounded-[2.5rem] p-6 md:p-10 space-y-10">
-                      <div className="flex items-center justify-between">
-                         <h4 className="text-xl font-black uppercase text-pink-400">Цикл</h4>
-                         <Button onClick={() => setIsCycleActive(!isCycleActive)} variant={isCycleActive ? "default" : "outline"} className={cn("rounded-2xl h-12 px-6 font-black uppercase text-[10px]", isCycleActive ? "bg-pink-500 text-white" : "border-pink-500/30 text-pink-400")}>{isCycleActive ? 'День периода' : 'Отметить день'}</Button>
-                      </div>
-                      {isCycleActive && (
-                        <div className="space-y-12 pt-8 border-t border-pink-500/10">
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block">Границы периода</label>
-                              <div className="grid grid-cols-2 gap-4">
-                                 <button type="button" onClick={() => setIsCycleStart(!isCycleStart)} className={cn("h-14 rounded-2xl font-black uppercase text-[10px] border-2", isCycleStart ? "bg-pink-600 border-pink-500 text-white" : "bg-white/5 border-white/5 text-white/30")}>Начало цикла</button>
-                                 <button type="button" onClick={() => setIsCycleEnd(!isCycleEnd)} className={cn("h-14 rounded-2xl font-black uppercase text-[10px] border-2", isCycleEnd ? "bg-pink-600 border-pink-500 text-white" : "bg-white/5 border-white/5 text-white/30")}>Конец цикла</button>
-                              </div>
-                           </div>
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block">Ваше состояние</label>
-                              <div className="grid grid-cols-2 gap-3">
-                                 {energyStates.map((s) => (
-                                    <button key={s.id} type="button" onClick={() => setEnergyStatus(s.id)} className={cn("flex items-center gap-3 p-4 rounded-2xl border-2 transition-all", energyStatus === s.id ? "bg-pink-500/20 border-pink-500 text-pink-400" : "bg-white/5 border-white/5 text-white/40")}><s.icon className={cn("h-5 w-5", energyStatus === s.id ? s.color : "text-white/20")} /><span className="text-[9px] font-black uppercase">{s.label}</span></button>
-                                 ))}
-                              </div>
-                           </div>
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block">Интенсивность выделений</label>
-                              <div className="grid grid-cols-3 gap-3">
-                                 {['low', 'medium', 'high'].map((val) => (<button key={val} type="button" onClick={() => setCycleIntensity(val)} className={cn("h-14 rounded-xl font-black uppercase text-[9px] border-2", cycleIntensity === val ? "bg-pink-500 border-pink-500 text-white" : "bg-white/5 border-white/5 text-white/20")}>{val === 'low' ? 'Легкая' : val === 'medium' ? 'Средняя' : 'Сильная'}</button>))}
-                              </div>
-                           </div>
-                           <div className="space-y-4">
-                              <label className="text-[10px] font-black uppercase text-pink-400/60 px-2 text-center block">Физические симптомы</label>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                 {physicalSymptoms.map((s) => (<button key={s.id} type="button" onClick={() => setSelectedSymptoms(prev => prev.includes(s.id) ? prev.filter(i => i !== s.id) : [...prev, s.id])} className={cn("flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all", selectedSymptoms.includes(s.id) ? "bg-pink-500/20 border-pink-500 text-pink-400" : "bg-white/5 border-white/5 text-white/40")}><s.icon className={cn("h-6 w-6", selectedSymptoms.includes(s.id) ? "text-pink-400" : "text-white/20")} /><span className="text-[8px] font-black uppercase">{s.label}</span></button>))}
-                              </div>
-                           </div>
-                        </div>
-                      )}
-                   </div>
-                   <Button className="w-full h-20 rounded-3xl bg-pink-500 text-white font-black text-xl shadow-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ ДАННЫЕ ЦИКЛА</Button>
                 </TabsContent>
 
                 <TabsContent value="spirit" className="space-y-10 outline-none">

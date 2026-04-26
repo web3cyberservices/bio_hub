@@ -31,6 +31,7 @@ import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
 import { ActivitiesHub } from '@/components/activities-hub';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
+import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -63,6 +64,12 @@ export default function DashboardPage() {
 
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
+  
+  // Определение женского пола для отображения трекера цикла
+  const isFemale = useMemo(() => {
+    const gender = String(userData?.gender || '').toLowerCase().trim();
+    return gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
+  }, [userData?.gender]);
 
   // РЕАКТИВНЫЙ ЗАПРОС ВСЕХ ЛОГОВ ДЛЯ КАЛЕНДАРЯ
   const cycleLogsQuery = useMemoFirebase(() => {
@@ -151,14 +158,18 @@ export default function DashboardPage() {
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
+            <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
             <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             {profileType === 'specialist' && <CreatePostDialog />}
+            
+            {/* ТРЕКЕР ЦИКЛА В ШАПКЕ (Только для женщин) */}
+            {profileType === 'user' && isFemale && <CycleTrackerDialog selectedDate={selectedDate} />}
+
             <Popover>
               <PopoverTrigger asChild>
-                <button className="h-10 px-4 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2">
+                <button className="h-10 px-4 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg shadow-[#00ffff]/5 hover:bg-[#00ffff]/10 transition-all">
                   <CalendarIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
                   <ChevronDown className="h-3 w-3 opacity-50" />
