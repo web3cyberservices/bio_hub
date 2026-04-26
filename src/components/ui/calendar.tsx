@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -44,7 +45,7 @@ function Calendar({
         day: "h-10 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-primary/20 text-white text-xs relative overflow-visible"
+          "h-10 w-9 p-0 font-bold rounded-xl flex items-center justify-center transition-all hover:bg-white/10 text-white text-xs relative overflow-visible"
         ),
         selected: "bg-primary text-slate-950 shadow-[0_0_20px_rgba(0,255,255,0.5)] rounded-xl font-black scale-105 z-10",
         today: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full font-black text-primary",
@@ -58,63 +59,44 @@ function Calendar({
           if (orientation === 'left') return <ChevronLeft className="h-5 w-5" />;
           return <ChevronRight className="h-5 w-5" />;
         },
-        Day: ({ day, modifiers, ...dayProps }: any) => {
-          if (!day || !day.date || !isValid(day.date)) return null;
+        DayContent: ({ date, ...dayProps }: any) => {
+          if (!date || !isValid(date)) return null;
           
-          const date = day.date;
           const dateStr = format(date, 'yyyy-MM-dd');
           const dayNumber = periodDays ? periodDays[dateStr] : undefined;
-          
-          if (modifiers.outside && !showOutsideDays) {
-            return <td className="h-10 w-9" />;
-          }
 
           return (
-            <td 
-              {...dayProps}
-              className={cn(
-                dayProps.className,
-                "relative h-10 w-9 p-0"
+            <div className="relative w-full h-full flex items-center justify-center">
+              <span className="relative z-10">{date.getDate()}</span>
+              
+              {dayNumber !== undefined && (
+                <div 
+                  className="pointer-events-none"
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    width: '18px',
+                    height: '18px',
+                    backgroundColor: '#FF7F50',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 50,
+                    border: '2px solid #010411',
+                    boxShadow: '0 0 8px rgba(255,127,80,0.4)',
+                  }}
+                >
+                  <span style={{
+                    color: 'white',
+                    fontSize: '9px',
+                    fontWeight: '900',
+                    lineHeight: '1',
+                  }}>{dayNumber}</span>
+                </div>
               )}
-            >
-              <div 
-                onClick={dayProps.onClick}
-                className={cn(
-                  "w-full h-full flex items-center justify-center relative cursor-pointer rounded-xl transition-all",
-                  modifiers.selected ? "bg-primary text-slate-950 shadow-[0_0_15px_rgba(0,255,255,0.4)]" : "hover:bg-white/10",
-                  dayNumber !== undefined ? "ring-2 ring-pink-500/30 bg-pink-500/5" : ""
-                )}
-              >
-                 <span className={cn("relative z-10 font-bold", modifiers.selected ? "text-slate-950" : "text-white")}>
-                   {date.getDate()}
-                 </span>
-                 
-                 {dayNumber !== undefined && (
-                   <div style={{
-                     position: 'absolute',
-                     top: '-4px',
-                     right: '-4px',
-                     width: '18px',
-                     height: '18px',
-                     backgroundColor: '#FF7F50',
-                     borderRadius: '50%',
-                     display: 'flex',
-                     alignItems: 'center',
-                     justifyContent: 'center',
-                     zIndex: 50,
-                     border: '2px solid #010411',
-                     boxShadow: '0 0 8px rgba(255,127,80,0.4)',
-                   }}>
-                     <span style={{
-                       color: 'white',
-                       fontSize: '9px',
-                       fontWeight: '900',
-                       lineHeight: '1',
-                     }}>{dayNumber}</span>
-                   </div>
-                 )}
-              </div>
-            </td>
+            </div>
           );
         }
       }}
