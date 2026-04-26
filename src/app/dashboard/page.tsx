@@ -70,6 +70,7 @@ export default function DashboardPage() {
     return gender === 'женский' || gender === 'female' || gender === 'жен' || gender === 'woman' || gender === 'w';
   }, [userData?.gender]);
 
+  // Запрос всех логов для расчета карты циклов
   const cycleLogsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users', user.uid, 'dailyLogs'));
@@ -77,11 +78,13 @@ export default function DashboardPage() {
 
   const { data: allLogs } = useCollection<any>(cycleLogsQuery);
 
+  // Расчет карты дней цикла (1, 2, 3...) от даты старта
   const periodDaysMap = useMemo(() => {
     if (!allLogs || !allLogs.length) return {};
     
+    // Находим все записи с флагом "Начало цикла"
     const starts = allLogs
-      .filter(log => log.cycle?.isStart === true)
+      .filter(log => log.date && log.cycle?.isStart === true)
       .map(log => ({
         timestamp: startOfDay(new Date(log.date + 'T00:00:00')).getTime(),
         dateStr: log.date
@@ -92,9 +95,11 @@ export default function DashboardPage() {
     
     starts.forEach(start => {
       const startDate = new Date(start.dateStr + 'T00:00:00');
+      // Авто-заполнение на 10 дней вперед от старта или до следующего старта
       for (let i = 0; i < 10; i++) {
         const d = addDays(startDate, i);
         const dStr = format(d, 'yyyy-MM-dd');
+        // Если через i дней начинается новый цикл - прерываем нумерацию старого
         if (i > 0 && starts.some(s => s.dateStr === dStr)) break;
         map[dStr] = i + 1;
       }
@@ -154,7 +159,6 @@ export default function DashboardPage() {
             <h1 className="text-xl md:text-2xl font-black text-white leading-none">PRO СЕБЯ</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            {profileType === 'specialist' && <CreatePostDialog />}
             {profileType === 'user' && isFemale && <CycleTrackerDialog selectedDate={selectedDate} />}
 
             <Popover>
