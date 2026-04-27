@@ -5,8 +5,21 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { 
   Droplet, Flame, Zap, Footprints, Moon, 
-  Heart, Activity, Beef, Scale
+  Heart, Activity, Beef, Scale, Loader2, Save, CloudSync, X, RefreshCw
 } from 'lucide-react';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { format } from 'date-fns';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface GaugeProps {
   label: string;
@@ -16,18 +29,30 @@ interface GaugeProps {
   color: string;
   progress: number;
   className?: string;
+  onClick?: () => void;
+  isClickable?: boolean;
 }
 
-const NeonGauge = ({ label, value, goal, icon, color, progress, className }: GaugeProps) => {
+const NeonGauge = ({ label, value, goal, icon, color, progress, className, onClick, isClickable }: GaugeProps) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-1.5 md:gap-4 group transition-all duration-500", className)}>
+    <div 
+      className={cn(
+        "flex flex-col items-center justify-center gap-1.5 md:gap-4 group transition-all duration-500", 
+        isClickable && "cursor-pointer hover:scale-105 active:scale-95",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="relative w-24 h-24 md:w-28 md:h-28 flex items-center justify-center">
         <svg className="absolute inset-0 w-full h-full -rotate-90">
           <circle cx="50%" cy="50%" r="46%" fill="none" stroke="white" strokeOpacity="0.05" strokeWidth="1" />
           <circle 
             cx="50%" cy="50%" r="46%" fill="none" stroke={color} strokeWidth="3" 
             strokeDasharray="100" strokeDashoffset={100 - (progress || 0)} pathLength="100" strokeLinecap="round"
-            className="drop-shadow-[0_0_15px_currentColor] transition-all duration-1000"
+            className={cn(
+              "drop-shadow-[0_0_15px_currentColor] transition-all duration-1000",
+              isClickable && "group-hover:stroke-white transition-colors"
+            )}
           />
         </svg>
         <div className="text-center flex flex-col items-center px-1">
@@ -45,8 +70,16 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
             )}
           </div>
         </div>
+        {isClickable && (
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center border border-primary/40 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Zap className="h-2.5 w-2.5 text-primary" />
+          </div>
+        )}
       </div>
-      <span className="text-[8px] md:text-[9px] font-black uppercase text-white/40 tracking-[0.2em] group-hover:text-primary transition-colors">
+      <span className={cn(
+        "text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] transition-colors",
+        isClickable ? "text-primary/60 group-hover:text-primary" : "text-white/40"
+      )}>
         {label}
       </span>
     </div>
@@ -54,9 +87,18 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
+  const { user } = useUser();
+  const { firestore } = useFirestore();
+  const { toast } = useToast();
+
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
   const [version, setVersion] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Состояние модального окна
+  const [selectedDataType, setSelectedDataType] = useState<'steps' | 'heartRate' | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -127,6 +169,41 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
+  const handleManualSave = async () => {
+    if (!user || !firestore || !selectedDataType || !inputValue) return;
+
+    setIsSaving(true);
+    try {
+      const dateKey = format(new Date(), 'yyyy-MM-dd');
+      const logRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+      
+      const updateData: any = {
+        updatedAt: serverTimestamp(),
+      };
+
+      if (selectedDataType === 'steps') {
+        updateData.steps = Number(inputValue);
+      } else {
+        updateData.avgHeartRate = Number(inputValue);
+      }
+
+      await setDoc(logRef, updateData, { merge: true });
+      
+      toast({ title: 'Данные обновлены', description: `Показатель ${selectedDataType === 'steps' ? 'шагов' : 'пульса'} успешно сохранен.` });
+      setSelectedDataType(null);
+      setInputValue('');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleGoogleFitSync = () => {
+    console.log("Триггер OAuth Google для типа:", selectedDataType);
+    toast({ title: 'Google Fit Sync', description: 'Запуск процесса авторизации...' });
+  };
+
   if (!isMounted) return <div className="w-full h-full bg-black" />;
 
   return (
@@ -146,9 +223,27 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
-          <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} />
+          <NeonGauge 
+            label="ШАГИ" 
+            value={stepsVal} 
+            goal={10000} 
+            icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} 
+            color="#00ffff" 
+            progress={getProgress(stepsVal, 10000)} 
+            isClickable
+            onClick={() => setSelectedDataType('steps')}
+          />
           <NeonGauge label="СОН" value={`${sleepVal}ч`} goal="8ч" icon={<Moon className="h-5 w-5 text-[#818CF8]" />} color="#818CF8" progress={getProgress(sleepVal, 8)} />
-          <NeonGauge label="ПУЛЬС" value={hrVal} goal={100} icon={<Heart className="h-5 w-5 text-[#FB7185]" />} color="#FB7185" progress={getProgress(hrVal, 100)} />
+          <NeonGauge 
+            label="ПУЛЬС" 
+            value={hrVal} 
+            goal={100} 
+            icon={<Heart className="h-5 w-5 text-[#FB7185]" />} 
+            color="#FB7185" 
+            progress={getProgress(hrVal, 100)} 
+            isClickable
+            onClick={() => setSelectedDataType('heartRate')}
+          />
           <NeonGauge label="ВЕС" value={`${weightVal}кг`} icon={<Scale className="h-5 w-5 text-[#F472B6]" />} color="#F472B6" progress={100} />
         </div>
         <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
@@ -171,6 +266,66 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
           />
         </div>
       </div>
+
+      {/* Модальное окно ввода биометрии */}
+      <Dialog open={!!selectedDataType} onOpenChange={(open) => !open && setSelectedDataType(null)}>
+        <DialogContent className="w-[90vw] max-w-[400px] rounded-[2.5rem] bg-[#010411] border border-primary/20 p-0 overflow-hidden shadow-2xl z-[1200]">
+          <DialogHeader className="p-8 bg-primary text-slate-950 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#00ffff]/80 opacity-90" />
+            <div className="relative z-10">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                {selectedDataType === 'steps' ? 'Ввод данных: Шаги' : 'Ввод данных: Пульс'}
+              </DialogTitle>
+              <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Manual Biometric Entry</p>
+            </div>
+          </DialogHeader>
+
+          <div className="p-8 space-y-8 bg-blue-950/40 backdrop-blur-3xl">
+            <div className="space-y-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2">Ручной ввод</label>
+              <div className="relative">
+                <Input 
+                  type="number"
+                  placeholder={selectedDataType === 'steps' ? "Введите кол-во шагов" : "Введите уд/мин"}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
+                />
+              </div>
+              <Button 
+                onClick={handleManualSave}
+                disabled={isSaving || !inputValue}
+                className="w-full h-14 rounded-2xl bg-primary text-slate-950 font-black shadow-[0_10px_30px_rgba(0,255,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> СОХРАНИТЬ ВРУЧНУЮ</>}
+              </Button>
+            </div>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
+              <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
+                <span className="bg-[#0c1221] px-4 text-white/30">Или</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Автоматически</label>
+              <Button 
+                variant="outline"
+                onClick={handleGoogleFitSync}
+                className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40 font-black uppercase tracking-widest text-[10px] gap-3 transition-all"
+              >
+                <div className="p-2 bg-white rounded-lg"><Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={16} height={16} alt="Google" /></div>
+                СИНХРОНИЗИРОВАТЬ С GOOGLE FIT
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="p-4 bg-black/40 border-t border-white/5">
+            <Button variant="ghost" onClick={() => setSelectedDataType(null)} className="w-full font-bold text-white/40 hover:text-white">ОТМЕНА</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
