@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -30,6 +31,9 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
   const [message, setMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const lastInitialChatId = useRef<string | null>(null);
+  const lastInitialSpecId = useRef<string | null>(null);
 
   const chatsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -38,20 +42,38 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
 
   const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
 
+  // Эффект для инициализации активного чата из пропсов
   useEffect(() => {
     if (chats) {
-      if (initialChatId) {
+      if (initialChatId && initialChatId !== lastInitialChatId.current) {
         handleSelectRegularChat(initialChatId);
         setShowAIChat(false);
-      } else if (initialSpecialistId) {
+        lastInitialChatId.current = initialChatId;
+      } else if (initialSpecialistId && initialSpecialistId !== lastInitialSpecId.current) {
         const targetChat = chats.find(c => c.participants.includes(initialSpecialistId));
         if (targetChat) {
           handleSelectRegularChat(targetChat.id);
           setShowAIChat(false);
+          lastInitialSpecId.current = initialSpecialistId;
         }
       }
     }
   }, [chats, initialSpecialistId, initialChatId]);
+
+  // Эффект для сброса непрочитанных в ТЕКУЩЕМ активном чате
+  useEffect(() => {
+    if (activeChatId && firestore && user?.uid && chats) {
+      const activeChat = chats.find(c => c.id === activeChatId);
+      const myUnread = activeChat?.unreadCount?.[user.uid] || 0;
+      
+      if (myUnread > 0) {
+        console.log("--- Chat: Resetting unread count for current user in chat:", activeChatId);
+        updateDoc(doc(firestore, 'chats', activeChatId), {
+          [`unreadCount.${user.uid}`]: 0
+        }).catch(e => console.error("Unread reset error:", e));
+      }
+    }
+  }, [activeChatId, chats, firestore, user?.uid]);
 
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore || !activeChatId) return null;
@@ -119,17 +141,6 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
     setActiveChatId(id); 
     setShowAIChat(false);
     requestNotificationPermission();
-
-    // Сброс счетчика непрочитанных для текущего пользователя
-    if (firestore && user?.uid) {
-      try {
-        await updateDoc(doc(firestore, 'chats', id), {
-          [`unreadCount.${user.uid}`]: 0
-        });
-      } catch (e) {
-        console.error("Error resetting unread count:", e);
-      }
-    }
   };
 
   if (chatsLoading) return <div className="flex h-full items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
@@ -144,7 +155,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
           <Button variant="ghost" size="icon" onClick={requestNotificationPermission} className="text-white/20 hover:text-primary"><Bell className="h-4 w-4" /></Button>
         </div>
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-2 pb-32 md:pb-10">
+          <div className="p-2 space-y-2 pb-10">
             <button onClick={handleOpenAIChat} className={cn("w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all", showAIChat ? "bg-primary text-slate-950" : "bg-primary/5 text-primary")}>
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center border bg-primary/20 border-primary/20"><Sparkles className="h-6 w-6" /></div>
               <div className="flex-1 text-left"><p className="font-black text-sm uppercase">ИИ-Консультант</p></div>
@@ -192,7 +203,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
               </div>
             </div>
             <ScrollArea className="flex-1 p-6 md:p-10">
-              <div className="space-y-6 pb-32 md:pb-10">
+              <div className="space-y-6 pb-20">
                 {sortedMessages.map((m) => (
                   <div key={m.id} className={cn("flex flex-col", m.senderId === user?.uid ? "items-end" : "items-start")}>
                     <div className={cn("p-4 rounded-[1.8rem] text-sm max-w-[85%]", m.senderId === user?.uid ? "bg-primary text-slate-950 rounded-tr-none" : "bg-white/5 text-white/90 rounded-tl-none")}>
@@ -203,7 +214,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
                 <div ref={scrollRef} />
               </div>
             </ScrollArea>
-            <div className="p-4 md:p-8 border-t border-white/5 bg-black/40 pb-32 md:pb-10">
+            <div className="p-4 md:p-8 border-t border-white/5 bg-black/40">
               <form onSubmit={handleSendMessage} className="flex gap-4">
                 <Input placeholder="Напишите сообщение..." value={message} onChange={e => setMessage(e.target.value)} className="h-14 rounded-2xl bg-white/5 border-none text-white" />
                 <Button type="submit" disabled={!message.trim()} className="h-14 w-14 rounded-2xl bg-primary shadow-xl shrink-0"><Send className="h-5 w-5 text-slate-950" /></Button>

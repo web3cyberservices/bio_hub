@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -314,7 +315,7 @@ export default function DashboardPage() {
                 </div>
               )}
               {activeTab === 'chats' && (
-                <div className="h-full px-4 pb-0 flex flex-col animate-in fade-in duration-300">
+                <div className="h-full px-4 pb-32 md:pb-10 flex flex-col animate-in fade-in duration-300">
                   <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden">
                     <ChatInterface 
                       initialSpecialistId={directChatRecipientId} 
