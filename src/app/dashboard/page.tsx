@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
+  const [unreadTotal, setUnreadTotal] = useState(0);
 
   useHealthAggregator();
 
@@ -55,18 +56,33 @@ export default function DashboardPage() {
     setIsMounted(true);
     setSelectedDate(startOfToday());
     
-    // Обработка глубоких ссылок и редиректов
-    const spId = searchParams.get('spId');
-    if (spId) {
-      router.replace(`/specialist/${spId}`);
-    }
-    
     const activeChat = searchParams.get('activeChat');
     if (activeChat) {
       setDirectChatId(activeChat);
       setActiveTab('chats');
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
+
+  // Слушатель непрочитанных сообщений
+  useEffect(() => {
+    if (!firestore || !user?.uid || user.uid === 'public-user') return;
+
+    const q = query(
+      collection(firestore, 'chats'),
+      where('participants', 'array-contains', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let count = 0;
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        count += (data.unreadCount?.[user.uid] || 0);
+      });
+      setUnreadTotal(count);
+    });
+
+    return () => unsubscribe();
+  }, [firestore, user?.uid]);
 
   const dateKey = useMemo(() => {
     try {
@@ -84,7 +100,6 @@ export default function DashboardPage() {
   const { data: userData } = useDoc<any>(userDocRef);
   const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
-  // ДИНАМИЧЕСКИЙ РАСЧЕТ КАРТЫ ЦИКЛА
   const [periodDaysMap, setPeriodDaysMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -324,7 +339,17 @@ export default function DashboardPage() {
               <button onClick={() => { setActiveTab('meals'); setDirectChatId(null); }} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}</button>
               <button onClick={() => { setActiveTab('dashboard'); setDirectChatId(null); }} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}</button>
               <UnifiedDataEntry selectedDate={selectedDate}><button className="h-14 w-14 md:h-16 md:w-16 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)]"><Plus className="h-8 w-8 text-white stroke-[3px]" /></button></UnifiedDataEntry>
-              <button onClick={() => { setActiveTab('chats'); setDirectChatId(null); }} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}><MessageSquare className="h-6 w-6" /></button>
+              <button 
+                onClick={() => { setActiveTab('chats'); setDirectChatId(null); }} 
+                className={cn("transition-all duration-300 flex flex-col items-center gap-1 relative", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}
+              >
+                <MessageSquare className="h-6 w-6" />
+                {unreadTotal > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-black animate-in zoom-in duration-300">
+                    {unreadTotal > 9 ? '9+' : unreadTotal}
+                  </span>
+                )}
+              </button>
               <button onClick={() => { setActiveTab('activities'); setDirectChatId(null); }} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'activities' ? "text-[#00ffff]" : "text-white/30")}><Zap className="h-6 w-6" /></button>
               <button onClick={() => { setActiveTab('profile'); setDirectChatId(null); }} className={cn("transition-all duration-300 flex flex-col items-center gap-1", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-6 w-6" /></button>
            </div>

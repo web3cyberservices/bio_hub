@@ -9,7 +9,7 @@ import {
   Sparkles, ArrowLeft, Bell
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, addDoc, doc, updateDoc, where, limit } from 'firebase/firestore';
+import { collection, query, addDoc, doc, updateDoc, where, limit, increment } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
@@ -41,12 +41,12 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
   useEffect(() => {
     if (chats) {
       if (initialChatId) {
-        setActiveChatId(initialChatId);
+        handleSelectRegularChat(initialChatId);
         setShowAIChat(false);
       } else if (initialSpecialistId) {
         const targetChat = chats.find(c => c.participants.includes(initialSpecialistId));
         if (targetChat) {
-          setActiveChatId(targetChat.id);
+          handleSelectRegularChat(targetChat.id);
           setShowAIChat(false);
         }
       }
@@ -84,7 +84,18 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
         setEditingMessageId(null);
       } else {
         await addDoc(collection(firestore, 'chats', activeChatId, 'messages'), { senderId: user.uid, text: currentMsg, createdAt: new Date().toISOString() });
-        await updateDoc(doc(firestore, 'chats', activeChatId), { lastMessage: currentMsg, updatedAt: new Date().toISOString() });
+        
+        // Обновление последнего сообщения и счетчика непрочитанных для другого участника
+        const updateData: any = { 
+          lastMessage: currentMsg, 
+          updatedAt: new Date().toISOString() 
+        };
+        
+        if (otherParticipantId) {
+          updateData[`unreadCount.${otherParticipantId}`] = increment(1);
+        }
+        
+        await updateDoc(doc(firestore, 'chats', activeChatId), updateData);
         
         // Отправка уведомления (Telegram + Браузер)
         if (otherParticipantId) {
@@ -103,10 +114,22 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
   };
 
   const handleOpenAIChat = () => { setShowAIChat(true); setActiveChatId(null); };
-  const handleSelectRegularChat = (id: string) => { 
+  
+  const handleSelectRegularChat = async (id: string) => { 
     setActiveChatId(id); 
     setShowAIChat(false);
     requestNotificationPermission();
+
+    // Сброс счетчика непрочитанных для текущего пользователя
+    if (firestore && user?.uid) {
+      try {
+        await updateDoc(doc(firestore, 'chats', id), {
+          [`unreadCount.${user.uid}`]: 0
+        });
+      } catch (e) {
+        console.error("Error resetting unread count:", e);
+      }
+    }
   };
 
   if (chatsLoading) return <div className="flex h-[600px] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
@@ -129,10 +152,29 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
             {chats?.map((chat) => {
               const oId = chat.participants.find((id: string) => id !== user?.uid);
               const oDetails = chat.participantDetails?.[oId];
+              const userUnread = chat.unreadCount?.[user?.uid] || 0;
+              
               return (
-                <button key={chat.id} onClick={() => handleSelectRegularChat(chat.id)} className={cn("w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:bg-white/5", activeChatId === chat.id ? "bg-white/10" : "opacity-60")}>
+                <button 
+                  key={chat.id} 
+                  onClick={() => handleSelectRegularChat(chat.id)} 
+                  className={cn(
+                    "w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all hover:bg-white/5 relative", 
+                    activeChatId === chat.id ? "bg-white/10" : "opacity-60"
+                  )}
+                >
                   <Avatar className="h-12 w-12 rounded-2xl"><AvatarImage src={oDetails?.photo} /><AvatarFallback>{oDetails?.name?.charAt(0)}</AvatarFallback></Avatar>
-                  <div className="flex-1 text-left truncate"><p className="font-black text-sm text-white">{oDetails?.name || 'Специалист'}</p><p className="text-[11px] text-white/40 truncate">{chat.lastMessage}</p></div>
+                  <div className="flex-1 text-left truncate">
+                    <div className="flex items-center justify-between">
+                      <p className="font-black text-sm text-white">{oDetails?.name || 'Специалист'}</p>
+                      {userUnread > 0 && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {userUnread}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-white/40 truncate">{chat.lastMessage}</p>
+                  </div>
                 </button>
               );
             })}
