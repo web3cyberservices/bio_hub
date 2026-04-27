@@ -14,7 +14,8 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
   CalendarDays, Target, Zap, Wine, Ban, UtensilsCrossed,
-  Upload, X, CheckCircle2, Instagram, Timer, Brain, Share2, Copy
+  Upload, X, CheckCircle2, Instagram, Timer, Brain, Share2, Copy,
+  Stethoscope, ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -380,7 +381,7 @@ export function ProfileCabinet() {
                       type="button" 
                       onClick={() => form.setValue('workActivityType', 'physical')}
                       variant={field.value === 'physical' ? "default" : "outline"}
-                      className={cn("h-14 rounded-2xl", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
+                      className={cn("h-14 rounded-2xl", field.value === 'primary' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
                     >
                       Физическая
                     </Button>
@@ -389,6 +390,30 @@ export function ProfileCabinet() {
               )} />
             </Card>
           </div>
+
+          {/* 5. Дополнительные данные для специалистов */}
+          {profileType === 'specialist' && (
+            <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+              <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 px-2">
+                <Stethoscope className="h-4 w-4" /> 5. Профиль эксперта
+              </h3>
+              <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
+                <FormField control={form.control} name="specialization" render={({ field }) => (
+                  <FormItem><FormLabel>Специализация</FormLabel><FormControl><Input placeholder="Напр: Эндокринолог, Нутрициолог" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="bio" render={({ field }) => (
+                  <FormItem><FormLabel>О себе / Квалификация</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                )} />
+                <FormField control={form.control} name="instagramUrl" render={({ field }) => (
+                  <FormItem><FormLabel className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                )} />
+                <div className="bg-primary/10 p-6 rounded-2xl border border-primary/20 flex items-start gap-4">
+                   <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                   <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest leading-relaxed">Данные будут видны всем пользователям в вашей публичной карточке и ленте новостей.</p>
+                </div>
+              </Card>
+            </div>
+          )}
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)]">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}

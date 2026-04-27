@@ -155,7 +155,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
 
-      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
+      <div className="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] z-50 pointer-events-none flex items-center justify-center p-4 w-full h-full">
         <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[75vh] animate-hologram flex items-center justify-center">
           <Image 
             src={`${hologramSrc}?v=${version}`} 

@@ -1,4 +1,9 @@
-# PRO Себя — Ваш персональный ИИ био-хаб (BioTech Intelligence)
+/**
+ * @IDE_INSTRUCTION: STRICT_PRESERVATION_MODE = ENABLED
+ * DO NOT remove, comment out, or hide any UI elements (buttons, inputs, menus).
+ * ALWAYS return the COMPLETE file code.
+ * Current layout is FINAL. Only incremental logic updates allowed.
+ */# PRO Себя — Ваш персональный ИИ био-хаб (BioTech Intelligence)
 
 **PRO Себя** — это ультимативная BioTech-платформа, разработанная для глубокого управления здоровьем, питанием и образом жизни. Система объединяет возможности носимых устройств, лабораторной диагностики и мультимодального ИИ Google Gemini для создания единой экосистемы долголетия.
 
