@@ -146,7 +146,6 @@ export function ProfileCabinet() {
 
   const handleCopyInviteLink = () => {
     if (!user) return;
-    // Используем Direct Link для Mini App как основной метод инвайта
     const link = `https://t.me/web3cyberservices_bot/app?startapp=${user.uid}`;
     navigator.clipboard.writeText(link).then(() => {
       toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете приглашать пациентов напрямую в Mini App.' });
@@ -163,7 +162,10 @@ export function ProfileCabinet() {
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
     const recognition = new SpeechRecognition();
     recognition.lang = 'ru-RU';
     recognition.onstart = () => setRecordingField(fieldName);
@@ -330,41 +332,9 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {profileType === 'specialist' && (
-            <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-                 <Briefcase className="h-4 w-4" /> 1.1 Данные специалиста
-               </h3>
-               <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="specialization" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Специализация</FormLabel>
-                        <FormControl><Input {...field} placeholder="Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="instagramUrl" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
-                          <Instagram className="h-3.5 w-3.5" /> Instagram URL
-                        </FormLabel>
-                        <FormControl><Input {...field} placeholder="https://instagram.com/yourname" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                      </FormItem>
-                    )} />
-                  </div>
-                  <FormField control={form.control} name="bio" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">О себе / Опыт</FormLabel>
-                      <FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" /></FormControl>
-                    </FormItem>
-                  )} />
-               </Card>
-            </div>
-          )}
-
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-              <Activity className="h-4 w-4" /> 2. Биометрия
+              <Activity className="h-4 w-4" /> 2. Биометрия и цели
             </h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -398,93 +368,166 @@ export function ProfileCabinet() {
                 )} />
               </div>
 
-              {profileType === 'user' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
-                  <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Target className="h-3.5 w-3.5" /> Цель здоровья</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                         <FormControl>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                            <SelectValue />
-                          </SelectTrigger>
-                         </FormControl>
-                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                            <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
-                            <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
-                            <SelectItem value="набор массы">Набор массы</SelectItem>
-                         </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Активность</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                         <FormControl>
-                          <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
-                            <SelectValue />
-                          </SelectTrigger>
-                         </FormControl>
-                         <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                            <SelectItem value="minimal">Минимальная</SelectItem>
-                            <SelectItem value="low">Низкая (1-3 тренировки)</SelectItem>
-                            <SelectItem value="moderate">Средняя (3-5 тренировок)</SelectItem>
-                            <SelectItem value="high">Высокая (каждый день)</SelectItem>
-                            <SelectItem value="athlete">Спортсмен (2 раза в день)</SelectItem>
-                         </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="healthGoal" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Target className="h-3.5 w-3.5" /> Цель здоровья</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                          <SelectItem value="снизить массу тела">Снизить вес</SelectItem>
+                          <SelectItem value="поддержать текущее состояние">Поддержание</SelectItem>
+                          <SelectItem value="набор массы">Набор массы</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="activityLevel" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Zap className="h-3.5 w-3.5" /> Активность</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                        <SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                          <SelectItem value="minimal">Минимальная</SelectItem>
+                          <SelectItem value="low">Низкая (1-3 тренировки)</SelectItem>
+                          <SelectItem value="moderate">Средняя (3-5 тренировок)</SelectItem>
+                          <SelectItem value="high">Высокая (каждый день)</SelectItem>
+                          <SelectItem value="athlete">Спортсмен (2 раза в день)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+              </div>
             </Card>
           </div>
 
-          {profileType === 'user' && (
-            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-                <Briefcase className="h-4 w-4" /> 3. Работа
-              </h3>
-              <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="occupation" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Профессия</FormLabel>
-                      <FormControl><Input {...field} placeholder="Напр: Программист, Учитель..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Timer className="h-3.5 w-3.5" /> Часов работы в день</FormLabel>
-                      <FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
-                    </FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="workActivityType" render={({ field }) => (
+          {/* ПИТАНИЕ И ЛЕКАРСТВА */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <UtensilsCrossed className="h-4 w-4" /> 3. Питание и Медикаменты
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Характер работы</FormLabel>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Button 
-                        type="button" 
-                        onClick={() => form.setValue('workActivityType', 'mental')}
-                        variant={field.value === 'mental' ? "default" : "outline"}
-                        className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2", field.value === 'mental' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white/40")}
-                      >
-                         <Brain className="h-4 w-4" /> Умственная
-                      </Button>
-                      <Button 
-                        type="button" 
-                        onClick={() => form.setValue('workActivityType', 'physical')}
-                        variant={field.value === 'physical' ? "default" : "outline"}
-                        className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white/40")}
-                      >
-                         <Activity className="h-4 w-4" /> Физическая
-                      </Button>
-                    </div>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Любимые продукты</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Textarea {...field} placeholder="Овощи, рыба, орехи..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white font-medium pr-12 shadow-inner" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')} className={cn("absolute right-2 top-2 h-8 w-8 rounded-full", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button>
+                      </div>
+                    </FormControl>
                   </FormItem>
                 )} />
-              </Card>
+                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Исключить из рациона</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Textarea {...field} placeholder="Сахар, молочные продукты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white font-medium pr-12 shadow-inner" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')} className={cn("absolute right-2 top-2 h-8 w-8 rounded-full", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse")}><Mic className="h-4 w-4" /></Button>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="medications" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Pill className="h-4 w-4" /> Лекарства и БАДы</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Textarea {...field} placeholder="Витамин D3, Омега-3, Эутирокс..." className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white font-medium pr-12 shadow-inner" />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("absolute right-2 top-2 h-10 w-10 rounded-full", recordingField === 'medications' && "bg-red-500 animate-pulse")}><Mic className="h-5 w-5" /></Button>
+                    </div>
+                  </FormControl>
+                  <p className="text-[9px] text-white/20 italic px-2">Укажите дозировки для более точного ИИ-анализа.</p>
+                </FormItem>
+              )} />
+            </Card>
+          </div>
+
+          <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+              <Briefcase className="h-4 w-4" /> 4. Профессиональная деятельность
+            </h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="occupation" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Профессия</FormLabel>
+                    <FormControl><Input {...field} placeholder="Напр: Программист, Учитель..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2"><Timer className="h-3.5 w-3.5" /> Часов работы в день</FormLabel>
+                    <FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                  </FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Характер работы</FormLabel>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button 
+                      type="button" 
+                      onClick={() => form.setValue('workActivityType', 'mental')}
+                      variant={field.value === 'mental' ? "default" : "outline"}
+                      className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2 transition-all", field.value === 'mental' ? "bg-primary text-slate-950 shadow-lg" : "bg-white/5 border-white/10 text-white/40")}
+                    >
+                        <Brain className="h-4 w-4" /> Умственная
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={() => form.setValue('workActivityType', 'physical')}
+                      variant={field.value === 'physical' ? "default" : "outline"}
+                      className={cn("h-14 rounded-2xl font-black uppercase text-[10px] gap-2 transition-all", field.value === 'physical' ? "bg-primary text-slate-950 shadow-lg" : "bg-white/5 border-white/10 text-white/40")}
+                    >
+                        <Activity className="h-4 w-4" /> Физическая
+                    </Button>
+                  </div>
+                </FormItem>
+              )} />
+            </Card>
+          </div>
+
+          {profileType === 'specialist' && (
+            <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+               <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
+                 <Briefcase className="h-4 w-4" /> Данные специалиста
+               </h3>
+               <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="specialization" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">Специализация</FormLabel>
+                        <FormControl><Input {...field} placeholder="Эндокринолог, Нутрициолог..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="instagramUrl" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1 flex items-center gap-2">
+                          <Instagram className="h-3.5 w-3.5" /> Instagram URL
+                        </FormLabel>
+                        <FormControl><Input {...field} placeholder="https://instagram.com/yourname" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold" /></FormControl>
+                      </FormItem>
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="bio" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase text-white/40 tracking-widest px-1">О себе / Опыт</FormLabel>
+                      <FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white text-lg font-medium resize-none shadow-inner" /></FormControl>
+                    </FormItem>
+                  )} />
+               </Card>
             </div>
           )}
 
