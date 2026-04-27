@@ -8,18 +8,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, updateDoc, doc, orderBy } from 'firebase/firestore';
+import { collection, query, where, updateDoc, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { 
-  CalendarDays, Clock, CheckCircle2, Loader2, 
-  ArrowRight, ShieldCheck, Zap, User, ArrowLeft
+  Clock, CheckCircle2, Loader2, 
+  Zap, ArrowLeft, CalendarDays, ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { sendAppNotification } from '@/app/actions/notifications';
 
 interface PatientBookingDialogProps {
   specialistId: string;
@@ -59,14 +59,27 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
     if (!firestore || !user?.uid || !selectedSlotId) return;
     setLoading(true);
     try {
+      const targetSlot = availableSlots.find(s => s.id === selectedSlotId);
       const slotRef = doc(firestore, 'appointments', selectedSlotId);
+      
+      const patientName = (user as any).displayName || (user as any).firstName || 'Пациент';
+      
       await updateDoc(slotRef, {
         patientId: user.uid,
-        patientName: (user as any).displayName || (user as any).firstName || 'Пациент',
+        patientName: patientName,
         patientPhoto: (user as any).photoURL || (user as any).photoUrl || '',
         status: 'pending',
         updatedAt: new Date().toISOString()
       });
+
+      // Отправка уведомления специалисту
+      sendAppNotification({
+        userId: specialistId,
+        title: 'Новая заявка на приём',
+        message: `Пациент ${patientName} хочет записаться на ${format(selectedDate, 'd MMMM')} в ${targetSlot?.time}.`,
+        type: 'appointment'
+      });
+
       setIsSuccess(true);
       toast({ title: 'Заявка отправлена', description: 'Специалист рассмотрит вашу запись в ближайшее время.' });
     } catch (e: any) {

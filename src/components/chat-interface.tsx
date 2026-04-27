@@ -6,16 +6,15 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Send, Loader2, MessageSquare, 
-  Search, Phone, Video, MoreVertical, CheckCheck, 
-  Pencil, Trash2, X, Check, Mic, Sparkles, ArrowLeft
+  Sparkles, ArrowLeft, Bell
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, addDoc, doc, updateDoc, where, limit, deleteDoc } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { collection, query, addDoc, doc, updateDoc, where, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { AISpecialistChat } from './ai-specialist-chat';
+import { sendAppNotification } from '@/app/actions/notifications';
 
 interface ChatInterfaceProps {
   initialSpecialistId?: string | null;
@@ -29,7 +28,6 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
   const [showAIChat, setShowAIChat] = useState(false);
   const [message, setMessage] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const chatsQuery = useMemoFirebase(() => {
@@ -63,6 +61,12 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
     if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const requestNotificationPermission = () => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!message.trim() || !activeChatId || !user?.uid || !firestore) return;
@@ -75,6 +79,16 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
       } else {
         await addDoc(collection(firestore, 'chats', activeChatId, 'messages'), { senderId: user.uid, text: currentMsg, createdAt: new Date().toISOString() });
         await updateDoc(doc(firestore, 'chats', activeChatId), { lastMessage: currentMsg, updatedAt: new Date().toISOString() });
+        
+        // Отправка уведомления (Telegram + Браузер)
+        if (otherParticipantId) {
+          sendAppNotification({
+            userId: otherParticipantId,
+            title: `Новое сообщение от ${(user as any).displayName || 'Пользователя'}`,
+            message: currentMsg,
+            type: 'message'
+          });
+        }
       }
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Ошибка отправки', description: 'Не удалось отправить сообщение.' });
@@ -83,7 +97,11 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
   };
 
   const handleOpenAIChat = () => { setShowAIChat(true); setActiveChatId(null); };
-  const handleSelectRegularChat = (id: string) => { setActiveChatId(id); setShowAIChat(false); };
+  const handleSelectRegularChat = (id: string) => { 
+    setActiveChatId(id); 
+    setShowAIChat(false);
+    requestNotificationPermission();
+  };
 
   if (chatsLoading) return <div className="flex h-[600px] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
 
@@ -92,7 +110,10 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
   return (
     <div className="flex h-[70vh] md:h-[750px] bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden">
       <div className={cn("w-full md:w-80 border-r border-white/10 bg-black/40 flex flex-col transition-all", (activeChatId || showAIChat) ? "hidden md:flex" : "flex")}>
-        <div className="p-6 border-b border-white/5"><h2 className="text-xl font-black text-white uppercase">Чаты</h2></div>
+        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+          <h2 className="text-xl font-black text-white uppercase">Чаты</h2>
+          <Button variant="ghost" size="icon" onClick={requestNotificationPermission} className="text-white/20 hover:text-primary"><Bell className="h-4 w-4" /></Button>
+        </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-2">
             <button onClick={handleOpenAIChat} className={cn("w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all", showAIChat ? "bg-primary text-slate-950" : "bg-primary/5 text-primary")}>
