@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -42,7 +41,6 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
 
   const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
 
-  // Эффект для инициализации активного чата из пропсов
   useEffect(() => {
     if (chats) {
       if (initialChatId && initialChatId !== lastInitialChatId.current) {
@@ -60,14 +58,12 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
     }
   }, [chats, initialSpecialistId, initialChatId]);
 
-  // Эффект для сброса непрочитанных в ТЕКУЩЕМ активном чате
   useEffect(() => {
     if (activeChatId && firestore && user?.uid && chats) {
       const activeChat = chats.find(c => c.id === activeChatId);
       const myUnread = activeChat?.unreadCount?.[user.uid] || 0;
       
       if (myUnread > 0) {
-        console.log("--- Chat: Resetting unread count for current user in chat:", activeChatId);
         updateDoc(doc(firestore, 'chats', activeChatId), {
           [`unreadCount.${user.uid}`]: 0
         }).catch(e => console.error("Unread reset error:", e));
@@ -90,7 +86,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
   }, [messages]);
 
   const requestNotificationPermission = () => {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   };
@@ -107,7 +103,6 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
       } else {
         await addDoc(collection(firestore, 'chats', activeChatId, 'messages'), { senderId: user.uid, text: currentMsg, createdAt: new Date().toISOString() });
         
-        // Обновление последнего сообщения и счетчика непрочитанных для другого участника
         const updateData: any = { 
           lastMessage: currentMsg, 
           updatedAt: new Date().toISOString() 
@@ -119,7 +114,6 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
         
         await updateDoc(doc(firestore, 'chats', activeChatId), updateData);
         
-        // Отправка уведомления (Telegram + Браузер)
         if (otherParticipantId) {
           sendAppNotification({
             userId: otherParticipantId,
@@ -155,7 +149,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
           <Button variant="ghost" size="icon" onClick={requestNotificationPermission} className="text-white/20 hover:text-primary"><Bell className="h-4 w-4" /></Button>
         </div>
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-2 pb-10">
+          <div className="p-2 space-y-2 pb-20">
             <button onClick={handleOpenAIChat} className={cn("w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all", showAIChat ? "bg-primary text-slate-950" : "bg-primary/5 text-primary")}>
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center border bg-primary/20 border-primary/20"><Sparkles className="h-6 w-6" /></div>
               <div className="flex-1 text-left"><p className="font-black text-sm uppercase">ИИ-Консультант</p></div>
@@ -203,7 +197,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
               </div>
             </div>
             <ScrollArea className="flex-1 p-6 md:p-10">
-              <div className="space-y-6 pb-20">
+              <div className="space-y-6 pb-24 md:pb-10">
                 {sortedMessages.map((m) => (
                   <div key={m.id} className={cn("flex flex-col", m.senderId === user?.uid ? "items-end" : "items-start")}>
                     <div className={cn("p-4 rounded-[1.8rem] text-sm max-w-[85%]", m.senderId === user?.uid ? "bg-primary text-slate-950 rounded-tr-none" : "bg-white/5 text-white/90 rounded-tl-none")}>

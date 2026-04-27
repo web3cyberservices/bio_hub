@@ -55,9 +55,11 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className }: Gau
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
-  const [version, setVersion] = useState(Date.now());
+  const [version, setVersion] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (!profileData) return;
     
     const gender = String(profileData.gender || 'мужской').toLowerCase().trim();
@@ -67,7 +69,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     
     if (newSrc !== hologramSrc) {
       setHologramSrc(newSrc);
-      setVersion(Date.now());
+      setVersion(prev => prev + 1);
     }
   }, [profileData?.gender, hologramSrc]);
 
@@ -125,6 +127,8 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
+  if (!isMounted) return <div className="w-full h-full bg-black" />;
+
   return (
     <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none", className)}>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1">
@@ -155,7 +159,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
 
-      <div className="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%] z-50 pointer-events-none flex items-center justify-center p-4 w-full h-full">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none flex items-center justify-center p-4 w-full h-full">
         <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[75vh] animate-hologram flex items-center justify-center">
           <Image 
             src={`${hologramSrc}?v=${version}`} 

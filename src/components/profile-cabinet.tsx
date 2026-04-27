@@ -143,7 +143,10 @@ export function ProfileCabinet() {
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
+      return;
+    }
     const recognition = new SpeechRecognition();
     recognition.lang = 'ru-RU';
     recognition.onstart = () => setRecordingField(fieldName);
@@ -381,7 +384,7 @@ export function ProfileCabinet() {
                       type="button" 
                       onClick={() => form.setValue('workActivityType', 'physical')}
                       variant={field.value === 'physical' ? "default" : "outline"}
-                      className={cn("h-14 rounded-2xl", field.value === 'primary' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
+                      className={cn("h-14 rounded-2xl", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
                     >
                       Физическая
                     </Button>
