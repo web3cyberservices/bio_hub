@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, orderBy, updateDoc, arrayUnion, arrayRemove, addDoc, getDocs } from 'firebase/firestore';
+import { doc, collection, query, where, updateDoc, arrayUnion, arrayRemove, addDoc, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { 
-  ArrowLeft, Star, MessageSquare, Users, BookOpen, 
-  ThumbsUp, Calendar, Heart, Share2, Send, Loader2, Plus, Mic, Instagram, ShieldCheck, ShieldAlert, Copy
+  ArrowLeft, Star, BookOpen, 
+  Share2, Loader2, Instagram, ShieldCheck, ShieldAlert
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -107,8 +105,12 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
         const res = await addDoc(collection(firestore, 'chats'), {
           participants: [user.uid, specialistId],
           participantDetails: {
-            [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || '' },
+            [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || (user as any).photoUrl || '' },
             [specialistId]: { name: specData.firstName || 'Специалист', photo: specData.photoUrl || '' }
+          },
+          unreadCount: {
+            [user.uid]: 0,
+            [specialistId]: 0
           },
           lastMessage: 'Начат новый диалог со специалистом.',
           updatedAt: new Date().toISOString(),

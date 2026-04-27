@@ -132,19 +132,19 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
     }
   };
 
-  if (chatsLoading) return <div className="flex h-[600px] items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
+  if (chatsLoading) return <div className="flex h-full items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" /></div>;
 
   const sortedMessages = messages ? [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) : [];
 
   return (
-    <div className="flex h-[70vh] md:h-[750px] bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden">
+    <div className="flex flex-1 h-full bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden mb-4">
       <div className={cn("w-full md:w-80 border-r border-white/10 bg-black/40 flex flex-col transition-all", (activeChatId || showAIChat) ? "hidden md:flex" : "flex")}>
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <h2 className="text-xl font-black text-white uppercase">Чаты</h2>
           <Button variant="ghost" size="icon" onClick={requestNotificationPermission} className="text-white/20 hover:text-primary"><Bell className="h-4 w-4" /></Button>
         </div>
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-2">
+          <div className="p-2 space-y-2 pb-32 md:pb-10">
             <button onClick={handleOpenAIChat} className={cn("w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all", showAIChat ? "bg-primary text-slate-950" : "bg-primary/5 text-primary")}>
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center border bg-primary/20 border-primary/20"><Sparkles className="h-6 w-6" /></div>
               <div className="flex-1 text-left"><p className="font-black text-sm uppercase">ИИ-Консультант</p></div>
@@ -192,7 +192,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
               </div>
             </div>
             <ScrollArea className="flex-1 p-6 md:p-10">
-              <div className="space-y-6">
+              <div className="space-y-6 pb-32 md:pb-10">
                 {sortedMessages.map((m) => (
                   <div key={m.id} className={cn("flex flex-col", m.senderId === user?.uid ? "items-end" : "items-start")}>
                     <div className={cn("p-4 rounded-[1.8rem] text-sm max-w-[85%]", m.senderId === user?.uid ? "bg-primary text-slate-950 rounded-tr-none" : "bg-white/5 text-white/90 rounded-tl-none")}>
@@ -203,12 +203,14 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
                 <div ref={scrollRef} />
               </div>
             </ScrollArea>
-            <form onSubmit={handleSendMessage} className="p-4 md:p-8 border-t border-white/5 flex gap-4">
-              <Input placeholder="Напишите сообщение..." value={message} onChange={e => setMessage(e.target.value)} className="h-14 rounded-2xl bg-white/5 border-none text-white" />
-              <Button type="submit" disabled={!message.trim()} className="h-14 w-14 rounded-2xl bg-primary shadow-xl shrink-0"><Send className="h-5 w-5 text-slate-950" /></Button>
-            </form>
+            <div className="p-4 md:p-8 border-t border-white/5 bg-black/40 pb-32 md:pb-10">
+              <form onSubmit={handleSendMessage} className="flex gap-4">
+                <Input placeholder="Напишите сообщение..." value={message} onChange={e => setMessage(e.target.value)} className="h-14 rounded-2xl bg-white/5 border-none text-white" />
+                <Button type="submit" disabled={!message.trim()} className="h-14 w-14 rounded-2xl bg-primary shadow-xl shrink-0"><Send className="h-5 w-5 text-slate-950" /></Button>
+              </form>
+            </div>
           </>
-        ) : <div className="text-center opacity-20"><MessageSquare className="h-16 w-16 mx-auto mb-4" /><p className="font-black uppercase tracking-widest">Выберите диалог</p></div>}
+        ) : <div className="text-center opacity-20 h-full flex flex-col items-center justify-center"><MessageSquare className="h-16 w-16 mx-auto mb-4" /><p className="font-black uppercase tracking-widest">Выберите диалог</p></div>}
       </div>
     </div>
   );

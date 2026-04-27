@@ -82,6 +82,10 @@ export function SpecialistPatientsView({ onStartChat }: SpecialistPatientsViewPr
             [user.uid]: { name: userData.firstName || 'Специалист', photo: userData.photoUrl || '' },
             [patient.id]: { name: (patient.firstName + ' ' + (patient.lastName || '')).trim(), photo: patient.photoUrl || '' }
           },
+          unreadCount: {
+            [user.uid]: 0,
+            [patient.id]: 0
+          },
           lastMessage: 'Начат диалог со специалистом.',
           updatedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()

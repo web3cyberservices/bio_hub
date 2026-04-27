@@ -10,12 +10,10 @@ import {
   UserCheck,
   BarChart3,
   Zap,
-  ThumbsUp,
-  Share2
+  ThumbsUp
 } from 'lucide-react';
-import { format, startOfToday, startOfDay, addDays, isValid, isSameDay } from 'date-fns';
+import { format, startOfToday, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { ProfileCabinet } from '@/components/profile-cabinet';
@@ -76,9 +74,14 @@ export default function DashboardPage() {
       let count = 0;
       snapshot.docs.forEach(doc => {
         const data = doc.data();
-        count += (data.unreadCount?.[user.uid] || 0);
+        if (data.unreadCount && typeof data.unreadCount === 'object') {
+          count += (data.unreadCount[user.uid] || 0);
+        }
       });
+      console.log("--- Dashboard: Total Unread Updated:", count);
       setUnreadTotal(count);
+    }, (error) => {
+      console.error("Unread monitor error:", error);
     });
 
     return () => unsubscribe();
@@ -186,7 +189,7 @@ export default function DashboardPage() {
     try {
       await updateDoc(postRef, {
         likedBy: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
-        likes: isLiked ? Math.max(0, likedBy.length - 1) : (likedBy.length + 1)
+        likes: isLiked ? Math.max(0, (likedBy?.length || 0) - 1) : ((likedBy?.length || 0) + 1)
       });
     } catch (e: any) {
       console.error("Like error:", e);
@@ -311,8 +314,8 @@ export default function DashboardPage() {
                 </div>
               )}
               {activeTab === 'chats' && (
-                <div className="h-full px-4 pb-40 flex flex-col animate-in fade-in duration-300">
-                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pb-10 pt-4">
+                <div className="h-full px-4 pb-0 flex flex-col animate-in fade-in duration-300">
+                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden">
                     <ChatInterface 
                       initialSpecialistId={directChatRecipientId} 
                       initialChatId={directChatId}
