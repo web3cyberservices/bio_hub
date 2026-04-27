@@ -18,9 +18,10 @@ import { sendAppNotification } from '@/app/actions/notifications';
 
 interface ChatInterfaceProps {
   initialSpecialistId?: string | null;
+  initialChatId?: string | null;
 }
 
-export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
+export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterfaceProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -38,14 +39,19 @@ export function ChatInterface({ initialSpecialistId }: ChatInterfaceProps) {
   const { data: chats, isLoading: chatsLoading } = useCollection<any>(chatsQuery);
 
   useEffect(() => {
-    if (chats && initialSpecialistId) {
-      const targetChat = chats.find(c => c.participants.includes(initialSpecialistId));
-      if (targetChat) {
-        setActiveChatId(targetChat.id);
+    if (chats) {
+      if (initialChatId) {
+        setActiveChatId(initialChatId);
         setShowAIChat(false);
+      } else if (initialSpecialistId) {
+        const targetChat = chats.find(c => c.participants.includes(initialSpecialistId));
+        if (targetChat) {
+          setActiveChatId(targetChat.id);
+          setShowAIChat(false);
+        }
       }
     }
-  }, [chats, initialSpecialistId]);
+  }, [chats, initialSpecialistId, initialChatId]);
 
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore || !activeChatId) return null;
