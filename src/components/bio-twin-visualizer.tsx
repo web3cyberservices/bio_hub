@@ -68,7 +68,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     if (newSrc !== hologramSrc) {
       setHologramSrc(newSrc);
       setVersion(Date.now());
-      console.log('--- Bio-Twin Sync: Gender detected:', gender);
     }
   }, [profileData?.gender, hologramSrc]);
 
@@ -127,7 +126,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
   return (
-    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4", className)}>
+    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none", className)}>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1">
         <div className="px-6 py-2 rounded-full border border-[#00ffff]/30 bg-[#00ffff]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] flex items-center gap-3">
           <Activity className="h-4 w-4 text-[#00ffff] animate-pulse" />
@@ -157,7 +156,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
       </div>
 
       <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center p-4">
-        <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[65vh] animate-hologram flex items-center justify-center">
+        <div key={`${hologramSrc}-${version}`} className="relative w-full h-full max-h-[75vh] animate-hologram flex items-center justify-center">
           <Image 
             src={`${hologramSrc}?v=${version}`} 
             alt="Bio-Hologram" 
