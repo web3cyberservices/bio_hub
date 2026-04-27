@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { 
   CalendarDays, Clock, CheckCircle2, Loader2, 
-  ArrowRight, ShieldCheck, Zap, User
+  ArrowRight, ShieldCheck, Zap, User, ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,8 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
       const slotRef = doc(firestore, 'appointments', selectedSlotId);
       await updateDoc(slotRef, {
         patientId: user.uid,
-        patientName: (user as any).displayName || 'Пациент',
-        patientPhoto: (user as any).photoURL || '',
+        patientName: (user as any).displayName || (user as any).firstName || 'Пациент',
+        patientPhoto: (user as any).photoURL || (user as any).photoUrl || '',
         status: 'pending',
         updatedAt: new Date().toISOString()
       });
@@ -76,25 +76,43 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
     }
   };
 
-  const reset = () => {
+  const resetAndClose = () => {
     setIsSuccess(false);
     setSelectedSlotId(null);
     setIsOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) {
+        setIsSuccess(false);
+        setSelectedSlotId(null);
+      }
+    }}>
       <DialogTrigger asChild>
-        <Button className="rounded-2xl h-14 px-8 font-black bg-primary text-slate-950 shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-           Записаться на прием
+        <Button className="w-full rounded-2xl h-14 px-8 font-black bg-[#00ffff] text-slate-950 shadow-xl shadow-[#00ffff]/20 transition-all hover:scale-[1.02] active:scale-95 text-lg">
+           ЗАПИСАТЬСЯ НА ПРИЁМ
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] md:max-w-[800px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1200] bg-[#010411]">
         <DialogHeader className="p-8 bg-primary text-white relative border-b border-white/5">
            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-90" />
-           <div className="relative z-10">
-              <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter text-slate-950 uppercase">Запись к специалисту</DialogTitle>
-              <p className="text-slate-950/60 font-black uppercase text-xs md:text-sm tracking-widest mt-1">Эксперт: {specialistName}</p>
+           <div className="relative z-10 flex items-center gap-4">
+              {!isSuccess && selectedSlotId && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full text-slate-950 hover:bg-black/10"
+                  onClick={() => setSelectedSlotId(null)}
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </Button>
+              )}
+              <div>
+                <DialogTitle className="text-2xl md:text-3xl font-black tracking-tighter text-slate-950 uppercase">Запись к специалисту</DialogTitle>
+                <p className="text-slate-950/60 font-black uppercase text-xs md:text-sm tracking-widest mt-1">Эксперт: {specialistName}</p>
+              </div>
            </div>
            <Zap className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-950/10 rotate-12" />
         </DialogHeader>
@@ -110,7 +128,12 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                      <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
+                        onSelect={(date) => {
+                          if (date) {
+                            setSelectedDate(date);
+                            setSelectedSlotId(null);
+                          }
+                        }}
                         locale={ru}
                         className="w-full"
                      />
@@ -145,7 +168,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                         ) : (
                           <div className="col-span-full py-20 text-center space-y-4 opacity-30">
                              <Clock className="h-12 w-12 mx-auto" />
-                             <p className="text-[10px] font-black uppercase tracking-widest text-white">Нет доступных слотов на эту дату</p>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-white">Нет доступных слотов</p>
                           </div>
                         )}
                      </div>
@@ -161,10 +184,9 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                   <h3 className="text-3xl font-black text-white uppercase tracking-tight">Заявка отправлена!</h3>
                   <p className="text-sm text-white/50 font-medium leading-relaxed">
                      Специалист {specialistName} получил ваш запрос на <strong>{format(selectedDate, 'd MMMM')} в {availableSlots?.find(s => s.id === selectedSlotId)?.time}</strong>. 
-                     Как только запись будет подтверждена, статус обновится в вашем кабинете.
                   </p>
                </div>
-               <Button onClick={reset} className="h-14 rounded-xl bg-primary text-slate-950 font-black px-12">ОТЛИЧНО</Button>
+               <Button onClick={resetAndClose} className="h-14 rounded-xl bg-primary text-slate-950 font-black px-12">ВЕРНУТЬСЯ В ПРОФИЛЬ</Button>
             </div>
           )}
         </div>
@@ -176,13 +198,13 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                 <span className="text-[9px] font-black uppercase tracking-widest">Безопасное бронирование</span>
              </div>
              <div className="flex gap-4 w-full md:w-auto">
-                <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60">Отмена</Button>
+                <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60">Назад</Button>
                 <Button 
                   onClick={handleBook} 
                   disabled={loading || !selectedSlotId} 
                   className="flex-1 md:flex-none rounded-xl bg-primary text-slate-950 px-10 font-black h-12 shadow-xl"
                 >
-                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ ЗАПИСЬ"}
+                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ"}
                 </Button>
              </div>
           </DialogFooter>
