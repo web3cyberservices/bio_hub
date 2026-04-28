@@ -27,7 +27,7 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
         month_caption: "flex justify-center pt-2 relative items-center h-12 mb-4 px-10", 
-        caption_label: "text-sm font-black tracking-widest text-white uppercase text-center",
+        caption_label: "text-sm font-black tracking-widest text-white uppercase text-center hidden", // Скрываем стандартный заголовок при использовании dropdown
         nav: "flex items-center justify-between absolute inset-x-4 top-4 z-[100] w-[calc(100%-2rem)]", 
         button_previous: cn(
           buttonVariants({ variant: "ghost" }),
@@ -51,6 +51,8 @@ function Calendar({
         outside: "opacity-10 pointer-events-none",
         disabled: "opacity-10 pointer-events-none",
         hidden: "invisible",
+        caption_dropdowns: "flex justify-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10", // Стили для выпадающих списков
+        dropdown: "bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest border-none outline-none cursor-pointer p-1 rounded-lg hover:bg-white/10",
         ...classNames,
       }}
       components={{
@@ -66,10 +68,6 @@ function Calendar({
           const dayNumber = periodDays ? periodDays[currentKey] : undefined;
           const isPeriod = dayNumber !== undefined;
           
-          if (isPeriod) {
-            console.log("СРАВНИВАЮ:", currentKey, "РЕЗУЛЬТАТ:", isPeriod);
-          }
-
           const isSelected = modifiers.selected;
           const isToday = modifiers.today;
           const isOutside = modifiers.outside;

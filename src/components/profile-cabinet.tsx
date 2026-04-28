@@ -234,6 +234,9 @@ export function ProfileCabinet() {
                         <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[1200] bg-transparent" align="start">
                           <Calendar
                             mode="single"
+                            captionLayout="dropdown-buttons"
+                            fromYear={1940}
+                            toYear={new Date().getFullYear()}
                             selected={field.value ? new Date(field.value) : undefined}
                             onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
                             disabled={(date) =>
@@ -330,25 +333,6 @@ export function ProfileCabinet() {
               </Card>
             </div>
           )}
-
-          {/* 6. КАЛЕНДАРЬ ЗДОРОВЬЯ */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> 6. Календарь здоровья</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 border-white/5 flex flex-col items-center">
-              <div className="w-full max-w-sm">
-                <Calendar 
-                  mode="single"
-                  className="border-none shadow-none bg-transparent"
-                  locale={ru}
-                />
-              </div>
-              <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 w-full text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
-                  Визуальный архив вашей активности и биологических ритмов
-                </p>
-              </div>
-            </Card>
-          </div>
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ'}
