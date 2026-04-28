@@ -1,12 +1,6 @@
 'use client';
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 
-function DashboardContent() {
-
-"use client";
-
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
@@ -40,6 +34,7 @@ import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
 import { useToast } from '@/hooks/use-toast';
 
+function DashboardContent() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -83,7 +78,6 @@ import { useToast } from '@/hooks/use-toast';
           count += (data.unreadCount[user.uid] || 0);
         }
       });
-      console.log("--- Dashboard: Total Unread Updated:", count);
       setUnreadTotal(count);
     }, (error) => {
       console.error("Unread monitor error:", error);
@@ -366,11 +360,10 @@ import { useToast } from '@/hooks/use-toast';
     </div>
   );
 }
-}
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className='p-10 text-center text-blue-500'>Инициализация Bio-Hub...</div>}>
+    <Suspense fallback={<div className='p-10 text-center text-primary'>Инициализация Bio-Hub...</div>}>
       <DashboardContent />
     </Suspense>
   );
