@@ -32,6 +32,7 @@ import { SpecialistBookingManager } from '@/components/specialist-booking-manage
 import { ActivitiesHub } from '@/components/activities-hub';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
+import { BeautyIndicatorsDialog } from '@/components/beauty-indicators-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 function DashboardContent() {
@@ -214,7 +215,10 @@ function DashboardContent() {
             </div>
 
             {userData?.gender === 'женский' && (
-              <CycleTrackerDialog selectedDate={selectedDate} />
+              <div className="flex items-center gap-2">
+                <BeautyIndicatorsDialog />
+                <CycleTrackerDialog selectedDate={selectedDate} />
+              </div>
             )}
 
             <Popover>
