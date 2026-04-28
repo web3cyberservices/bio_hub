@@ -72,7 +72,6 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
         updatedAt: new Date().toISOString()
       });
 
-      // Отправка уведомления специалисту
       sendAppNotification({
         userId: specialistId,
         title: 'Новая заявка на приём',
@@ -108,37 +107,37 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
            ЗАПИСАТЬСЯ НА ПРИЁМ
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[98vw] md:max-w-[800px] max-h-[90vh] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1200] bg-[#010411] flex flex-col">
-        <DialogHeader className="p-6 md:p-8 bg-primary text-white shrink-0 relative border-b border-white/5">
-           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-90" />
-           <div className="relative z-10 flex items-center gap-4">
+      <DialogContent className="w-[98vw] md:max-w-[800px] h-[92vh] md:h-auto max-h-[92vh] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1200] bg-[#010411] flex flex-col">
+        <DialogHeader className="p-4 md:p-8 bg-primary text-white shrink-0 relative border-b border-white/5">
+           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
+           <div className="relative z-10 flex items-center gap-3">
               {!isSuccess && selectedSlotId && (
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="rounded-full text-slate-950 hover:bg-black/10"
+                  className="rounded-full text-slate-950 hover:bg-black/10 h-8 w-8"
                   onClick={() => setSelectedSlotId(null)}
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ArrowLeft className="h-5 w-5" />
                 </Button>
               )}
               <div>
-                <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter text-slate-950 uppercase">Запись к специалисту</DialogTitle>
-                <p className="text-slate-950/60 font-black uppercase text-[10px] md:text-sm tracking-widest mt-1">Эксперт: {specialistName}</p>
+                <DialogTitle className="text-lg md:text-3xl font-black tracking-tighter text-slate-950 uppercase leading-none">Запись на приём</DialogTitle>
+                <p className="text-slate-950/60 font-black uppercase text-[8px] md:text-sm tracking-widest mt-1">Эксперт: {specialistName}</p>
               </div>
            </div>
-           <Zap className="absolute -right-4 -bottom-4 h-20 w-24 text-slate-950/10 rotate-12" />
+           <Zap className="absolute -right-4 -bottom-4 h-16 w-20 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0 bg-blue-950/40 backdrop-blur-3xl">
-          <div className="p-4 md:p-10">
+          <div className="p-4 md:p-10 pb-10">
             {!isSuccess ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
                        <CalendarDays className="h-3 w-3" /> 1. Выберите дату
                     </h4>
-                    <div className="p-2 border border-white/10 bg-white/5 rounded-3xl shadow-inner flex justify-center">
+                    <div className="p-1.5 border border-white/10 bg-white/5 rounded-3xl shadow-inner flex justify-center overflow-hidden">
                        <Calendar
                           mode="single"
                           selected={selectedDate}
@@ -149,16 +148,16 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                             }
                           }}
                           locale={ru}
-                          className="scale-90 md:scale-100"
+                          className="scale-90 md:scale-100 origin-top"
                        />
                     </div>
                  </div>
 
                  <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
                        <Clock className="h-3 w-3" /> 2. Доступное время
                     </h4>
-                    <div className="grid grid-cols-2 gap-3 pb-4">
+                    <div className="grid grid-cols-3 md:grid-cols-2 gap-2 pb-4">
                        {slotsLoading ? (
                          <div className="col-span-full py-10 text-center">
                             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
@@ -169,7 +168,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
                               key={slot.id}
                               onClick={() => setSelectedSlotId(slot.id)}
                               className={cn(
-                                "h-14 md:h-16 rounded-2xl border-2 font-black text-base md:text-lg transition-all flex items-center justify-center gap-2",
+                                "h-12 md:h-16 rounded-xl md:rounded-2xl border-2 font-black text-sm md:text-lg transition-all flex items-center justify-center",
                                 selectedSlotId === slot.id 
                                   ? "bg-primary text-slate-950 border-primary shadow-[0_0_20px_rgba(0,255,255,0.3)]" 
                                   : "bg-white/5 border-white/5 text-white hover:bg-white/10"
@@ -205,22 +204,22 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
         </ScrollArea>
 
         {!isSuccess && (
-          <DialogFooter className="p-6 md:p-8 bg-black/40 border-t border-white/5 flex items-center justify-between gap-4 shrink-0">
+          <div className="p-4 md:p-8 bg-black/60 border-t border-white/10 flex items-center justify-between gap-4 shrink-0">
              <div className="hidden md:flex items-center gap-3 text-white/30">
                 <ShieldCheck className="h-5 w-5" />
                 <span className="text-[9px] font-black uppercase tracking-widest">Безопасное бронирование</span>
              </div>
-             <div className="flex gap-4 w-full md:w-auto">
-                <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60 uppercase text-[10px]">Отмена</Button>
+             <div className="flex gap-3 w-full md:w-auto">
+                <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60 uppercase text-[10px] h-12 md:h-14">Отмена</Button>
                 <Button 
                   onClick={handleBook} 
                   disabled={loading || !selectedSlotId} 
-                  className="flex-[2] md:flex-none rounded-xl bg-primary text-slate-950 px-10 font-black h-12 md:h-14 shadow-xl uppercase text-xs"
+                  className="flex-[2] md:flex-none rounded-xl bg-primary text-slate-950 px-8 md:px-12 font-black h-12 md:h-14 shadow-xl uppercase text-xs md:text-sm"
                 >
-                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ"}
+                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ ЗАПИСЬ"}
                 </Button>
              </div>
-          </DialogFooter>
+          </div>
         )}
       </DialogContent>
     </Dialog>
