@@ -125,7 +125,7 @@ export function ProfileCabinet() {
     const reader = new FileReader();
     reader.onloadend = () => {
       form.setValue('photoUrl', reader.result as string);
-      toast({ title: 'Фото готово к загрузке' });
+      toast({ title: 'Фото готово к сохранению' });
     };
     reader.readAsDataURL(file);
   };
@@ -195,7 +195,7 @@ export function ProfileCabinet() {
                     className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all text-center"
                   >
                     <Upload className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <p className="text-sm font-black text-white uppercase">Загрузить фото</p>
+                    <p className="text-sm font-black text-white uppercase">Загрузить новое фото</p>
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                   </div>
                 </div>
@@ -296,9 +296,9 @@ export function ProfileCabinet() {
 
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-              <Wine className="h-4 w-4" /> 3. Образ жизни и Питание
+              <UtensilsCrossed className="h-4 w-4" /> 3. Образ жизни и Питание
             </h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="smoking" render={({ field }) => (
                   <FormItem>
@@ -306,8 +306,8 @@ export function ProfileCabinet() {
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl>
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
-                        <SelectItem value="нет">Нет</SelectItem>
-                        <SelectItem value="да">Да</SelectItem>
+                        <SelectItem value="нет">Не курю</SelectItem>
+                        <SelectItem value="да">Курю</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -330,21 +330,21 @@ export function ProfileCabinet() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center justify-between">Любимая еда <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')}><Mic className="h-4 w-4" /></Button></FormLabel>
-                    <FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                    <FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel>
+                    <FormControl><Textarea {...field} placeholder="Напр: Лосось, шпинат, орехи..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center justify-between">Исключить из рациона <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')}><Mic className="h-4 w-4" /></Button></FormLabel>
-                    <FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                    <FormLabel className="flex items-center justify-between">Исключить из рациона <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel>
+                    <FormControl><Textarea {...field} placeholder="Напр: Лактоза, сахар, лук..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
                   </FormItem>
                 )} />
               </div>
               <FormField control={form.control} name="medications" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center justify-between">Лекарства / Витамины / БАДы <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')}><Mic className="h-4 w-4" /></Button></FormLabel>
-                  <FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
+                  <FormLabel className="flex items-center justify-between">Лекарства / Витамины / БАДы <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("h-8 w-8", recordingField === 'medications' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel>
+                  <FormControl><Textarea {...field} placeholder="Перечислите все препараты, которые принимаете..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl>
                 </FormItem>
               )} />
             </Card>
@@ -357,7 +357,7 @@ export function ProfileCabinet() {
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="occupation" render={({ field }) => (
-                  <FormItem><FormLabel>Профессия / Должность</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel>Профессия / Должность</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист, Тренер..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
                   <FormItem><FormLabel>Часов работы в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
@@ -371,17 +371,17 @@ export function ProfileCabinet() {
                       type="button" 
                       onClick={() => form.setValue('workActivityType', 'mental')}
                       variant={field.value === 'mental' ? "default" : "outline"}
-                      className={cn("h-14 rounded-2xl", field.value === 'mental' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
+                      className={cn("h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]", field.value === 'mental' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
                     >
-                      Умственная
+                      <Brain className="h-4 w-4 mr-2" /> Умственная
                     </Button>
                     <Button 
                       type="button" 
                       onClick={() => form.setValue('workActivityType', 'physical')}
                       variant={field.value === 'physical' ? "default" : "outline"}
-                      className={cn("h-14 rounded-2xl", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
+                      className={cn("h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}
                     >
-                      Физическая
+                      <Activity className="h-4 w-4 mr-2" /> Физическая
                     </Button>
                   </div>
                 </FormItem>
@@ -399,21 +399,21 @@ export function ProfileCabinet() {
                   <FormItem><FormLabel>Специализация</FormLabel><FormControl><Input placeholder="Напр: Эндокринолог, Нутрициолог" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="bio" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">О себе / Квалификация <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('bio')}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">О себе / Квалификация <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('bio')} className={cn("h-8 w-8", recordingField === 'bio' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} placeholder="Ваш опыт и достижения..." className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="instagramUrl" render={({ field }) => (
                   <FormItem><FormLabel className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <div className="bg-primary/10 p-6 rounded-2xl border border-primary/20 flex items-start gap-4">
                    <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-                   <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest leading-relaxed">Данные будут видны всем пользователям в вашей публичной карточке и ленте новостей.</p>
+                   <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest leading-relaxed">Внимание: Эти данные будут видны всем пользователям в вашей публичной карточке специалиста.</p>
                 </div>
               </Card>
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)]">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ИЗМЕНЕНИЯ'}
+          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ'}
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -423,14 +423,14 @@ export function ProfileCabinet() {
                   type="button"
                   variant="outline" 
                   onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} 
-                  className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black"
+                  className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black hover:bg-primary/5 transition-all"
                 >
                   <Send className="h-4 w-4 text-primary" /> Telegram <ExternalLink className="h-3 w-3 opacity-30" />
                 </Button>
              </Card>
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
-                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив здоровья</Button></AnalysisHistoryDialog>
+                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all">Открыть архив здоровья</Button></AnalysisHistoryDialog>
              </Card>
           </div>
         </form>

@@ -88,19 +88,10 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
     }
   };
 
-  const resetAndClose = () => {
-    setIsSuccess(false);
-    setSelectedSlotId(null);
-    setIsOpen(false);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       setIsOpen(open);
-      if (!open) {
-        setIsSuccess(false);
-        setSelectedSlotId(null);
-      }
+      if (!open) { setIsSuccess(false); setSelectedSlotId(null); }
     }}>
       <DialogTrigger asChild>
         <Button className="w-full rounded-2xl h-14 px-8 font-black bg-[#00ffff] text-slate-950 shadow-xl shadow-[#00ffff]/20 transition-all hover:scale-[1.02] active:scale-95 text-lg">
@@ -112,14 +103,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
            <div className="relative z-10 flex items-center gap-3">
               {!isSuccess && selectedSlotId && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full text-slate-950 hover:bg-black/10 h-8 w-8"
-                  onClick={() => setSelectedSlotId(null)}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full text-slate-950 hover:bg-black/10 h-8 w-8" onClick={() => setSelectedSlotId(null)}><ArrowLeft className="h-5 w-5" /></Button>
               )}
               <div>
                 <DialogTitle className="text-lg md:text-3xl font-black tracking-tighter text-slate-950 uppercase leading-none">Запись на приём</DialogTitle>
@@ -134,90 +118,34 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
             {!isSuccess ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
                  <div className="space-y-4">
-                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
-                       <CalendarDays className="h-3 w-3" /> 1. Выберите дату
-                    </h4>
-                    <div className="p-1.5 border border-white/10 bg-white/5 rounded-3xl shadow-inner flex justify-center overflow-hidden">
-                       <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            if (date) {
-                              setSelectedDate(date);
-                              setSelectedSlotId(null);
-                            }
-                          }}
-                          locale={ru}
-                          className="scale-90 md:scale-100 origin-top"
-                       />
-                    </div>
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> 1. Дата</h4>
+                    <div className="p-1.5 border border-white/10 bg-white/5 rounded-3xl flex justify-center"><Calendar mode="single" selected={selectedDate} onSelect={(date) => { if (date) { setSelectedDate(date); setSelectedSlotId(null); } }} locale={ru} className="scale-90 md:scale-100" /></div>
                  </div>
-
                  <div className="space-y-4">
-                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
-                       <Clock className="h-3 w-3" /> 2. Доступное время
-                    </h4>
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><Clock className="h-3 w-3" /> 2. Время</h4>
                     <div className="grid grid-cols-3 md:grid-cols-2 gap-2 pb-4">
-                       {slotsLoading ? (
-                         <div className="col-span-full py-10 text-center">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
-                         </div>
-                       ) : availableSlots && availableSlots.length > 0 ? (
-                         availableSlots.map((slot) => (
-                            <button
-                              key={slot.id}
-                              onClick={() => setSelectedSlotId(slot.id)}
-                              className={cn(
-                                "h-12 md:h-16 rounded-xl md:rounded-2xl border-2 font-black text-sm md:text-lg transition-all flex items-center justify-center",
-                                selectedSlotId === slot.id 
-                                  ? "bg-primary text-slate-950 border-primary shadow-[0_0_20px_rgba(0,255,255,0.3)]" 
-                                  : "bg-white/5 border-white/5 text-white hover:bg-white/10"
-                              )}
-                            >
-                               {slot.time}
-                            </button>
-                         ))
-                       ) : (
-                         <div className="col-span-full py-10 text-center space-y-4 opacity-30">
-                            <Clock className="h-10 w-10 mx-auto" />
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white">Нет доступных слотов</p>
-                         </div>
-                       )}
+                       {slotsLoading ? <div className="col-span-full py-10 text-center"><Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" /></div> : availableSlots.length > 0 ? availableSlots.map((slot) => (
+                          <button key={slot.id} onClick={() => setSelectedSlotId(slot.id)} className={cn("h-12 md:h-16 rounded-xl md:rounded-2xl border-2 font-black text-sm md:text-lg transition-all flex items-center justify-center", selectedSlotId === slot.id ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 border-white/5 text-white hover:bg-white/10")}>{slot.time}</button>
+                       )) : <div className="col-span-full py-10 text-center opacity-30"><Clock className="h-10 w-10 mx-auto" /><p className="text-[9px] font-black uppercase tracking-widest text-white">Нет слотов</p></div>}
                     </div>
                  </div>
               </div>
             ) : (
               <div className="py-10 text-center space-y-8 animate-in zoom-in duration-500">
-                 <div className="w-20 h-20 md:w-24 md:h-24 bg-primary rounded-[2rem] flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(0,255,255,0.4)] rotate-3">
-                    <CheckCircle2 className="h-10 w-10 md:h-12 md:w-12 text-slate-950" />
-                 </div>
-                 <div className="max-w-md mx-auto space-y-4">
-                    <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Заявка отправлена!</h3>
-                    <p className="text-xs md:text-sm text-white/50 font-medium leading-relaxed px-4">
-                       Специалист {specialistName} получил ваш запрос на <strong>{format(selectedDate, 'd MMMM')} в {availableSlots?.find(s => s.id === selectedSlotId)?.time}</strong>. 
-                    </p>
-                 </div>
-                 <Button onClick={resetAndClose} className="h-14 rounded-xl bg-primary text-slate-950 font-black px-12 uppercase text-xs">ВЕРНУТЬСЯ В ПРОФИЛЬ</Button>
+                 <div className="w-20 h-20 md:w-24 md:h-24 bg-primary rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl rotate-3"><CheckCircle2 className="h-10 w-10 md:h-12 md:w-12 text-slate-950" /></div>
+                 <div className="max-w-md mx-auto space-y-4"><h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Заявка отправлена!</h3><p className="text-xs md:text-sm text-white/50 px-4">Специалист получил ваш запрос на <strong>{format(selectedDate, 'd MMMM')} в {availableSlots.find(s => s.id === selectedSlotId)?.time}</strong>.</p></div>
+                 <Button onClick={() => setIsOpen(false)} className="h-14 rounded-xl bg-primary text-slate-950 font-black px-12 uppercase text-xs">ВЕРНУТЬСЯ В ПРОФИЛЬ</Button>
               </div>
             )}
           </div>
         </ScrollArea>
 
         {!isSuccess && (
-          <div className="p-4 md:p-8 bg-black/60 border-t border-white/10 flex items-center justify-between gap-4 shrink-0">
-             <div className="hidden md:flex items-center gap-3 text-white/30">
-                <ShieldCheck className="h-5 w-5" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Безопасное бронирование</span>
-             </div>
+          <div className="p-4 md:p-8 bg-black/60 border-t border-white/10 flex items-center justify-between gap-4 sticky bottom-0 z-20">
+             <div className="hidden md:flex items-center gap-3 text-white/30"><ShieldCheck className="h-5 w-5" /><span className="text-[9px] font-black uppercase tracking-widest">AES-512 Secure</span></div>
              <div className="flex gap-3 w-full md:w-auto">
                 <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60 uppercase text-[10px] h-12 md:h-14">Отмена</Button>
-                <Button 
-                  onClick={handleBook} 
-                  disabled={loading || !selectedSlotId} 
-                  className="flex-[2] md:flex-none rounded-xl bg-primary text-slate-950 px-8 md:px-12 font-black h-12 md:h-14 shadow-xl uppercase text-xs md:text-sm"
-                >
-                   {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ ЗАПИСЬ"}
-                </Button>
+                <Button onClick={handleBook} disabled={loading || !selectedSlotId} className="flex-[2] md:flex-none rounded-xl bg-primary text-slate-950 px-8 md:px-12 font-black h-12 md:h-14 shadow-xl uppercase text-xs md:text-sm">{loading ? <Loader2 className="animate-spin h-5 w-5" /> : "ПОДТВЕРДИТЬ ЗАПИСЬ"}</Button>
              </div>
           </div>
         )}

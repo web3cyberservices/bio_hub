@@ -95,7 +95,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
   const [version, setVersion] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Состояние модального окна
   const [selectedDataType, setSelectedDataType] = useState<'steps' | 'heartRate' | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -189,7 +188,7 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
       await setDoc(logRef, updateData, { merge: true });
       
-      toast({ title: 'Данные обновлены', description: `Показатель ${selectedDataType === 'steps' ? 'шагов' : 'пульса'} успешно сохранен.` });
+      toast({ title: 'Данные обновлены', description: `Показатель успешно сохранен.` });
       setSelectedDataType(null);
       setInputValue('');
     } catch (error: any) {
@@ -197,11 +196,6 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleGoogleFitSync = () => {
-    console.log("Триггер OAuth Google для типа:", selectedDataType);
-    toast({ title: 'Google Fit Sync', description: 'Запуск процесса авторизации...' });
   };
 
   if (!isMounted) return <div className="w-full h-full bg-black" />;
@@ -223,27 +217,9 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
-          <NeonGauge 
-            label="ШАГИ" 
-            value={stepsVal} 
-            goal={10000} 
-            icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} 
-            color="#00ffff" 
-            progress={getProgress(stepsVal, 10000)} 
-            isClickable
-            onClick={() => setSelectedDataType('steps')}
-          />
+          <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} isClickable onClick={() => setSelectedDataType('steps')} />
           <NeonGauge label="СОН" value={`${sleepVal}ч`} goal="8ч" icon={<Moon className="h-5 w-5 text-[#818CF8]" />} color="#818CF8" progress={getProgress(sleepVal, 8)} />
-          <NeonGauge 
-            label="ПУЛЬС" 
-            value={hrVal} 
-            goal={100} 
-            icon={<Heart className="h-5 w-5 text-[#FB7185]" />} 
-            color="#FB7185" 
-            progress={getProgress(hrVal, 100)} 
-            isClickable
-            onClick={() => setSelectedDataType('heartRate')}
-          />
+          <NeonGauge label="ПУЛЬС" value={hrVal} goal={100} icon={<Heart className="h-5 w-5 text-[#FB7185]" />} color="#FB7185" progress={getProgress(hrVal, 100)} isClickable onClick={() => setSelectedDataType('heartRate')} />
           <NeonGauge label="ВЕС" value={`${weightVal}кг`} icon={<Scale className="h-5 w-5 text-[#F472B6]" />} color="#F472B6" progress={100} />
         </div>
         <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
@@ -261,13 +237,11 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
             alt="Bio-Hologram" 
             fill 
             className="object-contain filter drop-shadow-[0_0_35px_rgba(0,255,255,0.8)] brightness-110 contrast-125 transition-all duration-1000" 
-            priority 
-            unoptimized 
+            priority unoptimized 
           />
         </div>
       </div>
 
-      {/* Модальное окно ввода биометрии */}
       <Dialog open={!!selectedDataType} onOpenChange={(open) => !open && setSelectedDataType(null)}>
         <DialogContent className="w-[90vw] max-w-[400px] rounded-[2.5rem] bg-[#010411] border border-primary/20 p-0 overflow-hidden shadow-2xl z-[1200]">
           <DialogHeader className="p-8 bg-primary text-slate-950 relative">
@@ -279,51 +253,21 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
               <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Manual Biometric Entry</p>
             </div>
           </DialogHeader>
-
           <div className="p-8 space-y-8 bg-blue-950/40 backdrop-blur-3xl">
             <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2">Ручной ввод</label>
-              <div className="relative">
-                <Input 
-                  type="number"
-                  placeholder={selectedDataType === 'steps' ? "Введите кол-во шагов" : "Введите уд/мин"}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white focus:ring-4 focus:ring-primary/10 transition-all shadow-inner"
-                />
-              </div>
-              <Button 
-                onClick={handleManualSave}
-                disabled={isSaving || !inputValue}
-                className="w-full h-14 rounded-2xl bg-primary text-slate-950 font-black shadow-[0_10px_30px_rgba(0,255,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all"
-              >
-                {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <><Save className="mr-2 h-5 w-5" /> СОХРАНИТЬ ВРУЧНУЮ</>}
+              <Input type="number" placeholder={selectedDataType === 'steps' ? "Введите кол-во шагов" : "Введите уд/мин"} value={inputValue} onChange={(e) => setInputValue(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white focus:ring-4 focus:ring-primary/10 transition-all shadow-inner" />
+              <Button onClick={handleManualSave} disabled={isSaving || !inputValue} className="w-full h-14 rounded-2xl bg-primary text-slate-950 font-black shadow-[0_10px_30px_rgba(0,255,255,0.2)]">
+                {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="mr-2 h-5 w-5" />} СОХРАНИТЬ ВРУЧНУЮ
               </Button>
             </div>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
-              <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
-                <span className="bg-[#0c1221] px-4 text-white/30">Или</span>
-              </div>
-            </div>
-
+            <div className="relative py-2"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div><div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest"><span className="bg-[#0c1221] px-4 text-white/30">Или</span></div></div>
             <div className="space-y-4">
               <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Автоматически</label>
-              <Button 
-                variant="outline"
-                onClick={handleGoogleFitSync}
-                className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40 font-black uppercase tracking-widest text-[10px] gap-3 transition-all"
-              >
-                <div className="p-2 bg-white rounded-lg"><Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={16} height={16} alt="Google" /></div>
-                СИНХРОНИЗИРОВАТЬ С GOOGLE FIT
-              </Button>
+              <Button variant="outline" onClick={() => console.log("Триггер OAuth Google")} className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white gap-3 transition-all"><Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={16} height={16} alt="Google" /> СИНХРОНИЗИРОВАТЬ С GOOGLE FIT</Button>
             </div>
           </div>
-
-          <DialogFooter className="p-4 bg-black/40 border-t border-white/5">
-            <Button variant="ghost" onClick={() => setSelectedDataType(null)} className="w-full font-bold text-white/40 hover:text-white">ОТМЕНА</Button>
-          </DialogFooter>
+          <DialogFooter className="p-4 bg-black/40 border-t border-white/5"><Button variant="ghost" onClick={() => setSelectedDataType(null)} className="w-full font-bold text-white/40 hover:text-white">ОТМЕНА</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
