@@ -16,7 +16,6 @@ import {
   Zap, ArrowLeft, CalendarDays, ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { sendAppNotification } from '@/app/actions/notifications';
@@ -98,7 +97,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
            ЗАПИСАТЬСЯ НА ПРИЁМ
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[98vw] md:max-w-[800px] h-[92vh] md:h-auto max-h-[92vh] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1200] bg-[#010411] flex flex-col">
+      <DialogContent className="w-[98vw] md:max-w-[800px] h-[92vh] md:h-auto max-h-[92vh] rounded-[2rem] md:rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl z-[1200] bg-[#010411] flex flex-col gap-0">
         <DialogHeader className="p-4 md:p-8 bg-primary text-white shrink-0 relative border-b border-white/5">
            <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
            <div className="relative z-10 flex items-center gap-3">
@@ -118,14 +117,14 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
             {!isSuccess ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
                  <div className="space-y-4">
-                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> 1. Дата</h4>
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><CalendarDays className="h-3 w-3" /> 1. ВЫБЕРИТЕ ДАТУ</h4>
                     <div className="p-1.5 border border-white/10 bg-white/5 rounded-3xl flex justify-center"><Calendar mode="single" selected={selectedDate} onSelect={(date) => { if (date) { setSelectedDate(date); setSelectedSlotId(null); } }} locale={ru} className="scale-90 md:scale-100" /></div>
                  </div>
                  <div className="space-y-4">
-                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><Clock className="h-3 w-3" /> 2. Время</h4>
-                    <div className="grid grid-cols-3 md:grid-cols-2 gap-2 pb-4">
+                    <h4 className="text-[9px] font-black uppercase text-primary/60 px-2 flex items-center gap-2"><Clock className="h-3 w-3" /> 2. ДОСТУПНОЕ ВРЕМЯ</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-3 pb-4">
                        {slotsLoading ? <div className="col-span-full py-10 text-center"><Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" /></div> : availableSlots.length > 0 ? availableSlots.map((slot) => (
-                          <button key={slot.id} onClick={() => setSelectedSlotId(slot.id)} className={cn("h-12 md:h-16 rounded-xl md:rounded-2xl border-2 font-black text-sm md:text-lg transition-all flex items-center justify-center", selectedSlotId === slot.id ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 border-white/5 text-white hover:bg-white/10")}>{slot.time}</button>
+                          <button key={slot.id} onClick={() => setSelectedSlotId(slot.id)} className={cn("h-14 md:h-16 rounded-xl md:rounded-2xl border-2 font-black text-sm md:text-lg transition-all flex items-center justify-center", selectedSlotId === slot.id ? "bg-primary text-slate-950 border-primary shadow-lg" : "bg-white/5 border-white/5 text-white hover:bg-white/10")}>{slot.time}</button>
                        )) : <div className="col-span-full py-10 text-center opacity-30"><Clock className="h-10 w-10 mx-auto" /><p className="text-[9px] font-black uppercase tracking-widest text-white">Нет слотов</p></div>}
                     </div>
                  </div>
@@ -141,7 +140,7 @@ export function PatientBookingDialog({ specialistId, specialistName }: PatientBo
         </ScrollArea>
 
         {!isSuccess && (
-          <div className="p-4 md:p-8 bg-black/60 border-t border-white/10 flex items-center justify-between gap-4 sticky bottom-0 z-20">
+          <div className="p-4 md:p-8 bg-black/60 border-t border-white/10 flex items-center justify-between gap-4 sticky bottom-0 z-20 shrink-0">
              <div className="hidden md:flex items-center gap-3 text-white/30"><ShieldCheck className="h-5 w-5" /><span className="text-[9px] font-black uppercase tracking-widest">AES-512 Secure</span></div>
              <div className="flex gap-3 w-full md:w-auto">
                 <Button variant="ghost" onClick={() => setIsOpen(false)} className="flex-1 md:flex-none font-bold text-white/60 uppercase text-[10px] h-12 md:h-14">Отмена</Button>

@@ -154,10 +154,10 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                )}
             </div>
             <div className="flex-1 space-y-2 text-center md:text-left">
-               <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white">{specData?.firstName} {specData?.lastName}</h2>
+               <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase">{specData?.firstName} {specData?.lastName}</h2>
                <div className="flex flex-wrap justify-center md:justify-start items-center gap-4">
                   <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary font-black uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-xl">
-                     {specData?.specialization || 'Эксперт'}
+                     {specData?.specialization || 'Эксперт BioTech'}
                   </Badge>
                   <div className="flex items-center gap-1.5 text-accent font-black">
                      <Star className="h-4 w-4 fill-accent" />
@@ -170,12 +170,12 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                   <Button onClick={handleToggleFollow} className={cn("flex-1 md:flex-none rounded-2xl h-14 px-8 font-black uppercase tracking-widest text-[10px] shadow-xl", isFollowing ? "bg-white/10 text-white/40" : "bg-primary text-slate-950")}>
                     {isFollowing ? "Вы подписаны" : "Подписаться"}
                   </Button>
-                  <Button onClick={handleCreateChat} variant="outline" className="flex-1 md:flex-none rounded-2xl h-14 px-8 font-black border-2 border-primary/20 text-primary hover:bg-primary/5">
+                  <Button onClick={handleCreateChat} variant="outline" className="flex-1 md:flex-none rounded-2xl h-14 px-8 font-black border-2 border-primary/20 text-primary hover:bg-primary/5 uppercase">
                     Чат
                   </Button>
                </div>
                
-               {user?.uid !== 'public-user' && (
+               {user?.uid && user.uid !== 'public-user' && (
                  <div className="flex flex-col gap-3">
                     <PatientBookingDialog specialistId={specialistId} specialistName={specData?.firstName || 'Эксперт'} />
                     <Button 
