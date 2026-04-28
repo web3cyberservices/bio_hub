@@ -10,15 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
-  UtensilsCrossed, Upload, X, CheckCircle2, Instagram, Brain, ShieldCheck
+  UtensilsCrossed, Upload, X, CheckCircle2, Instagram, Brain, ShieldCheck,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
 const profileSchema = z.object({
@@ -201,7 +206,47 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input type="date" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField 
+                  control={form.control} 
+                  name="birthDate" 
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Дата рождения</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "h-14 rounded-2xl bg-white/5 border-white/10 text-white w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                              {field.value ? (
+                                format(new Date(field.value), "d MMMM yyyy", { locale: ru })
+                              ) : (
+                                <span>Выберите дату</span>
+                              )}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[1200] bg-transparent" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            locale={ru}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormItem>
+                  )} 
+                />
                 <FormField control={form.control} name="profileType" render={({ field }) => (
                   <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
                 )} />
@@ -285,6 +330,25 @@ export function ProfileCabinet() {
               </Card>
             </div>
           )}
+
+          {/* 6. КАЛЕНДАРЬ ЗДОРОВЬЯ */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> 6. Календарь здоровья</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 border-white/5 flex flex-col items-center">
+              <div className="w-full max-w-sm">
+                <Calendar 
+                  mode="single"
+                  className="border-none shadow-none bg-transparent"
+                  locale={ru}
+                />
+              </div>
+              <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 w-full text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">
+                  Визуальный архив вашей активности и биологических ритмов
+                </p>
+              </div>
+            </Card>
+          </div>
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ'}
