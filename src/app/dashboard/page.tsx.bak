@@ -1,8 +1,3 @@
-'use client';
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-
-function DashboardContent() {
 
 "use client";
 
@@ -40,6 +35,7 @@ import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
 import { useToast } from '@/hooks/use-toast';
 
+export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -364,14 +360,5 @@ import { useToast } from '@/hooks/use-toast';
         </div>
       </main>
     </div>
-  );
-}
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={<div className='p-10 text-center text-blue-500'>Инициализация Bio-Hub...</div>}>
-      <DashboardContent />
-    </Suspense>
   );
 }
