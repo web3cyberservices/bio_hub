@@ -174,7 +174,6 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           
-          {/* Фото профиля */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <ImageIcon className="h-4 w-4" /> Фото профиля
@@ -204,7 +203,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 1. Личные данные */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Info className="h-4 w-4" /> 1. Личные данные
@@ -238,7 +236,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 2. Биометрия */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Activity className="h-4 w-4" /> 2. Биометрия
@@ -297,7 +294,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 3. Образ жизни и Питание */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Wine className="h-4 w-4" /> 3. Образ жизни и Питание
@@ -354,7 +350,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 4. Профессиональная деятельность */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Briefcase className="h-4 w-4" /> 4. Профессиональная деятельность
@@ -394,7 +389,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 5. Дополнительные данные для специалистов */}
           {profileType === 'specialist' && (
             <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 px-2">
@@ -405,7 +399,7 @@ export function ProfileCabinet() {
                   <FormItem><FormLabel>Специализация</FormLabel><FormControl><Input placeholder="Напр: Эндокринолог, Нутрициолог" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="bio" render={({ field }) => (
-                  <FormItem><FormLabel>О себе / Квалификация</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">О себе / Квалификация <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('bio')}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="instagramUrl" render={({ field }) => (
                   <FormItem><FormLabel className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Ссылка на Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
