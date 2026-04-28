@@ -24,9 +24,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PersonalMealPlanProps {
   selectedDate: Date;
+  patientId?: string; // ID пациента для работы специалиста
 }
 
-export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
+export function PersonalMealPlan({ selectedDate, patientId }: PersonalMealPlanProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -46,7 +47,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
   const [carbs, setCarbs] = useState('');
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const effectiveUid = user?.uid;
+  const effectiveUid = patientId || user?.uid;
 
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -120,10 +121,11 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
         protein: Number(protein) || 0,
         fat: Number(fat) || 0,
         carbs: Number(carbs) || 0,
+        assignedBy: patientId ? user?.uid : null, // Пометка, что назначено специалистом
         createdAt: new Date().toISOString()
       });
 
-      toast({ title: 'Блюдо добавлено' });
+      toast({ title: patientId ? 'План обновлен' : 'Блюдо добавлено' });
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');
       setIsAddingOpen(false);
     } catch (error: any) {
@@ -137,6 +139,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     if (!firestore || !effectiveUid) return;
     try {
       await deleteDoc(doc(firestore, 'users', effectiveUid, 'personalMeals', id));
+      toast({ title: 'Удалено' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка' });
     }
@@ -148,7 +151,9 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 px-4">
         <div className="space-y-0.5">
-          <h3 className="text-3xl font-black tracking-tighter text-white uppercase leading-none">Свой план</h3>
+          <h3 className="text-3xl font-black tracking-tighter text-white uppercase leading-none">
+            {patientId ? 'План питания пациента' : 'Свой план'}
+          </h3>
           <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">{format(selectedDate, 'd MMMM', { locale: ru })}</p>
         </div>
         <div className="bg-white/10 backdrop-blur-md px-4 md:px-6 py-2.5 rounded-[2rem] border border-white/5 shadow-sm flex items-center gap-3 md:gap-4">
@@ -159,41 +164,47 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
            <div className="w-px h-8 bg-white/10 shrink-0" />
            <div className="flex items-center gap-2">
               
-              <Dialog open={isScanningOpen} onOpenChange={setIsScanningOpen}>
-                <DialogTrigger asChild>
-                  <button className="rounded-xl h-10 px-4 bg-primary/20 text-primary border border-primary/30 font-black uppercase text-[10px] flex items-center gap-2 hover:bg-primary/30 transition-all active:scale-95">
-                    <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Скан
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="w-[98vw] md:max-w-4xl rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
-                  <DialogHeader className="p-8 md:p-10 bg-primary text-white shrink-0 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
-                    <div className="relative z-10">
-                      <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-slate-950">Neuro-Scanner 4.0</DialogTitle>
-                      <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Определение КБЖУ по фото и описанию</p>
-                    </div>
-                    <Sparkles className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
-                  </DialogHeader>
-                  <ScrollArea className="max-h-[75vh]">
-                    <div className="p-4 md:p-8">
-                      <ProductsMenuGenerator />
-                    </div>
-                  </ScrollArea>
-                </DialogContent>
-              </Dialog>
+              {!patientId && (
+                <Dialog open={isScanningOpen} onOpenChange={setIsScanningOpen}>
+                  <DialogTrigger asChild>
+                    <button className="rounded-xl h-10 px-4 bg-primary/20 text-primary border border-primary/30 font-black uppercase text-[10px] flex items-center gap-2 hover:bg-primary/30 transition-all active:scale-95">
+                      <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Скан
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[98vw] md:max-w-4xl rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
+                    <DialogHeader className="p-8 md:p-10 bg-primary text-white shrink-0 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
+                      <div className="relative z-10">
+                        <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-slate-950">Neuro-Scanner 4.0</DialogTitle>
+                        <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Определение КБЖУ по фото и описанию</p>
+                      </div>
+                      <Sparkles className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[75vh]">
+                      <div className="p-4 md:p-8">
+                        <ProductsMenuGenerator />
+                      </div>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              )}
 
               <Dialog open={isAddingOpen} onOpenChange={setIsAddingOpen}>
                 <DialogTrigger asChild>
                   <button className="rounded-xl h-10 px-4 bg-primary text-slate-950 font-black uppercase text-[10px] flex items-center gap-2 hover:shadow-[0_0_15px_rgba(0,255,255,0.4)] transition-all active:scale-95 shadow-lg shadow-primary/10">
-                    <Plus className="h-4 w-4 stroke-[3px]" /> Добавить
+                    <Plus className="h-4 w-4 stroke-[3px]" /> {patientId ? 'Назначить' : 'Добавить'}
                   </button>
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] md:max-w-[600px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
                   <DialogHeader className="p-8 md:p-10 bg-primary text-white shrink-0 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
                     <div className="relative z-10">
-                      <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-slate-950">Новое блюдо</DialogTitle>
-                      <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Ручной ввод с поддержкой ИИ</p>
+                      <DialogTitle className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-slate-950">
+                        {patientId ? 'Назначение питания' : 'Новое блюдо'}
+                      </DialogTitle>
+                      <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">
+                        {patientId ? 'Добавление в план пациента' : 'Ручной ввод с поддержкой ИИ'}
+                      </p>
                     </div>
                     <Utensils className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
                   </DialogHeader>
@@ -201,7 +212,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                      <form onSubmit={handleAddMeal} className="space-y-6">
                         <div className="grid grid-cols-1 gap-6">
                            <div className="space-y-2 relative">
-                              <label className="text-[10px] font-black uppercase tracking-widest text-white/50 px-2">Что вы съели?</label>
+                              <label className="text-[10px] font-black uppercase tracking-widest text-white/50 px-2">Блюдо или продукт</label>
                               <div className="relative">
                                <Input 
                                  placeholder="Напр: Салат с авокадо и лососем" 
@@ -281,7 +292,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                         <div className="flex gap-4 pt-4">
                            <Button type="button" variant="ghost" onClick={() => setIsAddingOpen(false)} className="flex-1 h-16 rounded-2xl font-bold text-white/40 hover:text-white transition-colors">Отмена</Button>
                            <Button type="submit" disabled={loading} className="flex-[2] h-16 rounded-2xl bg-primary font-black text-slate-950 shadow-[0_15px_40px_rgba(0,255,255,0.2)] hover:scale-[1.02] active:scale-95 transition-all text-xl">
-                              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-6 w-6" /> СОХРАНИТЬ</>}
+                              {loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Save className="mr-2 h-6 w-6" /> {patientId ? 'НАЗНАЧИТЬ' : 'СОХРАНИТЬ'}</>}
                            </Button>
                         </div>
                      </form>
@@ -309,6 +320,7 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                            <div className="flex items-center gap-2">
                               <h4 className="font-black text-lg text-white leading-tight uppercase tracking-tight">{meal.name}</h4>
                               <Badge variant="outline" className="bg-primary/5 border-none text-[8px] uppercase tracking-widest text-primary/60">{meal.time}</Badge>
+                              {meal.assignedBy && <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[7px] uppercase font-black">Назначено экспертом</Badge>}
                            </div>
                            <div className="flex flex-wrap items-center gap-4 mt-1.5 text-[10px] font-black uppercase text-white/40">
                               <span className="flex items-center gap-1"><Flame className="h-3 w-3 text-orange-500" /> {meal.calories} Ккал</span>
@@ -329,10 +341,12 @@ export function PersonalMealPlan({ selectedDate }: PersonalMealPlanProps) {
                <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                   <Calendar className="h-8 w-8 text-primary/20" />
                </div>
-               <p className="text-xl font-black text-white/40 uppercase tracking-tight">Ваш био-лог пуст</p>
+               <p className="text-xl font-black text-white/40 uppercase tracking-tight">
+                 {patientId ? 'План пациента не заполнен' : 'Ваш био-лог пуст'}
+               </p>
                <div className="flex justify-center gap-3">
                   <Button variant="outline" onClick={() => setIsAddingOpen(true)} className="rounded-xl border-primary/20 text-primary h-12 px-8 font-black uppercase text-[10px] hover:bg-primary/5">
-                    Добавить вручную
+                    {patientId ? 'Назначить питание' : 'Добавить вручную'}
                   </Button>
                </div>
             </div>
