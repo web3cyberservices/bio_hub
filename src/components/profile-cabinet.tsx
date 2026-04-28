@@ -10,8 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
@@ -22,8 +20,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
 const profileSchema = z.object({
@@ -210,43 +206,15 @@ export function ProfileCabinet() {
                   control={form.control} 
                   name="birthDate" 
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Дата рождения</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "h-14 rounded-2xl bg-white/5 border-white/10 text-white w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
-                              {field.value ? (
-                                format(new Date(field.value), "d MMMM yyyy", { locale: ru })
-                              ) : (
-                                <span>Выберите дату</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[1200] bg-transparent" align="start">
-                          <Calendar
-                            mode="single"
-                            captionLayout="dropdown-buttons"
-                            fromYear={1940}
-                            toYear={new Date().getFullYear()}
-                            selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            locale={ru}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Дата рождения (ДД.ММ.ГГГГ)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="01.01.1990" 
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" 
+                        />
+                      </FormControl>
                     </FormItem>
                   )} 
                 />
