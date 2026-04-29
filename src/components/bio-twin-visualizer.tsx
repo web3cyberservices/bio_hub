@@ -10,16 +10,9 @@ import {
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { HealthDataModal } from './health-data-modal';
 
 interface GaugeProps {
   label: string;
@@ -87,17 +80,10 @@ const NeonGauge = ({ label, value, goal, icon, color, progress, className, onCli
 };
 
 export function BioTwinVisualizer({ score, deviceData, profileData, macros, goals, className }: any) {
-  const { user } = useUser();
-  const { firestore } = useFirestore();
-  const { toast } = useToast();
-
   const [hologramSrc, setHologramSrc] = useState('/bio-hologram.png');
   const [version, setVersion] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-
-  const [selectedDataType, setSelectedDataType] = useState<'steps' | 'heartRate' | null>(null);
-  const [inputValue, setInputValue] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [selectedType, setSelectedType] = useState<'steps' | 'heartRate' | 'sleep' | 'weight' | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -168,40 +154,10 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
   const getProgress = (val: number, goal: number) => Math.min(100, (val / (goal || 1)) * 100);
 
-  const handleManualSave = async () => {
-    if (!user || !firestore || !selectedDataType || !inputValue) return;
-
-    setIsSaving(true);
-    try {
-      const dateKey = format(new Date(), 'yyyy-MM-dd');
-      const logRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
-      
-      const updateData: any = {
-        updatedAt: serverTimestamp(),
-      };
-
-      if (selectedDataType === 'steps') {
-        updateData.steps = Number(inputValue);
-      } else {
-        updateData.avgHeartRate = Number(inputValue);
-      }
-
-      await setDoc(logRef, updateData, { merge: true });
-      
-      toast({ title: 'Данные обновлены', description: `Показатель успешно сохранен.` });
-      setSelectedDataType(null);
-      setInputValue('');
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: error.message });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (!isMounted) return <div className="w-full h-full bg-black" />;
 
   return (
-    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none", className)}>
+    <div className={cn("relative w-full h-full flex flex-col items-center justify-center overflow-hidden bg-[#000000] touch-none pt-4", className)}>
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-1">
         <div className="px-6 py-2 rounded-full border border-[#00ffff]/30 bg-[#00ffff]/10 backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] flex items-center gap-3">
           <Activity className="h-4 w-4 text-[#00ffff] animate-pulse" />
@@ -217,10 +173,10 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
 
       <div className="relative z-[60] w-full h-full flex items-center justify-between px-2 md:px-20 pointer-events-none">
         <div className="flex flex-col gap-4 md:gap-8 items-start justify-center h-full pointer-events-auto">
-          <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} isClickable onClick={() => setSelectedDataType('steps')} />
-          <NeonGauge label="СОН" value={`${sleepVal}ч`} goal="8ч" icon={<Moon className="h-5 w-5 text-[#818CF8]" />} color="#818CF8" progress={getProgress(sleepVal, 8)} />
-          <NeonGauge label="ПУЛЬС" value={hrVal} goal={100} icon={<Heart className="h-5 w-5 text-[#FB7185]" />} color="#FB7185" progress={getProgress(hrVal, 100)} isClickable onClick={() => setSelectedDataType('heartRate')} />
-          <NeonGauge label="ВЕС" value={`${weightVal}кг`} icon={<Scale className="h-5 w-5 text-[#F472B6]" />} color="#F472B6" progress={100} />
+          <NeonGauge label="ШАГИ" value={stepsVal} goal={10000} icon={<Footprints className="h-5 w-5 text-[#00ffff]" />} color="#00ffff" progress={getProgress(stepsVal, 10000)} isClickable onClick={() => setSelectedType('steps')} />
+          <NeonGauge label="СОН" value={`${sleepVal}ч`} goal="8ч" icon={<Moon className="h-5 w-5 text-[#818CF8]" />} color="#818CF8" progress={getProgress(sleepVal, 8)} isClickable onClick={() => setSelectedType('sleep')} />
+          <NeonGauge label="ПУЛЬС" value={hrVal} goal={100} icon={<Heart className="h-5 w-5 text-[#FB7185]" />} color="#FB7185" progress={getProgress(hrVal, 100)} isClickable onClick={() => setSelectedType('heartRate')} />
+          <NeonGauge label="ВЕС" value={`${weightVal}кг`} icon={<Scale className="h-5 w-5 text-[#F472B6]" />} color="#F472B6" progress={100} isClickable onClick={() => setSelectedType('weight')} />
         </div>
         <div className="flex flex-col gap-4 md:gap-8 items-end justify-center h-full pointer-events-auto">
           <NeonGauge label="ККАЛ" value={kcalVal} goal={calculatedGoals.calories} icon={<Flame className="h-5 w-5 text-[#FB923C]" />} color="#FB923C" progress={getProgress(kcalVal, calculatedGoals.calories)} />
@@ -242,34 +198,11 @@ export function BioTwinVisualizer({ score, deviceData, profileData, macros, goal
         </div>
       </div>
 
-      <Dialog open={!!selectedDataType} onOpenChange={(open) => !open && setSelectedDataType(null)}>
-        <DialogContent className="w-[90vw] max-w-[400px] rounded-[2.5rem] bg-[#010411] border border-primary/20 p-0 overflow-hidden shadow-2xl z-[1200]">
-          <DialogHeader className="p-8 bg-primary text-slate-950 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-[#00ffff]/80 opacity-90" />
-            <div className="relative z-10">
-              <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
-                {selectedDataType === 'steps' ? 'Ввод данных: Шаги' : 'Ввод данных: Пульс'}
-              </DialogTitle>
-              <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Manual Biometric Entry</p>
-            </div>
-          </DialogHeader>
-          <div className="p-8 space-y-8 bg-blue-950/40 backdrop-blur-3xl">
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2">Ручной ввод</label>
-              <Input type="number" placeholder={selectedDataType === 'steps' ? "Введите кол-во шагов" : "Введите уд/мин"} value={inputValue} onChange={(e) => setInputValue(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white focus:ring-4 focus:ring-primary/10 transition-all shadow-inner" />
-              <Button onClick={handleManualSave} disabled={isSaving || !inputValue} className="w-full h-14 rounded-2xl bg-primary text-slate-950 font-black shadow-[0_10px_30px_rgba(0,255,255,0.2)]">
-                {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="mr-2 h-5 w-5" />} СОХРАНИТЬ ВРУЧНУЮ
-              </Button>
-            </div>
-            <div className="relative py-2"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div><div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest"><span className="bg-[#0c1221] px-4 text-white/30">Или</span></div></div>
-            <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-widest text-white/30 px-2">Автоматически</label>
-              <Button variant="outline" onClick={() => console.log("Триггер OAuth Google")} className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white gap-3 transition-all"><Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={16} height={16} alt="Google" /> СИНХРОНИЗИРОВАТЬ С GOOGLE FIT</Button>
-            </div>
-          </div>
-          <DialogFooter className="p-4 bg-black/40 border-t border-white/5"><Button variant="ghost" onClick={() => setSelectedDataType(null)} className="w-full font-bold text-white/40 hover:text-white">ОТМЕНА</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Универсальный модал ввода данных */}
+      <HealthDataModal 
+        type={selectedType} 
+        onClose={() => setSelectedType(null)} 
+      />
     </div>
   );
 }
