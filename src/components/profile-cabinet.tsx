@@ -14,11 +14,13 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, ImageIcon,
   UtensilsCrossed, Upload, X, CheckCircle2, Instagram, Brain, ShieldCheck,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon, LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
 
@@ -50,8 +52,10 @@ type ProfileValues = z.infer<typeof profileSchema>;
 
 export function ProfileCabinet() {
   const { user } = useUser();
+  const { auth } = useAuth();
   const { firestore } = useFirestore();
   const { toast } = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [recordingField, setRecordingField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +142,17 @@ export function ProfileCabinet() {
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally { setLoading(false); }
+  };
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      router.push('/');
+      toast({ title: 'Выход выполнен', description: 'Будем рады видеть вас снова!' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Ошибка выхода' });
+    }
   };
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
@@ -316,6 +331,19 @@ export function ProfileCabinet() {
                 <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all">Открыть архив здоровья</Button></AnalysisHistoryDialog>
              </Card>
           </div>
+
+          {/* КНОПКА ВЫХОДА */}
+          <Card className="cyber-card bg-red-950/20 p-8 flex flex-col gap-4 border-red-500/20">
+             <h3 className="font-black uppercase flex items-center gap-2 text-red-500/60 text-xs tracking-widest"><LogOut className="h-5 w-5" /> Сессия</h3>
+             <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleLogout} 
+                className="h-14 rounded-xl border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all uppercase font-black tracking-widest text-[10px]"
+             >
+                ВЫЙТИ ИЗ АККАУНТА
+             </Button>
+          </Card>
         </form>
       </Form>
     </div>
