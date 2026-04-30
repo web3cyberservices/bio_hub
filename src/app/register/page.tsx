@@ -69,7 +69,6 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      // Запрашиваем области доступа для Google Fit / Health Connect
       provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
@@ -78,20 +77,16 @@ export default function RegisterPage() {
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
 
-      // Извлекаем токен доступа для фоновой синхронизации данных здоровья
       const credential = GoogleAuthProvider.credentialFromResult(userCredential);
       if (credential?.accessToken) {
         sessionStorage.setItem('google_fit_token', credential.accessToken);
       }
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
-      
-      // Разбираем имя для создания качественного профиля
       const fullName = googleUser.displayName || googleUser.email?.split('@')[0] || 'Пользователь';
       const firstName = fullName.split(' ')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
-      // Обновляем данные пользователя при каждом входе
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
@@ -106,15 +101,16 @@ export default function RegisterPage() {
 
       toast({ title: 'Вход через Google выполнен' });
     } catch (error: any) {
+      // Игнорируем ошибки, связанные с закрытием окна или отменой запроса пользователем
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        setLoading(false);
+        return;
+      }
+
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось завершить вход через Google.';
       
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMsg = 'Окно входа было закрыто.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        // Игнорируем эту ошибку, так как это просто отмена предыдущего запроса
-        return;
-      } else if (error.code === 'auth/popup-blocked') {
+      if (error.code === 'auth/popup-blocked') {
         errorMsg = 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.';
       }
       

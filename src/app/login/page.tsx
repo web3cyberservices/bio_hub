@@ -61,7 +61,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      // Добавляем необходимые области доступа для Google Fit
       provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
@@ -70,20 +69,16 @@ export default function LoginPage() {
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
       
-      // Сохраняем токен для синхронизации здоровья
       const credential = GoogleAuthProvider.credentialFromResult(userCredential);
       if (credential?.accessToken) {
         sessionStorage.setItem('google_fit_token', credential.accessToken);
       }
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
-      
-      // Разбираем имя на составляющие
       const fullName = googleUser.displayName || googleUser.email?.split('@')[0] || 'Пользователь';
       const firstName = fullName.split(' ')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
-      // Обновляем данные пользователя при каждом входе для актуальности профиля
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
@@ -92,7 +87,7 @@ export default function LoginPage() {
         firstName,
         lastName,
         photoUrl: googleUser.photoURL || '',
-        profileType: 'user', // По умолчанию всегда user, если не было иного
+        profileType: 'user',
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
@@ -101,15 +96,16 @@ export default function LoginPage() {
         description: 'Добро пожаловать в Bio-хаб!' 
       });
     } catch (error: any) {
+      // Игнорируем ошибки отмены пользователем
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        setLoading(false);
+        return;
+      }
+
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось войти через Google.';
       
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMsg = 'Окно входа было закрыто.';
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        // Игнорируем эту ошибку
-        return;
-      } else if (error.code === 'auth/popup-blocked') {
+      if (error.code === 'auth/popup-blocked') {
         errorMsg = 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.';
       }
 
@@ -126,7 +122,7 @@ export default function LoginPage() {
   if (userLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
-        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+        <Activity className="h-12 w-12 animate-spin text-primary opacity-20" />
       </div>
     );
   }
