@@ -90,7 +90,7 @@ export default function LoginPage() {
       const firstName = fullName.split(' ')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
-      // Обновляем данные пользователя при каждом входе
+      // Обновляем данные пользователя при каждом входе для актуальности профиля
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
@@ -99,7 +99,7 @@ export default function LoginPage() {
         firstName,
         lastName,
         photoUrl: googleUser.photoURL || '',
-        profileType: 'user',
+        profileType: 'user', // По умолчанию всегда user, если не было иного
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
@@ -107,7 +107,7 @@ export default function LoginPage() {
         title: 'Вход через Google', 
         description: 'Добро пожаловать в Bio-хаб!' 
       });
-      router.push('/dashboard');
+      // Перенаправление произойдет автоматически через useEffect
     } catch (error: any) {
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось войти через Google.';

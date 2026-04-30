@@ -49,6 +49,7 @@ export default function RegisterPage() {
         email: email,
         profileType: 'user',
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }, { merge: true });
 
       toast({ title: 'Регистрация успешна' });
@@ -68,6 +69,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Запрашиваем области доступа для Google Fit / Health Connect
       provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
@@ -76,6 +78,7 @@ export default function RegisterPage() {
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
 
+      // Извлекаем токен доступа для фоновой синхронизации данных здоровья
       const credential = GoogleAuthProvider.credentialFromResult(userCredential);
       if (credential?.accessToken) {
         sessionStorage.setItem('google_fit_token', credential.accessToken);
@@ -83,10 +86,12 @@ export default function RegisterPage() {
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
       
+      // Разбираем имя для создания качественного профиля
       const fullName = googleUser.displayName || googleUser.email?.split('@')[0] || 'Пользователь';
       const firstName = fullName.split(' ')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
+      // Обновляем данные пользователя при каждом входе
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
@@ -100,7 +105,7 @@ export default function RegisterPage() {
       }, { merge: true });
 
       toast({ title: 'Вход через Google выполнен' });
-      router.push('/dashboard');
+      // Перенаправление произойдет автоматически через useEffect
     } catch (error: any) {
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось завершить вход через Google.';
