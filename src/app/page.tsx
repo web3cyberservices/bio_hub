@@ -190,8 +190,8 @@ export default function LandingPage() {
             <span className="font-headline font-black tracking-tighter text-3xl md:text-5xl text-white uppercase">PRO <span className="text-primary">Себя</span></span>
           </div>
           <div className="flex flex-wrap justify-center gap-12 text-[10px] md:text-[13px] font-black uppercase tracking-[0.4em] text-white/30">
-            <Link href="#" className="hover:text-primary transition-colors">Privacy Protocol</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Protocol</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
             <Link href="#" className="hover:text-primary transition-colors">Neural Support</Link>
           </div>
           <div className="space-y-4">
