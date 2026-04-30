@@ -33,11 +33,11 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) {
+    if (!auth || loading) {
       toast({
         variant: 'destructive',
         title: 'Ошибка',
-        description: 'Сервис авторизации не настроен.',
+        description: !auth ? 'Сервис авторизации не настроен.' : 'Запрос уже выполняется.',
       });
       return;
     }
@@ -57,14 +57,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Сервисы Firebase не инициализированы.',
-      });
-      return;
-    }
+    if (loading || !auth || !firestore) return;
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -107,11 +100,19 @@ export default function LoginPage() {
         title: 'Вход через Google', 
         description: 'Добро пожаловать в Bio-хаб!' 
       });
-      // Перенаправление произойдет автоматически через useEffect
     } catch (error: any) {
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось войти через Google.';
-      if (error.code === 'auth/popup-closed-by-user') errorMsg = 'Окно входа было закрыто.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = 'Окно входа было закрыто.';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Игнорируем эту ошибку
+        return;
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMsg = 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.';
+      }
+
       toast({
         variant: 'destructive',
         title: 'Ошибка авторизации',

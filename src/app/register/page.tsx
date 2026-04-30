@@ -35,7 +35,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
+    if (!auth || !firestore || loading) return;
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -65,7 +65,7 @@ export default function RegisterPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !firestore) return;
+    if (loading || !auth || !firestore) return;
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -105,11 +105,18 @@ export default function RegisterPage() {
       }, { merge: true });
 
       toast({ title: 'Вход через Google выполнен' });
-      // Перенаправление произойдет автоматически через useEffect
     } catch (error: any) {
       console.error("Google Auth Error:", error);
       let errorMsg = 'Не удалось завершить вход через Google.';
-      if (error.code === 'auth/popup-closed-by-user') errorMsg = 'Окно входа было закрыто.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMsg = 'Окно входа было закрыто.';
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Игнорируем эту ошибку, так как это просто отмена предыдущего запроса
+        return;
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMsg = 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.';
+      }
       
       toast({
         variant: 'destructive',
