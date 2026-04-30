@@ -8,18 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, UserPlus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Sparkles, Loader2, UserPlus, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { QuickTestButton } from '@/components/quick-test-button';
+import { LegalDialogs } from '@/components/legal-dialogs';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Состояния для политик безопасности
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptData, setAcceptData] = useState(false);
+  const [acceptAI, setAcceptAI] = useState(false);
+
+  const allAccepted = acceptTerms && acceptData && acceptAI;
   
   const { auth } = useAuth();
   const { firestore } = useFirestore();
@@ -35,7 +44,8 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore || loading) return;
+    if (!auth || !firestore || loading || !allAccepted) return;
+    
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -48,6 +58,8 @@ export default function RegisterPage() {
         firstName: name,
         email: email,
         profileType: 'user',
+        agreementsAccepted: true,
+        agreementsDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }, { merge: true });
@@ -66,6 +78,15 @@ export default function RegisterPage() {
 
   const handleGoogleLogin = async () => {
     if (loading || !auth || !firestore) return;
+    if (!allAccepted) {
+      toast({
+        variant: 'destructive',
+        title: 'Требуется согласие',
+        description: 'Пожалуйста, примите условия использования для входа через Google.',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -96,29 +117,18 @@ export default function RegisterPage() {
         lastName,
         photoUrl: googleUser.photoURL || '',
         profileType: 'user',
+        agreementsAccepted: true,
+        agreementsDate: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }, { merge: true });
 
       toast({ title: 'Вход через Google выполнен' });
     } catch (error: any) {
-      // Игнорируем ошибки, связанные с закрытием окна или отменой запроса пользователем
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         setLoading(false);
         return;
       }
-
-      console.error("Google Auth Error:", error);
-      let errorMsg = 'Не удалось завершить вход через Google.';
-      
-      if (error.code === 'auth/popup-blocked') {
-        errorMsg = 'Браузер заблокировал всплывающее окно. Пожалуйста, разрешите всплывающие окна для этого сайта.';
-      }
-      
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка авторизации',
-        description: errorMsg,
-      });
+      toast({ variant: 'destructive', title: 'Ошибка авторизации', description: 'Не удалось войти через Google.' });
     } finally {
       setLoading(false);
     }
@@ -135,7 +145,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#000000]">
       <NavBar />
-      <main className="flex flex-1 items-center justify-center p-4">
+      <main className="flex flex-1 items-center justify-center p-4 pt-24 pb-12">
         <Card className="mx-auto w-full max-w-md premium-card border border-blue-900/30 shadow-2xl overflow-hidden bg-blue-950/40 backdrop-blur-xl">
           <CardHeader className="space-y-2 text-center bg-primary text-slate-950 p-8">
             <div className="flex justify-center mb-2">
@@ -145,14 +155,14 @@ export default function RegisterPage() {
             </div>
             <CardTitle className="text-3xl font-black tracking-tighter uppercase">Регистрация</CardTitle>
             <CardDescription className="text-slate-950/70 font-black uppercase text-[10px] tracking-widest">
-              Присоединяйтесь к Bio-хабу PRO Себя
+              Безопасный биометрический хаб PRO Себя
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 variant="outline"
-                className="h-14 rounded-xl border-2 border-white/10 bg-white/5 font-black uppercase tracking-widest text-[10px] gap-2 hover:bg-white/10 text-white"
+                className={`h-14 rounded-xl border-2 border-white/10 bg-white/5 font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${!allAccepted ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-white/10 text-white'}`}
                 onClick={handleGoogleLogin}
                 disabled={loading}
                 type="button"
@@ -170,53 +180,61 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid gap-3">
+            <form onSubmit={handleRegister} className="space-y-6">
+              <div className="grid gap-4">
                 <div className="grid gap-1.5">
                   <Label htmlFor="name" className="text-white/50 uppercase text-[9px] font-black px-1">Имя</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="Ваше имя" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
-                    required
-                  />
+                  <Input id="name" placeholder="Ваше имя" value={name} onChange={(e) => setName(e.target.value)} className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white" required />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="email" className="text-white/50 uppercase text-[9px] font-black px-1">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
-                    required
-                  />
+                  <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white" required />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="password" className="text-white/50 uppercase text-[9px] font-black px-1">Пароль</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white"
-                    required
-                  />
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl bg-slate-200/10 border-white/10 text-white" required />
                 </div>
               </div>
+
+              {/* ПОЛИТИКИ БЕЗОПАСНОСТИ */}
+              <div className="space-y-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-start gap-3">
+                  <Checkbox id="terms" checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(!!v)} className="mt-1 border-primary/40 data-[state=checked]:bg-primary" />
+                  <label htmlFor="terms" className="text-[10px] leading-tight text-white/50 font-bold uppercase tracking-tight cursor-pointer">
+                    Я принимаю <LegalDialogs type="eula" /> и <LegalDialogs type="privacy" />
+                  </label>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Checkbox id="data" checked={acceptData} onCheckedChange={(v) => setAcceptData(!!v)} className="mt-1 border-primary/40 data-[state=checked]:bg-primary" />
+                  <label htmlFor="data" className="text-[10px] leading-tight text-white/50 font-bold uppercase tracking-tight cursor-pointer">
+                    Даю согласие на <LegalDialogs type="data" />
+                  </label>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Checkbox id="ai" checked={acceptAI} onCheckedChange={(v) => setAcceptAI(!!v)} className="mt-1 border-primary/40 data-[state=checked]:bg-primary" />
+                  <label htmlFor="ai" className="text-[10px] leading-tight text-white/50 font-bold uppercase tracking-tight cursor-pointer">
+                    ИИ-рекомендации не являются мед. диагнозом
+                  </label>
+                </div>
+              </div>
+
               <Button 
-                className="w-full h-14 bg-primary hover:bg-primary/90 rounded-xl font-black text-slate-950 shadow-xl mt-2" 
+                className={`w-full h-14 rounded-xl font-black text-slate-950 shadow-xl transition-all ${!allAccepted ? 'bg-white/10 text-white/20' : 'bg-primary hover:bg-primary/90'}`} 
                 type="submit"
-                disabled={loading}
+                disabled={loading || !allAccepted}
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><UserPlus className="h-5 w-5 mr-2" /> СОЗДАТЬ АККАУНТ</div>}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <div className="flex items-center"><UserPlus className="h-5 w-5 mr-2" /> СОЗДАТЬ ID</div>}
               </Button>
             </form>
 
-            <div className="text-center text-[10px] font-bold text-white/40 uppercase tracking-widest">
+            {!allAccepted && (
+              <div className="flex items-center justify-center gap-2 text-primary/40 animate-pulse">
+                <ShieldAlert className="h-3 w-3" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Требуется принятие условий</span>
+              </div>
+            )}
+
+            <div className="text-center text-[10px] font-bold text-white/40 uppercase tracking-widest pt-2">
               Уже есть аккаунт?{' '}
               <Link href="/login" className="text-primary hover:underline font-black">
                 Войти
