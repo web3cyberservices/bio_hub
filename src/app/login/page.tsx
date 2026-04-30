@@ -68,6 +68,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Добавляем необходимые области доступа для Google Fit
       provider.addScope('https://www.googleapis.com/auth/fitness.activity.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.body.read');
       provider.addScope('https://www.googleapis.com/auth/fitness.sleep.read');
@@ -76,6 +77,7 @@ export default function LoginPage() {
       const userCredential = await signInWithPopup(auth, provider);
       const googleUser = userCredential.user;
       
+      // Сохраняем токен для синхронизации здоровья
       const credential = GoogleAuthProvider.credentialFromResult(userCredential);
       if (credential?.accessToken) {
         sessionStorage.setItem('google_fit_token', credential.accessToken);
@@ -83,10 +85,12 @@ export default function LoginPage() {
 
       const userDocRef = doc(firestore, 'users', googleUser.uid);
       
+      // Разбираем имя на составляющие
       const fullName = googleUser.displayName || googleUser.email?.split('@')[0] || 'Пользователь';
       const firstName = fullName.split(' ')[0];
       const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
+      // Обновляем данные пользователя при каждом входе
       await setDoc(userDocRef, {
         uid: googleUser.uid,
         id: googleUser.uid,
