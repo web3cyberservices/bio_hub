@@ -8,6 +8,9 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'Bio Hub Pro | Ваш персональный ИИ нутрициолог',
   description: 'Индивидуальные рекомендации по питанию, образу жизни и добавкам на основе ваших данных и анализов.',
+  verification: {
+    google: 'google-site-verification-code-here', // Замените на ваш код из Search Console
+  }
 };
 
 export default function RootLayout({
