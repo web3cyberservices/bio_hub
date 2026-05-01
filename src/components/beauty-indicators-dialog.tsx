@@ -18,7 +18,7 @@ import {
 import { analyzeBeauty } from '@/ai/flows/analyze-beauty';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -41,26 +41,64 @@ export function BeautyIndicatorsDialog() {
 
   const { data: userData } = useDoc<any>(userDocRef);
 
+  // Исправленный расчет возраста из формата ДД.ММ.ГГГГ
+  const calculateAge = (birthDateStr: string) => {
+    if (!birthDateStr) return undefined;
+    try {
+      const parts = birthDateStr.split('.');
+      if (parts.length === 3) {
+        const birthYear = parseInt(parts[2], 10);
+        if (!isNaN(birthYear)) {
+          return new Date().getFullYear() - birthYear;
+        }
+      }
+      // Если формат ГГГГ-ММ-ДД
+      const date = new Date(birthDateStr);
+      if (!isNaN(date.getTime())) {
+        return new Date().getFullYear() - date.getFullYear();
+      }
+      return undefined;
+    } catch (e) {
+      return undefined;
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!description && !image) {
-      toast({ variant: 'destructive', title: 'Данные не введены', description: 'Опишите состояние или добавьте фото.' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Данные не введены', 
+        description: 'Пожалуйста, опишите проблему или прикрепите фотографию для анализа.' 
+      });
       return;
     }
 
     setLoading(true);
     try {
+      const age = calculateAge(userData?.birthDate);
+      
       const analysis = await analyzeBeauty({
         category: activeTab as any,
-        description,
+        description: description || undefined,
         photoDataUri: image || undefined,
         userContext: {
-          age: userData?.birthDate ? (new Date().getFullYear() - new Date(userData.birthDate).getFullYear()) : undefined,
+          age: age,
           healthGoal: userData?.healthGoal
         }
       });
-      setResult(analysis);
+      
+      if (analysis) {
+        setResult(analysis);
+      } else {
+        throw new Error('ИИ не вернул результат. Попробуйте еще раз.');
+      }
     } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: e.message });
+      console.error("Beauty Analysis Error:", e);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка ИИ', 
+        description: e.message || 'Не удалось провести анализ. Попробуйте сократить текст или сделать фото четче.' 
+      });
     } finally {
       setLoading(false);
     }
@@ -69,6 +107,10 @@ export function BeautyIndicatorsDialog() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер фото - 10МБ.' });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => setImage(reader.result as string);
       reader.readAsDataURL(file);
@@ -127,7 +169,7 @@ export function BeautyIndicatorsDialog() {
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">
                       {activeTab === 'hair' && 'Опишите структуру волос или прикрепите состав шампуня'}
-                      {activeTab === 'nails' && 'Опишите состояние (волны, пятна, ломкость)'}
+                      {activeTab === 'nails' && 'Опишите состояние (волны, пятна, ломкость) или фото ногтей'}
                       {activeTab === 'skin' && 'Укажите зоны высыпаний или уровень стянутости'}
                       {activeTab === 'teeth' && 'Отметьте чувствительность или состояние эмали'}
                     </label>
@@ -152,7 +194,7 @@ export function BeautyIndicatorsDialog() {
                        <div className="flex items-center gap-3">
                           <Info className="h-5 w-5 text-pink-500" />
                           <p className="text-[10px] font-bold text-white/60 leading-tight uppercase">
-                            ИИ проанализирует внешние данные и свяжет их с дефицитами витаминов.
+                            ИИ проанализирует фото и текст, связав внешние признаки с внутренними дефицитами.
                           </p>
                        </div>
                     </div>
@@ -184,7 +226,7 @@ export function BeautyIndicatorsDialog() {
                             <Stethoscope className="h-3 w-3" /> Проверить в организме
                          </h5>
                          <div className="space-y-2">
-                            {result.suggestedChecks.map((item: string, i: number) => (
+                            {result.suggestedChecks?.map((item: string, i: number) => (
                                <div key={i} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center gap-3">
                                   <div className="h-2 w-2 rounded-full bg-pink-500" />
                                   <span className="text-sm font-bold text-white/90">{item}</span>
@@ -198,7 +240,7 @@ export function BeautyIndicatorsDialog() {
                             <CheckCircle2 className="h-3 w-3" /> Рекомендации
                          </h5>
                          <div className="space-y-2">
-                            {result.recommendations.map((item: string, i: number) => (
+                            {result.recommendations?.map((item: string, i: number) => (
                                <div key={i} className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl flex items-center gap-3">
                                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                   <span className="text-xs font-medium text-white/80 leading-snug">{item}</span>
