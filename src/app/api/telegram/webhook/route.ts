@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
             });
 
             await sendRawTGMessage(chatId, 
-              `<b>Успешная синхронизация!</b>\n\n🚀 Ваш аккаунт успешно привязан.\n\nТеперь вы можете перейти в свой дашборд:`,
+              `<b>Успешная синхронизация!</b>\n\n🚀 Ваш аккаунт <b>Bio Hub Pro</b> успешно привязан.\n\nТеперь вы можете перейти в свой дашборд:`,
               [
                 [{ text: "📊 Мой Дашборд", url: `https://t.me/${botUsername}/${appName}` }]
               ]
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
           }
         }
       } else {
-        await sendRawTGMessage(chatId, `Добро пожаловать в <b>PRO Себя</b>!\n\nИспользуйте Mini App для глубокого анализа вашего здоровья:`, [
+        await sendRawTGMessage(chatId, `Добро пожаловать в <b>Bio Hub Pro</b>!\n\nИспользуйте Mini App для глубокого анализа вашего здоровья:`, [
           [{ text: "🚀 Запустить приложение", url: `https://t.me/${botUsername}/${appName}` }]
         ]);
       }

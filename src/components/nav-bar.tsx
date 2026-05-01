@@ -24,7 +24,7 @@ export function NavBar() {
           </div>
           <div className="flex flex-col">
             <span className="font-headline text-lg md:text-2xl font-black tracking-tighter leading-none text-white">
-              PRO <span className="text-primary neo-glow">Себя</span>
+              Bio <span className="text-primary neo-glow">Hub Pro</span>
             </span>
             <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.5em] text-primary/40">
               BIO-TECH HUB

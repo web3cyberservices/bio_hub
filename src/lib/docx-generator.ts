@@ -41,7 +41,7 @@ export async function downloadLabResultsDocx(data: LabData) {
         properties: {},
         children: [
           new Paragraph({
-            text: "PRO Себя | LabScan AI Report",
+            text: "Bio Hub Pro | LabScan AI Report",
             heading: HeadingLevel.HEADING_1,
             alignment: AlignmentType.CENTER,
             spacing: { after: 200 },
@@ -143,5 +143,5 @@ export async function downloadLabResultsDocx(data: LabData) {
   });
 
   const blob = await Packer.toBlob(doc);
-  saveAs(blob, `PRO_Sebya_Report_${docDate.replace(/\./g, '_')}.docx`);
+  saveAs(blob, `Bio_Hub_Pro_Report_${docDate.replace(/\./g, '_')}.docx`);
 }

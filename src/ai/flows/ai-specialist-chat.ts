@@ -39,7 +39,7 @@ const specialistPrompt = ai.definePrompt({
   name: 'specialistChatPrompt',
   input: {schema: AISpecialistChatInputSchema},
   output: {schema: AISpecialistChatOutputSchema},
-  prompt: `Вы — эксперт PRO Себя (биохакинг/нутрициология). 
+  prompt: `Вы — эксперт Bio Hub Pro (биохакинг/нутрициология). 
 Контекст: {{#if userContext}}Цель: {{userContext.healthGoal}}, Вес: {{userContext.weight}}кг, Активность: {{userContext.activityLevel}}{{/if}}
 Правила: Кратко, профессионально, на русском.
 

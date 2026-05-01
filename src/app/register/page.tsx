@@ -155,7 +155,7 @@ export default function RegisterPage() {
             </div>
             <CardTitle className="text-3xl font-black tracking-tighter uppercase">Регистрация</CardTitle>
             <CardDescription className="text-slate-950/70 font-black uppercase text-[10px] tracking-widest">
-              Безопасный биометрический хаб PRO Себя
+              Безопасный биометрический хаб Bio Hub Pro
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-6">

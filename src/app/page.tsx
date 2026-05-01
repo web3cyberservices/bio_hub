@@ -46,7 +46,7 @@ export default function LandingPage() {
                   <span className="text-primary neo-glow-strong">POTENTIAL</span>
                 </h1>
                 <p className="text-sm md:text-2xl text-white/50 max-w-3xl mx-auto font-medium leading-relaxed px-4">
-                  PRO Себя — это футуристичный био-хаб. Управляй своим организмом через ИИ, глубокую аналитику и персональный био-хакинг.
+                  Bio Hub Pro — это футуристичный био-хаб. Управляй своим организмом через ИИ, глубокую аналитику и персональный био-хакинг.
                 </p>
               </div>
 
@@ -187,7 +187,7 @@ export default function LandingPage() {
             <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(14,165,233,0.5)]">
               <Activity className="h-8 w-8 text-slate-950" />
             </div>
-            <span className="font-headline font-black tracking-tighter text-3xl md:text-5xl text-white uppercase">PRO <span className="text-primary">Себя</span></span>
+            <span className="font-headline font-black tracking-tighter text-3xl md:text-5xl text-white uppercase">Bio <span className="text-primary">Hub Pro</span></span>
           </div>
           <div className="flex flex-wrap justify-center gap-12 text-[10px] md:text-[13px] font-black uppercase tracking-[0.4em] text-white/30">
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Protocol</Link>

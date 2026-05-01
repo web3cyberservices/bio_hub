@@ -40,7 +40,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист PRO Себя. Чем я могу помочь вам в оптимизации вашего здоровья сегодня?' }
+    { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист Bio Hub Pro. Чем я могу помочь вам в оптимизации вашего здоровья сегодня?' }
   ]);
   
   const userDocRef = useMemoFirebase(() => {

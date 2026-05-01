@@ -206,7 +206,7 @@ function DashboardContent() {
         <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
-            <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">PRO СЕБЯ</h1>
+            <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">Bio Hub Pro</h1>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">

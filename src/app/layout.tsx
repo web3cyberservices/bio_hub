@@ -6,7 +6,7 @@ import { TelegramInit } from '@/components/telegram-init';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'PRO Себя | Ваш персональный ИИ нутрициолог',
+  title: 'Bio Hub Pro | Ваш персональный ИИ нутрициолог',
   description: 'Индивидуальные рекомендации по питанию, образу жизни и добавкам на основе ваших данных и анализов.',
 };
 

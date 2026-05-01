@@ -138,7 +138,7 @@ export default function LoginPage() {
                 <Activity className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter uppercase">Вход в PRO Себя</CardTitle>
+            <CardTitle className="text-3xl font-black tracking-tighter uppercase">Вход в Bio Hub Pro</CardTitle>
             <CardDescription className="text-slate-950/70 font-black uppercase text-[10px] tracking-widest">
               Ваш персональный биометрический хаб
             </CardDescription>
