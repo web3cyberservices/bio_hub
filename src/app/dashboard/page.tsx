@@ -203,30 +203,31 @@ function DashboardContent() {
   return (
     <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden relative h-screen w-screen">
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
-        <div className="container mx-auto h-full flex items-center justify-between px-6 md:px-12">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-7 w-7 text-[#00ffff]" /></div>
-            <h1 className="text-xl md:text-2xl font-black text-white leading-none uppercase">Bio Hub Pro</h1>
+        <div className="container mx-auto h-full flex items-center justify-between px-4 md:px-12">
+          <div className="flex items-center gap-3 md:gap-4 shrink-0">
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-6 w-6 md:h-7 md:w-7 text-[#00ffff]" /></div>
+            <h1 className="text-lg md:text-2xl font-black text-white leading-none uppercase hidden xs:block">Bio Hub Pro</h1>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1.5 md:gap-4">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                <span className="text-[8px] font-black uppercase text-emerald-500/80 tracking-widest">AES-256 Protocol Active</span>
             </div>
 
-            {userData?.gender === 'женский' && (
-              <div className="flex items-center gap-2">
-                <BeautyIndicatorsDialog />
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <BeautyIndicatorsDialog />
+              {userData?.gender === 'женский' && (
                 <CycleTrackerDialog selectedDate={selectedDate} />
-              </div>
-            )}
+              )}
+            </div>
 
             <Popover>
               <PopoverTrigger asChild>
-                <button className="h-10 px-4 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg shadow-[#00ffff]/5 hover:bg-[#00ffff]/10 transition-all">
-                  <CalendarIcon className="h-4 w-4" />
+                <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg shadow-[#00ffff]/5 hover:bg-[#00ffff]/10 transition-all">
+                  <CalendarIcon className="h-4 w-4 shrink-0" />
                   <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
-                  <ChevronDown className="h-3 w-3 opacity-50" />
+                  <span className="sm:hidden">{format(selectedDate, 'd MMM', { locale: ru })}</span>
+                  <ChevronDown className="h-3 w-3 opacity-50 hidden xs:block" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
