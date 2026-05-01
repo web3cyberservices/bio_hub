@@ -69,10 +69,13 @@ export function BeautyIndicatorsDialog() {
     }
 
     setLoading(true);
+    // Важно: очищаем предыдущий результат, чтобы не было мерцания старых данных
     setResult(null);
     
     try {
+      console.log(`[BEAUTY-ANALYSIS] Starting analysis for category: ${activeTab}`);
       const age = calculateAge(userData?.birthDate);
+      
       const analysis = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
@@ -82,14 +85,23 @@ export function BeautyIndicatorsDialog() {
       
       if (analysis) {
         setResult(analysis);
-        toast({ title: 'Анализ завершен', description: 'ИИ сформировал бьюти-отчет.' });
+        toast({ title: 'Анализ завершен', description: 'ИИ сформировал детальный бьюти-отчет.' });
+      } else {
+        throw new Error('ИИ вернул пустой результат.');
       }
     } catch (e: any) {
-      console.error("Beauty Analysis Error:", e);
+      console.error("[BEAUTY-ANALYSIS-ERROR]", e);
+      let errorMsg = 'Сервис временно недоступен. Попробуйте еще раз.';
+      if (e.message?.includes('408') || e.message?.includes('timeout')) {
+        errorMsg = 'Превышено время ожидания. Попробуйте использовать менее тяжелое фото или сократите описание.';
+      } else if (e.message) {
+        errorMsg = e.message;
+      }
+      
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: e.message || 'Сервис временно недоступен. Попробуйте еще раз.' 
+        description: errorMsg 
       });
     } finally {
       setLoading(false);
@@ -108,10 +120,10 @@ export function BeautyIndicatorsDialog() {
   const reset = () => { setDescription(''); setImage(null); setResult(null); };
 
   const categories = [
-    { id: 'hair', label: 'Волосы', icon: Scissors, color: 'text-orange-400', desc: 'Анализ состава и структуры' },
-    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: 'text-pink-400', desc: 'Маркер дефицитов' },
-    { id: 'skin', label: 'Кожа', icon: Droplets, color: 'text-cyan-400', desc: 'Face Mapping и SPF' },
-    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Эмаль и чувствительность' },
+    { id: 'hair', label: 'Волосы', icon: Scissors, color: 'text-orange-400', desc: 'Анализ состава шампуня и структуры волос' },
+    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: 'text-pink-400', desc: 'Поиск волн, пятен и дефицитов' },
+    { id: 'skin', label: 'Кожа', icon: Droplets, color: 'text-cyan-400', desc: 'Диагностика текстуры и высыпаний' },
+    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Оценка эмали и десен' },
   ];
 
   return (
@@ -146,7 +158,7 @@ export function BeautyIndicatorsDialog() {
                   <div className="space-y-2">
                      <p className="text-[10px] font-black uppercase text-pink-400/60 px-2 tracking-widest">{categories.find(c => c.id === activeTab)?.desc}</p>
                      <Textarea 
-                      placeholder={activeTab === 'hair' ? "Опишите волосы или прикрепите фото состава шампуня..." : "Опишите жалобы или прикрепите фото проблемной зоны..."} 
+                      placeholder={activeTab === 'hair' ? "Опишите волосы или прикрепите фото состава шампуня (OCR анализ)..." : activeTab === 'nails' ? "Опишите состояние ногтей (волны, пятна) или прикрепите фото..." : "Опишите жалобы или прикрепите фото проблемной зоны..."} 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="min-h-[150px] rounded-3xl bg-white/5 border-white/10 p-6 text-lg font-medium text-white shadow-inner resize-none focus:ring-pink-500/10"
@@ -161,20 +173,26 @@ export function BeautyIndicatorsDialog() {
                       </div>
                       <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                     </label>
-                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex items-center justify-center text-center">
-                       <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase tracking-tight">ИИ проанализирует визуальные изменения и свяжет их с вашим рационом.</p>
+                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex flex-col justify-center text-left gap-2">
+                       <div className="flex items-center gap-2 text-pink-400">
+                          <Zap className="h-3 w-3" />
+                          <span className="text-[9px] font-black uppercase">ИИ Алгоритм</span>
+                       </div>
+                       <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase tracking-tight">
+                         ИИ распознает текстуру ногтей (дефицит железа) или состав косметики на фото.
+                       </p>
                     </div>
                   </div>
 
                   {image && (
-                    <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white/10 animate-in fade-in">
+                    <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white/10 animate-in fade-in shadow-2xl">
                        <img src={image} alt="Preview" className="w-full h-full object-cover" />
-                       <Button variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full h-10 w-10" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button>
+                       <Button variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full h-10 w-10 shadow-xl" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button>
                     </div>
                   )}
 
                   <Button 
-                    className="w-full h-20 rounded-3xl bg-pink-500 text-white font-black text-xl shadow-[0_15px_40px_rgba(236,72,153,0.3)] hover:scale-[1.02] disabled:opacity-50"
+                    className="w-full h-20 rounded-3xl bg-pink-500 text-white font-black text-xl shadow-[0_15px_40px_rgba(236,72,153,0.3)] hover:scale-[1.02] disabled:opacity-50 active:scale-95 transition-all"
                     onClick={handleAnalyze}
                     disabled={loading}
                   >
@@ -183,7 +201,7 @@ export function BeautyIndicatorsDialog() {
                 </div>
               ) : (
                 <div className="space-y-8 animate-in zoom-in-95 duration-500 pb-10">
-                   <div className="bg-pink-500/10 border border-pink-500/20 rounded-[2.5rem] p-8 space-y-4">
+                   <div className="bg-pink-500/10 border border-pink-500/20 rounded-[2.5rem] p-8 space-y-4 shadow-inner">
                       <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Zap className="h-5 w-5 text-pink-500" /> Анализ состояния</h4>
                       <p className="text-sm md:text-lg font-medium leading-relaxed text-white/90 italic">"{result.analysis}"</p>
                    </div>
@@ -193,7 +211,7 @@ export function BeautyIndicatorsDialog() {
                          <h5 className="text-[10px] font-black uppercase text-pink-400 px-2 tracking-widest flex items-center gap-2"><Stethoscope className="h-3 w-3" /> Что проверить</h5>
                          <div className="space-y-3">
                             {result.suggestedChecks?.map((item: string, i: number) => (
-                               <div key={i} className="bg-white/5 border border-white/5 p-5 rounded-2xl flex items-center gap-4">
+                               <div key={i} className="bg-white/5 border border-white/5 p-5 rounded-2xl flex items-center gap-4 shadow-sm hover:bg-white/10 transition-colors">
                                   <div className="h-2.5 w-2.5 rounded-full bg-pink-500 shadow-[0_0_10px_#ec4899]" />
                                   <span className="text-sm font-black text-white/90 uppercase tracking-tight">{item}</span>
                                </div>
@@ -204,7 +222,7 @@ export function BeautyIndicatorsDialog() {
                          <h5 className="text-[10px] font-black uppercase text-emerald-400 px-2 tracking-widest flex items-center gap-2"><CheckCircle2 className="h-3 w-3" /> Рекомендации</h5>
                          <div className="space-y-3">
                             {result.recommendations?.map((item: string, i: number) => (
-                               <div key={i} className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-2xl flex items-start gap-4">
+                               <div key={i} className="bg-emerald-500/5 border border-emerald-500/10 p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                                   <div className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                   <span className="text-sm font-medium text-white/80 leading-relaxed">{item}</span>
                                </div>
@@ -216,11 +234,14 @@ export function BeautyIndicatorsDialog() {
                    {result.specialistHint && (
                      <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-3xl flex items-center gap-4">
                         <Info className="h-6 w-6 text-blue-400 shrink-0" />
-                        <p className="text-xs font-bold text-blue-100 uppercase tracking-tight">{result.specialistHint}</p>
+                        <p className="text-xs font-bold text-blue-100 uppercase tracking-tight leading-relaxed">{result.specialistHint}</p>
                      </div>
                    )}
 
-                   <Button className="w-full h-16 rounded-2xl bg-white/5 border border-white/10 font-black text-white uppercase tracking-widest text-xs" onClick={() => setResult(null)}>НОВЫЙ АНАЛИЗ</Button>
+                   <div className="flex gap-4">
+                      <Button className="flex-1 h-16 rounded-2xl bg-white/5 border border-white/10 font-black text-white uppercase tracking-widest text-xs hover:bg-white/10" onClick={() => setResult(null)}>НОВЫЙ АНАЛИЗ</Button>
+                      <Button className="flex-1 h-16 rounded-2xl bg-pink-500 text-white font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>ЗАКРЫТЬ</Button>
+                   </div>
                 </div>
               )}
             </div>
