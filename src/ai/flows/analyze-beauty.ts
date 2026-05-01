@@ -13,7 +13,9 @@ import {runWithRetry} from '@/ai/utils';
 const BeautyInputSchema = z.object({
   category: z.enum(['hair', 'nails', 'skin', 'teeth']),
   description: z.string().optional(),
-  photoDataUri: z.string().optional(),
+  photoDataUri: z.string().optional().describe(
+    "A photo as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+  ),
   userContext: z.object({
     age: z.number().optional(),
     healthGoal: z.string().optional(),
@@ -21,7 +23,7 @@ const BeautyInputSchema = z.object({
 });
 
 const BeautyOutputSchema = z.object({
-  analysis: z.string().describe('Детальный визуальный разбор того, что видно на фото или в описании'),
+  analysis: z.string().describe('Детальный визуальный разбор того, что видно на фото или в описании (например: "Вижу белые пятна на ногтях", "В составе шампуня найдены SLS")'),
   suggestedChecks: z.array(z.string()).describe('Список дефицитов (витамины, минералы) или анализов для проверки'),
   recommendations: z.array(z.string()).describe('Конкретные советы по уходу, продуктам питания и образу жизни'),
   specialistHint: z.string().optional().describe('Рекомендация по посещению профильного врача'),
@@ -57,9 +59,9 @@ const beautyPrompt = ai.definePrompt({
    - ВОЛОСЫ/ШАМПУНЬ: Проведите OCR-анализ этикетки. Ищите сульфаты (SLS/SLES), парабены, силиконы. Сделайте вывод о безопасности для типа волос.
    - НОГТИ: Опишите структуру (волны, белые пятна, ломкость). Свяжите это с дефицитами Цинка, Железа или Кальция.
    - КОЖА (Face Mapping): Определите локализацию проблем. Свяжите "гусиную кожу" с Витамином А/Омега-3, а высыпания — с работой ЖКТ.
-   - ЗУБЫ: Оцените состояние эмали и десен, если это видно.
+   - ЗУБЫ: Оцените состояние эмали и десен, если это видно. Опишите налет или микротрещины.
 2. СВЯЗЬ С ПИТАНИЕМ: На основе внешних признаков предложите продукты-суперфуды для решения проблемы.
-3. ТОН: Профессиональный, медицинский, на русском языке.`,
+3. ТОН: Профессиональный, медицинский, на русском языке. Будьте максимально детальными в поле "analysis".`,
 });
 
 const analyzeBeautyFlow = ai.defineFlow(
@@ -75,6 +77,6 @@ const analyzeBeautyFlow = ai.defineFlow(
         throw new Error('ИИ не смог распознать изображение. Пожалуйста, сделайте фото при более ярком освещении и убедитесь, что объект в фокусе.');
       }
       return output;
-    }, 2); // 2 попытки достаточно для тяжелых запросов с фото
+    }, 2);
   }
 );

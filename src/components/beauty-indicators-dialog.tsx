@@ -44,6 +44,7 @@ export function BeautyIndicatorsDialog() {
   const calculateAge = (birthDateStr: string) => {
     if (!birthDateStr) return undefined;
     try {
+      // Поддержка формата ДД.ММ.ГГГГ
       const parts = birthDateStr.split('.');
       if (parts.length === 3) {
         const day = parseInt(parts[0], 10);
@@ -76,7 +77,7 @@ export function BeautyIndicatorsDialog() {
     }
 
     setLoading(true);
-    setResult(null); // Очищаем старый результат перед новым запросом
+    setResult(null);
     
     try {
       const age = calculateAge(userData?.birthDate);
@@ -95,13 +96,13 @@ export function BeautyIndicatorsDialog() {
         setResult(analysis);
         toast({ title: 'Анализ завершен', description: 'ИИ сформировал отчет по бьюти-показателям.' });
       } else {
-        throw new Error('ИИ не смог распознать данные на фото. Попробуйте загрузить более четкое изображение.');
+        throw new Error('ИИ не смог сформировать ответ. Попробуйте загрузить более четкое изображение.');
       }
     } catch (e: any) {
       console.error("Beauty Analysis Error:", e);
       toast({ 
         variant: 'destructive', 
-        title: 'Ошибка ИИ-модуля', 
+        title: 'Ошибка анализа', 
         description: e.message || 'Не удалось провести анализ. Попробуйте еще раз позже.' 
       });
     } finally {
@@ -117,7 +118,10 @@ export function BeautyIndicatorsDialog() {
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+        setResult(null); // Сбрасываем старый результат при новом фото
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -190,10 +194,10 @@ export function BeautyIndicatorsDialog() {
                       </div>
                       <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                     </label>
-                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex items-center justify-center">
-                       <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase text-center tracking-tight">
-                         {activeTab === 'nails' ? 'ИИ определит дефициты цинка и железа по форме и цвету ногтей.' : 
-                          activeTab === 'hair' ? 'Загрузите фото состава ухода, чтобы ИИ проверил его на вредные сульфаты.' :
+                    <div className="bg-white/5 rounded-3xl p-6 border border-white/10 flex items-center justify-center text-center">
+                       <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase tracking-tight">
+                         {activeTab === 'nails' ? 'Загрузите фото ногтей, чтобы ИИ проверил наличие волн или пятен.' : 
+                          activeTab === 'hair' ? 'Прикрепите фото состава, чтобы проверить его на сульфаты и силиконы.' :
                           'ИИ проанализирует визуальные изменения и свяжет их с вашим рационом.'}
                        </p>
                     </div>
