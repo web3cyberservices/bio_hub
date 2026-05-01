@@ -2,7 +2,7 @@
 /**
  * @fileOverview ИИ-поток для анализа бьюти-показателей (волосы, кожа, ногти, зубы).
  * Интегрирует внешние признаки с внутренними дефицитами организма.
- * Оптимизирован для анализа фото частей тела и составов косметики.
+ * Оптимизирован для глубокого визуального анализа и OCR составов.
  */
 
 import {ai} from '@/ai/genkit';
@@ -21,10 +21,10 @@ const BeautyInputSchema = z.object({
 });
 
 const BeautyOutputSchema = z.object({
-  analysis: z.string().describe('Глубокий разбор состояния с описанием того, что видно на фото или в тексте состава'),
-  suggestedChecks: z.array(z.string()).describe('Список нутриентов или органов для проверки'),
-  recommendations: z.array(z.string()).describe('Советы по уходу и питанию'),
-  specialistHint: z.string().optional().describe('Совет по посещению врача'),
+  analysis: z.string().describe('Детальный визуальный разбор того, что видно на фото или в описании'),
+  suggestedChecks: z.array(z.string()).describe('Список дефицитов (витамины, минералы) или анализов для проверки'),
+  recommendations: z.array(z.string()).describe('Конкретные советы по уходу, продуктам питания и образу жизни'),
+  specialistHint: z.string().optional().describe('Рекомендация по посещению профильного врача'),
 });
 
 export async function analyzeBeauty(input: z.infer<typeof BeautyInputSchema>) {
@@ -36,7 +36,6 @@ const beautyPrompt = ai.definePrompt({
   input: {schema: BeautyInputSchema},
   output: {schema: BeautyOutputSchema},
   config: {
-    // МАКСИМАЛЬНОЕ СНЯТИЕ ОГРАНИЧЕНИЙ ДЛЯ ДИАГНОСТИКИ
     safetySettings: [
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -45,21 +44,22 @@ const beautyPrompt = ai.definePrompt({
       { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
     ],
   },
-  prompt: `Вы — эксперт Bio-Beauty и интегративной медицины. 
-Ваша задача — провести глубокий визуальный анализ по категории: {{category}}.
+  prompt: `Вы — ведущий эксперт Bio-Beauty и интегративной медицины. 
+Ваша задача — провести глубокий анализ по категории: {{category}}.
 
-КОНТЕКСТ ЗАПРОСА:
-{{#if userContext}}Данные пользователя: Возраст {{userContext.age}} лет, Цель: {{userContext.healthGoal}}{{/if}}
-{{#if description}}Описание от пользователя: {{{description}}}{{/if}}
-{{#if photoDataUri}}Медиа-файл для визуального анализа: {{media url=photoDataUri}}{{/if}}
+КОНТЕКСТ:
+{{#if userContext}}Возраст пользователя: {{userContext.age}} лет. Цель: {{userContext.healthGoal}}.{{/if}}
+{{#if description}}Сообщение пользователя: {{{description}}}{{/if}}
+Медиа-данные: {{#if photoDataUri}}{{media url=photoDataUri}}{{else}}Фото не предоставлено, анализируйте только текст.{{/if}}
 
-ПРАВИЛА АНАЛИЗА:
-1. ВИЗУАЛЬНЫЙ РАЗБОР (ОБЯЗАТЕЛЬНО): Начни ответ с детального описания того, что ты видишь на фото. 
-   - Если это НОГТИ: Опиши форму, цвет, наличие пятен, волн или ломкости.
-   - Если это СОСТАВ ШАМПУНЯ: Сделай OCR-анализ текста. Ищи парабены, сульфаты, силиконы.
-   - Если это КОЖА: Опиши текстуру, поры, высыпания.
-2. СВЯЗЬ С ВНУТРЕННИМ СОСТОЯНИЕМ: На основе фото предположи возможные дефициты (Железо, Цинк, Витамины группы B и т.д.).
-3. ТОН: Экспертный, на русском языке.`,
+АЛГОРИТМ ДЕЙСТВИЯ (ОБЯЗАТЕЛЬНО):
+1. ЕСЛИ ПРЕДОСТАВЛЕНО ФОТО:
+   - ВОЛОСЫ/ШАМПУНЬ: Проведите OCR-анализ этикетки. Ищите сульфаты (SLS/SLES), парабены, силиконы. Сделайте вывод о безопасности для типа волос.
+   - НОГТИ: Опишите структуру (волны, белые пятна, ломкость). Свяжите это с дефицитами Цинка, Железа или Кальция.
+   - КОЖА (Face Mapping): Определите локализацию проблем. Свяжите "гусиную кожу" с Витамином А/Омега-3, а высыпания — с работой ЖКТ.
+   - ЗУБЫ: Оцените состояние эмали и десен, если это видно.
+2. СВЯЗЬ С ПИТАНИЕМ: На основе внешних признаков предложите продукты-суперфуды для решения проблемы.
+3. ТОН: Профессиональный, медицинский, на русском языке.`,
 });
 
 const analyzeBeautyFlow = ai.defineFlow(
@@ -70,11 +70,11 @@ const analyzeBeautyFlow = ai.defineFlow(
   },
   async (input) => {
     return runWithRetry(async () => {
-      const {output} = await beautyPrompt(input, {
-        model: googleAI.model('gemini-2.5-flash'),
-      });
-      if (!output) throw new Error('ИИ не смог сформировать ответ. Попробуйте сделать фото четче.');
+      const {output} = await beautyPrompt(input);
+      if (!output) {
+        throw new Error('ИИ не смог распознать изображение. Пожалуйста, сделайте фото при более ярком освещении и убедитесь, что объект в фокусе.');
+      }
       return output;
-    }, 3);
+    }, 2); // 2 попытки достаточно для тяжелых запросов с фото
   }
 );
