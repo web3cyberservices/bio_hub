@@ -33,6 +33,7 @@ import { ActivitiesHub } from '@/components/activities-hub';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 import { CycleTrackerDialog } from '@/components/cycle-tracker-dialog';
 import { BeautyIndicatorsDialog } from '@/components/beauty-indicators-dialog';
+import { MedicalCalculatorDialog } from '@/components/medical-calculator-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 function DashboardContent() {
@@ -215,6 +216,7 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center gap-1.5 md:gap-2">
+              {profileType === 'specialist' && <MedicalCalculatorDialog />}
               <BeautyIndicatorsDialog />
               {userData?.gender === 'женский' && (
                 <CycleTrackerDialog selectedDate={selectedDate} />
