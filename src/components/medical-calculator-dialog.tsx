@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -78,7 +77,7 @@ export function MedicalCalculatorDialog() {
       return;
     }
 
-    const H_dl = H_raw > 30 ? H_raw / 10 : H_raw;
+    const H_dl = H_raw / 10; // Всегда делим для перевода в г/дл
     const indices: IndexResult[] = [];
 
     // 1. Ehsani et al
@@ -177,7 +176,7 @@ export function MedicalCalculatorDialog() {
       sens: 70.8, spec: 91.3
     });
 
-    // Продвинутые жидкостные индексы
+    // 9 & 10. Продвинутые индексы
     if (!isNaN(MR) && !isNaN(HH)) {
       const mh = MR - HH;
       indices.push({
@@ -209,9 +208,9 @@ export function MedicalCalculatorDialog() {
       const fFlag = F > 2;
       if (a2Flag || fFlag) {
         hplcAlert = true;
-        hplcComment = `Критическое повышение фракций (${a2Flag ? `HbA2: ${A2}%` : ''} ${fFlag ? `HbF: ${F}%` : ''}). Данная картина патогномонична для Бета-талассемии.`;
+        hplcComment = `Критическое повышение фракций (${a2Flag ? `HbA2: ${A2}%` : ''} ${fFlag ? `HbF: ${F}%` : ''}). Данная картина свидетельствует в пользу Бета-талассемии.`;
       } else {
-        hplcComment = "Фракции HbA2 и HbF в пределах нормы. Риск большой Бета-талассемии низкий.";
+        hplcComment = "Фракции HbA2 и HbF в пределах нормы. Риск Бета-талассемии низкий.";
       }
     }
 
@@ -245,11 +244,7 @@ export function MedicalCalculatorDialog() {
           probability: prob,
           timestamp: serverTimestamp()
         });
-      } catch (e) {
-        console.error("Log error:", e);
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error("Log error:", e); } finally { setLoading(false); }
     }
   };
 
@@ -363,7 +358,7 @@ export function MedicalCalculatorDialog() {
                       <div className="text-center md:text-left space-y-2 flex-1">
                          <Badge className="bg-primary text-black font-black uppercase text-[10px] px-4">Взвешенная Вероятность</Badge>
                          <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-tight">{results.verdict}</h3>
-                         <p className="text-sm text-white/60 font-medium leading-relaxed italic">«Расчет произведен на основе агрегированных данных 10 индексов с учетом их диагностической ценности.»</p>
+                         <p className="text-sm text-white/60 font-medium leading-relaxed italic">Расчет произведен на основе 10 индексов с учетом их диагностической ценности и данных ВЭЖХ.</p>
                       </div>
                    </div>
                    <Zap className="absolute -right-10 -bottom-10 h-40 w-40 text-primary/5 rotate-12" />
@@ -389,7 +384,7 @@ export function MedicalCalculatorDialog() {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="text-[9px] font-black uppercase text-white/30 tracking-widest">{idx.name}</p>
-                            <p className="text-[7px] font-bold text-white/10 uppercase italic transition-colors group-hover:text-white/20">Sens:{idx.sens}% / Spec:{idx.spec}%</p>
+                            <p className="text-[7px] font-bold text-white/10 uppercase italic">Sens:{idx.sens}% / Spec:{idx.spec}%</p>
                           </div>
                           <span className="text-2xl font-black text-white">{idx.value}</span>
                         </div>
@@ -411,7 +406,7 @@ export function MedicalCalculatorDialog() {
                 <div className="bg-white/5 p-6 rounded-3xl border border-white/10 flex items-start gap-4">
                    <AlertCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
                    <p className="text-[9px] font-bold text-white/40 leading-relaxed uppercase tracking-wider">
-                     ВНИМАНИЕ: Данный расчет является вспомогательным инструментом и не заменяет молекулярно-генетическую диагностику и электрофорез гемоглобина. Окончательный диагноз выставляется лечащим врачом.
+                     ВНИМАНИЕ: Данный расчет является вспомогательным инструментом и не заменяет молекулярно-генетическую диагностику. Окончательный диагноз выставляется врачом.
                    </p>
                 </div>
 
@@ -422,7 +417,7 @@ export function MedicalCalculatorDialog() {
         </ScrollArea>
 
         <DialogFooter className="p-4 bg-black/40 border-t border-white/5 shrink-0">
-           <p className="w-full text-center text-[8px] font-black text-white/20 uppercase tracking-[0.5em]">Hematology Protocol v4.0.26-BY (Weighted Prob)</p>
+           <p className="w-full text-center text-[8px] font-black text-white/20 uppercase tracking-[0.5em]">Hematology Engine v4.0.26-BY (10 Indices)</p>
         </DialogFooter>
       </DialogContent>
     </Dialog>
