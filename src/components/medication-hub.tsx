@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { collection, query, where, addDoc, updateDoc, doc, deleteDoc, orderBy } 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { 
   Pill, Plus, Trash2, CheckCircle2, 
@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 export function MedicationHub() {
   const { user } = useUser();
-  const { firestore } = useFirestore();
+  const { firestore } = useFirebase().firestore;
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
