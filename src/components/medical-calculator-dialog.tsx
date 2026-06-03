@@ -61,193 +61,199 @@ export function MedicalCalculatorDialog() {
   } | null>(null);
 
   const calculateAll = async () => {
-    const R = parseFloat(rbc);
-    const H_raw = parseFloat(hb);
-    const V = parseFloat(mcv);
-    const M = parseFloat(mch);
-    const Dw = parseFloat(rdw);
-    const MR = microR !== '' ? parseFloat(microR) : undefined;
-    const HH = hypoHe !== '' ? parseFloat(hypoHe) : undefined;
-    const A2 = hba2 !== '' ? parseFloat(hba2) : undefined;
-    const F = hbf !== '' ? parseFloat(hbf) : undefined;
+    try {
+      const R = parseFloat(rbc);
+      const H_raw = parseFloat(hb);
+      const V = parseFloat(mcv);
+      const M = parseFloat(mch);
+      const Dw = parseFloat(rdw);
+      
+      const MR = microR !== '' ? parseFloat(microR) : undefined;
+      const HH = hypoHe !== '' ? parseFloat(hypoHe) : undefined;
+      const A2 = hba2 !== '' ? parseFloat(hba2) : undefined;
+      const F = hbf !== '' ? parseFloat(hbf) : undefined;
 
-    if (isNaN(R) || isNaN(H_raw) || isNaN(V) || isNaN(M) || isNaN(isNaN(Dw) ? NaN : Dw)) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Данные не полны', 
-        description: 'Пожалуйста, заполните основные поля: RBC, Hb, MCV, MCH и RDW.' 
-      });
-      return;
-    }
-
-    const H_dl = H_raw > 30 ? H_raw / 10 : H_raw; // Авто-коррекция г/л в г/дл
-    const indices: IndexResult[] = [];
-
-    // 1. Ehsani et al
-    const ehsani = V - (10 * R);
-    indices.push({
-      name: "Ehsani et al",
-      value: parseFloat(ehsani.toFixed(3)),
-      interpretation: ehsani < 15 ? 'Талассемия' : 'ЖДА',
-      isThal: ehsani < 15,
-      formula: "MCV - (10 * RBC)",
-      threshold: "< 15",
-      sens: 87.2, spec: 88.9
-    });
-
-    // 2. England et al
-    const england = V - R - (5 * H_dl) - 3.4;
-    indices.push({
-      name: "England et al",
-      value: parseFloat(england.toFixed(3)),
-      interpretation: england < 0 ? 'Талассемия' : 'ЖДА',
-      isThal: england < 0,
-      formula: "MCV - RBC - (5 * Hb/10) - 3.4",
-      threshold: "< 0",
-      sens: 78.6, spec: 98.4
-    });
-
-    // 3. Green and King
-    const greenKing = (V * V * Dw) / (10 * H_raw);
-    indices.push({
-      name: "Green and King",
-      value: parseFloat(greenKing.toFixed(3)),
-      interpretation: greenKing < 65 ? 'Талассемия' : 'ЖДА',
-      isThal: greenKing < 65,
-      formula: "(MCV² * RDW) / (10 * Hb)",
-      threshold: "< 65",
-      sens: 91.0, spec: 99.1
-    });
-
-    // 4. Mentzer
-    const mentzer = V / R;
-    indices.push({
-      name: "Mentzer",
-      value: parseFloat(mentzer.toFixed(3)),
-      interpretation: mentzer < 13 ? 'Талассемия' : 'ЖДА',
-      isThal: mentzer < 13,
-      formula: "MCV / RBC",
-      threshold: "< 13",
-      sens: 94.3, spec: 84.2
-    });
-
-    // 5. Ricerca et al
-    const ricerca = Dw / R;
-    indices.push({
-      name: "Ricerca et al",
-      value: parseFloat(ricerca.toFixed(3)),
-      interpretation: ricerca < 4.4 ? 'Талассемия' : 'ЖДА',
-      isThal: ricerca < 4.4,
-      formula: "RDW / RBC",
-      threshold: "< 4.4",
-      sens: 100.0, spec: 13.7
-    });
-
-    // 6. Shine and Lal
-    const shineLal = (V * V * M) / 100;
-    indices.push({
-      name: "Shine and Lal",
-      value: parseFloat(shineLal.toFixed(3)),
-      interpretation: shineLal < 1530 ? 'Талассемия' : 'ЖДА',
-      isThal: shineLal < 1530,
-      formula: "(MCV² * MCH) / 100",
-      threshold: "< 1530",
-      sens: 100.0, spec: 13.3
-    });
-
-    // 7. Sirdah et al
-    const sirdah = V - R - (3 * H_dl);
-    indices.push({
-      name: "Sirdah et al",
-      value: parseFloat(sirdah.toFixed(3)),
-      interpretation: sirdah < 27 ? 'Талассемия' : 'ЖДА',
-      isThal: sirdah < 27,
-      formula: "MCV - RBC - (3 * Hb/10)",
-      threshold: "< 27",
-      sens: 81.3, spec: 97.9
-    });
-
-    // 8. Srivastava and Bevington
-    const srivastava = M / R;
-    indices.push({
-      name: "Srivastava and Bevington",
-      value: parseFloat(srivastava.toFixed(3)),
-      interpretation: srivastava < 3.8 ? 'Талассемия' : 'ЖДА',
-      isThal: srivastava < 3.8,
-      formula: "MCH / RBC",
-      threshold: "< 3.8",
-      sens: 70.8, spec: 91.3
-    });
-
-    // 9 & 10. Продвинутые индексы
-    if (MR !== undefined && HH !== undefined) {
-      const mh = MR - HH;
-      indices.push({
-        name: "M-H Index",
-        value: parseFloat(mh.toFixed(3)),
-        interpretation: mh > 11.5 ? 'Талассемия' : 'ЖДА',
-        isThal: mh > 11.5,
-        formula: "MicroR - Hypo_He",
-        threshold: "> 11.5",
-        sens: 97.4, spec: 96.0
-      });
-
-      const mhr = MR - HH - Dw;
-      indices.push({
-        name: "M-H-R (Уречаги)",
-        value: parseFloat(mhr.toFixed(3)),
-        interpretation: mhr > -5.1 ? 'Талассемия' : 'ЖДА',
-        isThal: mhr > -5.1,
-        formula: "MicroR - Hypo_He - RDW",
-        threshold: "> -5.1",
-        sens: 98.1, spec: 97.1
-      });
-    }
-
-    let hplcComment = "Данные ВЭЖХ не предоставлены.";
-    let hplcAlert = false;
-    if ((A2 !== undefined && !isNaN(A2)) || (F !== undefined && !isNaN(F))) {
-      const a2Flag = A2 !== undefined && A2 > 3;
-      const fFlag = F !== undefined && F > 2;
-      if (a2Flag || fFlag) {
-        hplcAlert = true;
-        hplcComment = `Критическое повышение фракций (${a2Flag ? `HbA2: ${A2}%` : ''} ${fFlag ? `HbF: ${F}%` : ''}). Данная картина свидетельствует в пользу Бета-талассемии.`;
-      } else {
-        hplcComment = "Фракции HbA2 и HbF в пределах нормы. Риск Бета-талассемии низкий.";
-      }
-    }
-
-    let thalVotes = 0;
-    let totalVotes = 0;
-    indices.forEach(idx => {
-      const weight = (idx.sens + idx.spec) / 200;
-      totalVotes += weight;
-      if (idx.isThal) thalVotes += weight;
-    });
-
-    let prob = (thalVotes / totalVotes) * 100;
-    if (hplcAlert) prob = Math.max(prob, 95);
-
-    const verdict = prob > 65 ? "Талассемия" : (prob < 35 ? "Железодефицитная анемия (ЖДА)" : "Смешанный паттерн / Требуется дообследование");
-
-    setResults({
-      indices,
-      hplc: { evaluated: hplcAlert, comment: hplcComment },
-      probability: parseFloat(prob.toFixed(1)),
-      verdict
-    });
-
-    if (firestore && user?.uid && user.uid !== 'public-user') {
-      setLoading(true);
-      try {
-        await addDoc(collection(firestore, 'calculator_logs'), {
-          specialistId: user.uid,
-          inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
-          verdict,
-          probability: prob,
-          timestamp: serverTimestamp()
+      if (isNaN(R) || isNaN(H_raw) || isNaN(V) || isNaN(M) || isNaN(Dw)) {
+        toast({ 
+          variant: 'destructive', 
+          title: 'Данные не полны', 
+          description: 'Пожалуйста, заполните основные поля: RBC, Hb, MCV, MCH и RDW.' 
         });
-      } catch (e) { console.error("Log error:", e); } finally { setLoading(false); }
+        return;
+      }
+
+      const H_dl = H_raw > 30 ? H_raw / 10 : H_raw;
+      const indices: IndexResult[] = [];
+
+      // 1. Ehsani et al
+      const ehsani = V - (10 * R);
+      indices.push({
+        name: "Ehsani et al",
+        value: parseFloat(ehsani.toFixed(3)),
+        interpretation: ehsani < 15 ? 'Талассемия' : 'ЖДА',
+        isThal: ehsani < 15,
+        formula: "MCV - (10 * RBC)",
+        threshold: "< 15",
+        sens: 87.2, spec: 88.9
+      });
+
+      // 2. England et al
+      const england = V - R - (5 * H_dl) - 3.4;
+      indices.push({
+        name: "England et al",
+        value: parseFloat(england.toFixed(3)),
+        interpretation: england < 0 ? 'Талассемия' : 'ЖДА',
+        isThal: england < 0,
+        formula: "MCV - RBC - (5 * Hb/10) - 3.4",
+        threshold: "< 0",
+        sens: 78.6, spec: 98.4
+      });
+
+      // 3. Green and King
+      const greenKing = (V * V * Dw) / (10 * H_raw);
+      indices.push({
+        name: "Green and King",
+        value: parseFloat(greenKing.toFixed(3)),
+        interpretation: greenKing < 65 ? 'Талассемия' : 'ЖДА',
+        isThal: greenKing < 65,
+        formula: "(MCV² * RDW) / (10 * Hb)",
+        threshold: "< 65",
+        sens: 91.0, spec: 99.1
+      });
+
+      // 4. Mentzer
+      const mentzer = V / R;
+      indices.push({
+        name: "Mentzer",
+        value: parseFloat(mentzer.toFixed(3)),
+        interpretation: mentzer < 13 ? 'Талассемия' : 'ЖДА',
+        isThal: mentzer < 13,
+        formula: "MCV / RBC",
+        threshold: "< 13",
+        sens: 94.3, spec: 84.2
+      });
+
+      // 5. Ricerca et al
+      const ricerca = Dw / R;
+      indices.push({
+        name: "Ricerca et al",
+        value: parseFloat(ricerca.toFixed(3)),
+        interpretation: ricerca < 4.4 ? 'Талассемия' : 'ЖДА',
+        isThal: ricerca < 4.4,
+        formula: "RDW / RBC",
+        threshold: "< 4.4",
+        sens: 100.0, spec: 13.7
+      });
+
+      // 6. Shine and Lal
+      const shineLal = (V * V * M) / 100;
+      indices.push({
+        name: "Shine and Lal",
+        value: parseFloat(shineLal.toFixed(3)),
+        interpretation: shineLal < 1530 ? 'Талассемия' : 'ЖДА',
+        isThal: shineLal < 1530,
+        formula: "(MCV² * MCH) / 100",
+        threshold: "< 1530",
+        sens: 100.0, spec: 13.3
+      });
+
+      // 7. Sirdah et al
+      const sirdah = V - R - (3 * H_dl);
+      indices.push({
+        name: "Sirdah et al",
+        value: parseFloat(sirdah.toFixed(3)),
+        interpretation: sirdah < 27 ? 'Талассемия' : 'ЖДА',
+        isThal: sirdah < 27,
+        formula: "MCV - RBC - (3 * Hb/10)",
+        threshold: "< 27",
+        sens: 81.3, spec: 97.9
+      });
+
+      // 8. Srivastava and Bevington
+      const srivastava = M / R;
+      indices.push({
+        name: "Srivastava and Bevington",
+        value: parseFloat(srivastava.toFixed(3)),
+        interpretation: srivastava < 3.8 ? 'Талассемия' : 'ЖДА',
+        isThal: srivastava < 3.8,
+        formula: "MCH / RBC",
+        threshold: "< 3.8",
+        sens: 70.8, spec: 91.3
+      });
+
+      // 9 & 10. Продвинутые индексы
+      if (MR !== undefined && !isNaN(MR) && HH !== undefined && !isNaN(HH)) {
+        const mh = MR - HH;
+        indices.push({
+          name: "M-H Index",
+          value: parseFloat(mh.toFixed(3)),
+          interpretation: mh > 11.5 ? 'Талассемия' : 'ЖДА',
+          isThal: mh > 11.5,
+          formula: "MicroR - Hypo_He",
+          threshold: "> 11.5",
+          sens: 97.4, spec: 96.0
+        });
+
+        const mhr = MR - HH - Dw;
+        indices.push({
+          name: "M-H-R (Уречаги)",
+          value: parseFloat(mhr.toFixed(3)),
+          interpretation: mhr > -5.1 ? 'Талассемия' : 'ЖДА',
+          isThal: mhr > -5.1,
+          formula: "MicroR - Hypo_He - RDW",
+          threshold: "> -5.1",
+          sens: 98.1, spec: 97.1
+        });
+      }
+
+      let hplcComment = "Данные ВЭЖХ не предоставлены.";
+      let hplcAlert = false;
+      if ((A2 !== undefined && !isNaN(A2)) || (F !== undefined && !isNaN(F))) {
+        const a2Flag = A2 !== undefined && A2 > 3;
+        const fFlag = F !== undefined && F > 2;
+        if (a2Flag || fFlag) {
+          hplcAlert = true;
+          hplcComment = `Критическое повышение фракций (${a2Flag ? `HbA2: ${A2}%` : ''} ${fFlag ? `HbF: ${F}%` : ''}). Данная картина свидетельствует в пользу Бета-талассемии.`;
+        } else {
+          hplcComment = "Фракции HbA2 и HbF в пределах нормы. Риск Бета-талассемии низкий.";
+        }
+      }
+
+      let thalVotes = 0;
+      let totalVotes = 0;
+      indices.forEach(idx => {
+        const weight = (idx.sens + idx.spec) / 200;
+        totalVotes += weight;
+        if (idx.isThal) thalVotes += weight;
+      });
+
+      let prob = (thalVotes / totalVotes) * 100;
+      if (hplcAlert) prob = Math.max(prob, 95);
+
+      const verdict = prob > 65 ? "Талассемия" : (prob < 35 ? "Железодефицитная анемия (ЖДА)" : "Смешанный паттерн / Требуется дообследование");
+
+      setResults({
+        indices,
+        hplc: { evaluated: hplcAlert, comment: hplcComment },
+        probability: parseFloat(prob.toFixed(1)),
+        verdict
+      });
+
+      if (firestore && user?.uid && user.uid !== 'public-user') {
+        setLoading(true);
+        try {
+          await addDoc(collection(firestore, 'calculator_logs'), {
+            specialistId: user.uid,
+            inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
+            verdict,
+            probability: prob,
+            timestamp: serverTimestamp()
+          });
+        } catch (e) { console.error("Log error:", e); } finally { setLoading(false); }
+      }
+    } catch (error) {
+      console.error("Calculation Error:", error);
+      toast({ variant: 'destructive', title: 'Ошибка расчета', description: 'Проверьте корректность введенных данных.' });
     }
   };
 
@@ -276,7 +282,6 @@ export function MedicalCalculatorDialog() {
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
-        {/* Заменяем ScrollArea на div для лучшей работы на мобильных устройствах */}
         <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl scrollbar-hide">
           <div className="p-6 md:p-10 space-y-10 pb-32">
             {!results ? (

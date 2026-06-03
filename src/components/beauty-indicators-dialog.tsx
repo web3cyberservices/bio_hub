@@ -75,7 +75,7 @@ export function BeautyIndicatorsDialog() {
     }
 
     setLoading(true);
-    setResult(null);
+    setResult(null); // Важно сбросить результат перед новым анализом
     
     try {
       const age = calculateAge(userData?.birthDate);
@@ -91,13 +91,13 @@ export function BeautyIndicatorsDialog() {
         setResult(analysis);
         toast({ title: 'Анализ завершен', description: 'ИИ сформировал детальный отчет.' });
       } else {
-        throw new Error('ИИ вернул пустой результат.');
+        throw new Error('ИИ не смог распознать данные. Попробуйте другое фото.');
       }
     } catch (e: any) {
       console.error("[BEAUTY-ANALYSIS-ERROR]", e);
-      let errorMsg = 'Сервис временно недоступен. Попробуйте еще раз.';
+      let errorMsg = 'ИИ временно недоступен. Попробуйте еще раз через минуту.';
       if (e.message?.includes('408') || e.message?.includes('timeout')) {
-        errorMsg = 'Превышено время ожидания. Попробуйте использовать менее тяжелое фото.';
+        errorMsg = 'Таймаут соединения. Пожалуйста, используйте менее тяжелое изображение.';
       } else if (e.message) {
         errorMsg = e.message;
       }
@@ -176,7 +176,7 @@ export function BeautyIndicatorsDialog() {
                        isMale ? "text-cyan-400/60" : "text-pink-400/60"
                      )}>{categories.find(c => c.id === activeTab)?.desc}</p>
                      <Textarea 
-                      placeholder={activeTab === 'hair' ? "Опишите волосы или фото состава шампуня..." : activeTab === 'nails' ? "Опишите ногти или прикрепите фото..." : "Опишите жалобы или прикрепите фото..."} 
+                      placeholder={activeTab === 'hair' ? "Опишите состояние или прикрепите фото состава шампуня..." : activeTab === 'nails' ? "Опишите ногти или прикрепите фото..." : "Опишите жалобы или прикрепите фото..."} 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="min-h-[150px] rounded-3xl bg-white/5 border-white/10 p-6 text-base md:text-lg font-medium text-white shadow-inner resize-none focus:ring-primary/10"
@@ -200,7 +200,7 @@ export function BeautyIndicatorsDialog() {
                           <span className="text-[9px] font-black uppercase">ИИ Алгоритм</span>
                        </div>
                        <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase tracking-tight">
-                         ИИ распознает текстуру тканей и состав косметики на фото.
+                         ИИ распознает текстуру тканей и состав косметики на фото для выявления скрытых дефицитов.
                        </p>
                     </div>
                   </div>
