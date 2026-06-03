@@ -18,7 +18,6 @@ import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 
 interface IndexResult {
@@ -67,17 +66,21 @@ export function MedicalCalculatorDialog() {
     const V = parseFloat(mcv);
     const M = parseFloat(mch);
     const Dw = parseFloat(rdw);
-    const MR = parseFloat(microR);
-    const HH = parseFloat(hypoHe);
-    const A2 = parseFloat(hba2);
-    const F = parseFloat(hbf);
+    const MR = microR !== '' ? parseFloat(microR) : undefined;
+    const HH = hypoHe !== '' ? parseFloat(hypoHe) : undefined;
+    const A2 = hba2 !== '' ? parseFloat(hba2) : undefined;
+    const F = hbf !== '' ? parseFloat(hbf) : undefined;
 
-    if (!R || !H_raw || !V || !M || !Dw) {
-      toast({ variant: 'destructive', title: 'Данные не полны', description: 'RBC, Hb, MCV, MCH и RDW обязательны для расчета.' });
+    if (isNaN(R) || isNaN(H_raw) || isNaN(V) || isNaN(M) || isNaN(isNaN(Dw) ? NaN : Dw)) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Данные не полны', 
+        description: 'Пожалуйста, заполните основные поля: RBC, Hb, MCV, MCH и RDW.' 
+      });
       return;
     }
 
-    const H_dl = H_raw / 10; // Всегда делим для перевода в г/дл
+    const H_dl = H_raw > 30 ? H_raw / 10 : H_raw; // Авто-коррекция г/л в г/дл
     const indices: IndexResult[] = [];
 
     // 1. Ehsani et al
@@ -177,7 +180,7 @@ export function MedicalCalculatorDialog() {
     });
 
     // 9 & 10. Продвинутые индексы
-    if (!isNaN(MR) && !isNaN(HH)) {
+    if (MR !== undefined && HH !== undefined) {
       const mh = MR - HH;
       indices.push({
         name: "M-H Index",
@@ -203,9 +206,9 @@ export function MedicalCalculatorDialog() {
 
     let hplcComment = "Данные ВЭЖХ не предоставлены.";
     let hplcAlert = false;
-    if (!isNaN(A2) || !isNaN(F)) {
-      const a2Flag = A2 > 3;
-      const fFlag = F > 2;
+    if ((A2 !== undefined && !isNaN(A2)) || (F !== undefined && !isNaN(F))) {
+      const a2Flag = A2 !== undefined && A2 > 3;
+      const fFlag = F !== undefined && F > 2;
       if (a2Flag || fFlag) {
         hplcAlert = true;
         hplcComment = `Критическое повышение фракций (${a2Flag ? `HbA2: ${A2}%` : ''} ${fFlag ? `HbF: ${F}%` : ''}). Данная картина свидетельствует в пользу Бета-талассемии.`;
@@ -239,7 +242,7 @@ export function MedicalCalculatorDialog() {
       try {
         await addDoc(collection(firestore, 'calculator_logs'), {
           specialistId: user.uid,
-          inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR, hypoHe: HH, hba2: A2, hbf: F },
+          inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
           verdict,
           probability: prob,
           timestamp: serverTimestamp()
@@ -263,8 +266,8 @@ export function MedicalCalculatorDialog() {
           <span className="sm:hidden">Кальк</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="w-[98vw] md:max-w-[850px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411] flex flex-col gap-0">
-        <DialogHeader className="p-8 md:p-10 bg-primary text-slate-950 shrink-0 relative overflow-hidden">
+      <DialogContent className="w-[98vw] md:max-w-[850px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411] flex flex-col h-[90vh] md:h-auto">
+        <DialogHeader className="p-6 md:p-10 bg-primary text-slate-950 shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
           <div className="relative z-10">
             <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter">Bio-Hematology Core</DialogTitle>
@@ -273,8 +276,9 @@ export function MedicalCalculatorDialog() {
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[75vh]">
-          <div className="p-6 md:p-10 space-y-10 bg-blue-950/40 backdrop-blur-3xl pb-24">
+        {/* Заменяем ScrollArea на div для лучшей работы на мобильных устройствах */}
+        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl scrollbar-hide">
+          <div className="p-6 md:p-10 space-y-10 pb-32">
             {!results ? (
               <div className="space-y-10 animate-in fade-in duration-500">
                 <div className="space-y-4">
@@ -365,7 +369,7 @@ export function MedicalCalculatorDialog() {
                 </Card>
 
                 <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem] flex items-start gap-4 shadow-inner">
-                   <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border", results.hplc.evaluated ? "bg-red-500/20 border-red-500 text-red-500" : "bg-emerald-500/20 border-emerald-500 text-emerald-500")}>
+                   <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border", results.hplc.evaluated ? "bg-red-500/20 border-red-500 text-red-500" : "bg-emerald-500/20 border-emerald-500 text-emerald-400")}>
                       <ShieldAlert className="h-6 w-6" />
                    </div>
                    <div className="space-y-1">
@@ -414,7 +418,7 @@ export function MedicalCalculatorDialog() {
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="p-4 bg-black/40 border-t border-white/5 shrink-0">
            <p className="w-full text-center text-[8px] font-black text-white/20 uppercase tracking-[0.5em]">Hematology Engine v4.0.26-BY (10 Indices)</p>
