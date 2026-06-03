@@ -42,28 +42,8 @@ export function BeautyIndicatorsDialog() {
   const { data: userData } = useDoc<any>(userDocRef);
 
   const isMale = userData?.gender === 'мужской';
-  const themeColor = isMale ? 'cyan' : 'pink';
   const hubTitle = isMale ? 'Bio-Aesthetic Hub' : 'Bio-Beauty Hub';
-  const mainButtonLabel = isMale ? 'Био-Эстетика' : 'Бьюти показатели';
-  const mobileButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
-
-  const calculateAge = (birthDateStr: string) => {
-    if (!birthDateStr) return undefined;
-    try {
-      const parts = birthDateStr.split('.');
-      const birthDate = parts.length === 3 
-        ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
-        : new Date(birthDateStr);
-
-      if (!isNaN(birthDate.getTime())) {
-        let age = new Date().getFullYear() - birthDate.getFullYear();
-        const m = new Date().getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && new Date().getDate() < birthDate.getDate())) age--;
-        return age;
-      }
-      return undefined;
-    } catch (e) { return undefined; }
-  };
+  const mainButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
 
   const handleAnalyze = async () => {
     if (!description && !image) {
@@ -79,9 +59,17 @@ export function BeautyIndicatorsDialog() {
     setResult(null); 
     
     try {
-      const age = calculateAge(userData?.birthDate);
-      
-      console.log("[BEAUTY-START] Running analysis for:", activeTab);
+      const birthDate = userData?.birthDate;
+      let age = undefined;
+      if (birthDate) {
+        const parts = birthDate.split('.');
+        const bDate = parts.length === 3 
+          ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
+          : new Date(birthDate);
+        if (!isNaN(bDate.getTime())) {
+          age = new Date().getFullYear() - bDate.getFullYear();
+        }
+      }
 
       const analysis = await analyzeBeauty({
         category: activeTab as any,
@@ -93,22 +81,12 @@ export function BeautyIndicatorsDialog() {
       if (analysis) {
         setResult(analysis);
         toast({ title: 'Анализ завершен' });
-      } else {
-        throw new Error('ИИ не смог распознать данные. Попробуйте другое фото.');
       }
     } catch (e: any) {
-      console.error("[BEAUTY-ANALYSIS-ERROR]", e);
-      let errorMsg = 'ИИ временно недоступен. Попробуйте еще раз через минуту.';
-      if (e.message?.includes('408') || e.message?.includes('timeout')) {
-        errorMsg = 'Таймаут соединения. Пожалуйста, используйте менее тяжелое изображение.';
-      } else if (e.message) {
-        errorMsg = e.message;
-      }
-      
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: errorMsg 
+        description: e.message || 'ИИ временно недоступен.' 
       });
     } finally {
       setLoading(false);
@@ -128,9 +106,9 @@ export function BeautyIndicatorsDialog() {
 
   const categories = [
     { id: 'hair', label: 'Волосы', icon: Scissors, color: 'text-orange-400', desc: 'Анализ состава и структуры' },
-    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: isMale ? 'text-cyan-400' : 'text-pink-400', desc: 'Поиск дефицитов и маркеров' },
+    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: isMale ? 'text-cyan-400' : 'text-pink-400', desc: 'Поиск дефицитов' },
     { id: 'skin', label: 'Кожа', icon: Droplets, color: 'text-cyan-400', desc: 'Диагностика текстуры' },
-    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Оценка эмали и десен' },
+    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Оценка эмали' },
   ];
 
   return (
@@ -144,7 +122,7 @@ export function BeautyIndicatorsDialog() {
         )}>
           <Sparkles className="h-4 w-4 animate-pulse shrink-0" />
           <span className="hidden sm:inline">{mainButtonLabel}</span>
-          <span className="sm:hidden">{mobileButtonLabel}</span>
+          <span className="sm:hidden">{mainButtonLabel}</span>
         </button>
       </DialogTrigger>
       <DialogContent className="w-[98vw] md:max-w-[800px] rounded-[2.5rem] md:rounded-[3.5rem] p-0 overflow-hidden border-none shadow-2xl z-[1100] bg-[#010411]">
@@ -169,7 +147,7 @@ export function BeautyIndicatorsDialog() {
             ))}
           </TabsList>
 
-          <ScrollArea className="h-[60vh] md:h-[65vh]">
+          <div className="max-h-[60vh] overflow-y-auto">
             <div className="p-5 md:p-10 space-y-8 bg-blue-950/20 backdrop-blur-3xl min-h-[400px]">
               {!result ? (
                 <div className="space-y-6 animate-in fade-in duration-500">
@@ -179,7 +157,7 @@ export function BeautyIndicatorsDialog() {
                        isMale ? "text-cyan-400/60" : "text-pink-400/60"
                      )}>{categories.find(c => c.id === activeTab)?.desc}</p>
                      <Textarea 
-                      placeholder={activeTab === 'hair' ? "Опишите состояние или прикрепите фото состава шампуня..." : activeTab === 'nails' ? "Опишите ногти или прикрепите фото..." : "Опишите жалобы или прикрепите фото..."} 
+                      placeholder="Опишите состояние или прикрепите фото для анализа..." 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="min-h-[150px] rounded-3xl bg-white/5 border-white/10 p-6 text-base md:text-lg font-medium text-white shadow-inner resize-none focus:ring-primary/10"
@@ -223,7 +201,7 @@ export function BeautyIndicatorsDialog() {
                     onClick={handleAnalyze}
                     disabled={loading}
                   >
-                    {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Sparkles className="mr-3 h-6 w-6 md:h-7 md:w-7" /> ЗАПУСТИТЬ ИИ-АНАЛИЗ</>}
+                    {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Sparkles className="mr-3 h-6 w-6 md:h-7 md:w-7" /> ЗАПУСТИТЬ АНАЛИЗ</>}
                   </Button>
                 </div>
               ) : (
@@ -271,7 +249,7 @@ export function BeautyIndicatorsDialog() {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>

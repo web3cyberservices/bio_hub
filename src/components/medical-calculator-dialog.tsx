@@ -19,7 +19,6 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface IndexResult {
   name: string;
@@ -39,20 +38,15 @@ export function MedicalCalculatorDialog() {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Основные параметры
-  const [rbc, setRbc] = useState(''); // x10¹²/л
-  const [hb, setHb] = useState('');   // г/л
-  const [mcv, setMcv] = useState(''); // фл
-  const [mch, setMch] = useState(''); // пг
-  const [rdw, setRdw] = useState(''); // %
-
-  // Продвинутые параметры
-  const [microR, setMicroR] = useState(''); // %
-  const [hypoHe, setHypoHe] = useState(''); // %
-
-  // HPLC параметры
-  const [hba2, setHba2] = useState(''); // %
-  const [hbf, setHbf] = useState('');   // %
+  const [rbc, setRbc] = useState('');
+  const [hb, setHb] = useState('');
+  const [mcv, setMcv] = useState('');
+  const [mch, setMch] = useState('');
+  const [rdw, setRdw] = useState('');
+  const [microR, setMicroR] = useState('');
+  const [hypoHe, setHypoHe] = useState('');
+  const [hba2, setHba2] = useState('');
+  const [hbf, setHbf] = useState('');
 
   const [results, setResults] = useState<{
     indices: IndexResult[];
@@ -61,18 +55,20 @@ export function MedicalCalculatorDialog() {
     verdict: string;
   } | null>(null);
 
+  const parseVal = (val: string) => parseFloat(val.replace(',', '.'));
+
   const calculateAll = async () => {
     try {
-      const R = parseFloat(rbc);
-      const H_raw = parseFloat(hb);
-      const V = parseFloat(mcv);
-      const M = parseFloat(mch);
-      const Dw = parseFloat(rdw);
+      const R = parseVal(rbc);
+      const H_raw = parseVal(hb);
+      const V = parseVal(mcv);
+      const M = parseVal(mch);
+      const Dw = parseVal(rdw);
       
-      const MR = microR !== '' ? parseFloat(microR) : undefined;
-      const HH = hypoHe !== '' ? parseFloat(hypoHe) : undefined;
-      const A2 = hba2 !== '' ? parseFloat(hba2) : undefined;
-      const F = hbf !== '' ? parseFloat(hbf) : undefined;
+      const MR = microR !== '' ? parseVal(microR) : undefined;
+      const HH = hypoHe !== '' ? parseVal(hypoHe) : undefined;
+      const A2 = hba2 !== '' ? parseVal(hba2) : undefined;
+      const F = hbf !== '' ? parseVal(hbf) : undefined;
 
       if (isNaN(R) || isNaN(H_raw) || isNaN(V) || isNaN(M) || isNaN(Dw)) {
         toast({ 
@@ -83,8 +79,11 @@ export function MedicalCalculatorDialog() {
         return;
       }
 
-      // Hb в г/дл для формул England и Sirdah
-      const H_dl = H_raw / 10;
+      setLoading(true);
+
+      const H_dl = H_raw > 30 ? H_raw / 10 : H_raw;
+      const H_gl = H_raw <= 30 ? H_raw * 10 : H_raw;
+      
       const indices: IndexResult[] = [];
 
       // 1. Ehsani et al
@@ -112,14 +111,13 @@ export function MedicalCalculatorDialog() {
       });
 
       // 3. Green and King
-      // MCV^2 * RDW / (10 * Hb_gdl) => MCV^2 * RDW / Hb_gl
-      const greenKing = (V * V * Dw) / H_raw;
+      const greenKing = (V * V * Dw) / (10 * H_dl);
       indices.push({
         name: "Green and King",
         value: parseFloat(greenKing.toFixed(3)),
         interpretation: greenKing < 65 ? 'Талассемия' : 'ЖДА',
         isThal: greenKing < 65,
-        formula: "(MCV² * RDW) / Hb_gl",
+        formula: "(MCV² * RDW) / (10 * Hb_gdl)",
         threshold: "< 65",
         sens: 91.0, spec: 99.1
       });
@@ -184,7 +182,6 @@ export function MedicalCalculatorDialog() {
         sens: 70.8, spec: 91.3
       });
 
-      // 9 & 10. Продвинутые индексы
       if (MR !== undefined && !isNaN(MR) && HH !== undefined && !isNaN(HH)) {
         const mh = MR - HH;
         indices.push({
@@ -233,33 +230,30 @@ export function MedicalCalculatorDialog() {
       let prob = (thalVotes / totalVotes) * 100;
       if (hplcAlert) prob = Math.max(prob, 95);
 
-      const verdict = prob > 65 ? "Талассемия" : (prob < 35 ? "Железодефицитная анемия (ЖДА)" : "Смешанный паттерн / Требуется дообследование");
+      const verdict = prob > 65 ? "Талассемия" : (prob < 35 ? "Железодефицитная анемия (ЖДА)" : "Смешанный паттерн");
 
-      setResults({
+      const finalRes = {
         indices,
         hplc: { evaluated: hplcAlert, comment: hplcComment },
         probability: parseFloat(prob.toFixed(1)),
         verdict
-      });
+      };
+
+      setResults(finalRes);
 
       if (firestore && user?.uid && user.uid !== 'public-user') {
-        try {
-          await addDoc(collection(firestore, 'calculator_logs'), {
-            specialistId: user.uid,
-            inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
-            verdict,
-            probability: prob,
-            timestamp: serverTimestamp()
-          });
-        } catch (e) { console.error("Logging error:", e); }
+        await addDoc(collection(firestore, 'calculator_logs'), {
+          specialistId: user.uid,
+          inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
+          verdict,
+          probability: prob,
+          timestamp: serverTimestamp()
+        });
       }
     } catch (error) {
-      console.error("Calculation Error:", error);
-      toast({ 
-        variant: 'destructive', 
-        title: 'Ошибка расчета', 
-        description: 'Проверьте корректность введенных данных.' 
-      });
+      toast({ variant: 'destructive', title: 'Ошибка расчета' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -287,7 +281,7 @@ export function MedicalCalculatorDialog() {
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32 no-scrollbar">
+        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32">
           {!results ? (
             <div className="space-y-10 animate-in fade-in duration-500">
               <div className="space-y-4">
@@ -297,39 +291,39 @@ export function MedicalCalculatorDialog() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">RBC (10¹²/л)</Label>
-                    <Input type="number" step="0.01" placeholder="4.5" value={rbc} onChange={e => setRbc(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="4.5" value={rbc} onChange={e => setRbc(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">Hb (г/л)</Label>
-                    <Input type="number" step="1" placeholder="120" value={hb} onChange={e => setHb(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="120" value={hb} onChange={e => setHb(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">MCV (фл)</Label>
-                    <Input type="number" step="0.1" placeholder="80" value={mcv} onChange={e => setMcv(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="80" value={mcv} onChange={e => setMcv(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">MCH (пг)</Label>
-                    <Input type="number" step="0.1" placeholder="27" value={mch} onChange={e => setMch(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="27" value={mch} onChange={e => setMch(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1 col-span-2 md:col-span-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">RDW (%)</Label>
-                    <Input type="number" step="0.1" placeholder="14" value={rdw} onChange={e => setRdw(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="14" value={rdw} onChange={e => setRdw(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-[#00ffff]/60 px-2 flex items-center gap-2">
-                  <Zap className="h-3 w-3" /> Продвинутые маркеры
+                  <Zap className="h-3 w-3 text-primary" /> Продвинутые маркеры
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">MicroR (%)</Label>
-                    <Input type="number" step="0.1" placeholder="Опционально" value={microR} onChange={e => setMicroR(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="Опционально" value={microR} onChange={e => setMicroR(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">Hypo-He (%)</Label>
-                    <Input type="number" step="0.1" placeholder="Опционально" value={hypoHe} onChange={e => setHypoHe(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="Опционально" value={hypoHe} onChange={e => setHypoHe(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                 </div>
               </div>
@@ -341,11 +335,11 @@ export function MedicalCalculatorDialog() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">HbA2 (%)</Label>
-                    <Input type="number" step="0.01" placeholder="Норма < 3%" value={hba2} onChange={e => setHba2(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="Норма < 3%" value={hba2} onChange={e => setHba2(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[8px] font-black uppercase text-white/30 ml-2">HbF (%)</Label>
-                    <Input type="number" step="0.01" placeholder="Норма < 2%" value={hbf} onChange={e => setHbf(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
+                    <Input type="text" placeholder="Норма < 2%" value={hbf} onChange={e => setHbf(e.target.value)} className="h-14 bg-white/5 border-white/10 rounded-xl font-bold text-white text-center" />
                   </div>
                 </div>
               </div>
@@ -360,7 +354,7 @@ export function MedicalCalculatorDialog() {
             </div>
           ) : (
             <div className="space-y-10 animate-in zoom-in-95 duration-500 pb-10">
-              <Card className="p-8 border-none bg-primary/10 rounded-[2.5rem] relative overflow-hidden">
+              <div className="p-8 border-none bg-primary/10 rounded-[2.5rem] relative overflow-hidden">
                  <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                     <div className="relative shrink-0">
                        <div className="w-32 h-32 rounded-full border-4 border-primary/30 flex items-center justify-center">
@@ -375,7 +369,7 @@ export function MedicalCalculatorDialog() {
                     </div>
                  </div>
                  <Zap className="absolute -right-10 -bottom-10 h-40 w-40 text-primary/5 rotate-12" />
-              </Card>
+              </div>
 
               <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem] flex items-start gap-4 shadow-inner">
                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border", results.hplc.evaluated ? "bg-red-500/20 border-red-500 text-red-500" : "bg-emerald-500/20 border-emerald-500 text-emerald-400")}>
