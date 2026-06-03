@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
   CheckCircle2, Zap, HeartPulse, Mic, Utensils, Scale, Smile,
-  Battery, Brain, Heart, Sun, Moon
+  Battery, Brain, Heart, Sun, Moon, Droplets
 } from 'lucide-react';
 import { analyzeMeal, AnalyzeMealOutput } from '@/ai/flows/analyze-meal';
 import { analyzeLabResults, AnalyzeLabOutput } from '@/ai/flows/analyze-lab-results';
@@ -19,10 +20,10 @@ import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -34,7 +35,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const { firestore } = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState('meal');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -49,11 +49,19 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
   const [sleep, setSleep] = useState('');
   const [mood, setMood] = useState('Спокойствие');
   const [energy, setEnergy] = useState([50]);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Record<string, number>>({});
 
   const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
 
   const { toast } = useToast();
+
+  const symptomList = [
+    { id: 'fatigue', label: 'Усталость' }, { id: 'weakness', label: 'Слабость' },
+    { id: 'headache', label: 'Головная боль' }, { id: 'bloating', label: 'Вздутие' },
+    { id: 'anxiety', label: 'Тревожность' }, { id: 'insomnia', label: 'Плохой сон' },
+    { id: 'hairloss', label: 'Выпадение волос' }, { id: 'dryskin', label: 'Сухость кожи' }
+  ];
 
   const handleDailyLogSubmit = async () => {
     if (!firestore || !user?.uid) return;
@@ -65,25 +73,31 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       const logData: any = {
         date: dateKey,
         updatedAt: serverTimestamp(),
-        timestamp: Timestamp.fromDate(selectedDate)
+        timestamp: Timestamp.fromDate(selectedDate),
+        water: water ? Number(water) : 0,
+        weight: weight ? Number(weight) : userData?.weight || 0,
+        steps: steps ? Number(steps) : 0,
+        sleepDurationHours: sleep ? Number(sleep) : 0,
+        mood,
+        energy: energy[0],
+        symptoms: selectedSymptoms
       };
 
-      if (water) logData.water = Number(water);
-      if (weight) logData.weight = Number(weight);
-      if (steps) logData.steps = Number(steps);
-      if (sleep) logData.sleepDurationHours = Number(sleep);
-      logData.mood = mood;
-      logData.energy = energy[0];
-
       await setDoc(docRef, logData, { merge: true });
-      
       setIsSuccess(true);
-      toast({ title: 'Данные обновлены' });
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: e.message });
-    } finally {
-      setLoading(false);
-    }
+      toast({ title: 'Данные синхронизированы' });
+    } catch (e) { toast({ variant: 'destructive', title: 'Ошибка сохранения' }); } finally { setLoading(false); }
+  };
+
+  const addWater = (amount: number) => {
+    const current = Number(water) || 0;
+    setWater((current + amount).toString());
+  };
+
+  const toggleSymptom = (id: string) => {
+    const current = selectedSymptoms[id] || 0;
+    const next = current === 10 ? 0 : current + 2;
+    setSelectedSymptoms({ ...selectedSymptoms, [id]: next });
   };
 
   const startVoiceInput = (fieldName: string, setter: (val: string) => void) => {
@@ -113,7 +127,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
   const reset = () => {
     setDescription(''); setImage(null); setMealResult(null); setLabResult(null); setIsSuccess(false);
-    setWater(''); setWeight(''); setSteps(''); setSleep('');
+    setWater(''); setWeight(''); setSteps(''); setSleep(''); setSelectedSymptoms({});
   };
 
   return (
@@ -148,7 +162,13 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 <TabsContent value="metrics" className="space-y-8 outline-none">
                   <div className="grid grid-cols-2 gap-4 md:gap-6">
                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-white/30 px-2">Текущий вес (кг)</label><Input placeholder="0.0" value={weight} onChange={e => setWeight(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" /></div>
-                     <div className="space-y-2"><label className="text-[10px] font-black uppercase text-white/30 px-2">Вода (мл)</label><Input placeholder="0" value={water} onChange={e => setWater(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" /></div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-white/30 px-2 flex justify-between">Вода (мл) <span className="text-primary">{water || '0'} мл</span></label>
+                        <div className="grid grid-cols-3 gap-2">
+                           {[100, 250, 500].map(v => <button key={v} onClick={() => addWater(v)} className="h-10 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black">+{v}</button>)}
+                        </div>
+                        <Input placeholder="Свой объём" value={water} onChange={e => setWater(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-black text-center mt-2" />
+                     </div>
                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-white/30 px-2">Шаги</label><Input placeholder="0" value={steps} onChange={e => setSteps(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" /></div>
                      <div className="space-y-2"><label className="text-[10px] font-black uppercase text-white/30 px-2">Сон (часов)</label><Input placeholder="0" value={sleep} onChange={e => setSleep(e.target.value)} className="h-16 rounded-2xl bg-white/5 border-white/10 font-black text-2xl text-center text-white" /></div>
                   </div>
@@ -156,9 +176,21 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </TabsContent>
 
                 <TabsContent value="spirit" className="space-y-10 outline-none">
-                   <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 space-y-10">
-                      <div className="space-y-4"><div className="flex justify-between items-center"><label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex items-center gap-2"><Zap className="h-3 w-3" /> Уровень энергии</label><span className="text-2xl font-black text-primary">{energy[0]}%</span></div><Slider value={energy} onValueChange={setEnergy} max={100} step={1} className="py-4" /></div>
-                      <div className="space-y-4"><label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex items-center gap-2"><Brain className="h-3 w-3" /> Настроение</label><Select value={mood} onValueChange={setMood}><SelectTrigger className="h-16 rounded-2xl bg-black/40 border-white/10 text-xl font-bold text-white px-6"><SelectValue /></SelectTrigger><SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl"><SelectItem value="Счастлив">🚀 Счастлив</SelectItem><SelectItem value="Спокойствие">🧘 Спокоен</SelectItem><SelectItem value="Усталость">🔋 Устал</SelectItem><SelectItem value="Стресс">⚡ Стресс</SelectItem></SelectContent></Select></div>
+                   <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-8">
+                      <div className="space-y-4"><div className="flex justify-between items-center"><label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex items-center gap-2"><Zap className="h-3 w-3" /> Энергия</label><span className="text-2xl font-black text-primary">{energy[0]}%</span></div><Slider value={energy} onValueChange={setEnergy} max={100} step={1} className="py-4" /></div>
+                      <div className="space-y-4">
+                         <label className="text-[10px] font-black uppercase text-white/40 tracking-widest flex items-center gap-2"><Brain className="h-3 w-3" /> Симптомы (интенсивность 1-10)</label>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {symptomList.map(sym => (
+                               <div key={sym.id} className="p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between">
+                                  <button onClick={() => toggleSymptom(sym.id)} className="font-bold text-white uppercase text-[10px]">{sym.label}</button>
+                                  <Badge variant="outline" className={cn("border-none text-[8px] font-black", selectedSymptoms[sym.id] ? "bg-primary text-slate-950" : "text-white/20")}>
+                                     {selectedSymptoms[sym.id] ? `${selectedSymptoms[sym.id]}/10` : 'НЕТ'}
+                                  </Badge>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
                    </div>
                    <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleDailyLogSubmit} disabled={loading}>СОХРАНИТЬ СОСТОЯНИЕ</Button>
                 </TabsContent>

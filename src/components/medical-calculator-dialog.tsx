@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,7 +13,7 @@ import {
   Calculator, Activity, AlertCircle, Save, 
   Loader2, CheckCircle2, FlaskConical, Info,
   TrendingDown, TrendingUp, ChevronDown, ChevronUp,
-  Percent, FileSearch, ShieldAlert
+  Percent, FileSearch, ShieldAlert, Zap
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -178,7 +179,6 @@ export function MedicalCalculatorDialog() {
 
     // Продвинутые жидкостные индексы
     if (!isNaN(MR) && !isNaN(HH)) {
-      // 9. M-H
       const mh = MR - HH;
       indices.push({
         name: "M-H Index",
@@ -190,7 +190,6 @@ export function MedicalCalculatorDialog() {
         sens: 97.4, spec: 96.0
       });
 
-      // 10. M-H-R (Уречаги)
       const mhr = MR - HH - Dw;
       indices.push({
         name: "M-H-R (Уречаги)",
@@ -203,7 +202,6 @@ export function MedicalCalculatorDialog() {
       });
     }
 
-    // ВЭЖХ Анализ
     let hplcComment = "Данные ВЭЖХ не предоставлены.";
     let hplcAlert = false;
     if (!isNaN(A2) || !isNaN(F)) {
@@ -217,7 +215,6 @@ export function MedicalCalculatorDialog() {
       }
     }
 
-    // Взвешенная вероятность
     let thalVotes = 0;
     let totalVotes = 0;
     indices.forEach(idx => {
@@ -238,7 +235,6 @@ export function MedicalCalculatorDialog() {
       verdict
     });
 
-    // Логирование
     if (firestore && user?.uid && user.uid !== 'public-user') {
       setLoading(true);
       try {
@@ -286,7 +282,6 @@ export function MedicalCalculatorDialog() {
           <div className="p-6 md:p-10 space-y-10 bg-blue-950/40 backdrop-blur-3xl pb-24">
             {!results ? (
               <div className="space-y-10 animate-in fade-in duration-500">
-                {/* 1. БАЗОВЫЕ */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase text-primary/60 px-2 flex items-center gap-2">
                     <Activity className="h-3 w-3" /> Базовые параметры (ОАК)
@@ -315,7 +310,6 @@ export function MedicalCalculatorDialog() {
                   </div>
                 </div>
 
-                {/* 2. ПРОДВИНУТЫЕ */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase text-[#00ffff]/60 px-2 flex items-center gap-2">
                     <Zap className="h-3 w-3" /> Продвинутые маркеры (Sysmex/Advia)
@@ -332,7 +326,6 @@ export function MedicalCalculatorDialog() {
                   </div>
                 </div>
 
-                {/* 3. HPLC */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase text-emerald-400/60 px-2 flex items-center gap-2">
                     <FileSearch className="h-3 w-3" /> Данные ВЭЖХ (HPLC)
@@ -359,7 +352,6 @@ export function MedicalCalculatorDialog() {
               </div>
             ) : (
               <div className="space-y-10 animate-in zoom-in-95 duration-500 pb-10">
-                {/* GLOBAL CONCLUSION */}
                 <Card className="p-8 border-none bg-primary/10 rounded-[2.5rem] relative overflow-hidden">
                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                       <div className="relative shrink-0">
@@ -377,7 +369,6 @@ export function MedicalCalculatorDialog() {
                    <Zap className="absolute -right-10 -bottom-10 h-40 w-40 text-primary/5 rotate-12" />
                 </Card>
 
-                {/* HPLC STATUS */}
                 <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem] flex items-start gap-4 shadow-inner">
                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border", results.hplc.evaluated ? "bg-red-500/20 border-red-500 text-red-500" : "bg-emerald-500/20 border-emerald-500 text-emerald-500")}>
                       <ShieldAlert className="h-6 w-6" />
@@ -388,7 +379,6 @@ export function MedicalCalculatorDialog() {
                    </div>
                 </div>
 
-                {/* INDICES GRID */}
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
                     <Percent className="h-3 w-3" /> Детальная расшифровка
