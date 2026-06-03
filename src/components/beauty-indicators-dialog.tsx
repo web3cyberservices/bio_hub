@@ -51,14 +51,15 @@ export function BeautyIndicatorsDialog() {
     if (!birthDateStr) return undefined;
     try {
       const parts = birthDateStr.split('.');
-      if (parts.length === 3) {
-        const birthDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
-        if (!isNaN(birthDate.getTime())) {
-          let age = new Date().getFullYear() - birthDate.getFullYear();
-          const m = new Date().getMonth() - birthDate.getMonth();
-          if (m < 0 || (m === 0 && new Date().getDate() < birthDate.getDate())) age--;
-          return age;
-        }
+      const birthDate = parts.length === 3 
+        ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
+        : new Date(birthDateStr);
+
+      if (!isNaN(birthDate.getTime())) {
+        let age = new Date().getFullYear() - birthDate.getFullYear();
+        const m = new Date().getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && new Date().getDate() < birthDate.getDate())) age--;
+        return age;
       }
       return undefined;
     } catch (e) { return undefined; }
@@ -75,11 +76,13 @@ export function BeautyIndicatorsDialog() {
     }
 
     setLoading(true);
-    setResult(null); // Важно сбросить результат перед новым анализом
+    setResult(null); 
     
     try {
       const age = calculateAge(userData?.birthDate);
       
+      console.log("[BEAUTY-START] Running analysis for:", activeTab);
+
       const analysis = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
@@ -89,7 +92,7 @@ export function BeautyIndicatorsDialog() {
       
       if (analysis) {
         setResult(analysis);
-        toast({ title: 'Анализ завершен', description: 'ИИ сформировал детальный отчет.' });
+        toast({ title: 'Анализ завершен' });
       } else {
         throw new Error('ИИ не смог распознать данные. Попробуйте другое фото.');
       }
