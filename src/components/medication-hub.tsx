@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 export function MedicationHub() {
   const { user } = useUser();
-  const { firestore } = useFirebase().firestore;
+  const { firestore } = useFirestore();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -188,7 +188,7 @@ export function MedicationHub() {
                 </div>
              </div>
              <Button onClick={handleAdd} disabled={loading || !name} className="w-full h-18 rounded-2xl bg-primary text-slate-950 font-black text-xl shadow-xl">
-                {loading ? <Loader2 className="animate-spin" /> : "СОЗДАТЬ КУРС"}
+                {loading ? <Loader2 className="animate-spin" /> : "СОХРАНИТЬ КУРС"}
              </Button>
           </div>
         </DialogContent>
