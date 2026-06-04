@@ -375,6 +375,12 @@ export function ProfileCabinet() {
                 <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив</Button></AnalysisHistoryDialog>
              </Card>
           </div>
+
+          <div className="pt-10 flex justify-center">
+             <Button variant="ghost" onClick={handleLogout} className="text-red-400 hover:text-red-300 hover:bg-red-500/5 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest">
+                <LogOut className="h-4 w-4" /> ВЫЙТИ ИЗ СИСТЕМЫ
+             </Button>
+          </div>
         </form>
       </Form>
     </div>
