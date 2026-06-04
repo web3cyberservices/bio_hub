@@ -15,7 +15,7 @@ import {
   Pill, Mic, Briefcase, Info, 
   Upload, Instagram, Brain, ShieldCheck,
   LogOut, Database, Zap, BookOpen, CheckCircle2,
-  UtensilsCrossed
+  UtensilsCrossed, Timer
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -196,7 +196,6 @@ export function ProfileCabinet() {
     try {
       await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
       
-      // ТОТАЛЬНАЯ СИНХРОНИЗАЦИЯ: Отправляем профиль в Obsidian
       if (userData?.obsidianConnected) {
         await syncToObsidian({
           type: 'profile',
@@ -204,8 +203,8 @@ export function ProfileCabinet() {
         });
       }
 
-      toast({ title: 'Профиль обновлен и синхронизирован с Obsidian' });
-    } catch (e: any) {
+      toast({ title: 'Профиль обновлен и синхронизирован' });
+    } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally { setLoading(false); }
   };
@@ -277,7 +276,7 @@ export function ProfileCabinet() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="profileType" render={({ field }) => (
-                  <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
                 )} />
               </div>
             </Card>
@@ -288,31 +287,46 @@ export function ProfileCabinet() {
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="gender" render={({ field }) => (
-                  <FormItem><FormLabel>Пол</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Пол</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                  <FormItem><FormLabel>Цель</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="снизить массу тела">Снизить вес</SelectItem><SelectItem value="поддержать текущее состояние">Поддержание</SelectItem><SelectItem value="набор массы">Набор массы</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Цель</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="снизить массу тела">Снизить вес</SelectItem><SelectItem value="поддержать текущее состояние">Поддержание</SelectItem><SelectItem value="набор массы">Набор массы</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                  <FormItem><FormLabel>Активность</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="minimal">Минимальная</SelectItem><SelectItem value="low">Низкая</SelectItem><SelectItem value="moderate">Средняя</SelectItem><SelectItem value="high">Высокая</SelectItem><SelectItem value="athlete">Атлет</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Активность</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="minimal">Минимальная</SelectItem><SelectItem value="low">Низкая</SelectItem><SelectItem value="moderate">Средняя</SelectItem><SelectItem value="high">Высокая</SelectItem><SelectItem value="athlete">Атлет</SelectItem></SelectContent></Select></FormItem>
                 )} />
               </div>
             </Card>
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><UtensilsCrossed className="h-4 w-4" /> 3. Образ жизни и Питание</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 3. Работа и нагрузка</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                  <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center gap-2"><Timer className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+              )} />
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><UtensilsCrossed className="h-4 w-4" /> 4. Образ жизни и Питание</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="smoking" render={({ field }) => (
-                  <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="alcohol" render={({ field }) => (
-                  <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
                 )} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
