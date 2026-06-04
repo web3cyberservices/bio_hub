@@ -12,7 +12,7 @@ import {
   Calculator, Activity, AlertCircle, Save, 
   Loader2, CheckCircle2, FlaskConical,
   TrendingDown, TrendingUp,
-  Percent, FileSearch, ShieldAlert, Zap
+  Search, ShieldAlert, Zap
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -55,7 +55,10 @@ export function MedicalCalculatorDialog() {
     verdict: string;
   } | null>(null);
 
-  const parseVal = (val: string) => parseFloat(val.replace(',', '.'));
+  const parseVal = (val: string) => {
+    if (!val) return NaN;
+    return parseFloat(val.replace(',', '.'));
+  };
 
   const calculateAll = async () => {
     try {
@@ -74,7 +77,7 @@ export function MedicalCalculatorDialog() {
         toast({ 
           variant: 'destructive', 
           title: 'Данные не полны', 
-          description: 'Пожалуйста, заполните основные поля: RBC, Hb, MCV, MCH и RDW.' 
+          description: 'Пожалуйста, заполните обязательные поля: RBC, Hb, MCV, MCH и RDW.' 
         });
         return;
       }
@@ -197,7 +200,7 @@ export function MedicalCalculatorDialog() {
         // 10. M-H-R (Индекс Уречаги)
         const mhr = MR - HH - Dw;
         indices.push({
-          name: "M-H-R (Индекс Уречаги)",
+          name: "M-H-R",
           value: parseFloat(mhr.toFixed(3)),
           interpretation: mhr > -5.1 ? 'Талассемия' : 'ЖДА',
           isThal: mhr > -5.1,
@@ -243,15 +246,16 @@ export function MedicalCalculatorDialog() {
       setResults(finalRes);
 
       if (firestore && user?.uid && user.uid !== 'public-user') {
-        await addDoc(collection(firestore, 'calculator_logs'), {
+        addDoc(collection(firestore, 'calculator_logs'), {
           specialistId: user.uid,
           inputs: { rbc: R, hb: H_raw, mcv: V, mch: M, rdw: Dw, microR: MR || null, hypoHe: HH || null, hba2: A2 || null, hbf: F || null },
           verdict,
           probability: prob,
           timestamp: serverTimestamp()
-        });
+        }).catch(e => console.error("Logging error:", e));
       }
     } catch (error) {
+      console.error("Calculation error:", error);
       toast({ variant: 'destructive', title: 'Ошибка расчета' });
     } finally {
       setLoading(false);
@@ -276,13 +280,13 @@ export function MedicalCalculatorDialog() {
         <DialogHeader className="p-6 md:p-10 bg-primary text-slate-950 shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
           <div className="relative z-10">
-            <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter">Калькулятор</DialogTitle>
+            <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-slate-950">Калькулятор</DialogTitle>
             <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Диф. диагностика: 10 Индексов + HPLC</p>
           </div>
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32 no-scrollbar">
+        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32">
           {!results ? (
             <div className="space-y-10 animate-in fade-in duration-500">
               <div className="space-y-4">
@@ -331,7 +335,7 @@ export function MedicalCalculatorDialog() {
 
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase text-emerald-400/60 px-2 flex items-center gap-2">
-                  <FileSearch className="h-3 w-3" /> Данные ВЭЖХ (HPLC)
+                  <ShieldAlert className="h-3 w-3" /> Данные ВЭЖХ (HPLC)
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">

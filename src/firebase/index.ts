@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -9,6 +8,9 @@ import { getFirestore, Firestore, enableMultiTabIndexedDbPersistence } from 'fir
 let app: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
+
+// Keep track of persistence status globally to avoid late initialization errors in hot-reloading
+let persistenceAttempted = false;
 
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
@@ -22,15 +24,21 @@ export function initializeFirebase() {
       auth = getAuth(app);
       firestore = getFirestore(app);
 
-      // Включаем оффлайн-сохранение для Firestore
-      try {
-        enableMultiTabIndexedDbPersistence(firestore);
-      } catch (err: any) {
-        if (err.code === 'failed-precondition') {
-          console.warn("Firestore: Multiple tabs open, persistence can only be enabled in one tab at a time.");
-        } else if (err.code === 'unimplemented') {
-          console.warn("Firestore: The current browser doesn't support all of the features required to enable persistence.");
-        }
+      // Attempt to enable persistence only once. 
+      // Firestore throws if called after operations have started.
+      if (!persistenceAttempted) {
+        persistenceAttempted = true;
+        enableMultiTabIndexedDbPersistence(firestore).catch((err: any) => {
+          if (err.code === 'failed-precondition') {
+            console.warn("Firestore: Multiple tabs open, persistence can only be enabled in one tab at a time.");
+          } else if (err.code === 'unimplemented') {
+            console.warn("Firestore: The current browser doesn't support all of the features required to enable persistence.");
+          } else if (err.code === 'failed-precondition' || err.message?.includes('already been started')) {
+            // Already started, ignore
+          } else {
+            console.error("Firestore persistence error:", err);
+          }
+        });
       }
 
       return {

@@ -42,7 +42,7 @@ export function BeautyIndicatorsDialog() {
   const { data: userData } = useDoc<any>(userDocRef);
 
   const isMale = userData?.gender === 'мужской';
-  const hubTitle = isMale ? 'Bio-Aesthetic Hub' : 'Bio-Beauty Hub';
+  const hubTitle = isMale ? 'Био-Эстетика' : 'Bio-Beauty Hub';
   const mainButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
 
   const handleAnalyze = async () => {
@@ -50,7 +50,7 @@ export function BeautyIndicatorsDialog() {
       toast({ 
         variant: 'destructive', 
         title: 'Данные не введены', 
-        description: 'Опишите состояние или прикрепите фото.' 
+        description: 'Опишите состояние или прикрепите фото для анализа.' 
       });
       return;
     }
@@ -62,12 +62,16 @@ export function BeautyIndicatorsDialog() {
       const birthDate = userData?.birthDate;
       let age = undefined;
       if (birthDate) {
-        const parts = birthDate.split('.');
-        const bDate = parts.length === 3 
-          ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
-          : new Date(birthDate);
-        if (!isNaN(bDate.getTime())) {
-          age = new Date().getFullYear() - bDate.getFullYear();
+        try {
+          const parts = birthDate.split('.');
+          const bDate = parts.length === 3 
+            ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
+            : new Date(birthDate);
+          if (!isNaN(bDate.getTime())) {
+            age = new Date().getFullYear() - bDate.getFullYear();
+          }
+        } catch (e) {
+          console.warn("Age calculation failed", e);
         }
       }
 
@@ -81,12 +85,15 @@ export function BeautyIndicatorsDialog() {
       if (analysis) {
         setResult(analysis);
         toast({ title: 'Анализ завершен' });
+      } else {
+        throw new Error('ИИ не вернул результат. Попробуйте еще раз.');
       }
     } catch (e: any) {
+      console.error("Beauty analysis error:", e);
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: e.message || 'ИИ временно недоступен.' 
+        description: e.message || 'ИИ временно недоступен или фото слишком большое.' 
       });
     } finally {
       setLoading(false);
@@ -96,6 +103,10 @@ export function BeautyIndicatorsDialog() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер 10MB' });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => { setImage(reader.result as string); setResult(null); };
       reader.readAsDataURL(file);
