@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Footprints, Heart, Moon, Scale, 
-  Save, Loader2, RefreshCw, Zap, CheckCircle2,
-  Info, AlertCircle, Smartphone
+  Save, Loader2, RefreshCw, Zap, 
+  Smartphone, Info
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { isNativeBridgeAvailable, requestNativePermissions, fetchNativeHealthData } from '@/lib/health-bridge';
+import { cn } from '@/lib/utils';
 
 type HealthDataType = 'steps' | 'heartRate' | 'sleep' | 'weight';
 
@@ -100,7 +101,6 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
     setLoading(true);
     try {
       if (isNative) {
-        // Сценарий Android Health Connect (TWA)
         const allowed = await requestNativePermissions();
         if (allowed) {
           const data = await fetchNativeHealthData();
@@ -116,15 +116,13 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
               updatedAt: serverTimestamp(),
             }, { merge: true });
 
-            toast({ title: "Синхронизация завершена", description: "Данные из Health Connect получены." });
+            toast({ title: "Синхронизация завершена", description: "Данные получены." });
             onClose();
           }
         } else {
-          toast({ variant: 'destructive', title: "Доступ отклонен", description: "Разрешите доступ в системном окне Android." });
+          toast({ variant: 'destructive', title: "Доступ отклонен", description: "Разрешите доступ в системе Android." });
         }
       } else {
-        // Сценарий Cloud Google Fit (PWA/Web)
-        console.log("Triggering OAuth Flow...");
         toast({
           title: "Облачная синхронизация",
           description: "Инициируем подключение к Google Fit API...",
@@ -155,7 +153,6 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
         </DialogHeader>
 
         <div className="p-8 space-y-8 bg-blue-950/40 backdrop-blur-3xl">
-          {/* СИНХРОНИЗАЦИЯ (ПРИОРИТЕТ) */}
           <div className="space-y-4">
             <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
               <Smartphone className="h-3 w-3" /> Автоматический трекинг
@@ -177,7 +174,7 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
               <div className="flex flex-col items-start leading-none z-10">
                 <span className="text-[11px] font-black uppercase tracking-tight">Подключить трекеры здоровья</span>
                 <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">
-                  {isNative ? 'Native Health Connect (Android)' : 'Google Health Sync'}
+                  {isNative ? 'Native Health Connect' : 'Google Health Sync'}
                 </span>
               </div>
               <RefreshCw className={cn("h-4 w-4 ml-auto text-primary/40 group-hover:rotate-180 transition-transform duration-500", loading && "animate-spin")} />
@@ -186,9 +183,7 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-start gap-3">
                <Info className="h-4 w-4 text-primary/40 shrink-0 mt-0.5" />
                <p className="text-[9px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
-                 {isNative 
-                   ? 'Данные будут получены напрямую из Health Connect без ввода пароля.'
-                   : 'Поддержка Apple Watch, Oura Ring и Garmin через единый профиль Google Health.'}
+                 Данные будут получены напрямую без ввода пароля через защищенный нативный шлюз.
                </p>
             </div>
           </div>
@@ -200,7 +195,6 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
             </div>
           </div>
 
-          {/* РУЧНОЙ ВВОД */}
           <div className="space-y-4">
             <div className="relative">
               <Input 

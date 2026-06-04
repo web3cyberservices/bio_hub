@@ -84,11 +84,25 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     }
   };
 
-  const handleCopyLink = () => {
-    const link = `https://t.me/web3cyberservices_bot/app?startapp=${specialistId}`;
-    navigator.clipboard.writeText(link).then(() => {
-      toast({ title: 'Ссылка скопирована', description: 'Прямая ссылка на профиль готова для отправки.' });
-    });
+  const handleCopyLink = async () => {
+    const link = typeof window !== 'undefined' ? `${window.location.origin}/specialist/${specialistId}` : '';
+    
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+        toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете отправить её в мессенджеры.' });
+      } else {
+        throw new Error('Clipboard not available');
+      }
+    } catch (err) {
+      console.warn('Copy failed:', err);
+      // Альтернативный вариант, если Clipboard заблокирован
+      toast({ 
+        title: 'Копирование недоступно', 
+        description: 'Ваш браузер заблокировал доступ к буферу обмена. Выделите ссылку вручную в адресной строке.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleCreateChat = async () => {
@@ -132,7 +146,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
           <ArrowLeft className="h-4 w-4" /> Назад
         </Button>
         <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-primary hover:bg-primary/5 transition-all uppercase font-black text-[10px]">
-          <Share2 className="h-4 w-4" /> Поделиться профилем
+          <Share2 className="h-4 w-4" /> Копировать ссылку
         </Button>
       </div>
 
