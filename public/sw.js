@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bio-hub-pro-v1';
+const CACHE_NAME = 'bio-hub-pro-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.webmanifest',
@@ -31,44 +31,30 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  const url = new URL(event.request.url);
-
-  // Не кэшируем запросы к Firebase API и Auth
-  if (url.origin.includes('firebaseio.com') || url.origin.includes('googleapis.com') || url.pathname.includes('/api/')) {
+  // Пропускаем запросы к API и Firestore
+  if (event.request.url.includes('firestore.googleapis.com') || 
+      event.request.url.includes('identitytoolkit.googleapis.com')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((fetchResponse) => {
-        // Кэшируем шрифты, изображения и внешние скрипты
-        if (
-          fetchResponse.status === 200 &&
-          (url.origin.includes('fonts.gstatic.com') ||
-           url.origin.includes('telegram.org') ||
-           url.origin.includes('transparenttextures.com') ||
-           url.origin.includes('placehold.co') ||
-           url.pathname.endsWith('.js') ||
-           url.pathname.endsWith('.css'))
-        ) {
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).then((fetchResponse) => {
+        // Кэшируем новые статические файлы (шрифты, скрипты чанков)
+        if (event.request.url.includes('_next/static') || 
+            event.request.url.includes('fonts.gstatic.com')) {
           const responseToCache = fetchResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
         return fetchResponse;
-      }).catch(() => {
-        // Если сеть недоступна и ресурса нет в кэше
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
       });
+    }).catch(() => {
+      // Оффлайн-заглушка для навигации
+      if (event.request.mode === 'navigate') {
+        return caches.match('/');
+      }
     })
   );
 });

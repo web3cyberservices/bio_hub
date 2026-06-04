@@ -96,10 +96,9 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
       }
     } catch (err) {
       console.warn('Copy failed:', err);
-      // Альтернативный вариант, если Clipboard заблокирован
       toast({ 
         title: 'Копирование недоступно', 
-        description: 'Ваш браузер заблокировал доступ к буферу обмена. Выделите ссылку вручную в адресной строке.',
+        description: 'Ваш браузер заблокировал доступ к буферу обмена. Используйте адресную строку.',
         variant: 'destructive'
       });
     }
