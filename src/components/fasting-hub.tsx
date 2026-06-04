@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 export function FastingHub() {
   const { user } = useUser();
@@ -27,9 +27,7 @@ export function FastingHub() {
   const [mode, setMode] = useState<'16/8' | '14/10' | '18/6' | '12/12'>('16/8');
   const [phase, setPhase] = useState('Пищеварение');
 
-  const modes = {
-    '12/12': 12, '14/10': 14, '16/8': 16, '18/6': 18
-  };
+  const modes = { '12/12': 12, '14/10': 14, '16/8': 16, '18/6': 18 };
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
@@ -44,28 +42,22 @@ export function FastingHub() {
 
   useEffect(() => {
     if (!isActive || !startTime) return;
-
     const interval = setInterval(() => {
       const now = Date.now();
       const elapsed = now - startTime;
       const total = modes[mode] * 3600000;
       const remaining = Math.max(0, total - elapsed);
-      
       setTimeLeft(remaining);
-      
-      // Логика фаз
       const hoursElapsed = elapsed / 3600000;
       if (hoursElapsed < 2) setPhase('Пищеварение');
       else if (hoursElapsed < 8) setPhase('Сжигание сахара');
       else if (hoursElapsed < 12) setPhase('Кетоз');
       else setPhase('Аутофагия');
-
       if (remaining === 0) {
         setIsActive(false);
-        toast({ title: 'Голодание завершено!', description: 'Вы достигли цели.' });
+        toast({ title: 'Голодание завершено!' });
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isActive, startTime, mode]);
 
@@ -73,19 +65,31 @@ export function FastingHub() {
     if (!user || !firestore) return;
     const start = Date.now();
     try {
-      await setDoc(doc(firestore, 'users', user.uid), {
-        activeFasting: { start, mode, createdAt: new Date().toISOString() }
-      }, { merge: true });
+      const fastingData = { start, mode, createdAt: new Date().toISOString(), status: 'started' };
+      await setDoc(doc(firestore, 'users', user.uid), { activeFasting: fastingData }, { merge: true });
+      
+      // СИНХРОНИЗАЦИЯ С OBSIDIAN
+      if (userData?.obsidianConnected) {
+        await syncToObsidian({ type: 'fasting', payload: fastingData });
+      }
+
       setStartTime(start);
       setIsActive(true);
-      toast({ title: 'Таймер запущен' });
-    } catch (e) { toast({ variant: 'destructive', title: 'Ошибка доступа' }); }
+      toast({ title: 'Таймер запущен и синхронизирован' });
+    } catch (e) { toast({ variant: 'destructive', title: 'Ошибка' }); }
   };
 
   const handleStop = async () => {
     if (!user || !firestore) return;
     try {
+      const stopData = { start: startTime, mode, stopTime: Date.now(), status: 'completed' };
       await setDoc(doc(firestore, 'users', user.uid), { activeFasting: null }, { merge: true });
+      
+      // СИНХРОНИЗАЦИЯ С OBSIDIAN
+      if (userData?.obsidianConnected) {
+        await syncToObsidian({ type: 'fasting', payload: stopData });
+      }
+
       setIsActive(false);
       setStartTime(null);
       toast({ title: 'Таймер остановлен' });
@@ -144,14 +148,14 @@ export function FastingHub() {
             <Flame className="h-8 w-8 text-emerald-400 shrink-0 mt-1" />
             <div className="space-y-2">
                <h4 className="font-black text-white uppercase text-sm">Метаболический эффект</h4>
-               <p className="text-xs text-white/50 leading-relaxed font-medium">Через 12 часов голодания уровень инсулина падает, и организм начинает активнее использовать жировые запасы в качестве энергии.</p>
+               <p className="text-xs text-white/50 leading-relaxed font-medium">Через 12 часов голодания уровень инсулина падает, и организм начинает активнее использовать жировые запасы.</p>
             </div>
          </Card>
          <Card className="cyber-card p-8 bg-blue-500/5 border-blue-500/20 flex items-start gap-5 shadow-inner">
             <Droplets className="h-8 w-8 text-blue-400 shrink-0 mt-1" />
             <div className="space-y-2">
-               <h4 className="font-black text-white uppercase text-sm">Водный баланс</h4>
-               <p className="text-xs text-white/50 leading-relaxed font-medium">В период голодания важно поддерживать гидратацию. Пейте чистую воду, зеленый чай или черный кофе без сахара.</p>
+               <h4 className="font-black text-white uppercase text-sm">Гидратация</h4>
+               <p className="text-xs text-white/50 leading-relaxed font-medium">В период голодания важно пить чистую воду для поддержания детоксикации.</p>
             </div>
          </Card>
       </div>

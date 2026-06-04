@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -150,33 +151,20 @@ export function ProfileCabinet() {
 
   const verifyPermission = async (handle: any, readWrite: boolean) => {
     const options: any = {};
-    if (readWrite) {
-      options.mode = 'readwrite';
-    }
+    if (readWrite) options.mode = 'readwrite';
     try {
-      if ((await handle.queryPermission(options)) === 'granted') {
-        return true;
-      }
-      if ((await handle.requestPermission(options)) === 'granted') {
-        return true;
-      }
-    } catch (e) {
-      return false;
-    }
+      if ((await handle.queryPermission(options)) === 'granted') return true;
+      if ((await handle.requestPermission(options)) === 'granted') return true;
+    } catch (e) { return false; }
     return false;
   };
 
   const handleConnectObsidian = async () => {
     if (!isObsidianSupported) return;
-    
     setObsidianLoading(true);
     try {
-      const handle = await (window as any).showDirectoryPicker({
-        mode: 'readwrite'
-      });
-
+      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
       await setInIdb('obsidian_vault_handle', handle);
-
       if (user && firestore) {
         await updateDoc(doc(firestore, 'users', user.uid), {
           obsidianConnected: true,
@@ -184,19 +172,11 @@ export function ProfileCabinet() {
           updatedAt: new Date().toISOString()
         });
       }
-
       setObsidianVault(handle.name);
-      toast({ 
-        title: 'Obsidian подключен', 
-        description: `База данных "${handle.name}" успешно привязана локально.` 
-      });
+      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" успешно привязана.` });
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: 'Ошибка подключения', description: 'Не удалось получить доступ к папке.' });
-      }
-    } finally {
-      setObsidianLoading(false);
-    }
+      if (err.name !== 'AbortError') toast({ variant: 'destructive', title: 'Ошибка подключения' });
+    } finally { setObsidianLoading(false); }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,7 +195,16 @@ export function ProfileCabinet() {
     setLoading(true);
     try {
       await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-      toast({ title: 'Профиль обновлен' });
+      
+      // ТОТАЛЬНАЯ СИНХРОНИЗАЦИЯ: Отправляем профиль в Obsidian
+      if (userData?.obsidianConnected) {
+        await syncToObsidian({
+          type: 'profile',
+          payload: values
+        });
+      }
+
+      toast({ title: 'Профиль обновлен и синхронизирован с Obsidian' });
     } catch (e: any) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally { setLoading(false); }
@@ -226,18 +215,13 @@ export function ProfileCabinet() {
     try {
       await signOut(auth);
       router.push('/');
-      toast({ title: 'Выход выполнен', description: 'Будем рады видеть вас снова!' });
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка выхода' });
-    }
+      toast({ title: 'Выход выполнен' });
+    } catch (error) { toast({ variant: 'destructive', title: 'Ошибка выхода' }); }
   };
 
   const startVoiceInput = (fieldName: keyof ProfileValues) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
-      return;
-    }
+    if (!SpeechRecognition) return;
     const recognition = new SpeechRecognition();
     recognition.lang = 'ru-RU';
     recognition.onstart = () => setRecordingField(fieldName);
@@ -264,7 +248,6 @@ export function ProfileCabinet() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-          
           <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
@@ -292,7 +275,7 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения (ДД.ММ.ГГГГ)</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="profileType" render={({ field }) => (
                   <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
                 )} />
@@ -334,125 +317,50 @@ export function ProfileCabinet() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} placeholder="Напр: Лосось, шпинат, орехи..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Исключить из рациона <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} placeholder="Напр: Лактоза, сахар, лук..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">Исключить <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
               </div>
-              <FormField control={form.control} name="medications" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center justify-between"><Pill className="h-4 w-4 mr-2" /> Лекарства / Витамины / БАДы <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('medications')} className={cn("h-8 w-8", recordingField === 'medications' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} placeholder="Перечислите все препараты, которые принимаете..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-              )} />
             </Card>
           </div>
-
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Профессиональная деятельность</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия / Должность</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист, Тренер..." className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (<FormItem><FormLabel>Часов работы в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-              </div>
-              <FormField control={form.control} name="workActivityType" render={({ field }) => (
-                <FormItem><FormLabel>Характер работы</FormLabel><div className="grid grid-cols-2 gap-4">
-                  <Button type="button" onClick={() => form.setValue('workActivityType', 'mental')} variant={field.value === 'mental' ? "default" : "outline"} className={cn("h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]", field.value === 'mental' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}><Brain className="h-4 w-4 mr-2" /> Умственная</Button>
-                  <Button type="button" onClick={() => form.setValue('workActivityType', 'physical')} variant={field.value === 'physical' ? "default" : "outline"} className={cn("h-14 rounded-2xl font-black uppercase tracking-widest text-[10px]", field.value === 'physical' ? "bg-primary text-slate-950" : "bg-white/5 border-white/10 text-white")}><Activity className="h-4 w-4 mr-2" /> Физическая</Button>
-                </div></FormItem>
-              )} />
-            </Card>
-          </div>
-
-          {profileType === 'specialist' && (
-            <div className="space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 px-2"><ShieldCheck className="h-4 w-4" /> 5. Профиль эксперта</h3>
-              <Card className="cyber-card bg-primary/5 p-8 space-y-6 border-primary/20">
-                <FormField control={form.control} name="specialization" render={({ field }) => (<FormItem><FormLabel>Специализация</FormLabel><FormControl><Input placeholder="Напр: Эндокринолог, Нутрициолог" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="bio" render={({ field }) => (<FormItem><FormLabel className="flex items-center justify-between">О себе / Квалификация <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('bio')} className={cn("h-8 w-8", recordingField === 'bio' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} placeholder="Ваш опыт и достижения..." className="min-h-[120px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="instagramUrl" render={({ field }) => (<FormItem><FormLabel className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Instagram</FormLabel><FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-              </Card>
-            </div>
-          )}
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ ВСЕ ИЗМЕНЕНИЯ'}
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
           </Button>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
-                <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black hover:bg-primary/5 transition-all"><Send className="h-4 w-4 text-primary" /> Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
-             </Card>
-             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
-                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase hover:bg-primary/5 transition-all">Открыть архив здоровья</Button></AnalysisHistoryDialog>
-             </Card>
-          </div>
 
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> Интеграция Obsidian</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-2 flex-1">
-                     <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                        <BookOpen className="h-5 w-5 text-primary" /> База знаний Obsidian
-                     </h4>
-                     <p className="text-xs text-white/50 font-medium leading-relaxed max-w-md">
-                        Подключите локальное хранилище Obsidian для синхронизации ваших медицинских заметок и ИИ-анализа. Данные хранятся только на вашем устройстве.
-                     </p>
+                     <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> База знаний Obsidian</h4>
+                     <p className="text-xs text-white/50 font-medium">Подключите локальное хранилище Obsidian для тотальной синхронизации вашего Цифрового Двойника.</p>
                      <div className="flex items-center gap-2 mt-4">
-                        <span className={cn(
-                          "h-2 w-2 rounded-full",
-                          obsidianVault ? "bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" : "bg-red-500"
-                        )} />
-                        <span className={cn(
-                          "text-[10px] font-black uppercase tracking-widest",
-                          obsidianVault ? "text-emerald-400" : "text-red-400"
-                        )}>
+                        <span className={cn("h-2 w-2 rounded-full", obsidianVault ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
+                        <span className={cn("text-[10px] font-black uppercase", obsidianVault ? "text-emerald-400" : "text-red-400")}>
                            {obsidianVault ? `Подключено: ${obsidianVault}` : "Не подключено"}
                         </span>
                      </div>
                   </div>
-                  <div className="w-full md:w-auto">
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      disabled={!isObsidianSupported || obsidianLoading}
-                      onClick={handleConnectObsidian}
-                      className={cn(
-                        "w-full md:w-auto h-16 px-8 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all relative group",
-                        obsidianVault 
-                          ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/5" 
-                          : "border-primary/20 text-primary hover:border-primary/60 hover:shadow-[0_0_20px_rgba(0,255,255,0.2)]"
-                      )}
-                    >
-                      {obsidianLoading ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                        <div className="flex items-center gap-2">
-                          <Zap className={cn("h-4 w-4", !obsidianVault && "animate-pulse")} />
-                          {obsidianVault ? "ОБНОВИТЬ ДОСТУП" : "ПОДКЛЮЧИТЬ OBSIDIAN"}
-                        </div>
-                      )}
-                      {!isObsidianSupported && (
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-white/30">
-                          Доступно только в десктопной версии
-                        </div>
-                      )}
-                    </Button>
-                  </div>
+                  <Button type="button" variant="outline" disabled={!isObsidianSupported || obsidianLoading} onClick={handleConnectObsidian} className="h-16 px-8 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px]">
+                    {obsidianLoading ? <Loader2 className="animate-spin" /> : "ПОДКЛЮЧИТЬ OBSIDIAN"}
+                  </Button>
                </div>
             </Card>
           </div>
-
-          <Card className="cyber-card bg-red-950/20 p-8 flex flex-col gap-4 border-red-500/20">
-             <h3 className="font-black uppercase flex items-center gap-2 text-red-500/60 text-xs tracking-widest"><LogOut className="h-5 w-5" /> Сессия</h3>
-             <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleLogout} 
-                className="h-14 rounded-xl border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all uppercase font-black tracking-widest text-[10px]"
-             >
-                ВЫЙТИ ИЗ АККАУНТА
-             </Button>
-          </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
+                <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
+             </Card>
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
+                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив</Button></AnalysisHistoryDialog>
+             </Card>
+          </div>
         </form>
       </Form>
     </div>

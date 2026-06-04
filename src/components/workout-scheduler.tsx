@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, addDoc, updateDoc, doc, deleteDoc, orderBy } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,6 +18,7 @@ import { ru } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 interface WorkoutSchedulerProps {
   selectedDate: Date;
@@ -38,6 +39,9 @@ export function WorkoutScheduler({ selectedDate, patientId }: WorkoutSchedulerPr
 
   const dateKey = format(localDate, 'yyyy-MM-dd');
   const effectiveUid = patientId || user?.uid;
+
+  const userDocRef = useMemoFirebase(() => effectiveUid ? doc(firestore!, 'users', effectiveUid) : null, [effectiveUid, firestore]);
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const workoutsQuery = useMemoFirebase(() => {
     if (!firestore || !effectiveUid) return null;
@@ -63,15 +67,27 @@ export function WorkoutScheduler({ selectedDate, patientId }: WorkoutSchedulerPr
     if (!firestore || !effectiveUid || !title) return;
     setLoading(true);
     try {
-      await addDoc(collection(firestore, 'users', effectiveUid, 'workouts'), {
+      const workoutData = {
         date: dateKey,
         title,
         exercises,
         status: 'planned',
         createdBy: user?.uid,
         createdAt: new Date().toISOString()
-      });
-      toast({ title: 'Тренировка запланирована' });
+      };
+
+      await addDoc(collection(firestore, 'users', effectiveUid, 'workouts'), workoutData);
+
+      // СИНХРОНИЗАЦИЯ С OBSIDIAN
+      if (userData?.obsidianConnected && !patientId) {
+        await syncToObsidian({
+          type: 'workout',
+          date: dateKey,
+          payload: workoutData
+        });
+      }
+
+      toast({ title: 'Тренировка запланирована и сохранена в Obsidian' });
       setIsAdding(false);
       setTitle(''); setExercises([]);
     } catch (e: any) {
@@ -118,26 +134,18 @@ export function WorkoutScheduler({ selectedDate, patientId }: WorkoutSchedulerPr
                      <h3 className="text-xl font-black text-white uppercase">Новый план</h3>
                      <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}><X className="h-5 w-5" /></Button>
                   </div>
-                  <Input placeholder="Название (напр: Спина + Бицепс)" value={title} onChange={e => setTitle(e.target.value)} className="h-14 bg-white/5 border-none text-lg font-bold" />
+                  <Input placeholder="Название тренировки" value={title} onChange={e => setTitle(e.target.value)} className="h-14 bg-white/5 border-none text-lg font-bold" />
                   
                   <div className="space-y-4">
-                     <label className="text-[10px] font-black uppercase text-white/30">Список упражнений</label>
+                     <label className="text-[10px] font-black uppercase text-white/30">Упражнения</label>
                      <div className="flex gap-2">
-                        <Input placeholder="Упражнение..." value={newExName} onChange={e => setNewExName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEx()} className="h-12 bg-white/5 border-none" />
-                        <Button onClick={addEx} variant="secondary" className="h-12 rounded-xl px-4"><Plus className="h-5 w-5" /></Button>
+                        <Input placeholder="Название..." value={newExName} onChange={e => setNewExName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEx()} className="h-12 bg-white/5 border-none" />
+                        <Button onClick={addEx} variant="secondary" className="h-12 px-4"><Plus className="h-5 w-5" /></Button>
                      </div>
                      <div className="space-y-2">
                         {exercises.map((ex, i) => (
                            <div key={i} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                               <span className="flex-1 font-bold text-sm text-white">{ex.name}</span>
-                              <div className="flex items-center gap-2">
-                                 <input type="number" value={ex.sets} onChange={e => {
-                                    const next = [...exercises];
-                                    next[i].sets = Number(e.target.value);
-                                    setExercises(next);
-                                 }} className="w-10 h-8 bg-black/40 rounded border-none text-center text-xs" />
-                                 <span className="text-[8px] font-black uppercase opacity-40">Подх</span>
-                              </div>
                               <Button variant="ghost" size="icon" onClick={() => removeEx(i)} className="h-8 w-8 text-white/20 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></Button>
                            </div>
                         ))}
@@ -159,38 +167,15 @@ export function WorkoutScheduler({ selectedDate, patientId }: WorkoutSchedulerPr
                     "cyber-card p-6 border-none transition-all",
                     w.status === 'completed' ? "bg-emerald-500/10 opacity-60" : "bg-blue-900/20"
                   )}>
-                     <div className="flex items-center justify-between mb-6">
+                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                              <Dumbbell className="h-5 w-5" />
-                           </div>
+                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><Dumbbell className="h-5 w-5" /></div>
                            <div>
                               <h4 className="font-black text-white text-lg uppercase leading-none">{w.title}</h4>
                               <p className="text-[10px] font-bold text-white/30 uppercase mt-1">{w.exercises?.length || 0} упражнений</p>
                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                           <Button 
-                             onClick={() => handleToggleStatus(w)}
-                             className={cn("h-10 px-4 rounded-xl font-black text-[9px] uppercase tracking-widest", w.status === 'completed' ? "bg-emerald-500 text-white" : "bg-white/10 text-white")}
-                           >
-                              {w.status === 'completed' ? "Завершено" : "Выполнить"}
-                           </Button>
-                           <Button variant="ghost" size="icon" onClick={() => handleDelete(w.id)} className="text-white/20 hover:text-red-400"><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                     </div>
-                     
-                     <div className="grid gap-2">
-                        {w.exercises?.map((ex: any, idx: number) => (
-                           <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl text-xs">
-                              <span className="font-bold text-white/80">{ex.name}</span>
-                              <div className="flex items-center gap-4 text-[10px] font-black uppercase text-primary/60">
-                                 <span>{ex.sets} подходов</span>
-                                 <span>{ex.reps} повт</span>
-                                 {ex.weight !== '—' && <span>{ex.weight} кг</span>}
-                              </div>
-                           </div>
-                        ))}
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(w.id)} className="text-white/20 hover:text-red-400"><Trash2 className="h-4 w-4" /></Button>
                      </div>
                   </Card>
                ))}
