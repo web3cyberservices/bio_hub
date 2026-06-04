@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,15 @@ import {
   BookOpen, FileText, Plus, Search, 
   ShieldCheck, Loader2, User, ChevronRight,
   Database, Zap, X, Trash2, Folder, FolderOpen,
-  File, RefreshCw, Info, AlertTriangle
+  File, RefreshCw, Info, AlertTriangle, Save,
+  ArrowLeft, Bot, Settings, Download, Monitor,
+  Cpu, Terminal, MessageSquare, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface FileNode {
   name: string;
@@ -22,6 +26,14 @@ interface FileNode {
   handle: FileSystemFileHandle | FileSystemDirectoryHandle;
   children?: FileNode[];
   isOpen?: boolean;
+}
+
+interface ActiveFile {
+  name: string;
+  content: string;
+  originalContent: string;
+  handle: FileSystemFileHandle;
+  isDirty: boolean;
 }
 
 export function SpecialistDiaryHub() {
@@ -32,11 +44,19 @@ export function SpecialistDiaryHub() {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [rootHandle, setRootHandle] = useState<FileSystemDirectoryHandle | null>(null);
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
-  const [activeTab, setActiveTab] = useState<'chat' | 'notes'>('chat');
+  const [activeFile, setActiveFile] = useState<ActiveFile | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [aiSidebarTab, setAiSidebarTab] = useState<'chat' | 'models'>('chat');
   const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
-  // Получаем список пациентов врача из Firestore
+  // Имитация локальных моделей
+  const [availableModels] = useState([
+    { id: 'biogemini-local', name: 'BioGemini 2.0 (Local)', size: '2.4 GB', status: 'installed', type: 'Clinical' },
+    { id: 'llama-3-med', name: 'Llama 3 Med-7B', size: '4.8 GB', status: 'available', type: 'General' },
+    { id: 'mistral-medical', name: 'Mistral-ORpo-Med', size: '3.9 GB', status: 'available', type: 'Analysis' },
+  ]);
+
   const patientsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'users'), where('sharedWith', 'array-contains', user.uid));
@@ -54,7 +74,6 @@ export function SpecialistDiaryHub() {
     try {
       const handle = await getInIdb('specialist_diary_root_handle');
       if (handle) {
-        // Проверяем права (браузер сбрасывает их после перезагрузки)
         const options = { mode: 'readwrite' };
         if ((await (handle as any).queryPermission(options)) === 'granted') {
           setRootHandle(handle);
@@ -109,118 +128,139 @@ export function SpecialistDiaryHub() {
     }
   };
 
-  const toggleFolder = async (node: FileNode) => {
-    if (node.kind !== 'directory') return;
-    
-    const newTree = [...fileTree];
-    const updateNode = (list: FileNode[]): boolean => {
-      for (let i = 0; i < list.length; i++) {
-        if (list[i].handle === node.handle) {
-          list[i].isOpen = !list[i].isOpen;
-          if (list[i].isOpen && !list[i].children) {
-            scanDirectory(list[i].handle as FileSystemDirectoryHandle).then(children => {
-              list[i].children = children;
-              setFileTree([...newTree]);
-            });
+  const toggleFolderOrOpenFile = async (node: FileNode) => {
+    if (node.kind === 'directory') {
+      const newTree = [...fileTree];
+      const updateNode = (list: FileNode[]): boolean => {
+        for (let i = 0; i < list.length; i++) {
+          if (list[i].handle === node.handle) {
+            list[i].isOpen = !list[i].isOpen;
+            if (list[i].isOpen && !list[i].children) {
+              scanDirectory(list[i].handle as FileSystemDirectoryHandle).then(children => {
+                list[i].children = children;
+                setFileTree([...newTree]);
+              });
+            }
+            return true;
           }
-          return true;
+          if (list[i].children && updateNode(list[i].children!)) return true;
         }
-        if (list[i].children && updateNode(list[i].children!)) return true;
+        return false;
+      };
+      updateNode(newTree);
+      setFileTree(newTree);
+    } else {
+      // Открытие файла
+      try {
+        const fileHandle = node.handle as FileSystemFileHandle;
+        const file = await fileHandle.getFile();
+        const content = await file.text();
+        setActiveFile({
+          name: node.name,
+          content,
+          originalContent: content,
+          handle: fileHandle,
+          isDirty: false
+        });
+      } catch (e) {
+        toast({ variant: 'destructive', title: 'Ошибка файла', description: 'Не удалось прочитать содержимое.' });
       }
-      return false;
-    };
-    updateNode(newTree);
-    setFileTree(newTree);
+    }
+  };
+
+  const handleSaveFile = async () => {
+    if (!activeFile || !activeFile.isDirty) return;
+    setSaveLoading(true);
+    try {
+      const writable = await (activeFile.handle as any).createWritable();
+      await writable.write(activeFile.content);
+      await writable.close();
+      setActiveFile({ ...activeFile, originalContent: activeFile.content, isDirty: false });
+      toast({ title: 'Файл сохранен', description: `Изменения в ${activeFile.name} записаны на диск.` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте права доступа к папке.' });
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const handleCancelChanges = () => {
+    if (activeFile) {
+      setActiveFile({ ...activeFile, content: activeFile.originalContent, isDirty: false });
+    }
   };
 
   if (patientsLoading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-[#010411] text-white rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
-      {/* ЛЕВАЯ ПАНЕЛЬ */}
-      <div className="w-80 border-r border-white/5 flex flex-col bg-black/40">
+    <div className="flex h-[calc(100vh-120px)] bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
+      {/* 1. ЛЕВАЯ ПАНЕЛЬ: Список пациентов и Файловый браузер */}
+      <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
                 <BookOpen className="h-5 w-5 text-primary" />
              </div>
-             <h2 className="text-lg font-black uppercase tracking-tight">Дневник врача</h2>
+             <h2 className="text-lg font-black uppercase tracking-tight">Дневник</h2>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl flex items-center gap-2">
              <ShieldCheck className="h-3 w-3 text-emerald-400" />
-             <span className="text-[8px] font-black uppercase text-emerald-400/80 tracking-widest">Local Security Mode Active</span>
+             <span className="text-[7px] font-black uppercase text-emerald-400/80 tracking-widest">Local Mode Active</span>
           </div>
         </div>
 
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-8 pb-20">
-            {/* Список пациентов */}
+            {/* Выбор пациента */}
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Выбор пациента</label>
+              <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Пациенты</label>
               <div className="space-y-1">
                 {patients?.map((p: any) => (
                   <button
                     key={p.id}
                     onClick={() => setSelectedPatientId(p.id)}
                     className={cn(
-                      "w-full p-3 rounded-2xl flex items-center gap-3 transition-all",
+                      "w-full p-2.5 rounded-xl flex items-center gap-3 transition-all",
                       selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5"
                     )}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-xs">
+                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-[10px]">
                       {p.firstName?.charAt(0)}
                     </div>
-                    <span className="flex-1 text-left text-sm font-bold truncate">{p.firstName} {p.lastName}</span>
-                    {selectedPatientId === p.id && <ChevronRight className="h-4 w-4" />}
+                    <span className="flex-1 text-left text-xs font-bold truncate">{p.firstName}</span>
                   </button>
                 ))}
-                {(!patients || patients.length === 0) && (
-                  <div className="p-4 text-center border border-white/5 rounded-2xl opacity-30">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Пациенты не найдены</p>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Проводник знаний (Локальные файлы) */}
+            {/* Проводник знаний */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
-                <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Проводник знаний</label>
+                <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Локальные файлы</label>
                 {rootHandle && (
                   <button onClick={handleSelectRootFolder} className="text-white/20 hover:text-primary transition-colors">
-                    <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+                    <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
                   </button>
                 )}
               </div>
 
               {!rootHandle ? (
-                <div className="p-4 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center gap-3 text-center">
-                   <Folder className="h-8 w-8 text-primary/60" />
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase text-white">Локальная база</p>
-                      <p className="text-[8px] text-white/40 uppercase leading-relaxed">Выберите папку с медицинскими записями на вашем ПК</p>
-                   </div>
-                   <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleSelectRootFolder} 
-                    disabled={!isFileSystemSupported}
-                    className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest"
-                   >
-                     {isFileSystemSupported ? 'ВЫБРАТЬ ПАПКУ' : 'НЕДОСТУПНО'}
-                   </Button>
-                   {!isFileSystemSupported && <p className="text-[7px] text-red-400 font-bold uppercase">Требуется Chrome/Edge на десктопе</p>}
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSelectRootFolder} 
+                  className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest"
+                >
+                  ОТКРЫТЬ ПАПКУ
+                </Button>
               ) : (
-                <div className="space-y-1 animate-in fade-in duration-500">
-                  <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[10px] truncate mb-2">
-                     <FolderOpen className="h-3.5 w-3.5" /> {rootHandle.name}
+                <div className="space-y-0.5 animate-in fade-in duration-500">
+                  <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[9px] truncate mb-2">
+                     <FolderOpen className="h-3 w-3" /> {rootHandle.name}
                   </div>
-                  <div className="space-y-0.5">
-                    {fileTree.map((node, i) => (
-                      <TreeNode key={i} node={node} onToggle={toggleFolder} />
-                    ))}
-                  </div>
+                  {fileTree.map((node, i) => (
+                    <TreeNode key={i} node={node} onToggle={toggleFolderOrOpenFile} activeFileName={activeFile?.name} />
+                  ))}
                 </div>
               )}
             </div>
@@ -228,107 +268,199 @@ export function SpecialistDiaryHub() {
         </ScrollArea>
       </div>
 
-      {/* ПРАВАЯ ПАНЕЛЬ */}
-      <div className="flex-1 flex flex-col relative bg-black/20">
-        {!selectedPatientId ? (
-          <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-4">
-             <Database className="h-16 w-16" />
-             <p className="font-black uppercase tracking-[0.3em]">Выберите пациента для начала работы</p>
+      {/* 2. ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: Редактор и рабочая зона */}
+      <div className="flex-1 flex flex-col min-w-0 bg-black/20">
+        {!activeFile ? (
+          <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
+             <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+                <Database className="h-24 w-24 relative z-10" />
+             </div>
+             <div className="text-center space-y-2">
+                <p className="font-black uppercase tracking-[0.4em] text-lg">Knowledge Workspace</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Выберите файл для редактирования</p>
+             </div>
           </div>
         ) : (
           <>
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-                   <User className="h-6 w-6 text-white/40" />
-                </div>
-                <div>
-                   <h3 className="font-black text-xl text-white uppercase tracking-tight">{selectedPatient?.firstName} {selectedPatient?.lastName}</h3>
-                   <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">Индивидуальный блокнот ИИ</p>
-                </div>
-              </div>
-              <div className="flex bg-white/5 p-1 rounded-xl">
-                 <button onClick={() => setActiveTab('chat')} className={cn("px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all", activeTab === 'chat' ? "bg-primary text-slate-950" : "text-white/40")}>Чат-анализ</button>
-                 <button onClick={() => setActiveTab('notes')} className={cn("px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all", activeTab === 'notes' ? "bg-primary text-slate-950" : "text-white/40")}>Заметки</button>
-              </div>
+            <div className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 shrink-0">
+               <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                     <FileText className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-white uppercase tracking-tight truncate max-w-[200px]">{activeFile.name}</h3>
+                    {activeFile.isDirty && <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">● Не сохранено</span>}
+                  </div>
+               </div>
+               <div className="flex items-center gap-3">
+                  {activeFile.isDirty && (
+                    <Button variant="ghost" size="sm" onClick={handleCancelChanges} className="h-9 rounded-xl font-black text-[10px] text-white/40 hover:text-white uppercase">Отмена</Button>
+                  )}
+                  <Button 
+                    onClick={handleSaveFile} 
+                    disabled={!activeFile.isDirty || saveLoading}
+                    className={cn(
+                      "h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg",
+                      activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20"
+                    )}
+                  >
+                    {saveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-2" /> СОХРАНИТЬ</>}
+                  </Button>
+               </div>
             </div>
 
-            <div className="flex-1 relative overflow-hidden">
-               {activeTab === 'chat' ? (
-                 <div className="h-full flex flex-col">
-                    <div className="flex-1 p-6 md:p-10 space-y-6 overflow-y-auto">
-                       <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4 max-w-2xl">
-                          <p className="text-sm font-medium text-white/70 italic leading-relaxed">
-                            ИИ готов анализировать локальные файлы для пациента <strong>{selectedPatient?.firstName}</strong>. 
-                            Выберите файлы слева, чтобы они стали частью контекста.
-                          </p>
-                          {!rootHandle && (
-                            <div className="flex items-center gap-3 text-orange-400/60 bg-orange-400/5 p-3 rounded-xl border border-orange-400/10">
-                               <AlertTriangle className="h-4 w-4 shrink-0" />
-                               <span className="text-[9px] font-black uppercase">Локальная база знаний не подключена</span>
-                            </div>
-                          )}
-                       </div>
-                    </div>
-                    
-                    <div className="p-8 border-t border-white/5 bg-black/40">
-                       <div className="relative max-w-4xl mx-auto">
-                          <input 
-                            placeholder={`Спросить о состоянии ${selectedPatient?.firstName}...`} 
-                            className="w-full h-16 rounded-2xl bg-white/5 border-none px-8 font-bold text-white shadow-inner focus:ring-4 focus:ring-primary/10 transition-all pr-16"
-                          />
-                          <button className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-xl hover:scale-110 transition-all">
-                             <Zap className="h-5 w-5 text-slate-950" />
-                          </button>
-                       </div>
-                    </div>
-                 </div>
-               ) : (
-                 <div className="h-full p-10 bg-[#010411]">
-                    <textarea 
-                      placeholder="Ваши врачебные заметки по пациенту..." 
-                      className="w-full h-full bg-transparent border-none text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed"
-                    />
-                 </div>
-               )}
+            <div className="flex-1 relative overflow-hidden bg-[#010411]">
+               <textarea 
+                value={activeFile.content}
+                onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })}
+                className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide"
+                spellCheck={false}
+               />
             </div>
           </>
         )}
+      </div>
+
+      {/* 3. ПРАВАЯ ПАНЕЛЬ: ИИ-Чат и Настройки Моделей */}
+      <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
+        <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
+           <div className="p-4 border-b border-white/5 flex justify-center">
+              <TabsList className="bg-white/5 border border-white/10 rounded-xl h-10 p-1 w-full grid grid-cols-2">
+                 <TabsTrigger value="chat" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                    <MessageSquare className="h-3 w-3 mr-1.5" /> Анализ
+                 </TabsTrigger>
+                 <TabsTrigger value="models" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950">
+                    <Cpu className="h-3 w-3 mr-1.5" /> Модели
+                 </TabsTrigger>
+              </TabsList>
+           </div>
+
+           <div className="flex-1 min-h-0 overflow-hidden">
+              <TabsContent value="chat" className="h-full m-0 p-0 flex flex-col outline-none">
+                 <ScrollArea className="flex-1 p-5">
+                    <div className="space-y-6">
+                       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-4 shadow-inner">
+                          <div className="flex items-center gap-2 text-primary">
+                             <Bot className="h-4 w-4" />
+                             <span className="text-[10px] font-black uppercase tracking-widest">Medical Assistant</span>
+                          </div>
+                          <p className="text-xs font-medium text-white/70 italic leading-relaxed">
+                             Я готов проанализировать локальные данные{activeFile ? ` из файла "${activeFile.name}"` : ''} для пациента {selectedPatient?.firstName || '...'}. Задайте вопрос.
+                          </p>
+                       </div>
+                    </div>
+                 </ScrollArea>
+                 
+                 <div className="p-4 bg-black/40 border-t border-white/5">
+                    <div className="relative">
+                       <textarea 
+                         rows={3}
+                         placeholder="Спросить ИИ о записях..." 
+                         className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10"
+                       />
+                       <button className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all">
+                          <Zap className="h-4 w-4 text-slate-950" />
+                       </button>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-white/20">
+                       <span>Shield Engine AES-512</span>
+                       <span className="flex items-center gap-1"><Monitor className="h-2 w-2" /> WebGPU Active</span>
+                    </div>
+                 </div>
+              </TabsContent>
+
+              <TabsContent value="models" className="h-full m-0 p-5 overflow-y-auto outline-none">
+                 <div className="space-y-6 pb-20">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
+                       <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
+                          <div className="space-y-1">
+                             <p className="text-sm font-black text-white">BioGemini 2.0</p>
+                             <p className="text-[8px] font-bold text-primary uppercase">Installed & Optimized</p>
+                          </div>
+                          <Zap className="h-5 w-5 text-primary animate-pulse" />
+                       </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Доступные библиотеки</label>
+                       <div className="grid gap-2">
+                          {availableModels.map(model => (
+                            <div key={model.id} className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col gap-3 hover:bg-white/10 transition-colors">
+                               <div className="flex justify-between items-start">
+                                  <div className="space-y-0.5">
+                                     <p className="text-xs font-bold text-white">{model.name}</p>
+                                     <p className="text-[8px] font-black text-white/30 uppercase">{model.type} • {model.size}</p>
+                                  </div>
+                                  <Badge variant="outline" className={cn("text-[7px] border-none", model.status === 'installed' ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/40")}>
+                                     {model.status === 'installed' ? 'ГОТОВО' : '4.8 GB'}
+                                  </Badge>
+                               </div>
+                               {model.status === 'available' ? (
+                                 <Button variant="outline" size="sm" className="w-full h-8 rounded-lg bg-white/5 border-white/10 text-white font-black text-[9px] uppercase tracking-widest hover:bg-primary hover:text-slate-950 border-none transition-all">
+                                    <Download className="h-3 w-3 mr-2" /> СКАЧАТЬ МОДЕЛЬ
+                                 </Button>
+                               ) : (
+                                 <div className="flex gap-2">
+                                    <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-lg bg-white/5 text-white font-black text-[9px] uppercase tracking-widest border border-white/5 hover:border-red-500/50 hover:text-red-400">
+                                       <Trash2 className="h-3 w-3 mr-2" /> УДАЛИТЬ
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg bg-white/5 text-white flex items-center justify-center border border-white/5">
+                                       <Terminal className="h-3 w-3" />
+                                    </Button>
+                                 </div>
+                               )}
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-dashed border-white/10 bg-white/[0.02] flex items-start gap-3">
+                       <Info className="h-4 w-4 text-white/20 shrink-0 mt-0.5" />
+                       <p className="text-[8px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
+                          Вы можете скачивать веса моделей на диск для работы в самолете или в местах без связи. Обработка идет через WebGPU вашего ПК.
+                       </p>
+                    </div>
+                 </div>
+              </TabsContent>
+           </div>
+        </Tabs>
       </div>
     </div>
   );
 }
 
-function TreeNode({ node, onToggle, level = 0 }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number }) {
+function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number, activeFileName?: string }) {
+  const isActive = activeFileName === node.name;
+
   return (
     <div className="flex flex-col">
       <button 
         onClick={() => onToggle(node)}
         className={cn(
-          "flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all hover:bg-white/5 text-left group",
-          node.kind === 'directory' ? "text-white/60" : "text-white/40"
+          "flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all text-left group",
+          isActive ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-white/5 text-white/40"
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
         {node.kind === 'directory' ? (
           node.isOpen ? <FolderOpen className="h-3.5 w-3.5 text-primary/60" /> : <Folder className="h-3.5 w-3.5 text-primary/40" />
         ) : (
-          <File className="h-3.5 w-3.5 text-white/20 group-hover:text-primary/40 transition-colors" />
+          <File className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-white/20 group-hover:text-primary/40")} />
         )}
-        <span className="text-[11px] font-medium truncate">{node.name}</span>
+        <span className={cn("text-[11px] font-medium truncate", isActive && "font-black")}>{node.name}</span>
+        {!node.children && node.kind === 'file' && isActive && (
+          <Zap className="h-2 w-2 ml-auto text-primary animate-pulse" />
+        )}
       </button>
       {node.isOpen && node.children && (
         <div className="flex flex-col">
           {node.children.map((child, i) => (
-            <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} />
+            <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />
           ))}
         </div>
       )}
     </div>
   );
 }
-
-function Badge({ children, variant, className }: any) {
-  return <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 font-bold", className)}>{children}</span>;
-}
-
