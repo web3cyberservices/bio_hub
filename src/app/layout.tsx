@@ -1,4 +1,3 @@
-
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -43,7 +42,6 @@ export default function RootLayout({
           src="https://telegram.org/js/telegram-web-app.js" 
           strategy="beforeInteractive" 
         />
-        {/* Регистрация Service Worker */}
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

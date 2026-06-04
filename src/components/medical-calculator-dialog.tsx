@@ -82,7 +82,6 @@ export function MedicalCalculatorDialog() {
       setLoading(true);
 
       const H_dl = H_raw > 30 ? H_raw / 10 : H_raw;
-      const H_gl = H_raw <= 30 ? H_raw * 10 : H_raw;
       
       const indices: IndexResult[] = [];
 
@@ -183,9 +182,10 @@ export function MedicalCalculatorDialog() {
       });
 
       if (MR !== undefined && !isNaN(MR) && HH !== undefined && !isNaN(HH)) {
+        // 9. M-H
         const mh = MR - HH;
         indices.push({
-          name: "M-H Index",
+          name: "M-H",
           value: parseFloat(mh.toFixed(3)),
           interpretation: mh > 11.5 ? 'Талассемия' : 'ЖДА',
           isThal: mh > 11.5,
@@ -194,6 +194,7 @@ export function MedicalCalculatorDialog() {
           sens: 97.4, spec: 96.0
         });
 
+        // 10. M-H-R (Индекс Уречаги)
         const mhr = MR - HH - Dw;
         indices.push({
           name: "M-H-R (Индекс Уречаги)",
@@ -281,7 +282,7 @@ export function MedicalCalculatorDialog() {
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32">
+        <div className="flex-1 overflow-y-auto bg-blue-950/40 backdrop-blur-3xl p-6 md:p-10 space-y-10 pb-32 no-scrollbar">
           {!results ? (
             <div className="space-y-10 animate-in fade-in duration-500">
               <div className="space-y-4">

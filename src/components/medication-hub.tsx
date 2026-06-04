@@ -144,7 +144,7 @@ export function MedicationHub() {
       </div>
 
       <Dialog open={isAdding} onOpenChange={setIsAdding}>
-        <DialogContent className="w-[95vw] md:max-w-[600px] rounded-[2.5rem] bg-[#010411] p-0 overflow-hidden border border-white/10 shadow-2xl">
+        <DialogContent className="w-[95vw] md:max-w-[600px] rounded-[2.5rem] bg-[#010411] p-0 overflow-hidden border border-white/10 shadow-2xl z-[1200]">
           <DialogHeader className="p-8 bg-primary text-slate-950 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-90" />
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter relative z-10">Добавить курс</DialogTitle>

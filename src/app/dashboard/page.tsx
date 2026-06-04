@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -223,7 +222,7 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center gap-1.5 md:gap-2">
-              <MedicalCalculatorDialog />
+              {profileType === 'specialist' && <MedicalCalculatorDialog />}
               <BeautyIndicatorsDialog />
               {userData?.gender === 'женский' && (
                 <CycleTrackerDialog selectedDate={selectedDate} />
@@ -259,7 +258,7 @@ function DashboardContent() {
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 min-h-0 overflow-hidden relative">
           <div className="w-full h-full flex flex-col">
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
@@ -372,7 +371,7 @@ function DashboardContent() {
               <button onClick={() => setActiveTab('profile')} className={cn("transition-all shrink-0 p-2", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-5 w-5" /></button>
            </div>
         </div>
-      </header>
+      </main>
     </div>
   );
 }
