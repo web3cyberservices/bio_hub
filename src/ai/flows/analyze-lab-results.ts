@@ -31,7 +31,12 @@ const AnalyzeLabOutputSchema = z.object({
 export type AnalyzeLabOutput = z.infer<typeof AnalyzeLabOutputSchema>;
 
 export async function analyzeLabResults(input: AnalyzeLabInput): Promise<AnalyzeLabOutput> {
-  return analyzeLabResultsFlow(input);
+  try {
+    return await analyzeLabResultsFlow(input);
+  } catch (error: any) {
+    console.error("[SERVER-ACTION] Lab Flow Error:", error);
+    throw new Error(error.message || 'Ошибка распознавания. Попробуйте загрузить более четкое фото бланка.');
+  }
 }
 
 const labPrompt = ai.definePrompt({

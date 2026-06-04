@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview ИИ-поток для глубокого анализа бьюти-показателей.
- * Оптимизирован для предотвращения таймаутов (408) и ложных срабатываний фильтров.
+ * Оптимизировано для предотвращения таймаутов (408) и ложных срабатываний фильтров.
  */
 
 import {ai} from '@/ai/genkit';
@@ -28,7 +28,12 @@ const BeautyOutputSchema = z.object({
 });
 
 export async function analyzeBeauty(input: z.infer<typeof BeautyInputSchema>) {
-  return analyzeBeautyFlow(input);
+  try {
+    return await analyzeBeautyFlow(input);
+  } catch (error: any) {
+    console.error("[SERVER-ACTION] Beauty Flow Error:", error);
+    throw new Error(error.message || 'Ошибка обработки ИИ. Попробуйте еще раз.');
+  }
 }
 
 const beautyPrompt = ai.definePrompt({
@@ -36,7 +41,7 @@ const beautyPrompt = ai.definePrompt({
   input: {schema: BeautyInputSchema},
   output: {schema: BeautyOutputSchema},
   config: {
-    // Отключаем все фильтры, так как медицинские/бьюти снимки часто ложно блокируются
+    // Отключаем все фильтры для исключения ложных блокировок медицинских фото
     safetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
@@ -49,7 +54,7 @@ const beautyPrompt = ai.definePrompt({
 
 КОНТЕКСТ:
 Возраст: {{userContext.age}}. Описание: {{{description}}}
-Медиа: {{#if photoDataUri}}{{media url=photoDataUri}}{{else}}Нет фото.{{/if}}
+{{#if photoDataUri}}Медиа: {{media url=photoDataUri}}{{/if}}
 
 ПРАВИЛА:
 1. НОГТИ: ищи волны (дефицит железа), пятна (цинк), ломкость или изменение цвета.

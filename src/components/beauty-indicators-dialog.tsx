@@ -45,14 +45,14 @@ export function BeautyIndicatorsDialog() {
   const hubTitle = isMale ? 'Био-Эстетика' : 'Bio-Beauty Hub';
   const mainButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
 
-  // Функция сжатия изображения перед отправкой
+  // Функция агрессивного сжатия изображения для предотвращения Error 500
   const compressImage = (dataUri: string): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1024;
-        const MAX_HEIGHT = 1024;
+        const MAX_WIDTH = 800; // Уменьшено для стабильности
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -72,7 +72,8 @@ export function BeautyIndicatorsDialog() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        // Качество 0.5 для экономии памяти сервера
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
       };
       img.src = dataUri;
     });
@@ -97,25 +98,24 @@ export function BeautyIndicatorsDialog() {
         finalImage = await compressImage(image);
       }
 
-      const analysis = await analyzeBeauty({
+      const response = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
         photoDataUri: finalImage || undefined,
         userContext: { age: userData?.age, healthGoal: userData?.healthGoal }
       });
       
-      if (analysis) {
-        setResult(analysis);
+      if (response) {
+        setResult(response);
         toast({ title: 'Анализ завершен' });
-      } else {
-        throw new Error('ИИ не вернул результат. Попробуйте еще раз.');
       }
     } catch (e: any) {
       console.error("Beauty analysis error:", e);
+      // Next.js в продакшене скрывает детали 500 ошибки, поэтому выводим общий совет
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: e.message || 'Произошла ошибка при обработке данных. Попробуйте сделать фото четче.' 
+        description: 'Сервер перегружен или фото слишком большое. Попробуйте сделать снимок менее детальным или сократить описание.' 
       });
     } finally {
       setLoading(false);
@@ -125,10 +125,6 @@ export function BeautyIndicatorsDialog() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 20 * 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер 20MB' });
-        return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => { setImage(reader.result as string); setResult(null); };
       reader.readAsDataURL(file);
