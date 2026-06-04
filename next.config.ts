@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://telegram.org; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.telegram.org; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://telegram.org; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.telegram.org https://telegram.org https://www.transparenttextures.com https://fonts.gstatic.com https://fonts.googleapis.com https://placehold.co https://picsum.photos https://images.unsplash.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;",
           },
           {
             key: 'X-Frame-Options',
