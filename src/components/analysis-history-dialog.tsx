@@ -14,16 +14,17 @@ import {
   History, FileText, Calendar, 
   ChevronRight, FlaskConical, Loader2,
   TrendingUp, TrendingDown, CheckCircle2,
-  AlertCircle, ArrowLeft, Zap, Download
+  AlertCircle, ArrowLeft, Zap, Download, Database
 } from 'lucide-react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { downloadLabResultsDocx } from '@/lib/docx-generator';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 interface AnalysisHistoryDialogProps {
   children: React.ReactNode;
@@ -33,6 +34,10 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
   const { user } = useUser();
   const { firestore } = useFirestore();
   const [selectedLab, setSelectedLab] = useState<any | null>(null);
+  const [obsidianSyncing, setObsidianSyncing] = useState(false);
+
+  const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const labsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -58,6 +63,26 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
   const handleDownload = (e: React.MouseEvent, lab: any) => {
     e.stopPropagation();
     downloadLabResultsDocx(lab);
+  };
+
+  const handleObsidianSync = async (e: React.MouseEvent, lab: any) => {
+    e.stopPropagation();
+    if (!userData?.obsidianConnected) return;
+
+    setObsidianSyncing(true);
+    try {
+      const dateKey = safeFormatDate(lab.createdAt, 'yyyy-MM-dd');
+      await syncToObsidian({
+        type: 'lab',
+        date: dateKey,
+        payload: lab
+      });
+      // toast({ title: 'Синхронизировано с Obsidian' });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setObsidianSyncing(false);
+    }
   };
 
   return (
@@ -90,14 +115,28 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
               </div>
             </div>
             {selectedLab && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={(e) => handleDownload(e, selectedLab)}
-                className="rounded-xl bg-slate-950/10 text-slate-950 hover:bg-black/10 border border-black/10 font-black uppercase text-[10px] gap-2"
-              >
-                <Download className="h-3 w-3" /> <span className="hidden sm:inline">Скачать DOCX</span>
-              </Button>
+              <div className="flex gap-2">
+                {userData?.obsidianConnected && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    disabled={obsidianSyncing}
+                    onClick={(e) => handleObsidianSync(e, selectedLab)}
+                    className="rounded-xl bg-slate-950/10 text-slate-950 hover:bg-black/10 border border-black/10 font-black uppercase text-[10px] gap-2"
+                  >
+                    <Database className={cn("h-3 w-3", obsidianSyncing && "animate-spin")} /> 
+                    <span className="hidden sm:inline">В Obsidian</span>
+                  </Button>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={(e) => handleDownload(e, selectedLab)}
+                  className="rounded-xl bg-slate-950/10 text-slate-950 hover:bg-black/10 border border-black/10 font-black uppercase text-[10px] gap-2"
+                >
+                  <Download className="h-3 w-3" /> <span className="hidden sm:inline">Скачать DOCX</span>
+                </Button>
+              </div>
             )}
           </div>
           {!selectedLab && <History className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-950/10 rotate-12" />}
@@ -175,7 +214,7 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                                   "text-[8px] h-4 px-1 border-none",
                                   marker.status === 'high' ? "bg-red-500/20 text-red-500" : 
                                   marker.status === 'low' ? "bg-yellow-500/20 text-yellow-500" : 
-                                  "bg-emerald-500/20 text-emerald-500"
+                                  "bg-emerald-500/20 text-emerald-400"
                                 )}
                               >
                                 {marker.status === 'normal' ? 'В НОРМЕ' : marker.status === 'high' ? 'ВЫШЕ НОРМЫ' : 'НИЖЕ НОРМЫ'}

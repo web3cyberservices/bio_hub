@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { analyzeMeal } from '@/ai/flows/analyze-meal';
 import { ProductsMenuGenerator } from './products-menu-generator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 interface PersonalMealPlanProps {
   selectedDate: Date;
@@ -48,6 +49,9 @@ export function PersonalMealPlan({ selectedDate, patientId }: PersonalMealPlanPr
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const effectiveUid = patientId || user?.uid;
+
+  const userDocRef = useMemoFirebase(() => effectiveUid ? doc(firestore!, 'users', effectiveUid) : null, [effectiveUid, firestore]);
+  const { data: userData } = useDoc<any>(userDocRef);
 
   const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -113,7 +117,7 @@ export function PersonalMealPlan({ selectedDate, patientId }: PersonalMealPlanPr
 
     setLoading(true);
     try {
-      await addDoc(collection(firestore, 'users', effectiveUid, 'personalMeals'), {
+      const mealData = {
         date: dateKey,
         name,
         time,
@@ -121,9 +125,20 @@ export function PersonalMealPlan({ selectedDate, patientId }: PersonalMealPlanPr
         protein: Number(protein) || 0,
         fat: Number(fat) || 0,
         carbs: Number(carbs) || 0,
-        assignedBy: patientId ? user?.uid : null, // Пометка, что назначено специалистом
+        assignedBy: patientId ? user?.uid : null,
         createdAt: new Date().toISOString()
-      });
+      };
+
+      await addDoc(collection(firestore, 'users', effectiveUid, 'personalMeals'), mealData);
+
+      // Синхронизация с Obsidian
+      if (userData?.obsidianConnected && !patientId) {
+        await syncToObsidian({
+          type: 'meal',
+          date: dateKey,
+          payload: mealData
+        });
+      }
 
       toast({ title: patientId ? 'План обновлен' : 'Блюдо добавлено' });
       setName(''); setCalories(''); setProtein(''); setFat(''); setCarbs('');

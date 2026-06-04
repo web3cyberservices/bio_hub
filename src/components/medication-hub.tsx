@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useState, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, addDoc, doc, deleteDoc, orderBy } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 export function MedicationHub() {
   const { user } = useUser();
@@ -30,6 +31,9 @@ export function MedicationHub() {
   const [time, setTime] = useState('09:00');
   const [mealRelation, setMealRelation] = useState('независимо от еды');
 
+  const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
+  const { data: userData } = useDoc<any>(userDocRef);
+
   const medsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(
@@ -39,6 +43,16 @@ export function MedicationHub() {
   }, [firestore, user?.uid]);
 
   const { data: meds, isLoading } = useCollection<any>(medsQuery);
+
+  // Автосинхронизация при изменении списка лекарств
+  useEffect(() => {
+    if (userData?.obsidianConnected && meds) {
+      syncToObsidian({
+        type: 'medication',
+        payload: meds
+      });
+    }
+  }, [meds, userData?.obsidianConnected]);
 
   const handleAdd = async () => {
     if (!firestore || !user?.uid || !name) return;

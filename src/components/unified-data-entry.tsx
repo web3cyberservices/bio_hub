@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -83,9 +84,23 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
       };
 
       await setDoc(docRef, logData, { merge: true });
+
+      // Синхронизация с Obsidian
+      if (userData?.obsidianConnected) {
+        await syncToObsidian({
+          type: 'daily',
+          date: dateKey,
+          payload: logData
+        });
+      }
+
       setIsSuccess(true);
       toast({ title: 'Данные синхронизированы' });
-    } catch (e) { toast({ variant: 'destructive', title: 'Ошибка сохранения' }); } finally { setLoading(false); }
+    } catch (e) { 
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' }); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const addWater = (amount: number) => {
