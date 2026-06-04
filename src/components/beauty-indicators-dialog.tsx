@@ -11,9 +11,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Sparkles, Scissors, Fingerprint, Smile, 
-  Stethoscope, Info, Camera, Upload, X, 
-  Loader2, Droplets, Zap, AlertCircle, CheckCircle2,
-  Mic, ArrowLeft
+  Stethoscope, Camera, X, 
+  Loader2, Droplets, Zap, CheckCircle2,
+  Mic
 } from 'lucide-react';
 import { analyzeBeauty } from '@/ai/flows/analyze-beauty';
 import { useToast } from '@/hooks/use-toast';
@@ -59,27 +59,11 @@ export function BeautyIndicatorsDialog() {
     setResult(null); 
     
     try {
-      const birthDate = userData?.birthDate;
-      let age = undefined;
-      if (birthDate) {
-        try {
-          const parts = birthDate.split('.');
-          const bDate = parts.length === 3 
-            ? new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10))
-            : new Date(birthDate);
-          if (!isNaN(bDate.getTime())) {
-            age = new Date().getFullYear() - bDate.getFullYear();
-          }
-        } catch (e) {
-          console.warn("Age calculation failed", e);
-        }
-      }
-
       const analysis = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
         photoDataUri: image || undefined,
-        userContext: { age, healthGoal: userData?.healthGoal }
+        userContext: { age: userData?.age, healthGoal: userData?.healthGoal }
       });
       
       if (analysis) {

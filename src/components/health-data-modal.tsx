@@ -116,20 +116,20 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
               updatedAt: serverTimestamp(),
             }, { merge: true });
 
-            toast({ title: "Синхронизация завершена", description: "Данные получены." });
+            toast({ title: "Синхронизация завершена", description: "Данные Health Connect получены." });
             onClose();
           }
         } else {
-          toast({ variant: 'destructive', title: "Доступ отклонен", description: "Разрешите доступ в системе Android." });
+          toast({ variant: 'destructive', title: "Доступ отклонен", description: "Разрешите доступ в настройках системы Android." });
         }
       } else {
         toast({
-          title: "Облачная синхронизация",
-          description: "Инициируем подключение к Google Fit API...",
+          title: "Нативный мост не найден",
+          description: "Эта функция доступна только в приложении Bio Hub Pro для Android (TWA).",
         });
       }
     } catch (error) {
-      toast({ variant: 'destructive', title: "Ошибка синхронизации" });
+      toast({ variant: 'destructive', title: "Ошибка синхронизации", description: "Убедитесь, что Health Connect установлен и настроен." });
     } finally {
       setLoading(false);
     }
@@ -164,17 +164,13 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
               className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white gap-4 hover:bg-white/10 transition-all group overflow-hidden relative"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {isNative ? (
-                <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/20 mr-1">
-                   <Zap className="h-4 w-4 text-primary" />
-                </div>
-              ) : (
-                <Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={20} height={20} alt="Google" />
-              )}
+              <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/20 mr-1">
+                 <Zap className="h-4 w-4 text-primary" />
+              </div>
               <div className="flex flex-col items-start leading-none z-10">
                 <span className="text-[11px] font-black uppercase tracking-tight">Подключить трекеры здоровья</span>
                 <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">
-                  {isNative ? 'Native Health Connect' : 'Google Health Sync'}
+                  Health Connect JS Bridge
                 </span>
               </div>
               <RefreshCw className={cn("h-4 w-4 ml-auto text-primary/40 group-hover:rotate-180 transition-transform duration-500", loading && "animate-spin")} />
@@ -183,7 +179,7 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-start gap-3">
                <Info className="h-4 w-4 text-primary/40 shrink-0 mt-0.5" />
                <p className="text-[9px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
-                 Данные будут получены напрямую без ввода пароля через защищенный нативный шлюз.
+                 Нативный мост вызовет системное окно Android для бесшовного получения данных без паролей.
                </p>
             </div>
           </div>
