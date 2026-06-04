@@ -13,9 +13,7 @@ import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, 
-  Upload, Instagram, Brain, ShieldCheck,
-  LogOut, Database, Zap, BookOpen, CheckCircle2,
-  UtensilsCrossed, Timer
+  Upload, LogOut, Database, BookOpen, Timer
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -96,7 +94,6 @@ export function ProfileCabinet() {
     },
   });
 
-  const profileType = form.watch('profileType');
   const currentPhotoUrl = form.watch('photoUrl');
 
   useEffect(() => {
@@ -319,7 +316,7 @@ export function ProfileCabinet() {
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><UtensilsCrossed className="h-4 w-4" /> 4. Образ жизни и Питание</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Activity className="h-4 w-4" /> 4. Образ жизни и Питание</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="smoking" render={({ field }) => (
@@ -331,10 +328,10 @@ export function ProfileCabinet() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods')} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods', (v) => form.setValue('favoriteFoods', v))} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Исключить <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods')} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                  <FormItem><FormLabel className="flex items-center justify-between">Исключить <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods', (v) => form.setValue('dislikedFoods', v))} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
                 )} />
               </div>
             </Card>
