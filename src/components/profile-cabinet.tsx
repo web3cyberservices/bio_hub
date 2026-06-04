@@ -12,17 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
-  Pill, Mic, Briefcase, Info, ImageIcon,
-  UtensilsCrossed, Upload, X, CheckCircle2, Instagram, Brain, ShieldCheck,
-  Calendar as CalendarIcon, LogOut
+  Pill, Mic, Briefcase, Info, 
+  Upload, Instagram, Brain, ShieldCheck,
+  LogOut, Database, Zap, BookOpen, CheckCircle2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
+import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -58,6 +59,9 @@ export function ProfileCabinet() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [recordingField, setRecordingField] = useState<string | null>(null);
+  const [obsidianLoading, setObsidianLoading] = useState(false);
+  const [obsidianVault, setObsidianVault] = useState<string | null>(null);
+  const [isObsidianSupported, setIsObsidianSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
@@ -93,7 +97,27 @@ export function ProfileCabinet() {
   const profileType = form.watch('profileType');
   const currentPhotoUrl = form.watch('photoUrl');
 
-  useEffect(() => { 
+  useEffect(() => {
+    setIsObsidianSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
+    
+    const checkObsidianAccess = async () => {
+      if (userData?.obsidianConnected) {
+        try {
+          const handle = await getInIdb('obsidian_vault_handle');
+          if (handle) {
+            const hasPermission = await verifyPermission(handle, false);
+            if (hasPermission) {
+              setObsidianVault(handle.name);
+            } else {
+              setObsidianVault(null); // Требуется повторный запрос прав
+            }
+          }
+        } catch (err) {
+          console.error("Obsidian access error:", err);
+        }
+      }
+    };
+
     if (userData) {
       form.reset({ 
         ...userData,
@@ -119,8 +143,59 @@ export function ProfileCabinet() {
         workActivityType: userData.workActivityType || 'mental',
         workHoursPerDay: userData.workHoursPerDay || 0,
       }); 
+      checkObsidianAccess();
     } 
   }, [userData, form]);
+
+  const verifyPermission = async (handle: any, readWrite: boolean) => {
+    const options: any = {};
+    if (readWrite) {
+      options.mode = 'readwrite';
+    }
+    if ((await handle.queryPermission(options)) === 'granted') {
+      return true;
+    }
+    if ((await handle.requestPermission(options)) === 'granted') {
+      return true;
+    }
+    return false;
+  };
+
+  const handleConnectObsidian = async () => {
+    if (!isObsidianSupported) return;
+    
+    setObsidianLoading(true);
+    try {
+      // 1. Вызываем системное окно выбора папки
+      const handle = await (window as any).showDirectoryPicker({
+        mode: 'readwrite'
+      });
+
+      // 2. Сохраняем хэндл в IndexedDB
+      await setInIdb('obsidian_vault_handle', handle);
+
+      // 3. Обновляем статус в Firestore
+      if (user && firestore) {
+        await updateDoc(doc(firestore, 'users', user.uid), {
+          obsidianConnected: true,
+          obsidianVaultName: handle.name,
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      setObsidianVault(handle.name);
+      toast({ 
+        title: 'Obsidian подключен', 
+        description: `База данных "${handle.name}" успешно привязана локально.` 
+      });
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: 'Ошибка подключения', description: 'Не удалось получить доступ к папке.' });
+      }
+    } finally {
+      setObsidianLoading(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,7 +263,6 @@ export function ProfileCabinet() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           
-          {/* ФОТО */}
           <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
@@ -208,7 +282,6 @@ export function ProfileCabinet() {
             </div>
           </Card>
 
-          {/* 1. ЛИЧНЫЕ ДАННЫЕ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Info className="h-4 w-4" /> 1. Личные данные</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -217,22 +290,7 @@ export function ProfileCabinet() {
                 <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField 
-                  control={form.control} 
-                  name="birthDate" 
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Дата рождения (ДД.ММ.ГГГГ)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="01.01.1990" 
-                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" 
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )} 
-                />
+                <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения (ДД.ММ.ГГГГ)</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="profileType" render={({ field }) => (
                   <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-900 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
                 )} />
@@ -240,7 +298,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 2. БИОМЕТРИЯ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Activity className="h-4 w-4" /> 2. Биометрия</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -262,7 +319,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 3. ОБРАЗ ЖИЗНИ И ПИТАНИЕ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><UtensilsCrossed className="h-4 w-4" /> 3. Образ жизни и Питание</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
@@ -288,7 +344,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 4. ПРОФЕССИЯ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Профессиональная деятельность</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -305,7 +360,6 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          {/* 5. ПРОФИЛЬ ЭКСПЕРТА (для врачей) */}
           {profileType === 'specialist' && (
             <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2 px-2"><ShieldCheck className="h-4 w-4" /> 5. Профиль эксперта</h3>
@@ -332,7 +386,67 @@ export function ProfileCabinet() {
              </Card>
           </div>
 
-          {/* КНОПКА ВЫХОДА */}
+          {/* ИНТЕГРАЦИЯ OBSIDIAN */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> Интеграция Obsidian</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="space-y-2 flex-1">
+                     <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-primary" /> База знаний Obsidian
+                     </h4>
+                     <p className="text-xs text-white/50 font-medium leading-relaxed max-w-md">
+                        Подключите локальное хранилище Obsidian для синхронизации ваших медицинских заметок и ИИ-анализа. Данные хранятся только на вашем устройстве.
+                     </p>
+                     <div className="flex items-center gap-2 mt-4">
+                        <span className={cn(
+                          "h-2 w-2 rounded-full",
+                          obsidianVault ? "bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]" : "bg-red-500"
+                        )} />
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest",
+                          obsidianVault ? "text-emerald-400" : "text-red-400"
+                        )}>
+                           {obsidianVault ? `Подключено: ${obsidianVault}` : "Не подключено"}
+                        </span>
+                     </div>
+                  </div>
+                  <div className="w-full md:w-auto">
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      disabled={!isObsidianSupported || obsidianLoading}
+                      onClick={handleConnectObsidian}
+                      className={cn(
+                        "w-full md:w-auto h-16 px-8 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all relative group",
+                        obsidianVault 
+                          ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/5" 
+                          : "border-primary/20 text-primary hover:border-primary/60 hover:shadow-[0_0_20px_rgba(0,255,255,0.2)]"
+                      )}
+                    >
+                      {obsidianLoading ? <Loader2 className="animate-spin h-5 w-5" /> : (
+                        <div className="flex items-center gap-2">
+                          <Zap className={cn("h-4 w-4", !obsidianVault && "animate-pulse")} />
+                          {obsidianVault ? "ОБНОВИТЬ ДОСТУП" : "ПОДКЛЮЧИТЬ OBSIDIAN"}
+                        </div>
+                      )}
+                      {!isObsidianSupported && (
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] text-white/30">
+                          Доступно только в десктопной версии
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+               </div>
+               <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-4">
+                  <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
+                  <p className="text-[9px] font-bold text-white/50 uppercase leading-relaxed tracking-wider">
+                    Ваши файлы не передаются на сервер. Приложение использует File System Access API для локальной обработки .md файлов.
+                  </p>
+               </div>
+            </Card>
+          </div>
+
           <Card className="cyber-card bg-red-950/20 p-8 flex flex-col gap-4 border-red-500/20">
              <h3 className="font-black uppercase flex items-center gap-2 text-red-500/60 text-xs tracking-widest"><LogOut className="h-5 w-5" /> Сессия</h3>
              <Button 
