@@ -6,7 +6,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger 
+  DialogTrigger,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -77,7 +78,6 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
         date: dateKey,
         payload: lab
       });
-      // toast({ title: 'Синхронизировано с Obsidian' });
     } catch (err) {
       console.error(err);
     } finally {
@@ -109,6 +109,9 @@ export function AnalysisHistoryDialog({ children }: AnalysisHistoryDialogProps) 
                 <DialogTitle className="text-xl md:text-3xl font-black tracking-tighter text-slate-950">
                   {selectedLab ? 'Детали анализа' : 'История анализов'}
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Архив медицинских анализов и интерпретаций ИИ.
+                </DialogDescription>
                 <p className="text-slate-950/60 text-[10px] md:text-sm font-black uppercase tracking-widest mt-0.5">
                   {selectedLab ? safeFormatDate(selectedLab.createdAt, 'd MMMM yyyy') : 'Ваш медицинский архив'}
                 </p>

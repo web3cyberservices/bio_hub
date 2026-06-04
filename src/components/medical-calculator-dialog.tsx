@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
-  DialogTrigger, DialogFooter 
+  DialogTrigger, DialogFooter, DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -281,6 +281,7 @@ export function MedicalCalculatorDialog() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
           <div className="relative z-10">
             <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-slate-950">Калькулятор</DialogTitle>
+            <DialogDescription className="sr-only">Инструмент дифференциальной диагностики анемий на основе гематологических индексов.</DialogDescription>
             <p className="text-slate-950/60 font-black uppercase text-[10px] tracking-widest mt-1">Диф. диагностика: 10 Индексов + HPLC</p>
           </div>
           <FlaskConical className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />

@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, 
+  DialogTrigger, DialogDescription 
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Camera, Upload, Sparkles, X, Loader2, Activity, FlaskConical, 
@@ -85,7 +88,6 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
 
       await setDoc(docRef, logData, { merge: true });
 
-      // Синхронизация с Obsidian
       if (userData?.obsidianConnected) {
         await syncToObsidian({
           type: 'daily',
@@ -152,6 +154,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
           <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-[#00ffff]/80 opacity-95" />
           <div className="relative z-10">
             <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-slate-950">Bio-Синхронизация</DialogTitle>
+            <DialogDescription className="sr-only">Центр ввода биометрических данных, питания и результатов анализов.</DialogDescription>
             <p className="text-slate-950/60 font-black uppercase text-[10px] md:text-xs tracking-[0.3em] mt-1">{format(selectedDate, 'd MMMM yyyy', { locale: ru })}</p>
           </div>
           <Zap className="absolute -right-8 -bottom-8 h-32 w-32 text-slate-950/10 rotate-12" />

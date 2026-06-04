@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
-  DialogTrigger 
+  DialogTrigger, DialogDescription
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -126,6 +126,7 @@ export function BeautyIndicatorsDialog() {
           isMale ? "bg-gradient-to-br from-cyan-600 to-blue-700" : "bg-gradient-to-br from-pink-600 to-purple-600"
         )}>
           <DialogTitle className="text-2xl md:text-4xl font-black uppercase tracking-tighter">{hubTitle}</DialogTitle>
+          <DialogDescription className="sr-only">Визуальная ИИ-диагностика состояния волос, кожи, ногтей и зубов.</DialogDescription>
           <p className="text-white/60 font-black uppercase text-[10px] tracking-widest mt-1">Интеллектуальная диагностика эстетики</p>
         </DialogHeader>
 

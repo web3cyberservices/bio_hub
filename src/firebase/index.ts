@@ -3,14 +3,17 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  Firestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from 'firebase/firestore';
 
 let app: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
-
-// Глобальный флаг для предотвращения повторной инициализации персистенции
-let persistenceAttempted = false;
 
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
@@ -22,23 +25,14 @@ export function initializeFirebase() {
       }
 
       auth = getAuth(app);
-      firestore = getFirestore(app);
-
-      // Попытка включения оффлайн-режима только один раз
-      if (!persistenceAttempted) {
-        persistenceAttempted = true;
-        enableMultiTabIndexedDbPersistence(firestore).catch((err: any) => {
-          if (err.code === 'failed-precondition') {
-            console.warn("Firestore Persistence: Multiple tabs open.");
-          } else if (err.code === 'unimplemented') {
-            console.warn("Firestore Persistence: Browser not supported.");
-          } else if (err.message?.includes('already been started')) {
-            // Игнорируем, если уже запущено
-          } else {
-            console.error("Firestore Persistence Error:", err);
-          }
-        });
-      }
+      
+      // Использование современного способа инициализации кэша (Firebase 10.3+)
+      // persistentMultipleTabManager заменяет устаревший метод persistence
+      firestore = initializeFirestore(app, {
+        cache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
 
       return {
         firebaseApp: app,
