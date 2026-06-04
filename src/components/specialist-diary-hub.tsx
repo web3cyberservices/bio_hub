@@ -3,26 +3,26 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
-import { Card } from '@/components/ui/card';
+import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, FileText, Plus, Search, 
   ShieldCheck, Loader2, User, ChevronRight,
-  Database, Zap, X, Trash2, Edit3, MessageSquare, Quote
+  Database, Zap, X, Trash2, Folder, FolderOpen,
+  File, RefreshCw, Info, AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  getSourcesLocal, 
-  saveSourceLocal, 
-  deleteSourceLocal, 
-  updateSourceContent,
-  DiarySource 
-} from '@/lib/local-diary-storage';
-import { AISpecialistChat } from './ai-specialist-chat';
+import { get as getInIdb, set as setInIdb } from 'idb-keyval';
+
+interface FileNode {
+  name: string;
+  kind: 'file' | 'directory';
+  handle: FileSystemFileHandle | FileSystemDirectoryHandle;
+  children?: FileNode[];
+  isOpen?: boolean;
+}
 
 export function SpecialistDiaryHub() {
   const { user } = useUser();
@@ -30,10 +30,11 @@ export function SpecialistDiaryHub() {
   const { toast } = useToast();
   
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [sources, setSources] = useState<DiarySource[]>([]);
-  const [isUploading, setIsAddingSource] = useState(false);
+  const [rootHandle, setRootHandle] = useState<FileSystemDirectoryHandle | null>(null);
+  const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'notes'>('chat');
   const [loading, setLoading] = useState(false);
+  const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
   // Получаем список пациентов врача из Firestore
   const patientsQuery = useMemoFirebase(() => {
@@ -44,56 +45,99 @@ export function SpecialistDiaryHub() {
   const { data: patients, isLoading: patientsLoading } = useCollection<any>(patientsQuery);
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
 
-  // Загрузка локальных источников при смене пациента
   useEffect(() => {
-    if (selectedPatientId) {
-      loadLocalData();
-    }
-  }, [selectedPatientId]);
+    setIsFileSystemSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
+    checkPersistedFolder();
+  }, []);
 
-  const loadLocalData = async () => {
-    if (!selectedPatientId) return;
-    const localSources = await getSourcesLocal(selectedPatientId);
-    setSources(localSources);
+  const checkPersistedFolder = async () => {
+    try {
+      const handle = await getInIdb('specialist_diary_root_handle');
+      if (handle) {
+        // Проверяем права (браузер сбрасывает их после перезагрузки)
+        const options = { mode: 'readwrite' };
+        if ((await (handle as any).queryPermission(options)) === 'granted') {
+          setRootHandle(handle);
+          refreshFileTree(handle);
+        }
+      }
+    } catch (err) {
+      console.error("IDB Error:", err);
+    }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedPatientId) return;
-
+  const refreshFileTree = async (handle: FileSystemDirectoryHandle) => {
     setLoading(true);
     try {
-      const text = await file.text(); // Упрощенно для TXT. Для PDF/DOCX нужны доп. библиотеки.
-      const newSource: DiarySource = {
-        id: Math.random().toString(36).substr(2, 9),
-        patientId: selectedPatientId,
-        name: file.name,
-        content: text,
-        type: file.name.endsWith('.pdf') ? 'pdf' : 'txt',
-        createdAt: new Date().toISOString()
-      };
-      await saveSourceLocal(newSource);
-      await loadLocalData();
-      toast({ title: 'Файл загружен локально' });
+      const nodes = await scanDirectory(handle);
+      setFileTree(nodes);
     } catch (err) {
-      toast({ variant: 'destructive', title: 'Ошибка загрузки' });
+      console.error("Scan error:", err);
     } finally {
       setLoading(false);
-      setIsAddingSource(false);
     }
   };
 
-  const handleDeleteSource = async (id: string) => {
-    await deleteSourceLocal(id);
-    await loadLocalData();
-    toast({ title: 'Источник удален' });
+  const scanDirectory = async (handle: FileSystemDirectoryHandle): Promise<FileNode[]> => {
+    const nodes: FileNode[] = [];
+    for await (const entry of (handle as any).values()) {
+      nodes.push({
+        name: entry.name,
+        kind: entry.kind,
+        handle: entry,
+        isOpen: false
+      });
+    }
+    return nodes.sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
   };
 
-  if (patientsLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-12 w-12 text-primary" /></div>;
+  const handleSelectRootFolder = async () => {
+    if (!isFileSystemSupported) return;
+    try {
+      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+      await setInIdb('specialist_diary_root_handle', handle);
+      setRootHandle(handle);
+      refreshFileTree(handle);
+      toast({ title: 'Папка подключена', description: `Проводник знаний: ${handle.name}` });
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: 'Ошибка доступа', description: 'Не удалось открыть папку.' });
+      }
+    }
+  };
+
+  const toggleFolder = async (node: FileNode) => {
+    if (node.kind !== 'directory') return;
+    
+    const newTree = [...fileTree];
+    const updateNode = (list: FileNode[]): boolean => {
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].handle === node.handle) {
+          list[i].isOpen = !list[i].isOpen;
+          if (list[i].isOpen && !list[i].children) {
+            scanDirectory(list[i].handle as FileSystemDirectoryHandle).then(children => {
+              list[i].children = children;
+              setFileTree([...newTree]);
+            });
+          }
+          return true;
+        }
+        if (list[i].children && updateNode(list[i].children!)) return true;
+      }
+      return false;
+    };
+    updateNode(newTree);
+    setFileTree(newTree);
+  };
+
+  if (patientsLoading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
     <div className="flex h-[calc(100vh-120px)] bg-[#010411] text-white rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
-      {/* ЛЕВАЯ ПАНЕЛЬ: ПАЦИЕНТЫ И ИСТОЧНИКИ */}
+      {/* ЛЕВАЯ ПАНЕЛЬ */}
       <div className="w-80 border-r border-white/5 flex flex-col bg-black/40">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
@@ -102,7 +146,6 @@ export function SpecialistDiaryHub() {
              </div>
              <h2 className="text-lg font-black uppercase tracking-tight">Дневник врача</h2>
           </div>
-          
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl flex items-center gap-2">
              <ShieldCheck className="h-3 w-3 text-emerald-400" />
              <span className="text-[8px] font-black uppercase text-emerald-400/80 tracking-widest">Local Security Mode Active</span>
@@ -110,68 +153,82 @@ export function SpecialistDiaryHub() {
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-4 space-y-8">
+          <div className="p-4 space-y-8 pb-20">
             {/* Список пациентов */}
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Пациенты</label>
-              {patients?.map((p: any) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPatientId(p.id)}
-                  className={cn(
-                    "w-full p-3 rounded-2xl flex items-center gap-3 transition-all",
-                    selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5"
-                  )}
-                >
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-xs">
-                    {p.firstName?.charAt(0)}
-                  </div>
-                  <span className="flex-1 text-left text-sm font-bold truncate">{p.firstName} {p.lastName}</span>
-                  {selectedPatientId === p.id && <ChevronRight className="h-4 w-4" />}
-                </button>
-              ))}
-            </div>
-
-            {/* Источники выбранного пациента */}
-            {selectedPatientId && (
-              <div className="space-y-4 animate-in fade-in duration-500">
-                <div className="flex items-center justify-between px-2">
-                  <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Источники ({sources.length})</label>
-                  <button onClick={() => setIsAddingSource(true)} className="text-primary hover:text-white transition-colors">
-                    <Plus className="h-4 w-4" />
+              <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Выбор пациента</label>
+              <div className="space-y-1">
+                {patients?.map((p: any) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPatientId(p.id)}
+                    className={cn(
+                      "w-full p-3 rounded-2xl flex items-center gap-3 transition-all",
+                      selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5"
+                    )}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-xs">
+                      {p.firstName?.charAt(0)}
+                    </div>
+                    <span className="flex-1 text-left text-sm font-bold truncate">{p.firstName} {p.lastName}</span>
+                    {selectedPatientId === p.id && <ChevronRight className="h-4 w-4" />}
                   </button>
-                </div>
-                
-                {isUploading && (
-                  <div className="p-3 border-2 border-dashed border-primary/30 rounded-2xl bg-primary/5">
-                    <label className="cursor-pointer flex flex-col items-center gap-2">
-                      <Database className="h-6 w-6 text-primary/60" />
-                      <span className="text-[9px] font-black uppercase text-primary">Выбрать PDF/TXT</span>
-                      <input type="file" className="hidden" onChange={handleFileUpload} accept=".txt,.pdf,.docx" />
-                    </label>
+                ))}
+                {(!patients || patients.length === 0) && (
+                  <div className="p-4 text-center border border-white/5 rounded-2xl opacity-30">
+                    <p className="text-[10px] font-black uppercase tracking-widest">Пациенты не найдены</p>
                   </div>
                 )}
-
-                <div className="space-y-2">
-                  {sources.map(source => (
-                    <div key={source.id} className="group p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                       <div className="flex items-center gap-3 truncate">
-                          <FileText className="h-4 w-4 text-primary/40 shrink-0" />
-                          <span className="text-[11px] font-medium truncate">{source.name}</span>
-                       </div>
-                       <button onClick={() => handleDeleteSource(source.id)} className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all">
-                          <Trash2 className="h-3.5 w-3.5" />
-                       </button>
-                    </div>
-                  ))}
-                </div>
               </div>
-            )}
+            </div>
+
+            {/* Проводник знаний (Локальные файлы) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Проводник знаний</label>
+                {rootHandle && (
+                  <button onClick={handleSelectRootFolder} className="text-white/20 hover:text-primary transition-colors">
+                    <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+                  </button>
+                )}
+              </div>
+
+              {!rootHandle ? (
+                <div className="p-4 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center gap-3 text-center">
+                   <Folder className="h-8 w-8 text-primary/60" />
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase text-white">Локальная база</p>
+                      <p className="text-[8px] text-white/40 uppercase leading-relaxed">Выберите папку с медицинскими записями на вашем ПК</p>
+                   </div>
+                   <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSelectRootFolder} 
+                    disabled={!isFileSystemSupported}
+                    className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest"
+                   >
+                     {isFileSystemSupported ? 'ВЫБРАТЬ ПАПКУ' : 'НЕДОСТУПНО'}
+                   </Button>
+                   {!isFileSystemSupported && <p className="text-[7px] text-red-400 font-bold uppercase">Требуется Chrome/Edge на десктопе</p>}
+                </div>
+              ) : (
+                <div className="space-y-1 animate-in fade-in duration-500">
+                  <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[10px] truncate mb-2">
+                     <FolderOpen className="h-3.5 w-3.5" /> {rootHandle.name}
+                  </div>
+                  <div className="space-y-0.5">
+                    {fileTree.map((node, i) => (
+                      <TreeNode key={i} node={node} onToggle={toggleFolder} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </ScrollArea>
       </div>
 
-      {/* ПРАВАЯ ПАНЕЛЬ: ЧАТ И ЗАМЕТКИ */}
+      {/* ПРАВАЯ ПАНЕЛЬ */}
       <div className="flex-1 flex flex-col relative bg-black/20">
         {!selectedPatientId ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-4">
@@ -202,13 +259,15 @@ export function SpecialistDiaryHub() {
                     <div className="flex-1 p-6 md:p-10 space-y-6 overflow-y-auto">
                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4 max-w-2xl">
                           <p className="text-sm font-medium text-white/70 italic leading-relaxed">
-                            Я проанализировал {sources.length} локальных файлов этого пациента. Задайте любой вопрос, и я найду ответы с указанием источников.
+                            ИИ готов анализировать локальные файлы для пациента <strong>{selectedPatient?.firstName}</strong>. 
+                            Выберите файлы слева, чтобы они стали частью контекста.
                           </p>
-                          <div className="flex flex-wrap gap-2">
-                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase font-black px-3 py-1">Анализ симптомов</Badge>
-                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase font-black px-3 py-1">Сводка по анализам</Badge>
-                             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase font-black px-3 py-1">Прогноз дефицитов</Badge>
-                          </div>
+                          {!rootHandle && (
+                            <div className="flex items-center gap-3 text-orange-400/60 bg-orange-400/5 p-3 rounded-xl border border-orange-400/10">
+                               <AlertTriangle className="h-4 w-4 shrink-0" />
+                               <span className="text-[9px] font-black uppercase">Локальная база знаний не подключена</span>
+                            </div>
+                          )}
                        </div>
                     </div>
                     
@@ -240,6 +299,36 @@ export function SpecialistDiaryHub() {
   );
 }
 
+function TreeNode({ node, onToggle, level = 0 }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number }) {
+  return (
+    <div className="flex flex-col">
+      <button 
+        onClick={() => onToggle(node)}
+        className={cn(
+          "flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all hover:bg-white/5 text-left group",
+          node.kind === 'directory' ? "text-white/60" : "text-white/40"
+        )}
+        style={{ paddingLeft: `${level * 12 + 8}px` }}
+      >
+        {node.kind === 'directory' ? (
+          node.isOpen ? <FolderOpen className="h-3.5 w-3.5 text-primary/60" /> : <Folder className="h-3.5 w-3.5 text-primary/40" />
+        ) : (
+          <File className="h-3.5 w-3.5 text-white/20 group-hover:text-primary/40 transition-colors" />
+        )}
+        <span className="text-[11px] font-medium truncate">{node.name}</span>
+      </button>
+      {node.isOpen && node.children && (
+        <div className="flex flex-col">
+          {node.children.map((child, i) => (
+            <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Badge({ children, variant, className }: any) {
   return <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 font-bold", className)}>{children}</span>;
 }
+
