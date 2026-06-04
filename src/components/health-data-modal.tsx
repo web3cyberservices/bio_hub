@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, 
   DialogFooter 
@@ -10,13 +10,14 @@ import { Input } from '@/components/ui/input';
 import { 
   Footprints, Heart, Moon, Scale, 
   Save, Loader2, RefreshCw, Zap, CheckCircle2,
-  Info, AlertCircle
+  Info, AlertCircle, Smartphone
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { isNativeBridgeAvailable, requestNativePermissions, fetchNativeHealthData } from '@/lib/health-bridge';
 
 type HealthDataType = 'steps' | 'heartRate' | 'sleep' | 'weight';
 
@@ -31,6 +32,11 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
   const { toast } = useToast();
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    setIsNative(isNativeBridgeAvailable());
+  }, []);
 
   if (!type) return null;
 
@@ -90,12 +96,45 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
     }
   };
 
-  const handleGoogleSync = () => {
-    console.log("Триггер OAuth Google для типа:", type);
-    toast({
-      title: "Синхронизация",
-      description: "Инициируем подключение к Google Health Connect...",
-    });
+  const handleSyncTrigger = async () => {
+    setLoading(true);
+    try {
+      if (isNative) {
+        // Сценарий Android Health Connect (TWA)
+        const allowed = await requestNativePermissions();
+        if (allowed) {
+          const data = await fetchNativeHealthData();
+          if (data && user && firestore) {
+            const dateKey = format(new Date(), 'yyyy-MM-dd');
+            const logRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
+            
+            await setDoc(logRef, {
+              steps: data.steps || undefined,
+              avgHeartRate: data.heartRate || undefined,
+              sleepDurationHours: data.sleepHours || undefined,
+              weight: data.weight || undefined,
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+
+            toast({ title: "Синхронизация завершена", description: "Данные из Health Connect получены." });
+            onClose();
+          }
+        } else {
+          toast({ variant: 'destructive', title: "Доступ отклонен", description: "Разрешите доступ в системном окне Android." });
+        }
+      } else {
+        // Сценарий Cloud Google Fit (PWA/Web)
+        console.log("Triggering OAuth Flow...");
+        toast({
+          title: "Облачная синхронизация",
+          description: "Инициируем подключение к Google Fit API...",
+        });
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Ошибка синхронизации" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,11 +155,53 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
         </DialogHeader>
 
         <div className="p-8 space-y-8 bg-blue-950/40 backdrop-blur-3xl">
-          {/* РУЧНОЙ ВВОД */}
+          {/* СИНХРОНИЗАЦИЯ (ПРИОРИТЕТ) */}
           <div className="space-y-4">
             <label className="text-[10px] font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2">
-              <Zap className="h-3 w-3" /> Ручной ввод ({config.unit})
+              <Smartphone className="h-3 w-3" /> Автоматический трекинг
             </label>
+            <Button 
+              variant="outline" 
+              onClick={handleSyncTrigger}
+              disabled={loading}
+              className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white gap-4 hover:bg-white/10 transition-all group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              {isNative ? (
+                <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/20 mr-1">
+                   <Zap className="h-4 w-4 text-primary" />
+                </div>
+              ) : (
+                <Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={20} height={20} alt="Google" />
+              )}
+              <div className="flex flex-col items-start leading-none z-10">
+                <span className="text-[11px] font-black uppercase tracking-tight">Подключить трекеры здоровья</span>
+                <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">
+                  {isNative ? 'Native Health Connect (Android)' : 'Google Health Sync'}
+                </span>
+              </div>
+              <RefreshCw className={cn("h-4 w-4 ml-auto text-primary/40 group-hover:rotate-180 transition-transform duration-500", loading && "animate-spin")} />
+            </Button>
+            
+            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-start gap-3">
+               <Info className="h-4 w-4 text-primary/40 shrink-0 mt-0.5" />
+               <p className="text-[9px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
+                 {isNative 
+                   ? 'Данные будут получены напрямую из Health Connect без ввода пароля.'
+                   : 'Поддержка Apple Watch, Oura Ring и Garmin через единый профиль Google Health.'}
+               </p>
+            </div>
+          </div>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
+            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
+              <span className="bg-[#0c1221] px-4 text-white/30">Или ручной ввод</span>
+            </div>
+          </div>
+
+          {/* РУЧНОЙ ВВОД */}
+          <div className="space-y-4">
             <div className="relative">
               <Input 
                 type="number" 
@@ -140,37 +221,6 @@ export function HealthDataModal({ type, onClose }: HealthDataModalProps) {
             >
               {loading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : <Save className="mr-2 h-5 w-5" />} СОХРАНИТЬ В ХАБ
             </Button>
-          </div>
-
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
-            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
-              <span className="bg-[#0c1221] px-4 text-white/30">Или внешние датчики</span>
-            </div>
-          </div>
-
-          {/* СИНХРОНИЗАЦИЯ */}
-          <div className="space-y-4">
-            <Button 
-              variant="outline" 
-              onClick={handleGoogleSync}
-              className="w-full h-16 rounded-2xl border-2 border-white/10 bg-white/5 text-white gap-4 hover:bg-white/10 transition-all group overflow-hidden relative"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-red-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Image src="https://www.gstatic.com/firebase/explore/images/goog-logo.svg" width={20} height={20} alt="Google" />
-              <div className="flex flex-col items-start leading-none z-10">
-                <span className="text-[11px] font-black uppercase tracking-tight">Синхронизировать через Google</span>
-                <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-1">Health Connect / Wear OS</span>
-              </div>
-              <RefreshCw className="h-4 w-4 ml-auto text-primary/40 group-hover:rotate-180 transition-transform duration-500" />
-            </Button>
-            
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-start gap-3">
-               <Info className="h-4 w-4 text-primary/40 shrink-0 mt-0.5" />
-               <p className="text-[9px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
-                 Поддержка Apple Watch, Oura Ring и Garmin через единый профиль Google Health.
-               </p>
-            </div>
           </div>
         </div>
 

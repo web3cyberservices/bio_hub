@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,9 +6,10 @@ import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { syncGoogleFitData } from '@/app/actions/sync-google-fit';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { isNativeBridgeAvailable, fetchNativeHealthData } from '@/lib/health-bridge';
 
 /**
- * Хук-агрегатор для PWA. 
+ * Хук-агрегатор для PWA/TWA. 
  * Реализует фоновую синхронизацию данных при входе в приложение.
  */
 export function useHealthAggregator() {
@@ -22,48 +22,51 @@ export function useHealthAggregator() {
     const triggerBackgroundSync = async () => {
       if (!user || user.uid === 'public-user' || !firestore) return;
 
-      const token = sessionStorage.getItem('google_fit_token');
-      if (!token) return;
-
       setIsSyncing(true);
       try {
-        // 1. Проверяем время последней синхронизации
-        const userRef = doc(firestore, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        const lastSync = userDoc.data()?.lastHealthSync;
-        const startTime = lastSync ? new Date(lastSync).getTime() : Date.now() - 3600000; // 1 час назад если нет данных
+        const dateKey = format(new Date(), 'yyyy-MM-dd');
+        const dailyRef = doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
 
-        // 2. Подтягиваем данные из Google Fit (включает данные из Health Connect)
-        const rawData = await syncGoogleFitData(token, startTime);
+        // 1. ПРИОРИТЕТ: Нативный мост (Android TWA)
+        if (isNativeBridgeAvailable()) {
+          const nativeData = await fetchNativeHealthData();
+          if (nativeData) {
+            await setDoc(dailyRef, {
+              steps: nativeData.steps || undefined,
+              avgHeartRate: nativeData.heartRate || undefined,
+              sleepDurationHours: nativeData.sleepHours || undefined,
+              updatedAt: serverTimestamp(),
+              syncSource: 'native_bridge'
+            }, { merge: true });
+            console.log('[HEALTH-AGGREGATOR] Native sync success');
+            setIsSyncing(false);
+            return;
+          }
+        }
 
-        // 3. Сохраняем в rawDeviceData для Bio-Hub
-        const dateKey = format(new Date(), 'yyyy-MM-dd-HH-mm');
-        const rawRef = doc(firestore, 'users', user.uid, 'rawDeviceData', dateKey);
-        
-        await setDoc(rawRef, {
-          ...rawData,
-          userId: user.uid,
-          timestamp: serverTimestamp(),
-          clientPlatform: navigator.platform,
-          userAgent: navigator.userAgent
-        });
+        // 2. РЕЗЕРВ: Облачная синхронизация Google Fit (если есть токен)
+        const token = sessionStorage.getItem('google_fit_token');
+        if (token) {
+          const userRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          const lastSync = userDoc.data()?.lastHealthSync;
+          const startTime = lastSync ? new Date(lastSync).getTime() : Date.now() - 3600000;
 
-        // 4. Дублируем в dailyLogs для обновления дашборда
-        const dailyKey = format(new Date(), 'yyyy-MM-dd');
-        const dailyRef = doc(firestore, 'users', user.uid, 'dailyLogs', dailyKey);
-        await setDoc(dailyRef, {
-          steps: rawData.steps || undefined,
-          avgHeartRate: rawData.heartRate || undefined,
-          sleepDurationHours: rawData.sleepHours || undefined,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+          const rawData = await syncGoogleFitData(token, startTime);
+          
+          await setDoc(dailyRef, {
+            steps: rawData.steps || undefined,
+            avgHeartRate: rawData.heartRate || undefined,
+            sleepDurationHours: rawData.sleepHours || undefined,
+            updatedAt: serverTimestamp(),
+            syncSource: 'cloud_fit'
+          }, { merge: true });
 
-        // Обновляем время последней синхронизации в профиле
-        await setDoc(userRef, { lastHealthSync: new Date().toISOString() }, { merge: true });
-
-        console.log('--- Health Aggregator: Background sync completed ---');
+          await setDoc(userRef, { lastHealthSync: new Date().toISOString() }, { merge: true });
+          console.log('[HEALTH-AGGREGATOR] Cloud sync success');
+        }
       } catch (e) {
-        console.error('--- Health Aggregator: Sync failed ---', e);
+        console.error('[HEALTH-AGGREGATOR] Sync error:', e);
       } finally {
         setIsSyncing(false);
       }
