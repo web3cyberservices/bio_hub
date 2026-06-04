@@ -14,7 +14,8 @@ import {
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, 
   Upload, Instagram, Brain, ShieldCheck,
-  LogOut, Database, Zap, BookOpen, CheckCircle2
+  LogOut, Database, Zap, BookOpen, CheckCircle2,
+  UtensilsCrossed
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -109,7 +110,7 @@ export function ProfileCabinet() {
             if (hasPermission) {
               setObsidianVault(handle.name);
             } else {
-              setObsidianVault(null); // Требуется повторный запрос прав
+              setObsidianVault(null);
             }
           }
         } catch (err) {
@@ -152,11 +153,15 @@ export function ProfileCabinet() {
     if (readWrite) {
       options.mode = 'readwrite';
     }
-    if ((await handle.queryPermission(options)) === 'granted') {
-      return true;
-    }
-    if ((await handle.requestPermission(options)) === 'granted') {
-      return true;
+    try {
+      if ((await handle.queryPermission(options)) === 'granted') {
+        return true;
+      }
+      if ((await handle.requestPermission(options)) === 'granted') {
+        return true;
+      }
+    } catch (e) {
+      return false;
     }
     return false;
   };
@@ -166,15 +171,12 @@ export function ProfileCabinet() {
     
     setObsidianLoading(true);
     try {
-      // 1. Вызываем системное окно выбора папки
       const handle = await (window as any).showDirectoryPicker({
         mode: 'readwrite'
       });
 
-      // 2. Сохраняем хэндл в IndexedDB
       await setInIdb('obsidian_vault_handle', handle);
 
-      // 3. Обновляем статус в Firestore
       if (user && firestore) {
         await updateDoc(doc(firestore, 'users', user.uid), {
           obsidianConnected: true,
@@ -386,7 +388,6 @@ export function ProfileCabinet() {
              </Card>
           </div>
 
-          {/* ИНТЕГРАЦИЯ OBSIDIAN */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> Интеграция Obsidian</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -437,12 +438,6 @@ export function ProfileCabinet() {
                       )}
                     </Button>
                   </div>
-               </div>
-               <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-4">
-                  <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-                  <p className="text-[9px] font-bold text-white/50 uppercase leading-relaxed tracking-wider">
-                    Ваши файлы не передаются на сервер. Приложение использует File System Access API для локальной обработки .md файлов.
-                  </p>
                </div>
             </Card>
           </div>
