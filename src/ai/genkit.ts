@@ -8,7 +8,8 @@ import { googleAI } from '@genkit-ai/google-genai';
  */
 export const ai = genkit({
   plugins: [
-    googleAI(),
+    // Явно указываем ключ из переменных окружения для стабильности на Vercel
+    googleAI({ apiKey: process.env.GEMINI_API_KEY }),
   ],
   // Используем актуальную модель Gemini 2.5 Flash
   model: googleAI.model('gemini-2.5-flash'),

@@ -21,6 +21,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import imageCompression from 'browser-image-compression';
 
 export function BeautyIndicatorsDialog() {
   const { user } = useUser();
@@ -45,35 +46,20 @@ export function BeautyIndicatorsDialog() {
   const hubTitle = isMale ? 'Био-Эстетика' : 'Bio-Beauty Hub';
   const mainButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
 
-  const compressImage = (dataUri: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 800;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.5));
-      };
-      img.src = dataUri;
-    });
+  const compressAndFormatImage = async (file: File): Promise<string> => {
+    const options = {
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1024,
+      useWebWorker: true,
+      fileType: 'image/jpeg'
+    };
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return await imageCompression.getDataUrlFromFile(compressedFile);
+    } catch (error) {
+      console.error("Compression error:", error);
+      throw error;
+    }
   };
 
   const handleAnalyze = async () => {
@@ -90,15 +76,10 @@ export function BeautyIndicatorsDialog() {
     setResult(null); 
     
     try {
-      let finalImage = null;
-      if (image) {
-        finalImage = await compressImage(image);
-      }
-
       const response = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
-        photoDataUri: finalImage || undefined,
+        photoDataUri: image || undefined,
         userContext: { age: userData?.age, healthGoal: userData?.healthGoal }
       });
       
@@ -111,22 +92,26 @@ export function BeautyIndicatorsDialog() {
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: e.message || 'Сервер перегружен. Попробуйте еще раз с меньшим фото.' 
+        description: e.message || 'Сервер перегружен. Попробуйте еще раз.' 
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => { 
-        setImage(reader.result as string); 
-        setResult(null); 
-      };
-      reader.readAsDataURL(file);
+      setLoading(true);
+      try {
+        const compressedDataUrl = await compressAndFormatImage(file);
+        setImage(compressedDataUrl);
+        setResult(null);
+      } catch (err) {
+        toast({ variant: 'destructive', title: 'Ошибка файла', description: 'Не удалось обработать изображение.' });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

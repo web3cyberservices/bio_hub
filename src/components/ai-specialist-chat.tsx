@@ -13,7 +13,8 @@ import {
   User, 
   Activity,
   Mic,
-  ArrowLeft
+  ArrowLeft,
+  Zap
 } from 'lucide-react';
 import { chatWithSpecialist } from '@/ai/flows/ai-specialist-chat';
 import { useToast } from '@/hooks/use-toast';
@@ -111,7 +112,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-transparent", className)}>
+    <div className={cn("flex flex-col h-full bg-transparent relative overflow-hidden", className)}>
       <div className="p-4 md:p-6 bg-primary/10 border-b flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           {onBack && (
@@ -197,6 +198,8 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
           </Button>
         </div>
       </div>
+      
+      <Zap className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-950/10 rotate-12 pointer-events-none" />
     </div>
   );
 }

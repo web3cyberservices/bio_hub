@@ -27,6 +27,7 @@ import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { syncToObsidian } from '@/lib/obsidian-sync';
+import imageCompression from 'browser-image-compression';
 
 interface UnifiedDataEntryProps {
   children: React.ReactNode;
@@ -65,6 +66,17 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     { id: 'anxiety', label: 'Тревожность' }, { id: 'insomnia', label: 'Плохой сон' },
     { id: 'hairloss', label: 'Выпадение волос' }, { id: 'dryskin', label: 'Сухость кожи' }
   ];
+
+  const compressFile = async (file: File): Promise<string> => {
+    const options = {
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+      fileType: 'image/jpeg'
+    };
+    const compressed = await imageCompression(file, options);
+    return await imageCompression.getDataUrlFromFile(compressed);
+  };
 
   const handleDailyLogSubmit = async () => {
     if (!firestore || !user?.uid) return;
@@ -105,26 +117,19 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
     }
   };
 
-  const addWater = (amount: number) => {
-    const current = Number(water) || 0;
-    setWater((current + amount).toString());
-  };
-
-  const toggleSymptom = (id: string) => {
-    const current = selectedSymptoms[id] || 0;
-    const next = current === 10 ? 0 : current + 2;
-    setSelectedSymptoms({ ...selectedSymptoms, [id]: next });
-  };
-
-  const startVoiceInput = (fieldName: string, setter: (val: string) => void) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.onstart = () => setRecordingField(fieldName);
-    recognition.onend = () => setRecordingField(null);
-    recognition.onresult = (event: any) => setter(event.results[0][0].transcript);
-    recognition.start();
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLoading(true);
+      try {
+        const compressedData = await compressFile(file);
+        setImage(compressedData);
+      } catch (err) {
+        toast({ variant: 'destructive', title: 'Ошибка сжатия', description: 'Не удалось обработать фото.' });
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleAnalyze = async () => {
@@ -182,7 +187,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                      <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase text-white/30 px-2 flex justify-between">Вода (мл) <span className="text-primary">{water || '0'} мл</span></label>
                         <div className="grid grid-cols-3 gap-2">
-                           {[100, 250, 500].map(v => <button key={v} onClick={() => addWater(v)} className="h-10 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black">+{v}</button>)}
+                           {[100, 250, 500].map(v => <button key={v} onClick={() => { const current = Number(water) || 0; setWater((current + v).toString()); }} className="h-10 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black">+{v}</button>)}
                         </div>
                         <Input placeholder="Свой объём" value={water} onChange={e => setWater(e.target.value)} className="h-12 bg-white/5 border-white/10 rounded-xl font-black text-center mt-2" />
                      </div>
@@ -200,7 +205,11 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {symptomList.map(sym => (
                                <div key={sym.id} className="p-3 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between">
-                                  <button onClick={() => toggleSymptom(sym.id)} className="font-bold text-white uppercase text-[10px]">{sym.label}</button>
+                                  <button onClick={() => {
+                                    const current = selectedSymptoms[sym.id] || 0;
+                                    const next = current === 10 ? 0 : current + 2;
+                                    setSelectedSymptoms({ ...selectedSymptoms, [sym.id]: next });
+                                  }} className="font-bold text-white uppercase text-[10px]">{sym.label}</button>
                                   <Badge variant="outline" className={cn("border-none text-[8px] font-black", selectedSymptoms[sym.id] ? "bg-primary text-slate-950" : "text-white/20")}>
                                      {selectedSymptoms[sym.id] ? `${selectedSymptoms[sym.id]}/10` : 'НЕТ'}
                                   </Badge>
@@ -213,7 +222,7 @@ export function UnifiedDataEntry({ children, selectedDate = new Date() }: Unifie
                 </TabsContent>
 
                 <TabsContent value="labs" className="space-y-6 outline-none">
-                  <label className="cursor-pointer group"><div className="h-48 rounded-[2.5rem] border-dashed border-2 border-white/10 flex flex-col items-center justify-center bg-white/5 hover:border-primary/40 transition-all text-white"><Upload className="h-12 w-12 text-primary mb-3" /><span className="text-sm font-black uppercase tracking-widest text-white/60">ЗАГРУЗИТЬ СКАН АНАЛИЗА</span></div><input type="file" className="hidden" accept="image/*" onChange={e => { const r = new FileReader(); r.onloadend = () => setImage(r.result as string); r.readAsDataURL(e.target.files![0]); }} /></label>
+                  <label className="cursor-pointer group"><div className="h-48 rounded-[2.5rem] border-dashed border-2 border-white/10 flex flex-col items-center justify-center bg-white/5 hover:border-primary/40 transition-all text-white"><Upload className="h-12 w-12 text-primary mb-3" /><span className="text-sm font-black uppercase tracking-widest text-white/60">ЗАГРУЗИТЬ СКАН АНАЛИЗА</span></div><input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} /></label>
                   {image && <div className="relative rounded-3xl overflow-hidden aspect-video border-4 border-white/5"><img src={image} className="w-full h-full object-cover" alt="Preview" /><Button variant="destructive" size="icon" className="absolute top-4 right-4 rounded-full" onClick={() => setImage(null)}><X className="h-5 w-5" /></Button></div>}
                   <Button className="w-full h-20 rounded-3xl bg-primary text-slate-950 font-black text-xl shadow-xl" onClick={handleAnalyze} disabled={!image || loading}>{loading ? <Loader2 className="animate-spin h-6 w-6" /> : <><Activity className="h-6 w-6 mr-3" /> АНАЛИЗИРОВАТЬ ЛАБ</>}</Button>
                 </TabsContent>
