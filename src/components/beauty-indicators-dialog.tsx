@@ -45,6 +45,39 @@ export function BeautyIndicatorsDialog() {
   const hubTitle = isMale ? 'Био-Эстетика' : 'Bio-Beauty Hub';
   const mainButtonLabel = isMale ? 'Эстетика' : 'Бьюти';
 
+  // Функция сжатия изображения перед отправкой
+  const compressImage = (dataUri: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1024;
+        const MAX_HEIGHT = 1024;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = dataUri;
+    });
+  };
+
   const handleAnalyze = async () => {
     if (!description && !image) {
       toast({ 
@@ -59,10 +92,15 @@ export function BeautyIndicatorsDialog() {
     setResult(null); 
     
     try {
+      let finalImage = image;
+      if (image) {
+        finalImage = await compressImage(image);
+      }
+
       const analysis = await analyzeBeauty({
         category: activeTab as any,
         description: description || undefined,
-        photoDataUri: image || undefined,
+        photoDataUri: finalImage || undefined,
         userContext: { age: userData?.age, healthGoal: userData?.healthGoal }
       });
       
@@ -77,7 +115,7 @@ export function BeautyIndicatorsDialog() {
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка анализа', 
-        description: e.message || 'ИИ временно недоступен или фото слишком большое.' 
+        description: e.message || 'Произошла ошибка при обработке данных. Попробуйте сделать фото четче.' 
       });
     } finally {
       setLoading(false);
@@ -87,8 +125,8 @@ export function BeautyIndicatorsDialog() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер 10MB' });
+      if (file.size > 20 * 1024 * 1024) {
+        toast({ variant: 'destructive', title: 'Файл слишком большой', description: 'Максимальный размер 20MB' });
         return;
       }
       const reader = new FileReader();
@@ -100,10 +138,10 @@ export function BeautyIndicatorsDialog() {
   const reset = () => { setDescription(''); setImage(null); setResult(null); };
 
   const categories = [
-    { id: 'hair', label: 'Волосы', icon: Scissors, color: 'text-orange-400', desc: 'Анализ состава и структуры' },
-    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: isMale ? 'text-cyan-400' : 'text-pink-400', desc: 'Поиск дефицитов' },
-    { id: 'skin', label: 'Кожа', icon: Droplets, color: 'text-cyan-400', desc: 'Диагностика текстуры' },
-    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Оценка эмали' },
+    { id: 'hair', label: 'Волосы', icon: Scissors, color: 'text-orange-400', desc: 'Анализ состава шампуня или структуры волос' },
+    { id: 'nails', label: 'Ногти', icon: Fingerprint, color: isMale ? 'text-cyan-400' : 'text-pink-400', desc: 'Поиск визуальных маркеров дефицитов' },
+    { id: 'skin', label: 'Кожа', icon: Droplets, color: 'text-cyan-400', desc: 'Диагностика текстуры и увлажненности' },
+    { id: 'teeth', label: 'Зубы', icon: Smile, color: 'text-white', desc: 'Оценка прозрачности эмали и налета' },
   ];
 
   return (
@@ -153,7 +191,7 @@ export function BeautyIndicatorsDialog() {
                        isMale ? "text-cyan-400/60" : "text-pink-400/60"
                      )}>{categories.find(c => c.id === activeTab)?.desc}</p>
                      <Textarea 
-                      placeholder="Опишите состояние или прикрепите фото для анализа..." 
+                      placeholder="Опишите симптомы или прикрепите макро-фото для глубокого анализа..." 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="min-h-[150px] rounded-3xl bg-white/5 border-white/10 p-6 text-base md:text-lg font-medium text-white shadow-inner resize-none focus:ring-primary/10"
@@ -177,7 +215,7 @@ export function BeautyIndicatorsDialog() {
                           <span className="text-[9px] font-black uppercase">ИИ Алгоритм</span>
                        </div>
                        <p className="text-[10px] font-bold text-white/40 leading-relaxed uppercase tracking-tight">
-                         ИИ распознает текстуру тканей и состав косметики на фото для выявления скрытых дефицитов.
+                         Для анализа ногтей используйте макро-съемку. ИИ ищет линии, точки и изменения текстуры.
                        </p>
                     </div>
                   </div>

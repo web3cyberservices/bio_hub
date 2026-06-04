@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview Оптимизированный анализ анализов.
- * Сокращены инструкции для снижения расхода токенов.
  */
 
 import {ai} from '@/ai/genkit';
@@ -40,11 +39,23 @@ const labPrompt = ai.definePrompt({
   input: {schema: AnalyzeLabInputSchema},
   output: {schema: AnalyzeLabOutputSchema},
   config: {
-    safetySettings: [{ category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }],
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
+    ],
   },
-  prompt: `Вы — мед.эксперт. Проведите OCR-анализ.
-Данные пользователя: {{userContext.gender}}, {{userContext.age}} лет.
-Правила: 1. Извлеките все маркеры. 2. Если нет нормы в бланке, рассчитайте персонально. 3. Ответ на русском.
+  prompt: `Вы — эксперт по клинической лабораторной диагностике. Проведите OCR-анализ бланка результатов.
+Данные пользователя: пол {{userContext.gender}}, возраст {{userContext.age}} лет.
+
+Правила:
+1. Извлеките все маркеры.
+2. Если норма не указана в бланке, рассчитайте её на основе возраста и пола.
+3. Обязательно добавьте интерпретацию для каждого отклонения.
+4. Ответ строго на русском.
+
 Фото: {{media url=photoDataUri}}`,
 });
 
@@ -56,9 +67,11 @@ const analyzeLabResultsFlow = ai.defineFlow(
   },
   async (input) => {
     return runWithRetry(async () => {
-      const {output} = await labPrompt(input);
-      if (!output) throw new Error('Ошибка распознавания');
+      const {output} = await labPrompt(input, {
+        model: googleAI.model('gemini-2.5-flash'),
+      });
+      if (!output) throw new Error('Ошибка распознавания. Попробуйте загрузить более четкое фото бланка.');
       return output;
-    }, 3);
+    }, 2);
   }
 );

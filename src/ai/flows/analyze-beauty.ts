@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview ИИ-поток для глубокого анализа бьюти-показателей.
- * Оптимизирован для предотвращения таймаутов (408).
+ * Оптимизирован для предотвращения таймаутов (408) и ложных срабатываний фильтров.
  */
 
 import {ai} from '@/ai/genkit';
@@ -36,8 +36,13 @@ const beautyPrompt = ai.definePrompt({
   input: {schema: BeautyInputSchema},
   output: {schema: BeautyOutputSchema},
   config: {
+    // Отключаем все фильтры, так как медицинские/бьюти снимки часто ложно блокируются
     safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
     ],
   },
   prompt: `Вы — эксперт Bio-Beauty Hub. Проведите быстрый анализ категории: {{category}}.
@@ -47,10 +52,11 @@ const beautyPrompt = ai.definePrompt({
 Медиа: {{#if photoDataUri}}{{media url=photoDataUri}}{{else}}Нет фото.{{/if}}
 
 ПРАВИЛА:
-1. НОГТИ: ищи волны (дефицит железа) или пятна.
-2. ШАМПУНЬ: OCR состава (сульфаты/силиконы).
-3. КОЖА/ЗУБЫ: текстура и эмаль.
-Ответ на русском. Начни с "На фото я вижу...". Будь краток.`,
+1. НОГТИ: ищи волны (дефицит железа), пятна (цинк), ломкость или изменение цвета.
+2. ШАМПУНЬ/КОСМЕТИКА: OCR состава (сульфаты/силиконы/парабены).
+3. КОЖА/ЗУБЫ: оценка текстуры, пор, увлажненности или прозрачности эмали.
+
+Ответ на русском. Начни с фразы "На фото я вижу...". Будь профессионален и краток.`,
 });
 
 const analyzeBeautyFlow = ai.defineFlow(
@@ -65,9 +71,9 @@ const analyzeBeautyFlow = ai.defineFlow(
         model: googleAI.model('gemini-2.5-flash'),
       });
       if (!output) {
-        throw new Error('ИИ не смог распознать изображение. Убедитесь, что фото четкое.');
+        throw new Error('ИИ не смог распознать изображение. Убедитесь, что фото четкое и не содержит посторонних объектов.');
       }
       return output;
-    }, 1);
+    }, 2); // 2 попытки
   }
 );
