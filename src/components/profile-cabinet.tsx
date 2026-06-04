@@ -104,11 +104,9 @@ export function ProfileCabinet() {
         try {
           const handle = await getInIdb('obsidian_vault_handle');
           if (handle) {
-            const hasPermission = await verifyPermission(handle, false);
-            if (hasPermission) {
+            const options = { mode: 'read' };
+            if ((await (handle as any).queryPermission(options)) === 'granted') {
               setObsidianVault(handle.name);
-            } else {
-              setObsidianVault(null);
             }
           }
         } catch (err) {
@@ -145,16 +143,6 @@ export function ProfileCabinet() {
       checkObsidianAccess();
     } 
   }, [userData, form]);
-
-  const verifyPermission = async (handle: any, readWrite: boolean) => {
-    const options: any = {};
-    if (readWrite) options.mode = 'readwrite';
-    try {
-      if ((await handle.queryPermission(options)) === 'granted') return true;
-      if ((await handle.requestPermission(options)) === 'granted') return true;
-    } catch (e) { return false; }
-    return false;
-  };
 
   const handleConnectObsidian = async () => {
     if (!isObsidianSupported) return;
@@ -315,39 +303,17 @@ export function ProfileCabinet() {
             </Card>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Activity className="h-4 w-4" /> 4. Образ жизни и Питание</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-8 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="smoking" render={({ field }) => (
-                  <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
-                )} />
-                <FormField control={form.control} name="alcohol" render={({ field }) => (
-                  <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Любимые продукты <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('favoriteFoods', (v) => form.setValue('favoriteFoods', v))} className={cn("h-8 w-8", recordingField === 'favoriteFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-                )} />
-                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center justify-between">Исключить <Button type="button" variant="ghost" size="icon" onClick={() => startVoiceInput('dislikedFoods', (v) => form.setValue('dislikedFoods', v))} className={cn("h-8 w-8", recordingField === 'dislikedFoods' && "bg-red-500 animate-pulse text-white")}><Mic className="h-4 w-4" /></Button></FormLabel><FormControl><Textarea {...field} className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-                )} />
-              </div>
-            </Card>
-          </div>
-
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
           </Button>
 
           <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> Интеграция Obsidian</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 4. Интеграция Obsidian</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-2 flex-1">
                      <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> База знаний Obsidian</h4>
-                     <p className="text-xs text-white/50 font-medium">Подключите локальное хранилище Obsidian для тотальной синхронизации вашего Цифрового Двойника.</p>
+                     <p className="text-xs text-white/50 font-medium">Подключите локальное хранилище Obsidian для синхронизации вашего Цифрового Двойника.</p>
                      <div className="flex items-center gap-2 mt-4">
                         <span className={cn("h-2 w-2 rounded-full", obsidianVault ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
                         <span className={cn("text-[10px] font-black uppercase", obsidianVault ? "text-emerald-400" : "text-red-400")}>

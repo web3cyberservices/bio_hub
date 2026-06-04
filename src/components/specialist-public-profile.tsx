@@ -98,7 +98,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
       console.warn('Copy failed:', err);
       toast({ 
         title: 'Копирование недоступно', 
-        description: 'Ваш браузер заблокировал доступ к буферу обмена. Используйте адресную строку.',
+        description: 'Ваш браузер заблокировал доступ к буферу обмена.',
         variant: 'destructive'
       });
     }

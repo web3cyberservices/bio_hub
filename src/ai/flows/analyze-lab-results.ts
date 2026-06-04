@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Оптимизированный анализ анализов.
+ * @fileOverview Оптимизированный анализ лабораторных отчетов.
  */
 
 import {ai} from '@/ai/genkit';
@@ -15,7 +15,6 @@ const AnalyzeLabInputSchema = z.object({
     gender: z.string().optional(),
   }).optional(),
 });
-export type AnalyzeLabInput = z.infer<typeof AnalyzeLabInputSchema>;
 
 const AnalyzeLabOutputSchema = z.object({
   summary: z.string().describe('Краткое заключение на русском'),
@@ -28,41 +27,15 @@ const AnalyzeLabOutputSchema = z.object({
   })),
   recommendations: z.array(z.string()).describe('2-3 совета')
 });
-export type AnalyzeLabOutput = z.infer<typeof AnalyzeLabOutputSchema>;
 
-export async function analyzeLabResults(input: AnalyzeLabInput): Promise<AnalyzeLabOutput> {
+export async function analyzeLabResults(input: z.infer<typeof AnalyzeLabInputSchema>): Promise<z.infer<typeof AnalyzeLabOutputSchema>> {
   try {
     return await analyzeLabResultsFlow(input);
   } catch (error: any) {
     console.error("[SERVER-ACTION] Lab Flow Error:", error);
-    throw new Error(error.message || 'Ошибка распознавания. Попробуйте загрузить более четкое фото бланка.');
+    throw new Error(error.message || 'Ошибка распознавания. Попробуйте сжать фото или сделать его четче.');
   }
 }
-
-const labPrompt = ai.definePrompt({
-  name: 'analyzeLabPrompt',
-  input: {schema: AnalyzeLabInputSchema},
-  output: {schema: AnalyzeLabOutputSchema},
-  config: {
-    safetySettings: [
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
-    ],
-  },
-  prompt: `Вы — эксперт по клинической лабораторной диагностике. Проведите OCR-анализ бланка результатов.
-Данные пользователя: пол {{userContext.gender}}, возраст {{userContext.age}} лет.
-
-Правила:
-1. Извлеките все маркеры.
-2. Если норма не указана в бланке, рассчитайте её на основе возраста и пола.
-3. Обязательно добавьте интерпретацию для каждого отклонения.
-4. Ответ строго на русском.
-
-Фото: {{media url=photoDataUri}}`,
-});
 
 const analyzeLabResultsFlow = ai.defineFlow(
   {
@@ -72,10 +45,32 @@ const analyzeLabResultsFlow = ai.defineFlow(
   },
   async (input) => {
     return runWithRetry(async () => {
-      const {output} = await labPrompt(input, {
+      const {output} = await ai.generate({
         model: googleAI.model('gemini-2.5-flash'),
+        prompt: [
+          { text: `Вы — эксперт по клинической лабораторной диагностике. Проведите OCR-анализ бланка результатов.
+          Данные пользователя: пол ${input.userContext?.gender || 'не указан'}, возраст ${input.userContext?.age || 'не указан'} лет.
+          
+          Правила:
+          1. Извлеките все маркеры.
+          2. Если норма не указана в бланке, рассчитайте её на основе возраста и пола.
+          3. Обязательно добавьте интерпретацию для каждого отклонения.
+          4. Ответ строго на русском.` },
+          { media: { url: input.photoDataUri } }
+        ],
+        output: { schema: AnalyzeLabOutputSchema },
+        config: {
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
+          ],
+        }
       });
-      if (!output) throw new Error('Ошибка распознавания. Попробуйте загрузить более четкое фото бланка.');
+
+      if (!output) throw new Error('Ошибка распознавания. Бланк не читается.');
       return output;
     }, 2);
   }
