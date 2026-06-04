@@ -28,7 +28,7 @@ import { MealsHub } from '@/components/meals-hub';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
 import { ActivitiesHub } from '@/components/activities-hub';
@@ -122,14 +122,14 @@ function DashboardContent() {
       const starts = logs
         .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
         .sort((a, b) => {
-           const da = a.timestamp?.toDate?.() || new Date(a.date);
-           const db = b.timestamp?.toDate?.() || new Date(b.date);
+           const da = a.timestamp?.toDate?.() || (a.date ? new Date(a.date) : new Date(0));
+           const db = b.timestamp?.toDate?.() || (b.date ? new Date(b.date) : new Date(0));
            return da.getTime() - db.getTime();
         });
 
       starts.forEach(start => {
-        const startDate = start.timestamp?.toDate?.() || new Date(start.date + 'T00:00:00');
-        if (!isValid(startDate)) return; // Защита от некорректных дат
+        const startDate = start.timestamp?.toDate?.() || (start.date ? new Date(start.date + 'T00:00:00') : null);
+        if (!startDate || !isValid(startDate)) return;
 
         const duration = start.cycle?.periodDuration || 5;
         

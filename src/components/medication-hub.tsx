@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Pill, Plus, Trash2, CheckCircle2, 
   Clock, Loader2, Save, X, Calendar, 
-  ChevronRight, AlertCircle, Info, Mic
+  ChevronRight, AlertCircle, Info, Mic, Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';

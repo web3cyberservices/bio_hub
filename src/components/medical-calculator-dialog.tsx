@@ -113,7 +113,7 @@ export function MedicalCalculatorDialog() {
       });
 
       // 3. Green and King
-      const greenKing = (V * V * Dw) / (10 * H_dl);
+      const greenKing = (V * V * Dw) / (10 * H_raw);
       indices.push({
         name: "Green and King",
         value: parseFloat(greenKing.toFixed(3)),
@@ -197,7 +197,7 @@ export function MedicalCalculatorDialog() {
           sens: 97.4, spec: 96.0
         });
 
-        // 10. M-H-R (Индекс Уречаги)
+        // 10. M-H-R
         const mhr = MR - HH - Dw;
         indices.push({
           name: "M-H-R",
