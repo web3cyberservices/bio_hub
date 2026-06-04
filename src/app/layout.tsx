@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
   title: 'Bio Hub Pro | Ваш персональный ИИ нутрициолог',
   description: 'Индивидуальные рекомендации по питанию, образу жизни и добавкам на основе ваших данных и анализов.',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: 'https://placehold.co/32x32/010411/00ffff?text=🧬',
+    apple: 'https://placehold.co/180x180/010411/00ffff?text=🧬',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
