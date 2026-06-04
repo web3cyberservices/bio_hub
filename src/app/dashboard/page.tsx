@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -39,6 +40,7 @@ import { MedicalCalculatorDialog } from '@/components/medical-calculator-dialog'
 import { MedicationHub } from '@/components/medication-hub';
 import { FastingHub } from '@/components/fasting-hub';
 import { useToast } from '@/hooks/use-toast';
+import { PWAInstallBanner } from '@/components/pwa-install-banner';
 
 function DashboardContent() {
   const { user, loading: userLoading } = useUser();
@@ -206,6 +208,8 @@ function DashboardContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden relative h-screen w-screen">
+      <PWAInstallBanner />
+      
       <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20 w-full shrink-0">
         <div className="container mx-auto h-full flex items-center justify-between px-4 md:px-12">
           <div className="flex items-center gap-3 md:gap-4 shrink-0">
@@ -219,7 +223,7 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center gap-1.5 md:gap-2">
-              {profileType === 'specialist' && <MedicalCalculatorDialog />}
+              <MedicalCalculatorDialog />
               <BeautyIndicatorsDialog />
               {userData?.gender === 'женский' && (
                 <CycleTrackerDialog selectedDate={selectedDate} />
@@ -368,7 +372,7 @@ function DashboardContent() {
               <button onClick={() => setActiveTab('profile')} className={cn("transition-all shrink-0 p-2", activeTab === 'profile' ? "text-[#00ffff]" : "text-white/30")}><Settings className="h-5 w-5" /></button>
            </div>
         </div>
-      </main>
+      </header>
     </div>
   );
 }

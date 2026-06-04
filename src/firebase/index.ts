@@ -1,9 +1,10 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -20,6 +21,17 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       firestore = getFirestore(app);
+
+      // Включаем оффлайн-сохранение для Firestore
+      try {
+        enableMultiTabIndexedDbPersistence(firestore);
+      } catch (err: any) {
+        if (err.code === 'failed-precondition') {
+          console.warn("Firestore: Multiple tabs open, persistence can only be enabled in one tab at a time.");
+        } else if (err.code === 'unimplemented') {
+          console.warn("Firestore: The current browser doesn't support all of the features required to enable persistence.");
+        }
+      }
 
       return {
         firebaseApp: app,
