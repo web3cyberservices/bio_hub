@@ -9,7 +9,7 @@ let app: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
 
-// Keep track of persistence status globally to avoid late initialization errors in hot-reloading
+// Глобальный флаг для предотвращения повторной инициализации персистенции
 let persistenceAttempted = false;
 
 export function initializeFirebase() {
@@ -24,19 +24,18 @@ export function initializeFirebase() {
       auth = getAuth(app);
       firestore = getFirestore(app);
 
-      // Attempt to enable persistence only once. 
-      // Firestore throws if called after operations have started.
+      // Попытка включения оффлайн-режима только один раз
       if (!persistenceAttempted) {
         persistenceAttempted = true;
         enableMultiTabIndexedDbPersistence(firestore).catch((err: any) => {
           if (err.code === 'failed-precondition') {
-            console.warn("Firestore: Multiple tabs open, persistence can only be enabled in one tab at a time.");
+            console.warn("Firestore Persistence: Multiple tabs open.");
           } else if (err.code === 'unimplemented') {
-            console.warn("Firestore: The current browser doesn't support all of the features required to enable persistence.");
-          } else if (err.code === 'failed-precondition' || err.message?.includes('already been started')) {
-            // Already started, ignore
+            console.warn("Firestore Persistence: Browser not supported.");
+          } else if (err.message?.includes('already been started')) {
+            // Игнорируем, если уже запущено
           } else {
-            console.error("Firestore persistence error:", err);
+            console.error("Firestore Persistence Error:", err);
           }
         });
       }
@@ -47,7 +46,7 @@ export function initializeFirebase() {
         firestore
       };
     } catch (error) {
-      console.error("Firebase initialization failed:", error);
+      console.error("Firebase Initialization Failed:", error);
     }
   }
 

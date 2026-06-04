@@ -14,7 +14,7 @@ import {
   Pill,
   Timer
 } from 'lucide-react';
-import { format, startOfToday, addDays } from 'date-fns';
+import { format, startOfToday, addDays, isValid } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
@@ -28,7 +28,7 @@ import { MealsHub } from '@/components/meals-hub';
 import { RecommendationDisplay } from '@/components/recommendation-display';
 import { useHealthAggregator } from '@/hooks/use-health-aggregator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar } from "@/ui/calendar";
 import { SpecialistPatientsView } from '@/components/specialist-patients-view';
 import { SpecialistBookingManager } from '@/components/specialist-booking-manager';
 import { ActivitiesHub } from '@/components/activities-hub';
@@ -129,12 +129,16 @@ function DashboardContent() {
 
       starts.forEach(start => {
         const startDate = start.timestamp?.toDate?.() || new Date(start.date + 'T00:00:00');
+        if (!isValid(startDate)) return; // Защита от некорректных дат
+
         const duration = start.cycle?.periodDuration || 5;
         
         for (let i = 0; i < duration; i++) {
           const d = addDays(startDate, i);
-          const dStr = format(d, 'yyyy-MM-dd');
-          map[dStr] = i + 1;
+          if (isValid(d)) {
+            const dStr = format(d, 'yyyy-MM-dd');
+            map[dStr] = i + 1;
+          }
         }
       });
 
