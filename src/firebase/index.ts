@@ -51,6 +51,13 @@ export function initializeFirebase() {
   return { firebaseApp: app, auth, firestore };
 }
 
+// Export a robust DB singleton for use in non-blocking updates
+export const db = (() => {
+  if (typeof window === 'undefined') return null;
+  const { firestore } = initializeFirebase();
+  return firestore;
+})();
+
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';

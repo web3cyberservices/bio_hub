@@ -62,7 +62,7 @@ type ProfileValues = z.infer<typeof profileSchema>;
 export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () => void }) {
   const { user } = useUser();
   const { auth } = useAuth();
-  const { firestore } = useFirebase().firestore;
+  const { firestore } = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -123,10 +123,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
-      /**
-       * CRITICAL SANITIZATION: Replaces Firestore nulls with type-safe defaults for Zod.
-       * Fixes "Save" button not working.
-       */
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {

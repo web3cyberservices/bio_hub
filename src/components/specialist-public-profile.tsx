@@ -96,6 +96,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
       }
     } catch (err) {
       console.warn('Copy failed:', err);
+      // Fallback for restricted environments
       toast({ 
         title: 'Копирование недоступно', 
         description: 'Ваш браузер заблокировал доступ к буферу обмена.',
