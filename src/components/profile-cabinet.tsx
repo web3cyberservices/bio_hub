@@ -7,13 +7,11 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
-  User, Loader2, Smartphone, Send, ExternalLink, Activity, 
-  Pill, Mic, Briefcase, Info, 
-  Upload, LogOut, Database, BookOpen, Clock
+  User, Loader2, Smartphone, ExternalLink, Activity, 
+  Info, Upload, LogOut, Briefcase, Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -58,7 +56,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [recordingField, setRecordingField] = useState<string | null>(null);
   const [obsidianLoading, setObsidianLoading] = useState(false);
   const [obsidianVault, setObsidianVault] = useState<string | null>(null);
   const [isObsidianSupported, setIsObsidianSupported] = useState(true);
@@ -117,7 +114,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Гарантируем наличие значений для всех полей схемы, чтобы избежать ошибки Controlled/Uncontrolled
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {

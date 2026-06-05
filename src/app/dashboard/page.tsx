@@ -78,7 +78,6 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Security redirect for specialists trying to access fasting
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');

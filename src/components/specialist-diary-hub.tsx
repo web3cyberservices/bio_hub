@@ -6,12 +6,9 @@ import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  BookOpen, FileText, Plus, Search, 
-  ShieldCheck, Loader2, User, ChevronRight,
-  Database, Zap, X, Trash2, Folder, FolderOpen,
-  File, RefreshCw, Info, AlertTriangle, Save,
-  ArrowLeft, Bot, Settings, Download, Monitor,
-  Cpu, Terminal, MessageSquare, Sparkles, Send
+  BookOpen, FileText, ShieldCheck, Loader2, RefreshCw, 
+  Database, Zap, Folder, FolderOpen,
+  File, Save, Bot, MessageSquare, Cpu, Send, User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
