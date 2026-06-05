@@ -12,8 +12,8 @@ import {
 } from 'firebase/firestore';
 
 /**
- * Архитектура Safe Firebase Singleton.
- * Поддерживает Next.js Fast Refresh и предотвращает ошибки повторной инициализации.
+ * Safe Firebase Singleton Architecture.
+ * Prevents "initializeFirestore() has already been called" error during Next.js Fast Refresh.
  */
 
 let app: FirebaseApp;
@@ -25,13 +25,13 @@ export function initializeFirebase() {
     return { firebaseApp: null, auth: null, firestore: null };
   }
 
-  // 1. Инициализация App
+  // 1. App Initialization
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   
-  // 2. Инициализация Auth
+  // 2. Auth Initialization
   auth = getAuth(app);
   
-  // 3. Безопасная инициализация Firestore с поддержкой HMR
+  // 3. Protected Firestore Initialization
   try {
     firestore = initializeFirestore(app, {
       localCache: persistentLocalCache({
@@ -39,6 +39,7 @@ export function initializeFirebase() {
       })
     });
   } catch (error: any) {
+    // If already initialized, use getFirestore to return existing instance
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
       firestore = getFirestore(app);
     } else {

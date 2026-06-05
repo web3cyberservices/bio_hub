@@ -25,9 +25,7 @@ import { cn } from '@/lib/utils';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
-/**
- * Динамический импорт диалога истории для разрыва круговых зависимостей и стабильности Turbopack.
- */
+// BREAK CIRCULAR DEPENDENCY: Use dynamic import for Heavy Dialogs
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
   { ssr: false }
@@ -123,7 +121,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
-      // САНИТАРНАЯ ОЧИСТКА: заменяем null на пустые строки для прохождения валидации Zod
+      // DATA SANITIZATION: Replace nulls with empty strings to pass Zod validation
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
