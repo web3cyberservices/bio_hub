@@ -24,13 +24,12 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 /**
- * Динамический импорт диалога истории для предотвращения ошибок HMR Turbopack
- * "Module factory not available".
+ * КРИТИЧЕСКИЙ ФИКС: Динамический импорт диалога истории для предотвращения ошибок Turbopack HMR.
  */
-const AnalysisHistoryDialog = dynamic(() => import('./analysis-history-dialog').then(m => m.AnalysisHistoryDialog), {
-  ssr: false,
-  loading: () => <Button variant="outline" className="h-14 w-full opacity-50" disabled>Загрузка архива...</Button>
-});
+const AnalysisHistoryDialog = dynamic(
+  () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
+  { ssr: false }
+);
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -102,7 +101,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Санитарная очистка: заменяем null на значения по умолчанию для корректной работы Zod
+      // Санитарная очистка для предотвращения Uncontrolled Input и ошибок Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -148,7 +147,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({ title: 'Профиль успешно обновлен' });
     } catch (e: any) {
       console.error("Save error:", e);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте данные и попробуйте снова.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте данные.' });
     } finally {
       setLoading(false);
     }

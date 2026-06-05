@@ -11,43 +11,34 @@ import {
   persistentMultipleTabManager 
 } from 'firebase/firestore';
 
-let app: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-
 /**
  * Безопасная инициализация Firebase Singleton.
- * Предотвращает ошибки повторной инициализации при HMR (Hot Module Replacement).
+ * Поддерживает Next.js Fast Refresh и устраняет ошибку "already been called".
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
-  try {
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApp();
-    }
-
-    auth = getAuth(app);
-    
-    // Пытаемся получить существующий инстанс Firestore или создать новый
+  const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  const auth = getAuth(app);
+  
+  const firestore = (() => {
     try {
-      firestore = initializeFirestore(app, {
+      // Инициализируем Firestore с поддержкой мульти-таб кэширования
+      return initializeFirestore(app, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
       });
-    } catch (e: any) {
-      // Если Firestore уже инициализирован (ошибка "already been called"), возвращаем текущий инстанс
-      firestore = getFirestore(app);
+    } catch (error: any) {
+      // Если Firestore уже запущен (Fast Refresh), возвращаем текущий инстанс
+      if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
+        return getFirestore(app);
+      }
+      throw error;
     }
+  })();
 
-    return { firebaseApp: app, auth, firestore };
-  } catch (error) {
-    console.error("Firebase Core Initialization Failed:", error);
-    return { firebaseApp: null, auth: null, firestore: null };
-  }
+  return { firebaseApp: app, auth, firestore };
 }
 
 export * from './provider';

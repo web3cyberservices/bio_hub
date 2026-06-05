@@ -31,7 +31,7 @@ interface AISpecialistChatProps {
 
 export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const { user } = useUser();
-  const { firestore } = useFirebase();
+  const { firestore } = useFirestore();
   const [isRecording, setIsRecording] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,10 +80,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
-      /**
-       * КРИТИЧЕСКИ: Динамический импорт разорвет круговую зависимость Turbopack.
-       * Это единственный способ устранить ошибку "Module factory not available".
-       */
+      // КРИТИЧЕСКИЙ ФИКС: Локальный динамический импорт для предотвращения HMR-ошибок
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const history = messages.map(m => ({ role: m.role, content: m.content }));
