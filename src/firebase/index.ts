@@ -13,7 +13,7 @@ import {
 
 /**
  * SAFE FIREBASE SINGLETON ARCHITECTURE
- * Prevents "initializeFirestore() has already been called" error during Fast Refresh and builds.
+ * Prevents "initializeFirestore() has already been called" error during Fast Refresh.
  */
 
 let app: FirebaseApp;
@@ -39,7 +39,6 @@ export function initializeFirebase() {
       })
     });
   } catch (error: any) {
-    // If already initialized, use existing instance
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
       firestore = getFirestore(app);
     } else {
@@ -51,7 +50,7 @@ export function initializeFirebase() {
   return { firebaseApp: app, auth, firestore };
 }
 
-// Export a robust DB singleton for use in non-blocking updates
+// Global Singleton Instance
 export const db = (() => {
   if (typeof window === 'undefined') return null;
   const { firestore } = initializeFirebase();

@@ -26,7 +26,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * BREAK CIRCULAR DEPENDENCY: Dynamic import prevents Turbopack memory loops and HMR errors.
+ * BREAK CIRCULAR DEPENDENCY: Dynamic import for heavy dialogs.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -123,6 +123,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
+      // DATA SANITIZATION: Critical for Zod validation
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
@@ -132,6 +133,16 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             sanitizedData[key] = 'мужской';
           } else if (key === 'profileType') {
             sanitizedData[key] = 'user';
+          } else if (key === 'activityLevel') {
+            sanitizedData[key] = 'moderate';
+          } else if (key === 'healthGoal') {
+            sanitizedData[key] = 'поддержать текущее состояние';
+          } else if (key === 'smoking') {
+            sanitizedData[key] = 'нет';
+          } else if (key === 'alcohol') {
+            sanitizedData[key] = 'не употребляю';
+          } else if (key === 'workActivityType') {
+            sanitizedData[key] = 'mental';
           } else {
             sanitizedData[key] = '';
           }
@@ -147,7 +158,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({
         variant: 'destructive',
         title: 'Safari не поддерживается',
-        description: 'Используйте Chrome или Edge для работы с папками на Mac.',
+        description: 'Используйте Chrome или Edge для работы с локальными папками.',
       });
       return;
     }
@@ -195,7 +206,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       }
 
       toast({ title: 'Профиль обновлен' });
-    } catch (e: any) {
+    } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
@@ -316,6 +327,17 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ИЗМЕНЕНИЯ</>}
           </Button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
+                <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
+             </Card>
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
+                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив</Button></AnalysisHistoryDialog>
+             </Card>
+          </div>
 
           <div className="pt-10 flex justify-center">
              <Button variant="ghost" onClick={handleLogout} className="text-red-400 hover:text-red-300 hover:bg-red-500/5 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest">
