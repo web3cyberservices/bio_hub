@@ -81,7 +81,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     try {
       /**
        * BREAK CIRCULAR DEPENDENCY: Dynamic import at the point of use.
-       * Prevents Turbopack panic and Module Factory errors during HMR.
+       * Prevents Turbopack HMR "Module factory not available" errors.
        */
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       

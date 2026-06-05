@@ -1,48 +1,32 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { 
   getFirestore, 
   initializeFirestore, 
   persistentLocalCache, 
-  persistentMultipleTabManager,
-  Firestore
+  persistentMultipleTabManager
 } from 'firebase/firestore';
 
 /**
  * SAFE FIREBASE SINGLETON ARCHITECTURE
  * Permanently resolves "initializeFirestore() has already been called" error.
- * Optimized for Next.js 15 Fast Refresh.
+ * Optimized for Next.js Fast Refresh and Turbopack.
  */
 
-let app: FirebaseApp;
-let auth: Auth;
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export function initializeFirebase() {
-  if (typeof window === 'undefined') {
-    return { firebaseApp: null, auth: null, firestore: null };
-  }
-
-  // 1. App Initialization Singleton
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  
-  // 2. Auth Initialization Singleton
-  auth = getAuth(app);
-  
-  return { firebaseApp: app, auth };
-}
+export const auth = getAuth(app);
 
 // Global Singleton Instance for Firestore with HMR Protection
 export const db = (() => {
   if (typeof window === 'undefined') return null;
   
-  const currentApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  
   try {
     // Try primary initialization with persistent cache
-    return initializeFirestore(currentApp, {
+    return initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
       })
@@ -50,10 +34,10 @@ export const db = (() => {
   } catch (error: any) {
     // If already initialized (common during HMR), return the existing instance
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
-      return getFirestore(currentApp);
+      return getFirestore(app);
     }
-    console.error("[FIREBASE] Critical Init Error:", error);
-    return getFirestore(currentApp);
+    console.warn("[FIREBASE] Init recovery triggered:", error.message);
+    return getFirestore(app);
   }
 })();
 
