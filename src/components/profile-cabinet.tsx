@@ -14,14 +14,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, Loader2, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
-  Flame, Clock, Smartphone, ExternalLink
+  Flame, Clock, Smartphone, ExternalLink, Database, BookOpen, AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { get as getInIdb, set as setInIdb } from 'idb-keyval';
+import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
  * Динамический импорт для предотвращения HMR-ошибок Turbopack.
@@ -64,6 +66,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [obsidianLoading, setObsidianLoading] = useState(false);
+  const [obsidianVault, setObsidianVault] = useState<string | null>(null);
+  const [isObsidianSupported, setIsObsidianSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
@@ -99,9 +104,27 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const currentPhotoUrl = form.watch('photoUrl');
 
   useEffect(() => {
+    // Проверка поддержки File System Access API (проблема Safari на Mac)
+    setIsObsidianSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
+
+    const checkObsidianAccess = async () => {
+      if (userData?.obsidianConnected) {
+        try {
+          const handle = await getInIdb('obsidian_vault_handle');
+          if (handle) {
+            const options = { mode: 'read' };
+            if ((await (handle as any).queryPermission(options)) === 'granted') {
+              setObsidianVault(handle.name);
+            }
+          }
+        } catch (err) {
+          console.error("Obsidian access error:", err);
+        }
+      }
+    };
+
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // КРИТИЧЕСКИЙ ФИКС: Заменяем null на пустые строки для успешной валидации Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -120,8 +143,40 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         }
       });
       form.reset(sanitizedData); 
+      checkObsidianAccess();
     } 
   }, [userData, form]);
+
+  const handleConnectObsidian = async () => {
+    if (!isObsidianSupported) {
+      toast({
+        variant: 'destructive',
+        title: 'Браузер не поддерживается',
+        description: 'Safari на Mac не поддерживает прямой доступ к папкам. Используйте Chrome или Edge для работы с Obsidian.',
+      });
+      return;
+    }
+    setObsidianLoading(true);
+    try {
+      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+      await setInIdb('obsidian_vault_handle', handle);
+      if (user?.uid && firestore) {
+        await updateDoc(doc(firestore, 'users', user.uid), {
+          obsidianConnected: true,
+          obsidianVaultName: handle.name,
+          updatedAt: new Date().toISOString()
+        });
+      }
+      setObsidianVault(handle.name);
+      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" успешно привязана.` });
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        toast({ variant: 'destructive', title: 'Ошибка подключения', description: 'Не удалось получить доступ к папке.' });
+      }
+    } finally {
+      setObsidianLoading(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,6 +199,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         updatedAt: new Date().toISOString() 
       }, { merge: true });
       
+      if (userData?.obsidianConnected) {
+        await syncToObsidian({ type: 'profile', payload: values });
+      }
+
       toast({ title: 'Профиль успешно обновлен' });
     } catch (e: any) {
       console.error("Save error:", e);
@@ -199,6 +258,43 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </CardContent>
           </Card>
 
+          {/* Интеграция с Obsidian */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 0. Внешние системы</h3>
+            <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20">
+               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-5">
+                     <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center border border-white/10">
+                        <BookOpen className="h-8 w-8 text-white" />
+                     </div>
+                     <div className="space-y-1">
+                        <h4 className="text-xl font-black text-white uppercase tracking-tight">Obsidian Sync</h4>
+                        <p className="text-xs text-white/40 font-medium">Синхронизация логов питания и анализов в вашу базу знаний.</p>
+                     </div>
+                  </div>
+                  <Button 
+                    type="button" 
+                    onClick={handleConnectObsidian} 
+                    disabled={obsidianLoading}
+                    className={cn(
+                      "h-14 px-10 rounded-2xl font-black uppercase text-xs shadow-xl transition-all",
+                      obsidianVault ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
+                    )}
+                  >
+                    {obsidianLoading ? <Loader2 className="animate-spin h-4 w-4" /> : obsidianVault ? <><ShieldCheck className="mr-2 h-4 w-4" /> {obsidianVault.toUpperCase()}</> : 'ПОДКЛЮЧИТЬ ПАПКУ'}
+                  </Button>
+               </div>
+               {!isObsidianSupported && (
+                 <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3">
+                    <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-bold text-orange-200/60 uppercase leading-relaxed">
+                      Ваш браузер (Safari) не поддерживает прямой доступ к файлам. Для работы с Obsidian на Mac используйте Chrome или Edge.
+                    </p>
+                 </div>
+               )}
+            </Card>
+          </div>
+
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Info className="h-4 w-4" /> 1. Личные данные</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -253,9 +349,26 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </Card>
           </div>
 
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <CardContent className="p-0 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                    <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                  <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                )} />
+              </CardContent>
+            </Card>
+          </div>
+
           {isSpecialist && (
             <div className="space-y-6 animate-in slide-in-from-top-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 4. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
@@ -269,7 +382,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           )}
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ</>}
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ИЗМЕНЕНИЯ</>}
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

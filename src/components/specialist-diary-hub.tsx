@@ -11,7 +11,7 @@ import {
   Database, Zap, Folder, FolderOpen,
   File, Save, Bot, MessageSquare, Cpu, Send, User,
   Play, Pause, FastForward, Rewind, Mic, Sparkles, X,
-  Music, Film
+  Music, Film, AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -76,8 +76,10 @@ export function SpecialistDiaryHub() {
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
 
   useEffect(() => {
-    setIsFileSystemSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
-    checkPersistedFolder();
+    const isSupported = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+    setIsFileSystemSupported(isSupported);
+    if (isSupported) checkPersistedFolder();
+    
     return () => {
       if (activeFile?.blobUrl) URL.revokeObjectURL(activeFile.blobUrl);
     };
@@ -138,7 +140,11 @@ export function SpecialistDiaryHub() {
 
   const handleSelectRootFolder = async () => {
     if (!isFileSystemSupported) {
-      toast({ variant: 'destructive', title: 'Не поддерживается', description: 'Ваш браузер не поддерживает File System Access API.' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Не поддерживается', 
+        description: 'Ваш браузер (Safari) не поддерживает прямой доступ к папкам. Используйте Chrome или Edge.' 
+      });
       return;
     }
     try {
@@ -305,6 +311,22 @@ export function SpecialistDiaryHub() {
 
   return (
     <div className="flex h-full bg-[#010411] text-white rounded-none md:rounded-t-[3rem] overflow-hidden border border-white/5 shadow-2xl relative">
+      {!isFileSystemSupported && (
+        <div className="absolute inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-10 text-center">
+           <div className="max-w-md space-y-6">
+              <div className="w-20 h-20 bg-orange-500/20 rounded-[2rem] flex items-center justify-center mx-auto border border-orange-500/30">
+                 <AlertTriangle className="h-10 w-10 text-orange-500" />
+              </div>
+              <h2 className="text-2xl font-black uppercase text-white">Браузер не поддерживается</h2>
+              <p className="text-sm text-white/60 font-medium leading-relaxed">
+                Safari на MacBook не поддерживает прямой доступ к папкам через Web API. 
+                Пожалуйста, используйте <strong>Chrome, Edge или Brave</strong> для работы в Дневнике.
+              </p>
+              <Button onClick={() => window.location.reload()} className="h-14 px-10 rounded-2xl bg-primary text-slate-950 font-black uppercase text-xs">ПОПРОБОВАТЬ СНОВА</Button>
+           </div>
+        </div>
+      )}
+
       {/* ЛЕВАЯ ПАНЕЛЬ: ПАЦИЕНТЫ И ФАЙЛЫ */}
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
