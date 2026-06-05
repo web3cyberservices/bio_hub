@@ -26,12 +26,13 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сначала пытаемся получить существующий экземпляр,
-      // чтобы избежать ошибки "initializeFirestore() has already been called with different options"
+      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сначала пытаемся получить существующий экземпляр Firestore.
+      // Если initializeFirestore уже был вызван (например, при HMR), повторный вызов с опциями вызовет ошибку.
       try {
+        // Мы проверяем, существует ли уже инициализированный firestore для этого приложения
         firestore = getFirestore(app);
       } catch (e) {
-        // Если экземпляр не найден, инициализируем с нужными настройками кэша
+        // Если не найден, инициализируем один раз с настройками кэша
         firestore = initializeFirestore(app, {
           cache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()

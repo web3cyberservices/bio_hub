@@ -19,7 +19,6 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Интерфейсы для работы с файловой системой
 interface FileNode {
   name: string;
   kind: 'file' | 'directory';
@@ -55,19 +54,12 @@ export function SpecialistDiaryHub() {
   const [aiSidebarTab, setAiSidebarTab] = useState<'chat' | 'models'>('chat');
   const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
-  // Состояния для ИИ-чата в дневнике
   const [aiInput, setAiInput] = useState('');
   const [diaryChat, setDiaryChat] = useState<ChatMessage[]>([
     { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать открытый файл или записи о пациенте.' }
   ]);
   const [aiLoading, setAiLoading] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
-
-  const [availableModels] = useState([
-    { id: 'biogemini-local', name: 'BioGemini 2.0 (Local)', size: '2.4 GB', status: 'installed', type: 'Clinical' },
-    { id: 'llama-3-med', name: 'Llama 3 Med-7B', size: '4.8 GB', status: 'available', type: 'General' },
-    { id: 'mistral-medical', name: 'Mistral-ORpo-Med', size: '3.9 GB', status: 'available', type: 'Analysis' },
-  ]);
 
   const patientsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -216,7 +208,6 @@ export function SpecialistDiaryHub() {
     setAiLoading(true);
 
     try {
-      // Подгружаем действие чата динамически
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const response = await chatWithSpecialist({
@@ -242,8 +233,7 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-full min-h-0 bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
-      {/* ЛЕВАЯ ПАНЕЛЬ */}
+    <div className="flex h-full bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
@@ -315,7 +305,6 @@ export function SpecialistDiaryHub() {
         </ScrollArea>
       </div>
 
-      {/* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ */}
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
@@ -366,7 +355,6 @@ export function SpecialistDiaryHub() {
         )}
       </div>
 
-      {/* ПРАВАЯ ПАНЕЛЬ */}
       <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
            <div className="p-4 border-b border-white/5 flex justify-center">
