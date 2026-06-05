@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -13,8 +12,8 @@ import {
 } from 'firebase/firestore';
 
 /**
- * BIO-HUB FIREBASE CORE (v16.2 Optimized)
- * Использование паттерна Safe Singleton для предотвращения ошибок HMR.
+ * BIO-HUB FIREBASE CORE (Next.js 16 Optimized)
+ * Паттерн Safe Singleton для предотвращения ошибок HMR.
  */
 
 let app: FirebaseApp;
@@ -44,7 +43,7 @@ export function initializeFirebase() {
         })
       });
     } catch (error: any) {
-      // Игнорируем ошибку "already initialized", если она возникла при HMR
+      // Игнорируем ошибку "already initialized", если она возникла при Fast Refresh
       dbInstance = getFirestore(app);
     }
   }
@@ -52,7 +51,7 @@ export function initializeFirebase() {
   return { firebaseApp: app, auth: authInstance, firestore: dbInstance };
 }
 
-// Ленивые функции доступа
+// Ленивые функции доступа для серверных компонентов и экшенов
 export const getSafeAuth = () => {
   const { auth } = initializeFirebase();
   return auth as Auth;
@@ -63,7 +62,7 @@ export const getSafeDb = () => {
   return firestore as Firestore;
 };
 
-// Экспортируем основные утилиты напрямую для лучшей работы Turbopack
+// Экспортируем хуки из провайдера (через barrel-файл провайдера для избежания циклов)
 export { useFirebase, useAuth, useFirestore, useUser, useMemoFirebase } from './provider';
 export { useCollection } from './firestore/use-collection';
 export { useDoc } from './firestore/use-doc';

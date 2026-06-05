@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, Settings, ShieldCheck,
+  HeartPulse, ShieldCheck,
   LayoutGrid, Activity, Calendar as CalendarIcon,
-  ChevronDown, UserCheck, BarChart3, Zap,
-  ThumbsUp, Pill, Timer, BookOpen
+  BarChart3, Zap, Settings, UserCheck
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -21,16 +20,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { PWAInstallBanner } from '@/components/pwa-install-banner';
 import { UnifiedDataEntry } from '@/components/unified-data-entry';
 
-// Динамические импорты для стабильности сборки
-const ChatInterface = dynamic(() => import('@/components/chat-interface').then(m => m.ChatInterface), { ssr: false });
-const SpecialistDiaryHub = dynamic(() => import('@/components/specialist-diary-hub').then(m => m.SpecialistDiaryHub), { ssr: false });
+// Оптимизированные динамические импорты
+const SocialFeed = dynamic(() => import('@/components/social-feed').then(m => m.SocialFeed), { ssr: false });
 const RecommendationDisplay = dynamic(() => import('@/components/recommendation-display').then(m => m.RecommendationDisplay), { ssr: false });
 const MealsHub = dynamic(() => import('@/components/meals-hub').then(m => m.MealsHub), { ssr: false });
 const ActivitiesHub = dynamic(() => import('@/components/activities-hub').then(m => m.ActivitiesHub), { ssr: false });
 const SpecialistPatientsView = dynamic(() => import('@/components/specialist-patients-view').then(m => m.SpecialistPatientsView), { ssr: false });
 const ProfileCabinet = dynamic(() => import('@/components/profile-cabinet').then(m => m.ProfileCabinet), { ssr: false });
-const SocialFeed = dynamic(() => import('@/components/social-feed').then(m => m.SocialFeed), { ssr: false });
-const FastingHub = dynamic(() => import('@/components/fasting-hub').then(m => m.FastingHub), { ssr: false });
+const ChatInterface = dynamic(() => import('@/components/chat-interface').then(m => m.ChatInterface), { ssr: false });
+const SpecialistDiaryHub = dynamic(() => import('@/components/specialist-diary-hub').then(m => m.SpecialistDiaryHub), { ssr: false });
 
 function DashboardContent() {
   const { user, loading: userLoading } = useUser();
@@ -38,7 +36,6 @@ function DashboardContent() {
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isMounted, setIsMounted] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   const userDocRef = useMemoFirebase(() => {
@@ -50,7 +47,6 @@ function DashboardContent() {
   const isSpecialist = userData?.profileType === 'specialist';
 
   useEffect(() => {
-    setIsMounted(true);
     setSelectedDate(startOfToday());
   }, []);
 
@@ -68,7 +64,7 @@ function DashboardContent() {
     return () => unsubscribe();
   }, [firestore, user?.uid]);
 
-  if (!isMounted || userLoading || !user) {
+  if (userLoading || !user) {
     return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" /></div>;
   }
 
@@ -115,14 +111,11 @@ function DashboardContent() {
                      {isSpecialist ? (
                        <div className="w-full h-full overflow-y-auto p-4 pb-40 no-scrollbar">
                          <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
-                            <div className="space-y-2">
-                               <h2 className="text-4xl font-black uppercase tracking-tighter">Управление</h2>
-                               <p className="text-white/30 text-[10px] uppercase font-black tracking-[0.3em]">Specialist Control Center</p>
-                            </div>
+                            <h2 className="text-4xl font-black uppercase tracking-tighter">Управление</h2>
                             <Card className="cyber-card p-10 bg-blue-900/20 border-white/5 flex items-center justify-center">
                                <div className="text-center space-y-4">
                                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto border border-primary/20"><BarChart3 className="h-10 w-10 text-primary" /></div>
-                                  <p className="text-sm font-bold text-white/40 uppercase tracking-widest leading-relaxed">Модуль аналитики и записи пациентов<br />находится в стадии синхронизации.</p>
+                                  <p className="text-sm font-bold text-white/40 uppercase tracking-widest">Модуль аналитики синхронизируется.</p>
                                </div>
                             </Card>
                          </div>
@@ -138,18 +131,13 @@ function DashboardContent() {
                 </div>
               )}
               {activeTab === 'diary' && isSpecialist && (
-                <div className="flex-1 min-h-0 h-full overflow-hidden pb-24 md:pb-28">
+                <div className="flex-1 min-h-0 h-full overflow-hidden">
                   <SpecialistDiaryHub />
                 </div>
               )}
               {activeTab === 'chats' && (
                 <div className="h-full px-4 flex flex-col pb-40 no-scrollbar">
                   <ChatInterface />
-                </div>
-              )}
-              {activeTab === 'fasting' && !isSpecialist && (
-                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar">
-                  <FastingHub />
                 </div>
               )}
               {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ActivitiesHub selectedDate={selectedDate} /></div>}
@@ -163,9 +151,11 @@ function DashboardContent() {
               <button onClick={() => setActiveTab('meals')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'meals' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 {isSpecialist ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}
               </button>
+              
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'feed' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 <LayoutGrid className="h-6 w-6" />
               </button>
+
               <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'dashboard' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 {isSpecialist ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
               </button>
@@ -180,7 +170,9 @@ function DashboardContent() {
                 <MessageSquare className="h-6 w-6" />
                 {unreadTotal > 0 && <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-lg border border-black">{unreadTotal}</span>}
               </button>
+              
               <button onClick={() => setActiveTab('activities')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'activities' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}><Zap className="h-6 w-6" /></button>
+              
               <button onClick={() => setActiveTab('profile')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'profile' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}><Settings className="h-6 w-6" /></button>
            </div>
         </div>

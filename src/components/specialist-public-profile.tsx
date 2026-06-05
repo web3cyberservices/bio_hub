@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -41,10 +40,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore || !specialistId) return null;
-    return query(
-      collection(firestore, 'posts'),
-      where('authorId', '==', specialistId)
-    );
+    return query(collection(firestore, 'posts'), where('authorId', '==', specialistId));
   }, [firestore, specialistId]);
 
   const { data: specData, isLoading: specLoading } = useDoc<any>(specRef);
@@ -56,7 +52,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
 
   const handleToggleFollow = () => {
     if (!user || user.uid === 'public-user' || !firestore || !specRef) {
-      toast({ variant: 'destructive', title: 'Вход не выполнен', description: 'Подписка доступна только зарегистрированным пользователям.' });
+      toast({ variant: 'destructive', title: 'Вход не выполнен' });
       return;
     }
     const data = { followers: isFollowing ? arrayRemove(user.uid) : arrayUnion(user.uid) };
@@ -72,12 +68,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
       await updateDoc(userRef, {
         sharedWith: isDataShared ? arrayRemove(specialistId) : arrayUnion(specialistId)
       });
-      toast({ 
-        title: isDataShared ? 'Доступ отозван' : 'Доступ предоставлен', 
-        description: isDataShared 
-          ? `Специалист больше не видит ваши био-данные.` 
-          : `Специалист теперь может анализировать ваши активности и анализы.` 
-      });
+      toast({ title: isDataShared ? 'Доступ отозван' : 'Доступ предоставлен' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка доступа' });
     } finally {
@@ -89,28 +80,19 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     const link = typeof window !== 'undefined' ? `${window.location.origin}/specialist/${specialistId}` : '';
     
     try {
-      /**
-       * SAFE CLIPBOARD HANDLING: Added more defensive checks for browser policy.
-       */
       if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
         toast({ title: 'Ссылка скопирована' });
       } else {
-        // Fallback for restricted environments
         const textArea = document.createElement("textarea");
         textArea.value = link;
         document.body.appendChild(textArea);
         textArea.select();
-        try {
-          document.execCommand('copy');
-          toast({ title: 'Ссылка скопирована' });
-        } catch (err) {
-          throw new Error('Fallback copy failed');
-        }
+        document.execCommand('copy');
         document.body.removeChild(textArea);
+        toast({ title: 'Ссылка скопирована' });
       }
     } catch (err) {
-      console.warn('Clipboard access failed:', err);
       toast({ 
         title: 'Копирование ограничено', 
         description: 'Ваш браузер заблокировал доступ к буферу обмена.',
@@ -133,14 +115,11 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
         const res = await addDoc(collection(firestore, 'chats'), {
           participants: [user.uid, specialistId],
           participantDetails: {
-            [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || (user as any).photoUrl || '' },
+            [user.uid]: { name: (user as any).displayName || 'Пользователь', photo: (user as any).photoURL || '' },
             [specialistId]: { name: specData.firstName || 'Специалист', photo: specData.photoUrl || '' }
           },
-          unreadCount: {
-            [user.uid]: 0,
-            [specialistId]: 0
-          },
-          lastMessage: 'Начат новый диалог со специалистом.',
+          unreadCount: { [user.uid]: 0, [specialistId]: 0 },
+          lastMessage: 'Начат новый диалог.',
           updatedAt: new Date().toISOString(),
           createdAt: new Date().toISOString()
         });
@@ -175,11 +154,6 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                   <AvatarImage src={specData?.photoUrl} className="object-cover" />
                   <AvatarFallback className="bg-primary/5 text-primary text-4xl font-black">{specData?.firstName?.charAt(0)}</AvatarFallback>
                </Avatar>
-               {specData?.instagramUrl && (
-                 <a href={specData.instagramUrl} target="_blank" rel="noreferrer" className="absolute -bottom-2 -left-2 bg-[#E1306C] text-white p-3 rounded-2xl shadow-lg border-4 border-black hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.85.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                 </a>
-               )}
             </div>
             <div className="flex-1 space-y-2 text-center md:text-left">
                <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase">{specData?.firstName} {specData?.lastName}</h2>
@@ -212,51 +186,26 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
                       variant={isDataShared ? "destructive" : "secondary"}
                       className="w-full rounded-2xl h-14 font-black uppercase tracking-widest text-[9px] gap-2 shadow-lg"
                     >
-                      {sharingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isDataShared ? <><ShieldAlert className="h-4 w-4" /> Отозвать доступ к данным</> : <><ShieldCheck className="h-4 w-4" /> Предоставить личные данные</>}
+                      {sharingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : isDataShared ? <><ShieldAlert className="h-4 w-4" /> Отозвать доступ</> : <><ShieldCheck className="h-4 w-4" /> Предоставить данные</>}
                     </Button>
                  </div>
                )}
             </div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-12">
-            <div className="lg:col-span-4 space-y-10">
-               <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-2">О специалисте</h4>
-                  <p className="text-sm font-medium leading-relaxed text-white/70">{specData?.bio || 'Описание отсутствует.'}</p>
-               </div>
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 text-center">
-                     <p className="text-2xl font-black text-primary">{specData?.followers?.length || 0}</p>
-                     <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Подписчиков</p>
-                  </div>
-                  <div className="bg-primary/5 p-6 rounded-3xl border border-primary/10 text-center">
-                     <p className="text-2xl font-black text-primary">{specPosts?.length || 0}</p>
-                     <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Постов</p>
-                  </div>
-               </div>
-            </div>
-
-            <div className="lg:col-span-8 space-y-8">
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-2">Публикации</h4>
-               <div className="space-y-8">
-                  {specPosts?.map((post) => (
-                     <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-xl bg-white/5 p-8 space-y-6">
-                        <p className="text-lg font-medium leading-relaxed text-white/90">{post.content}</p>
-                        {post.imageUrl && <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border-4 border-white/5 shadow-2xl"><Image src={post.imageUrl} alt="Post" fill className="object-cover" unoptimized /></div>}
-                     </Card>
-                  ))}
-                  {(!specPosts || specPosts.length === 0) && (
-                    <div className="py-20 text-center opacity-20">
-                      <BookOpen className="h-12 w-12 mx-auto text-white" />
-                      <p className="text-xs font-black uppercase tracking-widest mt-4">Публикаций пока нет</p>
-                    </div>
-                  )}
-               </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      <div className="lg:col-span-8 space-y-8">
+         <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-4">Публикации специалиста</h4>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+            {specPosts?.map((post) => (
+               <Card key={post.id} className="cyber-card overflow-hidden border-none shadow-xl bg-white/5 p-8 space-y-6">
+                  <p className="text-lg font-medium leading-relaxed text-white/90">{post.content}</p>
+                  {post.imageUrl && <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border-4 border-white/5 shadow-2xl"><Image src={post.imageUrl} alt="Post" fill className="object-cover" unoptimized /></div>}
+               </Card>
+            ))}
+         </div>
+      </div>
     </div>
   );
 }
