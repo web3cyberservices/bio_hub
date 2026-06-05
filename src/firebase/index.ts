@@ -31,7 +31,7 @@ export function initializeFirebase() {
   // 2. Инициализация Auth
   auth = getAuth(app);
   
-  // 3. Безопасная инициализация Firestore
+  // 3. Безопасная инициализация Firestore с поддержкой HMR
   try {
     firestore = initializeFirestore(app, {
       localCache: persistentLocalCache({
@@ -39,7 +39,6 @@ export function initializeFirebase() {
       })
     });
   } catch (error: any) {
-    // Если Firestore уже инициализирован (HMR), получаем текущий инстанс
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
       firestore = getFirestore(app);
     } else {

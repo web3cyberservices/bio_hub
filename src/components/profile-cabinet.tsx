@@ -26,7 +26,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * Динамический импорт для предотвращения HMR-ошибок Turbopack.
+ * Динамический импорт диалога истории для разрыва круговых зависимостей и стабильности Turbopack.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -104,7 +104,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const currentPhotoUrl = form.watch('photoUrl');
 
   useEffect(() => {
-    // Проверка поддержки File System Access API (проблема Safari на Mac)
     setIsObsidianSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
 
     const checkObsidianAccess = async () => {
@@ -124,6 +123,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
+      // САНИТАРНАЯ ОЧИСТКА: заменяем null на пустые строки для прохождения валидации Zod
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
@@ -133,10 +133,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             sanitizedData[key] = 'мужской';
           } else if (key === 'profileType') {
             sanitizedData[key] = 'user';
-          } else if (key === 'smoking') {
-            sanitizedData[key] = 'нет';
-          } else if (key === 'alcohol') {
-            sanitizedData[key] = 'не употребляю';
           } else {
             sanitizedData[key] = '';
           }
@@ -152,7 +148,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({
         variant: 'destructive',
         title: 'Браузер не поддерживается',
-        description: 'Safari на Mac не поддерживает прямой доступ к папкам. Используйте Chrome или Edge для работы с Obsidian.',
+        description: 'Используйте Chrome или Edge для работы с папками Obsidian.',
       });
       return;
     }
@@ -168,10 +164,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         });
       }
       setObsidianVault(handle.name);
-      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" успешно привязана.` });
+      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" привязана.` });
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: 'Ошибка подключения', description: 'Не удалось получить доступ к папке.' });
+        toast({ variant: 'destructive', title: 'Ошибка подключения' });
       }
     } finally {
       setObsidianLoading(false);
@@ -203,10 +199,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         await syncToObsidian({ type: 'profile', payload: values });
       }
 
-      toast({ title: 'Профиль успешно обновлен' });
+      toast({ title: 'Профиль успешно сохранен' });
     } catch (e: any) {
       console.error("Save error:", e);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте корректность данных.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
     }
@@ -258,7 +254,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </CardContent>
           </Card>
 
-          {/* Интеграция с Obsidian */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 0. Внешние системы</h3>
             <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20">
@@ -269,7 +264,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                      </div>
                      <div className="space-y-1">
                         <h4 className="text-xl font-black text-white uppercase tracking-tight">Obsidian Sync</h4>
-                        <p className="text-xs text-white/40 font-medium">Синхронизация логов питания и анализов в вашу базу знаний.</p>
+                        <p className="text-xs text-white/40 font-medium">Синхронизация логов здоровья в вашу локальную базу знаний.</p>
                      </div>
                   </div>
                   <Button 
@@ -288,7 +283,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                  <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3">
                     <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] font-bold text-orange-200/60 uppercase leading-relaxed">
-                      Ваш браузер (Safari) не поддерживает прямой доступ к файлам. Для работы с Obsidian на Mac используйте Chrome или Edge.
+                      Safari не поддерживает прямой доступ к папкам. Используйте Chrome или Edge для работы с Obsidian на Mac.
                     </p>
                  </div>
                )}
@@ -339,29 +334,12 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                   )} />
                 </div>
                 <FormField control={form.control} name="medications" render={({ field }) => (
-                   <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white" /></FormControl></FormItem>
+                   <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white shadow-inner" /></FormControl></FormItem>
                 )} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                   <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <CardContent className="p-0 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="workActivityType" render={({ field }) => (
-                    <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-                )} />
               </CardContent>
             </Card>
           </div>

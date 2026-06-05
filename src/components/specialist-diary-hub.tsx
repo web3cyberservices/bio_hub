@@ -5,7 +5,6 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent } from '@/components/ui/card';
 import { 
   BookOpen, FileText, ShieldCheck, Loader2, RefreshCw, 
   Database, Zap, Folder, FolderOpen,
@@ -251,7 +250,6 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        // Динамический импорт серверного потока
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
@@ -265,7 +263,7 @@ export function SpecialistDiaryHub() {
           type: 'text' 
         } : null);
         
-        toast({ title: 'Транскрибация завершена', description: 'Текст добавлен в редактор.' });
+        toast({ title: 'Транскрибация завершена' });
       };
       
       reader.readAsDataURL(file);
@@ -301,7 +299,7 @@ export function SpecialistDiaryHub() {
       setDiaryChat(prev => [...prev, { role: 'assistant', text: response.text }]);
     } catch (error: any) {
       console.error("Diary AI Error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось получить ответ.' });
+      toast({ variant: 'destructive', title: 'Ошибка ИИ' });
     } finally {
       setAiLoading(false);
     }
@@ -310,7 +308,7 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-full bg-[#010411] text-white rounded-none md:rounded-t-[3rem] overflow-hidden border border-white/5 shadow-2xl relative">
+    <div className="flex h-full bg-[#010411] text-white overflow-hidden border border-white/5 relative">
       {!isFileSystemSupported && (
         <div className="absolute inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-10 text-center">
            <div className="max-w-md space-y-6">
@@ -319,15 +317,14 @@ export function SpecialistDiaryHub() {
               </div>
               <h2 className="text-2xl font-black uppercase text-white">Браузер не поддерживается</h2>
               <p className="text-sm text-white/60 font-medium leading-relaxed">
-                Safari на MacBook не поддерживает прямой доступ к папкам через Web API. 
-                Пожалуйста, используйте <strong>Chrome, Edge или Brave</strong> для работы в Дневнике.
+                Safari не поддерживает прямой доступ к локальным папкам. 
+                Пожалуйста, используйте <strong>Chrome или Edge</strong> для работы в Дневнике.
               </p>
               <Button onClick={() => window.location.reload()} className="h-14 px-10 rounded-2xl bg-primary text-slate-950 font-black uppercase text-xs">ПОПРОБОВАТЬ СНОВА</Button>
            </div>
         </div>
       )}
 
-      {/* ЛЕВАЯ ПАНЕЛЬ: ПАЦИЕНТЫ И ФАЙЛЫ */}
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
@@ -374,7 +371,6 @@ export function SpecialistDiaryHub() {
         </ScrollArea>
       </div>
 
-      {/* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: РЕДАКТОР / ПЛЕЕР */}
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
@@ -397,7 +393,7 @@ export function SpecialistDiaryHub() {
                   {activeFile.type !== 'text' && (
                     <Button onClick={handleTranscription} disabled={transcribing} className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20">
                       {transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
-                      <span className="hidden sm:inline">Перевести в текст</span>
+                      <span className="hidden sm:inline">В текст</span>
                     </Button>
                   )}
                   <Button onClick={handleSaveFile} disabled={!activeFile.isDirty || saveLoading} className={cn("h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg", activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20")}>
@@ -438,7 +434,6 @@ export function SpecialistDiaryHub() {
         )}
       </div>
 
-      {/* ПРАВАЯ ПАНЕЛЬ: AI АНАЛИЗ */}
       <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
            <div className="p-4 border-b border-white/5 flex justify-center">

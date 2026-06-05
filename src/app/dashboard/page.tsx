@@ -149,10 +149,7 @@ function DashboardContent() {
   const { data: posts } = useCollection<any>(postsQuery);
 
   const handleToggleLike = async (postId: string, likedBy: string[]) => {
-    if (!user || user.uid === 'public-user') {
-      toast({ variant: 'destructive', title: 'Вход не выполнен', description: 'Лайки доступны только зарегистрированным пользователям.' });
-      return;
-    }
+    if (!user || user.uid === 'public-user') return;
     const isLiked = likedBy?.includes(user.uid);
     const postRef = doc(firestore!, 'posts', postId);
     try {
