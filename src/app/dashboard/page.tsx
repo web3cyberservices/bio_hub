@@ -125,27 +125,17 @@ function DashboardContent() {
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const map: Record<string, number> = {};
-      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
-      const starts = logs
+      snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any))
         .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
-        .sort((a, b) => {
-           const da = a.timestamp?.toDate?.() || (a.date ? new Date(a.date) : new Date(0));
-           const db = b.timestamp?.toDate?.() || (b.date ? new Date(b.date) : new Date(0));
-           return da.getTime() - db.getTime();
-        });
-
-      starts.forEach(start => {
-        const startDate = start.timestamp?.toDate?.() || (start.date ? new Date(start.date + 'T00:00:00') : null);
-        if (!startDate || !isValid(startDate)) return;
-        const duration = start.cycle?.periodDuration || 5;
-        for (let i = 0; i < duration; i++) {
-          const d = addDays(startDate, i);
-          if (isValid(d)) {
-            const dStr = format(d, 'yyyy-MM-dd');
-            map[dStr] = i + 1;
+        .forEach(start => {
+          const startDate = start.timestamp?.toDate?.() || (start.date ? new Date(start.date + 'T00:00:00') : null);
+          if (!startDate || !isValid(startDate)) return;
+          const duration = start.cycle?.periodDuration || 5;
+          for (let i = 0; i < duration; i++) {
+            const d = addDays(startDate, i);
+            if (isValid(d)) map[format(d, 'yyyy-MM-dd')] = i + 1;
           }
-        }
-      });
+        });
       setPeriodDaysMap(map);
     });
     return () => unsubscribe();
@@ -225,15 +215,11 @@ function DashboardContent() {
                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                <span className="text-[8px] font-black uppercase text-emerald-500/80 tracking-widest">AES-256 Protocol Active</span>
             </div>
-
             <div className="flex items-center gap-1.5 md:gap-2">
               {isSpecialist && <MedicalCalculatorDialog />}
               <BeautyIndicatorsDialog />
-              {userData?.gender === 'женский' && (
-                <CycleTrackerDialog selectedDate={selectedDate} />
-              )}
+              {userData?.gender === 'женский' && <CycleTrackerDialog selectedDate={selectedDate} />}
             </div>
-
             <Popover>
               <PopoverTrigger asChild>
                 <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg shadow-[#00ffff]/5 hover:bg-[#00ffff]/10 transition-all">
@@ -244,18 +230,7 @@ function DashboardContent() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                    }
-                  }}
-                  initialFocus
-                  locale={ru}
-                  periodDays={periodDaysMap}
-                />
+                <Calendar mode="single" selected={selectedDate} onSelect={(date) => date && setSelectedDate(date)} initialFocus locale={ru} periodDays={periodDaysMap} />
               </PopoverContent>
             </Popover>
           </div>
@@ -285,36 +260,15 @@ function DashboardContent() {
                               <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-primary/20">
                                 {post.authorPhoto && <Image src={post.authorPhoto} alt={post.authorName} width={48} height={48} className="object-cover" unoptimized />}
                               </div>
-                              <div>
-                                <p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p>
-                                <p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p>
-                              </div>
+                              <div><p className="font-black text-sm uppercase tracking-tight">{post.authorName}</p><p className="text-[10px] font-bold text-white/40 uppercase">{post.authorRole}</p></div>
                             </button>
                           </div>
-                          
-                          <div 
-                            className="space-y-6 cursor-pointer group/content"
-                            onClick={() => router.push(`/specialist/${post.authorId}`)}
-                          >
+                          <div className="space-y-6 cursor-pointer group/content" onClick={() => router.push(`/specialist/${post.authorId}`)}>
                             <p className="text-lg font-medium leading-relaxed text-white/80 group-hover/content:text-white transition-colors">{post.content}</p>
-                            {post.imageUrl && (
-                              <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-2xl group-hover/content:border-primary/30 transition-all">
-                                <Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized />
-                              </div>
-                            )}
+                            {post.imageUrl && <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-2xl group-hover/content:border-primary/30 transition-all"><Image src={post.imageUrl} alt="Post content" fill className="object-cover" unoptimized /></div>}
                           </div>
-
                           <div className="flex items-center gap-6 pt-4 border-t border-white/5">
-                            <button 
-                              onClick={() => handleToggleLike(post.id, post.likedBy || [])}
-                              className={cn(
-                                "flex items-center gap-2 transition-all group",
-                                post.likedBy?.includes(user?.uid) ? "text-primary" : "text-white/30 hover:text-white"
-                              )}
-                            >
-                              <ThumbsUp className={cn("h-5 w-5 transition-transform group-active:scale-125", post.likedBy?.includes(user?.uid) && "fill-primary")} />
-                              <span className="font-black text-sm">{post.likes || 0}</span>
-                            </button>
+                            <button onClick={() => handleToggleLike(post.id, post.likedBy || [])} className={cn("flex items-center gap-2 transition-all group", post.likedBy?.includes(user?.uid) ? "text-primary" : "text-white/30 hover:text-white")}><ThumbsUp className={cn("h-5 w-5 transition-transform group-active:scale-125", post.likedBy?.includes(user?.uid) && "fill-primary")} /><span className="font-black text-sm">{post.likes || 0}</span></button>
                           </div>
                       </Card>
                     ))}
@@ -323,23 +277,11 @@ function DashboardContent() {
               )}
               {activeTab === 'meals' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  {isSpecialist ? (
-                    <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setDirectChatId(''); setActiveTab('chats'); }} />
-                  ) : (
-                    <MealsHub selectedDate={selectedDate} />
-                  )}
+                  {isSpecialist ? <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setDirectChatId(''); setActiveTab('chats'); }} /> : <MealsHub selectedDate={selectedDate} />}
                 </div>
               )}
-              {activeTab === 'meds' && (
-                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <MedicationHub />
-                </div>
-              )}
-              {activeTab === 'fasting' && !isSpecialist && (
-                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <FastingHub />
-                </div>
-              )}
+              {activeTab === 'meds' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><MedicationHub /></div>}
+              {activeTab === 'fasting' && !isSpecialist && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><FastingHub /></div>}
               {activeTab === 'diary' && isSpecialist && (
                 <div className="h-full px-4 flex flex-col animate-in fade-in duration-300 overflow-hidden">
                   <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 h-full pb-40">
@@ -350,29 +292,15 @@ function DashboardContent() {
               {activeTab === 'chats' && (
                 <div className="h-full px-4 flex flex-col animate-in fade-in duration-300">
                   <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden h-full pb-40">
-                    <ChatInterface 
-                      initialSpecialistId={directChatRecipientId} 
-                      initialChatId={directChatId || ''}
-                    />
+                    <ChatInterface initialSpecialistId={directChatRecipientId} initialChatId={directChatId || ''} />
                   </div>
                 </div>
               )}
-              {activeTab === 'activities' && (
-                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <ActivitiesHub selectedDate={selectedDate} />
-                </div>
-              )}
-              {activeTab === 'profile' && (
-                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <div className="max-w-5xl mx-auto pt-4 pb-20">
-                    <ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} />
-                  </div>
-                </div>
-              )}
+              {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><ActivitiesHub selectedDate={selectedDate} /></div>}
+              {activeTab === 'profile' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><div className="max-w-5xl mx-auto pt-4 pb-20"><ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} /></div></div>}
           </div>
         </div>
 
-        {/* НИЖНЕЕ МЕНЮ */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
            <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-4 md:px-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-x-auto no-scrollbar">
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all shrink-0 p-2", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-5 w-5" /></button>
@@ -389,9 +317,7 @@ function DashboardContent() {
               )}
               
               <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all shrink-0 p-2", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{isSpecialist ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}</button>
-              
               <UnifiedDataEntry selectedDate={selectedDate}><button className="h-12 w-12 md:h-14 md:w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)] shrink-0"><Plus className="h-7 w-7 text-white stroke-[3px]" /></button></UnifiedDataEntry>
-              
               <button onClick={() => setActiveTab('meds')} className={cn("transition-all shrink-0 p-2", activeTab === 'meds' ? "text-[#00ffff]" : "text-white/30")}><Pill className="h-5 w-5" /></button>
               <button onClick={() => setActiveTab('chats')} className={cn("transition-all shrink-0 p-2 relative", activeTab === 'chats' ? "text-[#00ffff]" : "text-white/30")}><MessageSquare className="h-5 w-5" />{unreadTotal > 0 && <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black text-white">{unreadTotal > 9 ? '9+' : unreadTotal}</span>}</button>
               <button onClick={() => setActiveTab('activities')} className={cn("transition-all shrink-0 p-2", activeTab === 'activities' ? "text-[#00ffff]" : "text-white/30")}><Zap className="h-5 w-5" /></button>
@@ -404,9 +330,5 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  return (
-    <Suspense fallback={<div className='p-10 text-center text-primary'>Инициализация Bio-Hub...</div>}>
-      <DashboardContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className='p-10 text-center text-primary'>Инициализация Bio-Hub...</div>}><DashboardContent /></Suspense>;
 }

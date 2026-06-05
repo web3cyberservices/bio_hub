@@ -323,17 +323,8 @@ export function SpecialistDiaryHub() {
               <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Пациенты</label>
               <div className="space-y-1">
                 {patients?.map((p: any) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPatientId(p.id)}
-                    className={cn(
-                      "w-full p-2.5 rounded-xl flex items-center gap-3 transition-all",
-                      selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5"
-                    )}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-[10px]">
-                      {p.firstName?.charAt(0)}
-                    </div>
+                  <button key={p.id} onClick={() => setSelectedPatientId(p.id)} className={cn("w-full p-2.5 rounded-xl flex items-center gap-3 transition-all", selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5")}>
+                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-[10px]">{p.firstName?.charAt(0)}</div>
                     <span className="flex-1 text-left text-xs font-bold truncate">{p.firstName}</span>
                   </button>
                 ))}
@@ -343,30 +334,14 @@ export function SpecialistDiaryHub() {
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Локальные файлы</label>
-                {rootHandle && (
-                  <button onClick={handleRefreshOnly} className="text-white/20 hover:text-primary transition-colors">
-                    <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
-                  </button>
-                )}
+                {rootHandle && <button onClick={handleRefreshOnly} className="text-white/20 hover:text-primary transition-colors"><RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} /></button>}
               </div>
-
               {!rootHandle ? (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleSelectRootFolder} 
-                  className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest"
-                >
-                  ОТКРЫТЬ ПАПКУ
-                </Button>
+                <Button variant="outline" size="sm" onClick={handleSelectRootFolder} className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest">ОТКРЫТЬ ПАПКУ</Button>
               ) : (
                 <div className="space-y-0.5 animate-in fade-in duration-500">
-                  <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[9px] truncate mb-2">
-                     <FolderOpen className="h-3 w-3" /> {rootHandle.name}
-                  </div>
-                  {fileTree.map((node, i) => (
-                    <TreeNode key={i} node={node} onToggle={toggleFolderOrOpenFile} activeFileName={activeFile?.name} />
-                  ))}
+                  <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[9px] truncate mb-2"><FolderOpen className="h-3 w-3" /> {rootHandle.name}</div>
+                  {fileTree.map((node, i) => <TreeNode key={i} node={node} onToggle={toggleFolderOrOpenFile} activeFileName={activeFile?.name} />)}
                 </div>
               )}
             </div>
@@ -377,14 +352,8 @@ export function SpecialistDiaryHub() {
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
-             <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-                <Database className="h-24 w-24 relative z-10" />
-             </div>
-             <div className="text-center space-y-2">
-                <p className="font-black uppercase tracking-[0.4em] text-lg">Knowledge Workspace</p>
-                <p className="text-xs font-bold uppercase tracking-widest">Выберите файл для редактирования</p>
-             </div>
+             <div className="relative"><div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" /><Database className="h-24 w-24 relative z-10" /></div>
+             <div className="text-center space-y-2"><p className="font-black uppercase tracking-[0.4em] text-lg">Knowledge Workspace</p><p className="text-xs font-bold uppercase tracking-widest">Выберите файл для редактирования</p></div>
           </div>
         ) : (
           <>
@@ -400,23 +369,12 @@ export function SpecialistDiaryHub() {
                </div>
                <div className="flex items-center gap-3">
                   {activeFile.type !== 'text' && (
-                    <Button 
-                      onClick={handleTranscription}
-                      disabled={transcribing}
-                      className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20"
-                    >
+                    <Button onClick={handleTranscription} disabled={transcribing} className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20">
                       {transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
                       <span className="hidden sm:inline">Перевести в текст</span>
                     </Button>
                   )}
-                  <Button 
-                    onClick={handleSaveFile} 
-                    disabled={!activeFile.isDirty || saveLoading}
-                    className={cn(
-                      "h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg",
-                      activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20"
-                    )}
-                  >
+                  <Button onClick={handleSaveFile} disabled={!activeFile.isDirty || saveLoading} className={cn("h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg", activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20")}>
                     {saveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-2" /> СОХРАНИТЬ</>}
                   </Button>
                </div>
@@ -424,48 +382,28 @@ export function SpecialistDiaryHub() {
 
             <div className="flex-1 relative overflow-hidden bg-[#010411]">
                {activeFile.type === 'text' ? (
-                 <textarea 
-                  value={activeFile.content}
-                  onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })}
-                  className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide"
-                  spellCheck={false}
-                 />
+                 <textarea value={activeFile.content} onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })} className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide" spellCheck={false} />
                ) : (
                  <div className="w-full h-full flex flex-col items-center justify-center p-10 space-y-10">
                     <div className="relative group">
                        <div className="absolute inset-0 bg-primary/10 rounded-full blur-[100px] group-hover:bg-primary/20 transition-all animate-pulse" />
                        <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-primary/20 bg-black/60 flex items-center justify-center relative z-10 shadow-2xl overflow-hidden">
-                          {activeFile.type === 'audio' ? (
-                            <Music className="h-24 w-24 text-primary opacity-40 animate-bounce" />
-                          ) : (
-                            <video src={activeFile.blobUrl} className="w-full h-full object-cover" controls={false} ref={mediaRef as any} />
-                          )}
+                          {activeFile.type === 'audio' ? <Music className="h-24 w-24 text-primary opacity-40 animate-bounce" /> : <video src={activeFile.blobUrl} className="w-full h-full object-cover" controls={false} ref={mediaRef as any} />}
                        </div>
                     </div>
-                    
                     <div className="w-full max-w-xl space-y-6">
                        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl backdrop-blur-xl">
-                          {activeFile.type === 'audio' ? (
-                            <audio src={activeFile.blobUrl} controls className="w-full h-12 filter invert opacity-80" ref={mediaRef as any} />
-                          ) : (
+                          {activeFile.type === 'audio' ? <audio src={activeFile.blobUrl} controls className="w-full h-12 filter invert opacity-80" ref={mediaRef as any} /> : (
                             <div className="flex flex-col gap-4">
                                <div className="flex items-center justify-center gap-6">
                                   <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime -= 10)}><Rewind className="h-6 w-6" /></Button>
-                                  <Button 
-                                    className="h-16 w-16 rounded-full bg-primary text-slate-950 shadow-xl shadow-primary/20"
-                                    onClick={() => mediaRef.current?.paused ? mediaRef.current.play() : mediaRef.current?.pause()}
-                                  >
-                                     <Play className="h-8 w-8" />
-                                  </Button>
+                                  <Button className="h-16 w-16 rounded-full bg-primary text-slate-950 shadow-xl shadow-primary/20" onClick={() => mediaRef.current?.paused ? mediaRef.current.play() : mediaRef.current?.pause()}><Play className="h-8 w-8" /></Button>
                                   <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime += 10)}><FastForward className="h-6 w-6" /></Button>
                                </div>
                             </div>
                           )}
                        </div>
-                       <div className="text-center space-y-2">
-                          <p className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">Media Control Hub</p>
-                          <p className="text-xs text-primary/60 font-bold uppercase tracking-widest">{activeFile.mimeType}</p>
-                       </div>
+                       <div className="text-center space-y-2"><p className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">Media Control Hub</p><p className="text-xs text-primary/60 font-bold uppercase tracking-widest">{activeFile.mimeType}</p></div>
                     </div>
                  </div>
                )}
@@ -478,73 +416,37 @@ export function SpecialistDiaryHub() {
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
            <div className="p-4 border-b border-white/5 flex justify-center">
               <TabsList className="bg-white/5 border border-white/10 rounded-xl h-10 p-1 w-full grid grid-cols-2">
-                 <TabsTrigger value="chat" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                    <MessageSquare className="h-3 w-3 mr-1.5" /> Анализ
-                 </TabsTrigger>
-                 <TabsTrigger value="models" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950">
-                    <Cpu className="h-3 w-3 mr-1.5" /> Модели
-                 </TabsTrigger>
+                 <TabsTrigger value="chat" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950"><MessageSquare className="h-3 w-3 mr-1.5" /> Анализ</TabsTrigger>
+                 <TabsTrigger value="models" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Cpu className="h-3 w-3 mr-1.5" /> Модели</TabsTrigger>
               </TabsList>
            </div>
-
            <div className="flex-1 min-h-0 overflow-hidden">
               <TabsContent value="chat" className="h-full m-0 p-0 flex flex-col outline-none">
                  <ScrollArea className="flex-1 p-5">
                     <div className="space-y-6">
                        {diaryChat.map((msg, i) => (
                          <div key={i} className={cn("p-4 rounded-2xl text-xs leading-relaxed", msg.role === 'user' ? "bg-primary/10 text-primary ml-4" : "bg-white/5 text-white/70 mr-4")}>
-                            <div className="flex items-center gap-2 mb-2 opacity-40">
-                               {msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-                               <span className="text-[8px] font-black uppercase">{msg.role === 'user' ? 'Вы' : 'ИИ'}</span>
-                            </div>
+                            <div className="flex items-center gap-2 mb-2 opacity-40">{msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}<span className="text-[8px] font-black uppercase">{msg.role === 'user' ? 'Вы' : 'ИИ'}</span></div>
                             {msg.text}
                          </div>
                        ))}
-                       {aiLoading && (
-                         <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl animate-pulse">
-                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                            <span className="text-[10px] font-black text-primary/40 uppercase">Анализ...</span>
-                         </div>
-                       )}
+                       {aiLoading && <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl animate-pulse"><Loader2 className="h-3 w-3 animate-spin text-primary" /><span className="text-[10px] font-black text-primary/40 uppercase">Анализ...</span></div>}
                        <div ref={chatScrollRef} />
                     </div>
                  </ScrollArea>
-                 
                  <div className="p-4 bg-black/40 border-t border-white/5">
                     <div className="relative">
-                       <textarea 
-                         rows={3}
-                         value={aiInput}
-                         onChange={(e) => setAiInput(e.target.value)}
-                         onKeyDown={(e) => {
-                           if (e.key === 'Enter' && !e.shiftKey) {
-                             e.preventDefault();
-                             handleSendAiQuery();
-                           }
-                         }}
-                         placeholder="Спросить ИИ о записях..." 
-                         className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10"
-                       />
-                       <button 
-                        onClick={handleSendAiQuery}
-                        disabled={aiLoading || !aiInput.trim()}
-                        className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all disabled:opacity-20"
-                       >
-                          <Send className="h-4 w-4 text-slate-950" />
-                       </button>
+                       <textarea rows={3} value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendAiQuery(); } }} placeholder="Спросить ИИ о записях..." className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10" />
+                       <button onClick={handleSendAiQuery} disabled={aiLoading || !aiInput.trim()} className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all disabled:opacity-20"><Send className="h-4 w-4 text-slate-950" /></button>
                     </div>
                  </div>
               </TabsContent>
-
               <TabsContent value="models" className="h-full m-0 p-5 overflow-y-auto outline-none">
                  <div className="space-y-6 pb-20">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
                        <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
-                          <div className="space-y-1">
-                             <p className="text-sm font-black text-white">BioGemini 2.5</p>
-                             <p className="text-[8px] font-bold text-primary uppercase">Installed & Optimized</p>
-                          </div>
+                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5</p><p className="text-[8px] font-bold text-primary uppercase">Installed & Optimized</p></div>
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
                        </div>
                     </div>
@@ -559,31 +461,13 @@ export function SpecialistDiaryHub() {
 
 function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number, activeFileName?: string }) {
   const isActive = activeFileName === node.name;
-
   return (
     <div className="flex flex-col">
-      <button 
-        onClick={() => onToggle(node)}
-        className={cn(
-          "flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all text-left group",
-          isActive ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-white/5 text-white/40"
-        )}
-        style={{ paddingLeft: `${level * 12 + 8}px` }}
-      >
-        {node.kind === 'directory' ? (
-          node.isOpen ? <FolderOpen className="h-3.5 w-3.5 text-primary/60" /> : <Folder className="h-3.5 w-3.5 text-primary/40" />
-        ) : (
-          <File className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-white/20 group-hover:text-primary/40")} />
-        )}
+      <button onClick={() => onToggle(node)} className={cn("flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all text-left group", isActive ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-white/5 text-white/40")} style={{ paddingLeft: `${level * 12 + 8}px` }}>
+        {node.kind === 'directory' ? (node.isOpen ? <FolderOpen className="h-3.5 w-3.5 text-primary/60" /> : <Folder className="h-3.5 w-3.5 text-primary/40" />) : (<File className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-white/20 group-hover:text-primary/40")} />)}
         <span className={cn("text-[11px] font-medium truncate", isActive && "font-black")}>{node.name}</span>
       </button>
-      {node.isOpen && node.children && (
-        <div className="flex flex-col">
-          {node.children.map((child, i) => (
-            <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />
-          ))}
-        </div>
-      )}
+      {node.isOpen && node.children && <div className="flex flex-col">{node.children.map((child, i) => <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />)}</div>}
     </div>
   );
 }

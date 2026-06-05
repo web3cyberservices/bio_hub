@@ -26,7 +26,7 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE (try/catch паттерн для предотвращения ошибок HMR)
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE
       try {
         // Пытаемся получить уже созданный инстанс
         firestore = getFirestore(app);
