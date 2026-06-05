@@ -31,7 +31,7 @@ interface AISpecialistChatProps {
 
 export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const { user } = useUser();
-  const { firestore } = useFirebase();
+  const { firestore } = useFirestore();
   const [isRecording, setIsRecording] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,9 +40,9 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   ]);
   
   const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore || user.uid === 'public-user') return null;
+    if (!user?.uid || !firestore || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
-  }, [user, firestore]);
+  }, [user?.uid, firestore]);
 
   const { data: userData } = useDoc<any>(userDocRef);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
-      // КРИТИЧЕСКИЙ ФИКС: Динамический импорт для предотвращения HMR-ошибок Turbopack
+      // ДИНАМИЧЕСКИЙ ИМПОРТ: Разрывает круговую зависимость для Turbopack
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const history = messages.map(m => ({ role: m.role, content: m.content }));
@@ -100,7 +100,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       toast({
         variant: 'destructive',
         title: 'Ошибка ИИ',
-        description: 'Не удалось получить ответ.',
+        description: 'Не удалось получить ответ от ассистента.',
       });
     } finally {
       setLoading(false);

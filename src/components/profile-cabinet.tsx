@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, Loader2, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 /**
- * Динамический импорт диалога истории для предотвращения ошибок Turbopack HMR.
+ * Динамический импорт для предотвращения HMR-ошибок Turbopack.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -179,92 +179,83 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
-                {currentPhotoUrl ? (
-                  <img src={currentPhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12 text-white/20" /></div>
-                )}
-              </div>
-              <div className="flex-1 space-y-4">
-                <div onClick={() => fileInputRef.current?.click()} className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all text-center">
-                  <Upload className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-sm font-black text-white uppercase">Загрузить новое фото</p>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
+                  {currentPhotoUrl ? (
+                    <img src={currentPhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><User className="h-12 w-12 text-white/20" /></div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-4 w-full">
+                  <div onClick={() => fileInputRef.current?.click()} className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all text-center">
+                    <Upload className="h-8 w-8 text-primary mx-auto mb-2" />
+                    <p className="text-sm font-black text-white uppercase">Загрузить новое фото</p>
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                  </div>
                 </div>
               </div>
-            </div>
+            </CardContent>
           </Card>
 
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Info className="h-4 w-4" /> 1. Личные данные</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="profileType" render={({ field }) => (
-                  <FormItem><FormLabel>Роль в системе</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
+              <CardContent className="p-0 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl><FormMessage /></FormItem>)} />
+                  <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="profileType" render={({ field }) => (
+                    <FormItem><FormLabel>Роль в системе</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                </div>
+              </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Activity className="h-4 w-4" /> 2. Биометрия</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <CardContent className="p-0 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField control={form.control} name="gender" render={({ field }) => (
                   <FormItem><FormLabel>Пол</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="мужской">Мужской</SelectItem><SelectItem value="женский">Женский</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-              </div>
+              </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Flame className="h-4 w-4" /> 3. Образ жизни</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="smoking" render={({ field }) => (
-                  <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
+              <CardContent className="p-0 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="smoking" render={({ field }) => (
+                    <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                  <FormField control={form.control} name="alcohol" render={({ field }) => (
+                    <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="medications" render={({ field }) => (
+                   <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white" /></FormControl></FormItem>
                 )} />
-                <FormField control={form.control} name="alcohol" render={({ field }) => (
-                  <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="medications" render={({ field }) => (
-                 <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white" /></FormControl></FormItem>
-              )} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-              </div>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="workActivityType" render={({ field }) => (
-                  <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-              )} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                </div>
+              </CardContent>
             </Card>
           </div>
 
           {isSpecialist && (
             <div className="space-y-6 animate-in slide-in-from-top-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 4. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
@@ -288,7 +279,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
              </Card>
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
                 <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
-                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив</Button></AnalysisHistoryDialog>
+                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase w-full">Открыть архив</Button></AnalysisHistoryDialog>
              </Card>
           </div>
 

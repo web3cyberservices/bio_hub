@@ -78,7 +78,6 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Защита от попадания на вкладки, не предназначенные для роли
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -254,7 +253,7 @@ function DashboardContent() {
               {activeTab === 'fasting' && !isSpecialist && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><FastingHub /></div>}
               
               {activeTab === 'diary' && isSpecialist && (
-                <div className="flex-1 min-h-0 h-full overflow-hidden pb-28 pt-0">
+                <div className="flex-1 min-h-0 h-full overflow-hidden pb-24 md:pb-28">
                   <SpecialistDiaryHub />
                 </div>
               )}
@@ -271,7 +270,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* BOTTOM NAVIGATION */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
            <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-4 md:px-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-x-auto no-scrollbar">
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all shrink-0 p-2", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-5 w-5" /></button>
