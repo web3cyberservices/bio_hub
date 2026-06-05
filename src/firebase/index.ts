@@ -35,15 +35,15 @@ export function initializeFirebase() {
     
     // 3. Безопасная инициализация Firestore
     try {
-      // Пытаемся инициализировать с кэшем
+      // Сначала проверяем, есть ли уже живой экземпляр
+      firestore = getFirestore(app);
+    } catch (e) {
+      // Если не инициализировано, создаем один раз с настройками
       firestore = initializeFirestore(app, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
       });
-    } catch (e: any) {
-      // Если уже инициализировано (ошибка HMR), получаем текущий инстанс
-      firestore = getFirestore(app);
     }
 
     return { firebaseApp: app, auth, firestore };

@@ -93,7 +93,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // КРИТИЧЕСКИ: Заменяем все null на пустые строки/нули для корректной работы uncontrolled inputs
+      // КРИТИЧЕСКИ: Заменяем все null на пустые строки/нули для корректной работы uncontrolled inputs и валидации Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -104,6 +104,14 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             sanitizedData[key] = 'user';
           } else if (key === 'workActivityType') {
             sanitizedData[key] = 'mental';
+          } else if (key === 'smoking') {
+            sanitizedData[key] = 'нет';
+          } else if (key === 'alcohol') {
+            sanitizedData[key] = 'не употребляю';
+          } else if (key === 'activityLevel') {
+            sanitizedData[key] = 'moderate';
+          } else if (key === 'healthGoal') {
+            sanitizedData[key] = 'поддержать текущее состояние';
           } else {
             sanitizedData[key] = '';
           }
