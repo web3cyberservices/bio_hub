@@ -64,7 +64,7 @@ function DashboardContent() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: userData } = useDoc<any>(userDocRef);
+  const { data: userData, isLoading: userDataLoading } = useDoc<any>(userDocRef);
   const isSpecialist = userData?.profileType === 'specialist';
 
   useEffect(() => {
@@ -78,7 +78,6 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Принудительный редирект для специалистов с раздела голодания на дневник
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');

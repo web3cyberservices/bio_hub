@@ -117,13 +117,11 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Санитизация данных для предотвращения uncontrolled input
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
-          sanitizedData[key] = key === 'weight' || key === 'height' || key === 'workHoursPerDay' ? 0 : '';
+          sanitizedData[key] = (key === 'weight' || key === 'height' || key === 'workHoursPerDay') ? 0 : '';
         }
       });
-      
       form.reset(sanitizedData); 
       checkObsidianAccess();
     } 
@@ -165,14 +163,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     setLoading(true);
     try {
       await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-      
       if (userData?.obsidianConnected) {
-        await syncToObsidian({
-          type: 'profile',
-          payload: values
-        });
+        await syncToObsidian({ type: 'profile', payload: values });
       }
-
       toast({ title: 'Профиль обновлен и синхронизирован' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
@@ -190,7 +183,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
   const isSpecialist = form.watch('profileType') === 'specialist';
 
-  const startVoiceInput = (fieldName: string, setter: (val: string) => void) => {
+  const startVoiceInput = (fieldName: string) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
     const recognition = new SpeechRecognition();
@@ -264,14 +257,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                 <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="healthGoal" render={({ field }) => (
-                  <FormItem><FormLabel>Цель</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="снизить массу тела">Снизить вес</SelectItem><SelectItem value="поддержать текущее состояние">Поддержание</SelectItem><SelectItem value="набор массы">Набор массы</SelectItem></SelectContent></Select></FormItem>
-                )} />
-                <FormField control={form.control} name="activityLevel" render={({ field }) => (
-                  <FormItem><FormLabel>Активность</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="minimal">Минимальная</SelectItem><SelectItem value="low">Низкая</SelectItem><SelectItem value="moderate">Средняя</SelectItem><SelectItem value="high">Высокая</SelectItem><SelectItem value="athlete">Атлет</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
             </Card>
           </div>
 
@@ -290,10 +275,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </Card>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
-          </Button>
-
           {isSpecialist && (
             <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Рабочее пространство</h3>
@@ -309,26 +290,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </div>
           )}
 
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> {isSpecialist ? '5' : '4'}. Интеграция Obsidian</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="space-y-2 flex-1">
-                     <h4 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" /> База знаний Obsidian</h4>
-                     <p className="text-xs text-white/50 font-medium">Подключите локальное хранилище Obsidian для синхронизации вашего Цифрового Двойника.</p>
-                     <div className="flex items-center gap-2 mt-4">
-                        <span className={cn("h-2 w-2 rounded-full", obsidianVault ? "bg-emerald-500 animate-pulse" : "bg-red-500")} />
-                        <span className={cn("text-[10px] font-black uppercase", obsidianVault ? "text-emerald-400" : "text-red-400")}>
-                           {obsidianVault ? `Подключено: ${obsidianVault}` : "Не подключено"}
-                        </span>
-                     </div>
-                  </div>
-                  <Button type="button" variant="outline" disabled={!isObsidianSupported || obsidianLoading} onClick={handleConnectObsidian} className="h-16 px-8 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px]">
-                    {obsidianLoading ? <Loader2 className="animate-spin" /> : "ПОДКЛЮЧИТЬ OBSIDIAN"}
-                  </Button>
-               </div>
-            </Card>
-          </div>
+          <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
+          </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
