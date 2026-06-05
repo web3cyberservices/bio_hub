@@ -80,7 +80,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
-      // КРИТИЧЕСКИЙ ФИКС: Локальный динамический импорт для предотвращения HMR-ошибок
+      // КРИТИЧЕСКИЙ ФИКС: Динамический импорт для предотвращения HMR-ошибок Turbopack
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const history = messages.map(m => ({ role: m.role, content: m.content }));

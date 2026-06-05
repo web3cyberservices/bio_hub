@@ -1,11 +1,10 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 import { 
   getFirestore, 
-  Firestore, 
   initializeFirestore, 
   persistentLocalCache, 
   persistentMultipleTabManager 
@@ -30,7 +29,7 @@ export function initializeFirebase() {
         })
       });
     } catch (error: any) {
-      // Если Firestore уже запущен (Fast Refresh), возвращаем текущий инстанс
+      // Если Firestore уже запущен (Fast Refresh), возвращаем существующий инстанс
       if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
         return getFirestore(app);
       }

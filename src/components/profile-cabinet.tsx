@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 /**
- * КРИТИЧЕСКИЙ ФИКС: Динамический импорт диалога истории для предотвращения ошибок Turbopack HMR.
+ * Динамический импорт диалога истории для предотвращения ошибок Turbopack HMR.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -101,7 +101,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Санитарная очистка для предотвращения Uncontrolled Input и ошибок Zod
+      // КРИТИЧЕСКИЙ ФИКС: Заменяем null на пустые строки для успешной валидации Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -147,7 +147,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({ title: 'Профиль успешно обновлен' });
     } catch (e: any) {
       console.error("Save error:", e);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте данные.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте корректность данных.' });
     } finally {
       setLoading(false);
     }
