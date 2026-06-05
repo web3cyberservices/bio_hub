@@ -117,6 +117,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       const sanitizedData: any = { ...userData };
+      // Ensure all schema fields have at least an empty string/0 to avoid "uncontrolled to controlled" warning
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           sanitizedData[key] = (key === 'weight' || key === 'height' || key === 'workHoursPerDay') ? 0 : '';

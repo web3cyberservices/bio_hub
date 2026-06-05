@@ -64,7 +64,7 @@ function DashboardContent() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
-  const { data: userData, isLoading: userDataLoading } = useDoc<any>(userDocRef);
+  const { data: userData } = useDoc<any>(userDocRef);
   const isSpecialist = userData?.profileType === 'specialist';
 
   useEffect(() => {
@@ -78,6 +78,7 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
+  // Security redirect for specialists trying to access fasting
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -121,7 +122,7 @@ function DashboardContent() {
   useEffect(() => {
     if (!firestore || !user?.uid) return;
     
-    const q = query(collection(firestore, 'users', user.uid, 'dailyLogs'));
+    const q = query(collection(firestore, user.uid === 'public-user' ? 'public-logs' : 'users', user.uid, 'dailyLogs'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const map: Record<string, number> = {};
@@ -378,9 +379,13 @@ function DashboardContent() {
               <button onClick={() => setActiveTab('meals')} className={cn("transition-all shrink-0 p-2", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{isSpecialist ? <UserCheck className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}</button>
               
               {isSpecialist ? (
-                <button onClick={() => setActiveTab('diary')} className={cn("transition-all shrink-0 p-2", activeTab === 'diary' ? "text-[#00ffff]" : "text-white/30")}><BookOpen className="h-5 w-5" /></button>
+                <button onClick={() => setActiveTab('diary')} className={cn("transition-all shrink-0 p-2", activeTab === 'diary' ? "text-[#00ffff]" : "text-white/30")} title="Дневник специалиста">
+                  <BookOpen className="h-5 w-5" />
+                </button>
               ) : (
-                <button onClick={() => setActiveTab('fasting')} className={cn("transition-all shrink-0 p-2", activeTab === 'fasting' ? "text-[#00ffff]" : "text-white/30")}><Timer className="h-5 w-5" /></button>
+                <button onClick={() => setActiveTab('fasting')} className={cn("transition-all shrink-0 p-2", activeTab === 'fasting' ? "text-[#00ffff]" : "text-white/30")} title="Интервальное голодание">
+                  <Timer className="h-5 w-5" />
+                </button>
               )}
               
               <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all shrink-0 p-2", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{isSpecialist ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}</button>

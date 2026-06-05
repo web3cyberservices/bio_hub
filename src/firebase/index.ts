@@ -26,13 +26,16 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // Использование современного способа инициализации кэша (Firebase 10.3+)
-      // persistentMultipleTabManager заменяет устаревший метод persistence
-      firestore = initializeFirestore(app, {
-        cache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager()
-        })
-      });
+      // FIX: Check if firestore is already initialized to avoid "different options" error
+      try {
+        firestore = getFirestore(app);
+      } catch (e) {
+        firestore = initializeFirestore(app, {
+          cache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+          })
+        });
+      }
 
       return {
         firebaseApp: app,
