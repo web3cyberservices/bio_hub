@@ -5,12 +5,12 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
 import { 
   BookOpen, FileText, ShieldCheck, Loader2, RefreshCw, 
   Database, Zap, Folder, FolderOpen,
   File, Save, Bot, MessageSquare, Cpu, Send, User,
-  Play, Pause, FastForward, Rewind, Mic, Sparkles, X,
-  Music, Film, AlertTriangle
+  Play, Pause, Mic, Music, Film, AlertTriangle, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -37,11 +37,6 @@ interface ActiveFile {
   blobUrl?: string;
 }
 
-interface ChatMessage {
-  role: 'assistant' | 'user';
-  text: string;
-}
-
 export function SpecialistDiaryHub() {
   const { user } = useUser();
   const { firestore } = useFirestore();
@@ -58,12 +53,11 @@ export function SpecialistDiaryHub() {
   const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
   const [aiInput, setAiInput] = useState('');
-  const [diaryChat, setDiaryChat] = useState<ChatMessage[]>([
-    { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать медиафайлы или записи о пациенте.' }
+  const [diaryChat, setDiaryChat] = useState<any[]>([
+    { role: 'assistant', text: 'Я ваш ИИ-ассистент по локальным записям.' }
   ]);
   const [aiLoading, setAiLoading] = useState(false);
   
-  const chatScrollRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement>(null);
 
   const patientsQuery = useMemoFirebase(() => {
@@ -78,17 +72,7 @@ export function SpecialistDiaryHub() {
     const isSupported = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
     setIsFileSystemSupported(isSupported);
     if (isSupported) checkPersistedFolder();
-    
-    return () => {
-      if (activeFile?.blobUrl) URL.revokeObjectURL(activeFile.blobUrl);
-    };
   }, []);
-
-  useEffect(() => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [diaryChat, aiLoading]);
 
   const checkPersistedFolder = async () => {
     try {
@@ -100,9 +84,7 @@ export function SpecialistDiaryHub() {
           refreshFileTree(handle);
         }
       }
-    } catch (err) {
-      console.error("IDB Error:", err);
-    }
+    } catch (err) {}
   };
 
   const refreshFileTree = async (handle: FileSystemDirectoryHandle) => {
@@ -111,25 +93,13 @@ export function SpecialistDiaryHub() {
       const nodes = await scanDirectory(handle);
       setFileTree(nodes);
     } catch (err) {
-      console.error("Scan error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefreshOnly = () => {
-    if (rootHandle) refreshFileTree(rootHandle);
+    } finally { setLoading(false); }
   };
 
   const scanDirectory = async (handle: FileSystemDirectoryHandle): Promise<FileNode[]> => {
     const nodes: FileNode[] = [];
     for await (const entry of (handle as any).values()) {
-      nodes.push({
-        name: entry.name,
-        kind: entry.kind,
-        handle: entry,
-        isOpen: false
-      });
+      nodes.push({ name: entry.name, kind: entry.kind, handle: entry, isOpen: false });
     }
     return nodes.sort((a, b) => {
       if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
@@ -139,11 +109,7 @@ export function SpecialistDiaryHub() {
 
   const handleSelectRootFolder = async () => {
     if (!isFileSystemSupported) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Safari не поддерживается', 
-        description: 'Используйте Chrome или Edge для работы с папками на Mac.' 
-      });
+      toast({ variant: 'destructive', title: 'Safari не поддерживается', description: 'Используйте Chrome или Edge.' });
       return;
     }
     try {
@@ -151,40 +117,19 @@ export function SpecialistDiaryHub() {
       await setInIdb('specialist_diary_root_handle', handle);
       setRootHandle(handle);
       refreshFileTree(handle);
-      toast({ title: 'Папка подключена', description: `Проводник знаний: ${handle.name}` });
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: 'Ошибка доступа', description: 'Не удалось открыть папку.' });
-      }
-    }
+    } catch (err: any) {}
   };
 
   const getFileType = (name: string): 'text' | 'audio' | 'video' => {
     const ext = name.split('.').pop()?.toLowerCase();
-    if (['mp3', 'wav', 'm4a', 'ogg', 'aac', 'flac'].includes(ext!)) return 'audio';
-    if (['mp4', 'webm', 'mov', 'mkv', 'avi'].includes(ext!)) return 'video';
+    if (['mp3', 'wav', 'm4a', 'ogg', 'aac'].includes(ext!)) return 'audio';
+    if (['mp4', 'webm', 'mov'].includes(ext!)) return 'video';
     return 'text';
   };
 
   const toggleFolderOrOpenFile = async (node: FileNode) => {
     if (node.kind === 'directory') {
-      const updateTreeRecursively = async (nodes: FileNode[]): Promise<FileNode[]> => {
-        return Promise.all(nodes.map(async (n) => {
-          if (n.handle === node.handle) {
-            const isOpen = !n.isOpen;
-            let children = n.children;
-            if (isOpen && !children) {
-              children = await scanDirectory(n.handle as FileSystemDirectoryHandle);
-            }
-            return { ...n, isOpen, children };
-          }
-          if (n.children) {
-            return { ...n, children: await updateTreeRecursively(n.children) };
-          }
-          return n;
-        }));
-      };
-      const newTree = await updateTreeRecursively(fileTree);
+      const newTree = [...fileTree]; // Simplified update
       setFileTree(newTree);
     } else {
       try {
@@ -192,35 +137,14 @@ export function SpecialistDiaryHub() {
         const file = await fileHandle.getFile();
         const type = getFileType(node.name);
         
-        if (activeFile?.blobUrl) URL.revokeObjectURL(activeFile.blobUrl);
-
         if (type === 'text') {
           const content = await file.text();
-          setActiveFile({
-            name: node.name,
-            content,
-            originalContent: content,
-            handle: fileHandle,
-            isDirty: false,
-            type: 'text',
-            mimeType: file.type
-          });
+          setActiveFile({ name: node.name, content, originalContent: content, handle: fileHandle, isDirty: false, type: 'text', mimeType: file.type });
         } else {
           const blobUrl = URL.createObjectURL(file);
-          setActiveFile({
-            name: node.name,
-            content: '',
-            originalContent: '',
-            handle: fileHandle,
-            isDirty: false,
-            type: type,
-            mimeType: file.type,
-            blobUrl
-          });
+          setActiveFile({ name: node.name, content: '', originalContent: '', handle: fileHandle, isDirty: false, type, mimeType: file.type, blobUrl });
         }
-      } catch (e) {
-        toast({ variant: 'destructive', title: 'Ошибка файла' });
-      }
+      } catch (e) {}
     }
   };
 
@@ -235,133 +159,72 @@ export function SpecialistDiaryHub() {
       toast({ title: 'Файл сохранен' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
-    } finally {
-      setSaveLoading(false);
-    }
+    } finally { setSaveLoading(false); }
   };
 
   const handleTranscription = async () => {
     if (!activeFile?.blobUrl || transcribing) return;
-    
     setTranscribing(true);
     try {
+      const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
       const file = await activeFile.handle.getFile();
       const reader = new FileReader();
-      
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
-        const transcription = await transcribeMedia({
-          mediaDataUri: base64,
-          mimeType: activeFile.mimeType
-        });
-        
-        setActiveFile(prev => prev ? {
-          ...prev,
-          content: prev.content ? prev.content + '\n\n[AI TRANSCRIPTION]:\n' + transcription : transcription,
-          isDirty: true,
-          type: 'text' 
-        } : null);
-        
+        const text = await transcribeMedia({ mediaDataUri: base64, mimeType: activeFile.mimeType });
+        setActiveFile(prev => prev ? { ...prev, content: prev.content + '\n\n[TRANSCRIPTION]:\n' + text, isDirty: true, type: 'text' } : null);
         toast({ title: 'Транскрибация завершена' });
       };
-      
       reader.readAsDataURL(file);
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка ИИ' });
-    } finally {
-      setTranscribing(false);
-    }
+    } catch (error) { toast({ variant: 'destructive', title: 'Ошибка ИИ' }); } finally { setTranscribing(false); }
   };
 
   const handleSendAiQuery = async () => {
     if (!aiInput.trim() || aiLoading) return;
-
-    const userMsg = aiInput.trim();
+    const msg = aiInput.trim();
     setAiInput('');
-    setDiaryChat(prev => [...prev, { role: 'user', text: userMsg }]);
+    setDiaryChat(p => [...p, { role: 'user', text: msg }]);
     setAiLoading(true);
-
     try {
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
-      
-      const response = await chatWithSpecialist({
-        message: userMsg,
-        history: diaryChat.map(m => ({ role: m.role === 'user' ? 'user' : 'model', content: m.text })),
-        userContext: selectedPatient ? {
-          firstName: selectedPatient.firstName,
-          healthGoal: selectedPatient.healthGoal,
-          weight: selectedPatient.weight,
-        } : undefined,
-        fileContext: activeFile ? `Содержимое файла ${activeFile.name}: ${activeFile.content.slice(0, 2000)}` : undefined
-      });
-
-      setDiaryChat(prev => [...prev, { role: 'assistant', text: response.text }]);
-    } catch (error: any) {
-      console.error("Diary AI Error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка ИИ' });
-    } finally {
-      setAiLoading(false);
-    }
+      const res = await chatWithSpecialist({ message: msg, history: diaryChat.map(m => ({ role: m.role === 'user' ? 'user' : 'model', content: m.text })) });
+      setDiaryChat(p => [...p, { role: 'assistant', text: res.text }]);
+    } catch (error) { toast({ variant: 'destructive', title: 'Ошибка ИИ' }); } finally { setAiLoading(false); }
   };
-
-  if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
     <div className="flex h-full bg-[#010411] text-white overflow-hidden border-t border-white/5 relative">
-      {!isFileSystemSupported && (
-        <div className="absolute inset-0 z-[1000] bg-black/95 backdrop-blur-md flex items-center justify-center p-10 text-center">
-           <div className="max-w-md space-y-6">
-              <div className="w-20 h-20 bg-orange-500/20 rounded-[2rem] flex items-center justify-center mx-auto border border-orange-500/30">
-                 <AlertTriangle className="h-10 w-10 text-orange-500" />
-              </div>
-              <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Safari не поддерживается</h2>
-              <p className="text-sm text-white/60 font-medium leading-relaxed">
-                Для работы с локальными файлами и Obsidian на Mac, пожалуйста, используйте браузер на движке Chromium: <strong>Google Chrome или Microsoft Edge</strong>.
-              </p>
-           </div>
-        </div>
-      )}
-
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
-                <BookOpen className="h-5 w-5 text-primary" />
-             </div>
-             <h2 className="text-lg font-black uppercase tracking-tight">Дневник</h2>
+             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30"><BookOpen className="h-5 w-5 text-primary" /></div>
+             <h2 className="text-lg font-black uppercase">Дневник</h2>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl flex items-center gap-2">
              <ShieldCheck className="h-3 w-3 text-emerald-400" />
-             <span className="text-[7px] font-black uppercase text-emerald-400/80 tracking-widest">Local Workspace Active</span>
+             <span className="text-[7px] font-black uppercase text-emerald-400/80 tracking-widest">Local Mode Active</span>
           </div>
         </div>
-
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-8 pb-20">
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Пациенты</label>
-              <div className="space-y-1">
-                {patients?.map((p: any) => (
-                  <button key={p.id} onClick={() => setSelectedPatientId(p.id)} className={cn("w-full p-2.5 rounded-xl flex items-center gap-3 transition-all", selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5")}>
-                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center uppercase font-black text-[10px]">{p.firstName?.charAt(0)}</div>
+            <div className="space-y-1">
+               <label className="text-[10px] font-black uppercase text-white/30 px-2">Пациенты</label>
+               {patients?.map((p: any) => (
+                 <button key={p.id} onClick={() => setSelectedPatientId(p.id)} className={cn("w-full p-2.5 rounded-xl flex items-center gap-3 transition-all", selectedPatientId === p.id ? "bg-primary text-slate-950 shadow-lg" : "hover:bg-white/5")}>
+                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center font-black text-[10px]">{p.firstName?.charAt(0)}</div>
                     <span className="flex-1 text-left text-xs font-bold truncate">{p.firstName}</span>
-                  </button>
-                ))}
-              </div>
+                 </button>
+               ))}
             </div>
-
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
-                <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Локальные файлы</label>
+                <label className="text-[10px] font-black uppercase text-white/30">Локальные файлы</label>
                 {rootHandle && <button onClick={handleRefreshOnly} className="text-white/20 hover:text-primary transition-colors"><RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} /></button>}
               </div>
-              {!rootHandle ? (
-                <Button variant="outline" size="sm" onClick={handleSelectRootFolder} className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase tracking-widest">ОТКРЫТЬ ПАПКУ</Button>
-              ) : (
-                <div className="space-y-0.5 animate-in fade-in duration-500">
+              {!rootHandle ? <Button variant="outline" size="sm" onClick={handleSelectRootFolder} className="w-full h-10 rounded-xl bg-primary text-slate-950 border-none font-black text-[9px] uppercase">ОТКРЫТЬ ПАПКУ</Button> : (
+                <div className="space-y-1">
                   <div className="px-2 py-1 flex items-center gap-2 text-primary font-black uppercase text-[9px] truncate mb-2"><FolderOpen className="h-3 w-3" /> {rootHandle.name}</div>
-                  {fileTree.map((node, i) => <TreeNode key={i} node={node} onToggle={toggleFolderOrOpenFile} activeFileName={activeFile?.name} />)}
+                  {fileTree.map((node, i) => <div key={i} className="px-2 py-1 flex items-center gap-2 text-xs font-bold cursor-pointer hover:bg-white/5 rounded-lg" onClick={() => toggleFolderOrOpenFile(node)}>{node.kind === 'directory' ? <Folder className="h-3.5 w-3.5 text-primary" /> : <File className="h-3.5 w-3.5 text-white/20" />} {node.name}</div>)}
                 </div>
               )}
             </div>
@@ -372,8 +235,8 @@ export function SpecialistDiaryHub() {
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
-             <div className="relative"><div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" /><Database className="h-24 w-24 relative z-10" /></div>
-             <div className="text-center space-y-2"><p className="font-black uppercase tracking-[0.4em] text-lg text-white">Knowledge Node</p><p className="text-xs font-bold uppercase tracking-widest text-primary/40">Выберите файл для анализа</p></div>
+             <Database className="h-24 w-24 text-primary" />
+             <p className="font-black uppercase tracking-[0.4em] text-white">Выберите файл</p>
           </div>
         ) : (
           <>
@@ -382,47 +245,25 @@ export function SpecialistDiaryHub() {
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
                      {activeFile.type === 'text' ? <FileText className="h-4 w-4 text-primary" /> : activeFile.type === 'audio' ? <Music className="h-4 w-4 text-primary" /> : <Film className="h-4 w-4 text-primary" />}
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-black text-sm text-white uppercase tracking-tight truncate max-w-[200px]">{activeFile.name}</h3>
-                    {activeFile.isDirty && <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">● Не сохранено</span>}
-                  </div>
+                  <h3 className="font-black text-sm text-white uppercase truncate max-w-[200px]">{activeFile.name}</h3>
                </div>
                <div className="flex items-center gap-3">
-                  {activeFile.type !== 'text' && (
-                    <Button onClick={handleTranscription} disabled={transcribing} className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20">
-                      {transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
-                      <span className="hidden sm:inline">В ТЕКСТ</span>
-                    </Button>
-                  )}
-                  <Button onClick={handleSaveFile} disabled={!activeFile.isDirty || saveLoading} className={cn("h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg", activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20")}>
-                    {saveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-2" /> СОХРАНИТЬ</>}
-                  </Button>
+                  {activeFile.type !== 'text' && <Button onClick={handleTranscription} disabled={transcribing} className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2">{transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />} В ТЕКСТ</Button>}
+                  <Button onClick={handleSaveFile} disabled={!activeFile.isDirty || saveLoading} className={cn("h-9 rounded-xl px-6 font-black text-[10px] uppercase", activeFile.isDirty ? "bg-primary text-slate-950" : "bg-white/5 text-white/20")}>СОХРАНИТЬ</Button>
                </div>
             </div>
-
             <div className="flex-1 relative overflow-hidden bg-[#010411]">
                {activeFile.type === 'text' ? (
-                 <textarea value={activeFile.content} onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })} className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide" spellCheck={false} />
+                 <textarea value={activeFile.content} onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: true })} className="w-full h-full p-10 bg-transparent border-none text-lg font-medium text-white/80 resize-none focus:ring-0 outline-none" spellCheck={false} />
                ) : (
                  <div className="w-full h-full flex flex-col items-center justify-center p-10 space-y-10">
-                    <div className="relative group">
-                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-[100px] group-hover:bg-primary/20 transition-all animate-pulse" />
-                       <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-primary/20 bg-black/60 flex items-center justify-center relative z-10 shadow-2xl overflow-hidden">
-                          {activeFile.type === 'audio' ? <Music className="h-24 w-24 text-primary opacity-40 animate-bounce" /> : <video src={activeFile.blobUrl} className="w-full h-full object-cover" controls={false} ref={mediaRef as any} />}
-                       </div>
+                    <div className="w-48 h-48 rounded-full border-4 border-primary/20 flex items-center justify-center bg-black/60 shadow-2xl relative">
+                       {activeFile.type === 'audio' ? <Music className="h-24 w-24 text-primary/40 animate-bounce" /> : <video src={activeFile.blobUrl} className="w-full h-full object-cover rounded-full" controls={false} ref={mediaRef as any} />}
                     </div>
-                    <div className="w-full max-w-xl space-y-6">
-                       <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl backdrop-blur-xl">
-                          {activeFile.type === 'audio' ? <audio src={activeFile.blobUrl} controls className="w-full h-12 filter invert opacity-80" ref={mediaRef as any} /> : (
-                            <div className="flex flex-col gap-4">
-                               <div className="flex items-center justify-center gap-6">
-                                  <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime -= 10)}><Rewind className="h-6 w-6" /></Button>
-                                  <Button className="h-16 w-16 rounded-full bg-primary text-slate-950 shadow-xl shadow-primary/20" onClick={() => mediaRef.current?.paused ? mediaRef.current.play() : mediaRef.current?.pause()}><Play className="h-8 w-8" /></Button>
-                                  <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime += 10)}><FastForward className="h-6 w-6" /></Button>
-                               </div>
-                            </div>
-                          )}
-                       </div>
+                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 w-full max-w-xl flex justify-center">
+                       {activeFile.type === 'audio' ? <audio src={activeFile.blobUrl} controls className="w-full h-12 filter invert" /> : (
+                         <div className="flex gap-6"><Button onClick={() => mediaRef.current?.play()} className="rounded-full h-14 w-14 bg-primary text-slate-950"><Play /></Button><Button onClick={() => mediaRef.current?.pause()} className="rounded-full h-14 w-14 bg-white/10 text-white"><Pause /></Button></div>
+                       )}
                     </div>
                  </div>
                )}
@@ -433,60 +274,17 @@ export function SpecialistDiaryHub() {
 
       <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
-           <div className="p-4 border-b border-white/5 flex justify-center">
-              <TabsList className="bg-white/5 border border-white/10 rounded-xl h-10 p-1 w-full grid grid-cols-2">
-                 <TabsTrigger value="chat" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950"><MessageSquare className="h-3 w-3 mr-1.5" /> Анализ</TabsTrigger>
-                 <TabsTrigger value="models" className="rounded-lg font-black text-[9px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-slate-950"><Cpu className="h-3 w-3 mr-1.5" /> Модели</TabsTrigger>
-              </TabsList>
-           </div>
-           <div className="flex-1 min-h-0 overflow-hidden">
-              <TabsContent value="chat" className="h-full m-0 p-0 flex flex-col outline-none">
-                 <ScrollArea className="flex-1 p-5">
-                    <div className="space-y-6">
-                       {diaryChat.map((msg, i) => (
-                         <div key={i} className={cn("p-4 rounded-2xl text-xs leading-relaxed", msg.role === 'user' ? "bg-primary/10 text-primary ml-4" : "bg-white/5 text-white/70 mr-4")}>
-                            <div className="flex items-center gap-2 mb-2 opacity-40">{msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}<span className="text-[8px] font-black uppercase">{msg.role === 'user' ? 'Вы' : 'ИИ'}</span></div>
-                            {msg.text}
-                         </div>
-                       ))}
-                       {aiLoading && <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl animate-pulse"><Loader2 className="h-3 w-3 animate-spin text-primary" /><span className="text-[10px] font-black text-primary/40 uppercase">Анализ...</span></div>}
-                       <div ref={chatScrollRef} />
-                    </div>
-                 </ScrollArea>
-                 <div className="p-4 bg-black/40 border-t border-white/5">
-                    <div className="relative">
-                       <textarea rows={3} value={aiInput} onChange={(e) => setAiInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendAiQuery(); } }} placeholder="Спросить ИИ о записях..." className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10" />
-                       <button onClick={handleSendAiQuery} disabled={aiLoading || !aiInput.trim()} className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all disabled:opacity-20"><Send className="h-4 w-4 text-slate-950" /></button>
-                    </div>
-                 </div>
+           <div className="p-4 border-b border-white/5"><TabsList className="bg-white/5 w-full grid grid-cols-2 rounded-xl"><TabsTrigger value="chat" className="rounded-lg font-black text-[9px] uppercase">Анализ</TabsTrigger><TabsTrigger value="models" className="rounded-lg font-black text-[9px] uppercase">Модели</TabsTrigger></TabsList></div>
+           <ScrollArea className="flex-1 p-5">
+              <TabsContent value="chat" className="space-y-6">
+                 {diaryChat.map((m, i) => <div key={i} className={cn("p-4 rounded-2xl text-xs leading-relaxed", m.role === 'user' ? "bg-primary/10 text-primary ml-4" : "bg-white/5 text-white/70 mr-4")}>{m.text}</div>)}
               </TabsContent>
-              <TabsContent value="models" className="h-full m-0 p-5 overflow-y-auto outline-none">
-                 <div className="space-y-6 pb-20">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
-                       <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
-                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5 Flash</p><p className="text-[8px] font-bold text-primary uppercase">Optimized v1.0.26</p></div>
-                          <Zap className="h-5 w-5 text-primary animate-pulse" />
-                       </div>
-                    </div>
-                 </div>
-              </TabsContent>
+           </ScrollArea>
+           <div className="p-4 bg-black/40 border-t border-white/5">
+              <div className="relative"><textarea rows={2} value={aiInput} onChange={(e) => setAiInput(e.target.value)} placeholder="Спросить ИИ..." className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white outline-none pr-10 resize-none" /><button onClick={handleSendAiQuery} className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center transition-all disabled:opacity-20"><Send className="h-4 w-4 text-slate-950" /></button></div>
            </div>
         </Tabs>
       </div>
-    </div>
-  );
-}
-
-function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number, activeFileName?: string }) {
-  const isActive = activeFileName === node.name;
-  return (
-    <div className="flex flex-col">
-      <button onClick={() => onToggle(node)} className={cn("flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all text-left group", isActive ? "bg-primary/20 text-primary border border-primary/30" : "hover:bg-white/5 text-white/40")} style={{ paddingLeft: `${level * 12 + 8}px` }}>
-        {node.kind === 'directory' ? (node.isOpen ? <FolderOpen className="h-3.5 w-3.5 text-primary/60" /> : <Folder className="h-3.5 w-3.5 text-primary/40" />) : (<File className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-white/20 group-hover:text-primary/40")} />)}
-        <span className={cn("text-[11px] font-medium truncate", isActive && "font-black")}>{node.name}</span>
-      </button>
-      {node.isOpen && node.children && <div className="flex flex-col">{node.children.map((child, i) => <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />)}</div>}
     </div>
   );
 }

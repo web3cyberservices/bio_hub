@@ -14,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, Loader2, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
-  Flame, Clock, Smartphone, ExternalLink, Database, BookOpen, AlertTriangle
+  Flame, Clock, Smartphone, ExternalLink, Database, BookOpen
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -26,7 +26,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * BREAK CIRCULAR DEPENDENCY: Dynamic import prevents Turbopack HMR errors.
+ * BREAK CIRCULAR DEPENDENCY: Dynamic import prevents Turbopack memory loops and HMR errors.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -62,7 +62,7 @@ type ProfileValues = z.infer<typeof profileSchema>;
 export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () => void }) {
   const { user } = useUser();
   const { auth } = useAuth();
-  const { firestore } = useFirestore();
+  const { firestore } = useFirebase().firestore;
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -124,8 +124,8 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       /**
-       * DATA SANITIZATION: Critical for saving specialist mode.
-       * Replaces nulls from Firestore with type-safe defaults for Zod.
+       * CRITICAL SANITIZATION: Replaces Firestore nulls with type-safe defaults for Zod.
+       * Fixes "Save" button not working.
        */
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
@@ -151,7 +151,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({
         variant: 'destructive',
         title: 'Safari не поддерживается',
-        description: 'Используйте Chrome или Edge для работы с локальными папками на Mac.',
+        description: 'Используйте Chrome или Edge для работы с папками на Mac.',
       });
       return;
     }
@@ -167,12 +167,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         });
       }
       setObsidianVault(handle.name);
-      toast({ title: 'Obsidian подключен', description: `База знаний "${handle.name}" привязана.` });
+      toast({ title: 'Obsidian подключен' });
     } catch (err: any) {
       if (err.name !== 'AbortError') toast({ variant: 'destructive', title: 'Ошибка подключения' });
-    } finally {
-      setObsidianLoading(false);
-    }
+    } finally { setObsidianLoading(false); }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +179,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     const reader = new FileReader();
     reader.onloadend = () => {
       form.setValue('photoUrl', reader.result as string);
-      toast({ title: 'Фото готово к сохранению' });
+      toast({ title: 'Фото готово' });
     };
     reader.readAsDataURL(file);
   };
@@ -213,7 +211,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     try {
       await signOut(auth);
       router.push('/');
-      toast({ title: 'Выход выполнен' });
     } catch (error) { toast({ variant: 'destructive', title: 'Ошибка выхода' }); }
   };
 
@@ -244,9 +241,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                   )}
                 </div>
                 <div className="flex-1 space-y-4 w-full">
-                  <div onClick={() => fileInputRef.current?.click()} className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 hover:border-primary/30 transition-all text-center">
+                  <div onClick={() => fileInputRef.current?.click()} className="cursor-pointer border-2 border-dashed border-white/10 rounded-2xl p-6 bg-white/5 hover:bg-white/10 transition-all text-center">
                     <Upload className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <p className="text-sm font-black text-white uppercase">Загрузить новое фото</p>
+                    <p className="text-sm font-black text-white uppercase">Загрузить фото</p>
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                   </div>
                 </div>
@@ -255,7 +252,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           </Card>
 
           <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 0. Внешние системы</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 0. Obsidian Sync</h3>
             <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20">
                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-5">
@@ -263,20 +260,12 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                         <BookOpen className="h-8 w-8 text-white" />
                      </div>
                      <div className="space-y-1">
-                        <h4 className="text-xl font-black text-white uppercase tracking-tight">Obsidian Sync</h4>
-                        <p className="text-xs text-white/40 font-medium">Синхронизация логов здоровья в вашу локальную базу знаний.</p>
+                        <h4 className="text-xl font-black text-white uppercase tracking-tight">Локальное хранилище</h4>
+                        <p className="text-xs text-white/40 font-medium">Синхронизация данных в вашу базу знаний Obsidian.</p>
                      </div>
                   </div>
-                  <Button 
-                    type="button" 
-                    onClick={handleConnectObsidian} 
-                    disabled={obsidianLoading}
-                    className={cn(
-                      "h-14 px-10 rounded-2xl font-black uppercase text-xs shadow-xl transition-all",
-                      obsidianVault ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
-                    )}
-                  >
-                    {obsidianLoading ? <Loader2 className="animate-spin h-4 w-4" /> : obsidianVault ? <><ShieldCheck className="mr-2 h-4 w-4" /> {obsidianVault.toUpperCase()}</> : 'ПОДКЛЮЧИТЬ ПАПКУ'}
+                  <Button type="button" onClick={handleConnectObsidian} disabled={obsidianLoading} className={cn("h-14 px-10 rounded-2xl font-black uppercase text-xs shadow-xl transition-all", obsidianVault ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-white/20")}>
+                    {obsidianLoading ? <Loader2 className="animate-spin h-4 w-4" /> : obsidianVault ? <><ShieldCheck className="mr-2 h-4 w-4" /> {obsidianVault.toUpperCase()}</> : 'ПОДКЛЮЧИТЬ'}
                   </Button>
                </div>
             </Card>
@@ -293,7 +282,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                   <FormField control={form.control} name="profileType" render={({ field }) => (
-                    <FormItem><FormLabel>Роль в системе</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
+                    <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
                   )} />
                 </div>
               </CardContent>
@@ -313,53 +302,13 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </Card>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Flame className="h-4 w-4" /> 3. Образ жизни</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <CardContent className="p-0 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="smoking" render={({ field }) => (
-                    <FormItem><FormLabel>Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
-                  )} />
-                  <FormField control={form.control} name="alcohol" render={({ field }) => (
-                    <FormItem><FormLabel>Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="medications" render={({ field }) => (
-                   <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white shadow-inner" /></FormControl></FormItem>
-                )} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <CardContent className="p-0 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="workActivityType" render={({ field }) => (
-                    <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
-                  )} />
-                </div>
-                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                  <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-                )} />
-              </CardContent>
-            </Card>
-          </div>
-
           {isSpecialist && (
             <div className="space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 3. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
-                    <p className="text-xs text-white/40 font-medium">Управление локальными файлами и записями о пациентах.</p>
+                    <p className="text-xs text-white/40 font-medium">Управление локальными файлами и записями.</p>
                  </div>
                  <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20">
                     ОТКРЫТЬ ДНЕВНИК
@@ -371,21 +320,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ИЗМЕНЕНИЯ</>}
           </Button>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <CardContent className="p-0 flex flex-col gap-4">
-                  <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
-                  <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
-                </CardContent>
-             </Card>
-             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <CardContent className="p-0 flex flex-col gap-4">
-                  <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
-                  <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase w-full">Открыть архив</Button></AnalysisHistoryDialog>
-                </CardContent>
-             </Card>
-          </div>
 
           <div className="pt-10 flex justify-center">
              <Button variant="ghost" onClick={handleLogout} className="text-red-400 hover:text-red-300 hover:bg-red-500/5 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest">
