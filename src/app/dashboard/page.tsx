@@ -78,9 +78,13 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
+  // Защита от попадания на вкладки, не предназначенные для роли
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
+    }
+    if (!isSpecialist && activeTab === 'diary') {
+      setActiveTab('fasting');
     }
   }, [isSpecialist, activeTab]);
 

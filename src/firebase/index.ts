@@ -17,7 +17,7 @@ let firestore: Firestore;
 
 /**
  * Безопасная инициализация Firebase Singleton.
- * Предотвращает ошибки повторной инициализации при HMR.
+ * Предотвращает ошибки повторной инициализации при HMR (Hot Module Replacement).
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
@@ -31,7 +31,7 @@ export function initializeFirebase() {
 
     auth = getAuth(app);
     
-    // Пытаемся получить существующий инстанс или создать новый
+    // Пытаемся получить существующий инстанс Firestore или создать новый
     try {
       firestore = initializeFirestore(app, {
         localCache: persistentLocalCache({
@@ -39,7 +39,7 @@ export function initializeFirebase() {
         })
       });
     } catch (e: any) {
-      // Если Firestore уже инициализирован, просто получаем ссылку
+      // Если Firestore уже инициализирован (ошибка "already been called"), возвращаем текущий инстанс
       firestore = getFirestore(app);
     }
 

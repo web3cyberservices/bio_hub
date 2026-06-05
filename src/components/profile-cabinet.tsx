@@ -23,7 +23,10 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
-// Динамический импорт диалога истории для предотвращения ошибок HMR Turbopack
+/**
+ * Динамический импорт диалога истории для предотвращения ошибок HMR Turbopack
+ * "Module factory not available".
+ */
 const AnalysisHistoryDialog = dynamic(() => import('./analysis-history-dialog').then(m => m.AnalysisHistoryDialog), {
   ssr: false,
   loading: () => <Button variant="outline" className="h-14 w-full opacity-50" disabled>Загрузка архива...</Button>
@@ -58,7 +61,7 @@ type ProfileValues = z.infer<typeof profileSchema>;
 export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () => void }) {
   const { user } = useUser();
   const { auth } = useAuth();
-  const { firestore } = useFirebase();
+  const { firestore } = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -99,10 +102,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Глубокая санитарная очистка: убираем null, заменяем на значения по умолчанию для Zod
+      // Санитарная очистка: заменяем null на значения по умолчанию для корректной работы Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
-          const schemaKey = profileSchema.shape[key as keyof typeof profileSchema.shape];
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
             sanitizedData[key] = 0;
           } else if (key === 'gender') {
