@@ -7,11 +7,13 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, ExternalLink, Activity, 
-  Info, Upload, LogOut, Briefcase, Clock, Save, ShieldCheck
+  Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
+  Ban, Wine, Flame, Target
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -86,16 +88,17 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     },
   });
 
-  const currentPhotoUrl = form.watch('photoUrl');
-
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Глубокая очистка данных: заменяем null/undefined на пустые строки или 0 для валидности Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
             sanitizedData[key] = 0;
+          } else if (key === 'gender') {
+            sanitizedData[key] = 'мужской';
+          } else if (key === 'profileType') {
+            sanitizedData[key] = 'user';
           } else {
             sanitizedData[key] = '';
           }
@@ -120,7 +123,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     if (!user?.uid || !firestore) return;
     setLoading(true);
     try {
-      // Сохраняем все данные, включая принудительную установку ID
       await setDoc(doc(firestore, 'users', user.uid), { 
         ...values, 
         id: user.uid, 
@@ -133,7 +135,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка сохранения', 
-        description: 'Не удалось синхронизировать данные с облаком.' 
+        description: 'Убедитесь, что все поля заполнены корректно.' 
       });
     } finally {
       setLoading(false);
@@ -165,6 +167,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          {/* ФОТО */}
           <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
@@ -184,6 +187,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </div>
           </Card>
 
+          {/* 1. ЛИЧНЫЕ ДАННЫЕ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Info className="h-4 w-4" /> 1. Личные данные</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -194,12 +198,13 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="birthDate" render={({ field }) => (<FormItem><FormLabel>Дата рождения</FormLabel><FormControl><Input {...field} placeholder="01.01.1990" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="profileType" render={({ field }) => (
-                  <FormItem><FormLabel>Роль</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь</SelectItem><SelectItem value="specialist">Специалист</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel>Роль в системе</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="user">Пользователь (Био-хакер)</SelectItem><SelectItem value="specialist">Специалист (Врач / Эксперт)</SelectItem></SelectContent></Select></FormItem>
                 )} />
               </div>
             </Card>
           </div>
 
+          {/* 2. БИОМЕТРИЯ */}
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Activity className="h-4 w-4" /> 2. Биометрия</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
@@ -210,12 +215,58 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                 <FormField control={form.control} name="weight" render={({ field }) => (<FormItem><FormLabel>Вес (кг)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
                 <FormField control={form.control} name="height" render={({ field }) => (<FormItem><FormLabel>Рост (см)</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField control={form.control} name="activityLevel" render={({ field }) => (
+                    <FormItem><FormLabel>Уровень активности</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="minimal">Сидячий образ жизни</SelectItem><SelectItem value="low">Низкая нагрузка</SelectItem><SelectItem value="moderate">Умеренная нагрузка</SelectItem><SelectItem value="high">Высокая активность</SelectItem><SelectItem value="athlete">Профессиональный спорт</SelectItem></SelectContent></Select></FormItem>
+                 )} />
+                 <FormField control={form.control} name="healthGoal" render={({ field }) => (
+                    <FormItem><FormLabel>Основная цель</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="снизить массу тела">Снижение веса</SelectItem><SelectItem value="поддержать текущее состояние">Поддержание формы</SelectItem><SelectItem value="набор массы">Набор мышечной массы</SelectItem></SelectContent></Select></FormItem>
+                 )} />
+              </div>
+            </Card>
+          </div>
+
+          {/* 3. ОБРАЗ ЖИЗНИ (ВОССТАНОВЛЕНО) */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Flame className="h-4 w-4" /> 3. Образ жизни</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="smoking" render={({ field }) => (
+                  <FormItem><FormLabel className="flex items-center gap-2"><Ban className="h-4 w-4" /> Курение</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="нет">Не курю</SelectItem><SelectItem value="да">Курю</SelectItem></SelectContent></Select></FormItem>
+                )} />
+                <FormField control={form.control} name="alcohol" render={({ field }) => (
+                  <FormItem><FormLabel className="flex items-center gap-2"><Wine className="h-4 w-4" /> Алкоголь</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="не употребляю">Не употребляю</SelectItem><SelectItem value="редко">Редко (раз в месяц)</SelectItem><SelectItem value="умеренно">Умеренно</SelectItem><SelectItem value="часто">Часто</SelectItem></SelectContent></Select></FormItem>
+                )} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} placeholder="Напр: Лосось, орехи..." className="h-14 rounded-2xl bg-white/5 border-white/10" /></FormControl></FormItem>)} />
+                 <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} placeholder="Напр: Сахар, молоко..." className="h-14 rounded-2xl bg-white/5 border-white/10" /></FormControl></FormItem>)} />
+              </div>
+              <FormField control={form.control} name="medications" render={({ field }) => (
+                 <FormItem><FormLabel className="flex items-center gap-2"><Pill className="h-4 w-4" /> Текущие лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты, которые вы принимаете на постоянной основе..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none" /></FormControl></FormItem>
+              )} />
+            </Card>
+          </div>
+
+          {/* 4. РАБОТА И НАГРУЗКА (ВОССТАНОВЛЕНО) */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                  <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+              )} />
             </Card>
           </div>
 
           {isSpecialist && (
             <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 3. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 5. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
