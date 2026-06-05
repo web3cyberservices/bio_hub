@@ -5,13 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, ExternalLink, Activity, 
-  Info, Upload, LogOut, Briefcase, Clock
+  Info, Upload, LogOut, Briefcase, Clock, Save
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -20,8 +20,6 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { AnalysisHistoryDialog } from './analysis-history-dialog';
-import { get as getInIdb, set as setInIdb } from 'idb-keyval';
-import { syncToObsidian } from '@/lib/obsidian-sync';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -56,9 +54,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [obsidianLoading, setObsidianLoading] = useState(false);
-  const [obsidianVault, setObsidianVault] = useState<string | null>(null);
-  const [isObsidianSupported, setIsObsidianSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
@@ -94,26 +89,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const currentPhotoUrl = form.watch('photoUrl');
 
   useEffect(() => {
-    setIsObsidianSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
-    
-    const checkObsidianAccess = async () => {
-      if (userData?.obsidianConnected) {
-        try {
-          const handle = await getInIdb('obsidian_vault_handle');
-          if (handle) {
-            const options = { mode: 'read' };
-            if ((await (handle as any).queryPermission(options)) === 'granted') {
-              setObsidianVault(handle.name);
-            }
-          }
-        } catch (err) {
-          console.error("Obsidian access error:", err);
-        }
-      }
-    };
-
     if (userData) {
       const sanitizedData: any = { ...userData };
+      // Очистка данных для предотвращения ошибок uncontrolled input и валидации Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -124,29 +102,8 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         }
       });
       form.reset(sanitizedData); 
-      checkObsidianAccess();
     } 
   }, [userData, form]);
-
-  const handleConnectObsidian = async () => {
-    if (!isObsidianSupported) return;
-    setObsidianLoading(true);
-    try {
-      const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-      await setInIdb('obsidian_vault_handle', handle);
-      if (user && firestore) {
-        await updateDoc(doc(firestore, 'users', user.uid), {
-          obsidianConnected: true,
-          obsidianVaultName: handle.name,
-          updatedAt: new Date().toISOString()
-        });
-      }
-      setObsidianVault(handle.name);
-      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" успешно привязана.` });
-    } catch (err: any) {
-      if (err.name !== 'AbortError') toast({ variant: 'destructive', title: 'Ошибка подключения' });
-    } finally { setObsidianLoading(false); }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,14 +120,20 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      await setDoc(doc(firestore, 'users', user.uid), { ...values, id: user.uid, updatedAt: new Date().toISOString() }, { merge: true });
-      if (userData?.obsidianConnected) {
-        await syncToObsidian({ type: 'profile', payload: values });
-      }
-      toast({ title: 'Профиль обновлен и синхронизирован' });
+      // Сохраняем все поля, включая очищенные
+      await setDoc(doc(firestore, 'users', user.uid), { 
+        ...values, 
+        id: user.uid, 
+        updatedAt: new Date().toISOString() 
+      }, { merge: true });
+      
+      toast({ title: 'Профиль успешно сохранен' });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
-    } finally { setLoading(false); }
+      console.error("Save error:", e);
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте соединение с интернетом.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -221,7 +184,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Info className="h-4 w-4" /> 1. Личные данные</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>Имя</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Фамилия</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -246,24 +209,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </Card>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 3. Работа и нагрузка</h3>
-            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
-                <FormField control={form.control} name="workActivityType" render={({ field }) => (
-                  <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
-              )} />
-            </Card>
-          </div>
-
           {isSpecialist && (
             <div className="space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 3. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
@@ -277,7 +225,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           )}
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ПРОФИЛЬ</>}
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

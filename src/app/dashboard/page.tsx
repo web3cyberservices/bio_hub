@@ -78,7 +78,7 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Авто-редирект специалиста с вкладки голодания
+  // Авто-редирект специалиста с вкладки голодания на дневник
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -115,13 +115,6 @@ function DashboardContent() {
     }
   }, [selectedDate]);
 
-  const dailyLogRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || !dateKey) return null;
-    return doc(firestore, 'users', user.uid, 'dailyLogs', dateKey);
-  }, [firestore, user?.uid, dateKey]);
-
-  const { data: dailyLogDoc } = useDoc<any>(dailyLogRef);
-
   const mealsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
     return query(collection(firestore, 'users', user.uid, 'personalMeals'), where('date', '==', dateKey));
@@ -139,19 +132,19 @@ function DashboardContent() {
     }), { calories: 0, protein: 0, fat: 0, carbs: 0 });
   }, [meals]);
 
-  const postsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'), limit(20));
-  }, [firestore]);
-
-  const { data: posts } = useCollection<any>(postsQuery);
-
   const recommendationRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
     return doc(firestore, 'users', user.uid, 'recommendations', dateKey);
   }, [firestore, user?.uid, dateKey]);
 
   const { data: recData } = useDoc<any>(recommendationRef);
+
+  const postsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'), limit(20));
+  }, [firestore]);
+
+  const { data: posts } = useCollection<any>(postsQuery);
 
   const handleToggleLike = async (postId: string, likedBy: string[]) => {
     if (!user || user.uid === 'public-user') {
@@ -219,7 +212,7 @@ function DashboardContent() {
                      {isSpecialist ? (
                        <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-40"><SpecialistBookingManager /></div>
                      ) : (
-                       <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
+                       <RecommendationDisplay mode="dashboard" profileData={userData} data={recData?.data} actualMacros={actualMacros} />
                      )}
                 </div>
               )}

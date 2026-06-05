@@ -30,17 +30,17 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE
-      // Пытаемся получить существующий экземпляр, чтобы избежать ошибки "already been called"
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE через Singleton паттерн
       try {
-        firestore = getFirestore(app);
-      } catch (e) {
-        // Если база еще не создана, инициализируем с кэшем
+        // Попытка инициализировать с кэшем. Если уже инициализировано - выбросит ошибку.
         firestore = initializeFirestore(app, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()
           })
         });
+      } catch (e: any) {
+        // Если база уже создана (HMR), просто получаем текущий инстанс
+        firestore = getFirestore(app);
       }
 
       return {

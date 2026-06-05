@@ -11,8 +11,7 @@ import {
   User, 
   Activity,
   Mic,
-  ArrowLeft,
-  Zap
+  ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -46,7 +45,6 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   }, [user, firestore]);
 
   const { data: userData } = useDoc<any>(userDocRef);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -62,7 +60,6 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       toast({ variant: 'destructive', title: 'Ошибка', description: 'Браузер не поддерживает голосовой ввод.' });
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = 'ru-RU';
     recognition.onstart = () => setIsRecording(true);
@@ -83,7 +80,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
-      // КРИТИЧЕСКИ: Динамический импорт серверного действия для предотвращения ошибок HMR Turbopack
+      // КРИТИЧЕСКИ: Динамический импорт для предотвращения Runtime Error Turbopack
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const history = messages.map(m => ({ role: m.role, content: m.content }));
@@ -94,7 +91,6 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
           firstName: userData.firstName || 'Пациент',
           healthGoal: userData.healthGoal,
           weight: userData.weight,
-          activityLevel: userData.activityLevel,
         } : undefined
       });
       
@@ -104,7 +100,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       toast({
         variant: 'destructive',
         title: 'Ошибка ИИ',
-        description: 'Не удалось получить ответ. Пожалуйста, обновите страницу.',
+        description: 'Не удалось получить ответ. Пожалуйста, попробуйте снова.',
       });
     } finally {
       setLoading(false);
@@ -154,7 +150,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
         <div className="relative flex items-center gap-4">
           <div className="relative flex-1">
             <Input 
-              placeholder="Спросите об анализах или питании..." 
+              placeholder="Напишите сообщение..." 
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
               onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
