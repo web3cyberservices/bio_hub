@@ -117,7 +117,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       form.reset({ 
-        ...userData,
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '',
