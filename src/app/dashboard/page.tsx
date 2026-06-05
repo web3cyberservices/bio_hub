@@ -343,14 +343,14 @@ function DashboardContent() {
               )}
               {activeTab === 'diary' && isSpecialist && (
                 <div className="h-full px-4 pb-32 flex flex-col animate-in fade-in duration-300 overflow-hidden">
-                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4">
+                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 h-full">
                     <SpecialistDiaryHub />
                   </div>
                 </div>
               )}
               {activeTab === 'chats' && (
                 <div className="h-full px-4 pb-32 md:pb-10 flex flex-col animate-in fade-in duration-300">
-                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden">
+                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden h-full">
                     <ChatInterface 
                       initialSpecialistId={directChatRecipientId} 
                       initialChatId={directChatId || ''}

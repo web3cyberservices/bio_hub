@@ -8,13 +8,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, FileText, ShieldCheck, Loader2, RefreshCw, 
   Database, Zap, Folder, FolderOpen,
-  File, Save, Bot, MessageSquare, Cpu, Send, User
+  File, Save, Bot, MessageSquare, Cpu, Send, User,
+  Play, Pause, FastForward, Rewind, Mic, Sparkles, X,
+  Music, Film
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { transcribeMedia } from '@/ai/flows/transcribe-media';
 
 interface FileNode {
   name: string;
@@ -30,6 +33,9 @@ interface ActiveFile {
   originalContent: string;
   handle: FileSystemFileHandle;
   isDirty: boolean;
+  type: 'text' | 'audio' | 'video';
+  mimeType: string;
+  blobUrl?: string;
 }
 
 interface ChatMessage {
@@ -48,6 +54,7 @@ export function SpecialistDiaryHub() {
   const [activeFile, setActiveFile] = useState<ActiveFile | null>(null);
   const [loading, setLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [aiSidebarTab, setAiSidebarTab] = useState<'chat' | 'models'>('chat');
   const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
@@ -56,7 +63,9 @@ export function SpecialistDiaryHub() {
     { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать открытый файл или записи о пациенте.' }
   ]);
   const [aiLoading, setAiLoading] = useState(false);
+  
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const mediaRef = useRef<HTMLAudioElement | HTMLVideoElement>(null);
 
   const patientsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return null;
@@ -69,6 +78,9 @@ export function SpecialistDiaryHub() {
   useEffect(() => {
     setIsFileSystemSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
     checkPersistedFolder();
+    return () => {
+      if (activeFile?.blobUrl) URL.revokeObjectURL(activeFile.blobUrl);
+    };
   }, []);
 
   useEffect(() => {
@@ -142,6 +154,13 @@ export function SpecialistDiaryHub() {
     }
   };
 
+  const getFileType = (name: string): 'text' | 'audio' | 'video' => {
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext!)) return 'audio';
+    if (['mp4', 'webm', 'mov'].includes(ext!)) return 'video';
+    return 'text';
+  };
+
   const toggleFolderOrOpenFile = async (node: FileNode) => {
     if (node.kind === 'directory') {
       const updateTreeRecursively = async (nodes: FileNode[]): Promise<FileNode[]> => {
@@ -166,14 +185,34 @@ export function SpecialistDiaryHub() {
       try {
         const fileHandle = node.handle as FileSystemFileHandle;
         const file = await fileHandle.getFile();
-        const content = await file.text();
-        setActiveFile({
-          name: node.name,
-          content,
-          originalContent: content,
-          handle: fileHandle,
-          isDirty: false
-        });
+        const type = getFileType(node.name);
+        
+        if (activeFile?.blobUrl) URL.revokeObjectURL(activeFile.blobUrl);
+
+        if (type === 'text') {
+          const content = await file.text();
+          setActiveFile({
+            name: node.name,
+            content,
+            originalContent: content,
+            handle: fileHandle,
+            isDirty: false,
+            type: 'text',
+            mimeType: file.type
+          });
+        } else {
+          const blobUrl = URL.createObjectURL(file);
+          setActiveFile({
+            name: node.name,
+            content: '',
+            originalContent: '',
+            handle: fileHandle,
+            isDirty: false,
+            type: type,
+            mimeType: file.type,
+            blobUrl
+          });
+        }
       } catch (e) {
         toast({ variant: 'destructive', title: 'Ошибка файла', description: 'Не удалось прочитать содержимое.' });
       }
@@ -193,6 +232,39 @@ export function SpecialistDiaryHub() {
       toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте права доступа к папке.' });
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleTranscription = async () => {
+    if (!activeFile?.blobUrl || transcribing) return;
+    
+    setTranscribing(true);
+    try {
+      const file = await activeFile.handle.getFile();
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        const transcription = await transcribeMedia({
+          mediaDataUri: base64,
+          mimeType: activeFile.mimeType
+        });
+        
+        setActiveFile(prev => prev ? {
+          ...prev,
+          content: prev.content ? prev.content + '\n\n[ТРАНСКРИПЦИЯ]:\n' + transcription : transcription,
+          isDirty: true,
+          type: 'text' // Переключаемся в режим текста после транскрибации
+        } : null);
+        
+        toast({ title: 'Транскрибация завершена', description: 'Текст добавлен в редактор.' });
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось распознать голос.' });
+    } finally {
+      setTranscribing(false);
     }
   };
 
@@ -319,14 +391,24 @@ export function SpecialistDiaryHub() {
             <div className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 shrink-0">
                <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                     <FileText className="h-4 w-4 text-primary" />
+                     {activeFile.type === 'text' ? <FileText className="h-4 w-4 text-primary" /> : activeFile.type === 'audio' ? <Music className="h-4 w-4 text-primary" /> : <Film className="h-4 w-4 text-primary" />}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-black text-sm text-white uppercase tracking-tight truncate max-w-[200px]">{activeFile.name}</h3>
                     {activeFile.isDirty && <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest">● Не сохранено</span>}
                   </div>
                </div>
                <div className="flex items-center gap-3">
+                  {activeFile.type !== 'text' && (
+                    <Button 
+                      onClick={handleTranscription}
+                      disabled={transcribing}
+                      className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20"
+                    >
+                      {transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
+                      <span className="hidden sm:inline">Перевести в текст</span>
+                    </Button>
+                  )}
                   <Button 
                     onClick={handleSaveFile} 
                     disabled={!activeFile.isDirty || saveLoading}
@@ -341,12 +423,52 @@ export function SpecialistDiaryHub() {
             </div>
 
             <div className="flex-1 relative overflow-hidden bg-[#010411]">
-               <textarea 
-                value={activeFile.content}
-                onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })}
-                className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide"
-                spellCheck={false}
-               />
+               {activeFile.type === 'text' ? (
+                 <textarea 
+                  value={activeFile.content}
+                  onChange={(e) => setActiveFile({ ...activeFile, content: e.target.value, isDirty: e.target.value !== activeFile.originalContent })}
+                  className="w-full h-full p-10 bg-transparent border-none text-base md:text-lg font-medium text-white/80 resize-none focus:ring-0 leading-relaxed outline-none scrollbar-hide"
+                  spellCheck={false}
+                 />
+               ) : (
+                 <div className="w-full h-full flex flex-col items-center justify-center p-10 space-y-10">
+                    <div className="relative group">
+                       <div className="absolute inset-0 bg-primary/10 rounded-full blur-[100px] group-hover:bg-primary/20 transition-all animate-pulse" />
+                       <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-primary/20 bg-black/60 flex items-center justify-center relative z-10 shadow-2xl overflow-hidden">
+                          {activeFile.type === 'audio' ? (
+                            <Music className="h-24 w-24 text-primary opacity-40 animate-bounce" />
+                          ) : (
+                            <video src={activeFile.blobUrl} className="w-full h-full object-cover" controls={false} ref={mediaRef as any} />
+                          )}
+                       </div>
+                    </div>
+                    
+                    <div className="w-full max-w-xl space-y-6">
+                       <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl backdrop-blur-xl">
+                          {activeFile.type === 'audio' ? (
+                            <audio src={activeFile.blobUrl} controls className="w-full h-12 filter invert opacity-80" ref={mediaRef as any} />
+                          ) : (
+                            <div className="flex flex-col gap-4">
+                               <div className="flex items-center justify-center gap-6">
+                                  <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime -= 10)}><Rewind className="h-6 w-6" /></Button>
+                                  <Button 
+                                    className="h-16 w-16 rounded-full bg-primary text-slate-950 shadow-xl shadow-primary/20"
+                                    onClick={() => mediaRef.current?.paused ? mediaRef.current.play() : mediaRef.current?.pause()}
+                                  >
+                                     <Play className="h-8 w-8" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="text-white/40" onClick={() => (mediaRef.current!.currentTime += 10)}><FastForward className="h-6 w-6" /></Button>
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                       <div className="text-center space-y-2">
+                          <p className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">Media Control Hub</p>
+                          <p className="text-xs text-primary/60 font-bold uppercase tracking-widest">{activeFile.mimeType}</p>
+                       </div>
+                    </div>
+                 </div>
+               )}
             </div>
           </>
         )}

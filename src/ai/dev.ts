@@ -12,5 +12,6 @@ import '@/ai/flows/analyze-lab-results.ts';
 import '@/ai/flows/ai-specialist-chat.ts';
 import '@/ai/flows/generate-menu-from-products.ts';
 import '@/ai/flows/analyze-beauty.ts';
+import '@/ai/flows/transcribe-media.ts';
 
 console.log('--- BioTech AI Hub: Потоки зарегистрированы и готовы к работе ---');
