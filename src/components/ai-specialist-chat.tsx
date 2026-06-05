@@ -3,11 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { 
   MessageSquare, 
   Send, 
-  X, 
   Loader2, 
   Bot, 
   User, 
@@ -16,10 +14,8 @@ import {
   ArrowLeft,
   Zap
 } from 'lucide-react';
-import { chatWithSpecialist } from '@/ai/flows/ai-specialist-chat';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -88,19 +84,24 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
+      // Использование динамического импорта серверного действия для предотвращения HMR ошибок
+      const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
+      
       const history = messages.map(m => ({ role: m.role, content: m.content }));
       const response = await chatWithSpecialist({
         message: userMessage,
         history: history,
         userContext: userData ? {
-          healthGoal: userData.healthGoal,
-          weight: userData.weight,
-          activityLevel: userData.activityLevel,
+          firstName: userData.firstName || 'Пациент',
+          healthGoal: userData.healthGoal || 'поддержание здоровья',
+          weight: userData.weight || 70,
+          activityLevel: userData.activityLevel || 'moderate',
         } : undefined
       });
       
       setMessages(prev => [...prev, { role: 'model', content: response.text }]);
     } catch (error) {
+      console.error("Specialist Chat Error:", error);
       toast({
         variant: 'destructive',
         title: 'Ошибка связи',
@@ -113,7 +114,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
 
   return (
     <div className={cn("flex flex-col h-full bg-transparent relative overflow-hidden", className)}>
-      <div className="p-4 md:p-6 bg-primary/10 border-b flex items-center justify-between shrink-0">
+      <div className="p-4 md:p-6 bg-primary/10 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           {onBack && (
             <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 text-primary" onClick={onBack}>
@@ -134,7 +135,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       </div>
 
       <ScrollArea className="flex-1 p-6 md:p-10">
-        <div className="space-y-6 md:space-y-8">
+        <div className="space-y-6 md:space-y-8 pb-20">
           {messages.map((m, i) => (
             <div key={i} className={cn("flex flex-col gap-2", m.role === 'user' ? "items-end" : "items-start")}>
               <div className={cn(
@@ -198,8 +199,6 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
           </Button>
         </div>
       </div>
-      
-      <Zap className="absolute -right-4 -bottom-4 h-24 w-24 text-slate-950/10 rotate-12 pointer-events-none" />
     </div>
   );
 }

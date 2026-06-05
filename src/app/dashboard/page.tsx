@@ -78,7 +78,6 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Защита ролей: специалисты не видят голодание
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -269,7 +268,7 @@ function DashboardContent() {
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
                      {isSpecialist ? (
-                       <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>
+                       <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-40"><SpecialistBookingManager /></div>
                      ) : (
                        <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
                      )}
@@ -342,15 +341,15 @@ function DashboardContent() {
                 </div>
               )}
               {activeTab === 'diary' && isSpecialist && (
-                <div className="h-full px-4 pb-32 flex flex-col animate-in fade-in duration-300 overflow-hidden">
-                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 h-full">
+                <div className="h-full px-4 pb-40 flex flex-col animate-in fade-in duration-300 overflow-hidden">
+                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 h-full pb-32">
                     <SpecialistDiaryHub />
                   </div>
                 </div>
               )}
               {activeTab === 'chats' && (
-                <div className="h-full px-4 pb-32 md:pb-10 flex flex-col animate-in fade-in duration-300">
-                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden h-full">
+                <div className="h-full px-4 pb-40 md:pb-10 flex flex-col animate-in fade-in duration-300">
+                  <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden h-full pb-32">
                     <ChatInterface 
                       initialSpecialistId={directChatRecipientId} 
                       initialChatId={directChatId || ''}
@@ -365,7 +364,7 @@ function DashboardContent() {
               )}
               {activeTab === 'profile' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <div className="max-w-5xl mx-auto pt-4">
+                  <div className="max-w-5xl mx-auto pt-4 pb-20">
                     <ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} />
                   </div>
                 </div>

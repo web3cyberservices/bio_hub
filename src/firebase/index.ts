@@ -26,7 +26,7 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE (try/catch паттерн)
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE (try/catch паттерн для Next.js 15 HMR)
       try {
         // Пытаемся инициализировать с кэшем
         firestore = initializeFirestore(app, {
@@ -35,7 +35,7 @@ export function initializeFirebase() {
           })
         });
       } catch (e: any) {
-        // Если уже инициализирован (HMR или перезагрузка) — просто получаем текущий инстанс
+        // Если уже инициализирован — просто получаем текущий инстанс
         firestore = getFirestore(app);
       }
 

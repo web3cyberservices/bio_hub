@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { transcribeMedia } from '@/ai/flows/transcribe-media';
 
 interface FileNode {
   name: string;
@@ -245,6 +244,7 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
+        const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
           mimeType: activeFile.mimeType
@@ -254,7 +254,7 @@ export function SpecialistDiaryHub() {
           ...prev,
           content: prev.content ? prev.content + '\n\n[ТРАНСКРИПЦИЯ]:\n' + transcription : transcription,
           isDirty: true,
-          type: 'text' // Переключаемся в режим текста после транскрибации
+          type: 'text' 
         } : null);
         
         toast({ title: 'Транскрибация завершена', description: 'Текст добавлен в редактор.' });
@@ -542,7 +542,7 @@ export function SpecialistDiaryHub() {
                        <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
                        <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
                           <div className="space-y-1">
-                             <p className="text-sm font-black text-white">BioGemini 2.0</p>
+                             <p className="text-sm font-black text-white">BioGemini 2.5</p>
                              <p className="text-[8px] font-bold text-primary uppercase">Installed & Optimized</p>
                           </div>
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
