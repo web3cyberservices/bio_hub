@@ -26,8 +26,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * BREAK CIRCULAR DEPENDENCY: Use dynamic import for Heavy Dialogs.
- * This prevents Turbopack HMR "Module factory not available" errors.
+ * BREAK CIRCULAR DEPENDENCY: Dynamic import prevents Turbopack HMR errors.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -125,8 +124,8 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       /**
-       * DATA SANITIZATION: Critical for Zod validation.
-       * Replaces nulls/undefined from Firestore with type-safe defaults.
+       * DATA SANITIZATION: Critical for saving specialist mode.
+       * Replaces nulls from Firestore with type-safe defaults for Zod.
        */
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
@@ -137,16 +136,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             sanitizedData[key] = 'мужской';
           } else if (key === 'profileType') {
             sanitizedData[key] = 'user';
-          } else if (key === 'activityLevel') {
-             sanitizedData[key] = 'moderate';
-          } else if (key === 'healthGoal') {
-             sanitizedData[key] = 'поддержать текущее состояние';
-          } else if (key === 'smoking') {
-             sanitizedData[key] = 'нет';
-          } else if (key === 'alcohol') {
-             sanitizedData[key] = 'не употребляю';
-          } else if (key === 'workActivityType') {
-             sanitizedData[key] = 'mental';
           } else {
             sanitizedData[key] = '';
           }
@@ -161,8 +150,8 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     if (!isObsidianSupported) {
       toast({
         variant: 'destructive',
-        title: 'Браузер не поддерживается',
-        description: 'Safari не поддерживает доступ к папкам. Используйте Chrome или Edge.',
+        title: 'Safari не поддерживается',
+        description: 'Используйте Chrome или Edge для работы с локальными папками на Mac.',
       });
       return;
     }
@@ -178,11 +167,9 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         });
       }
       setObsidianVault(handle.name);
-      toast({ title: 'Obsidian подключен', description: `База данных "${handle.name}" привязана.` });
+      toast({ title: 'Obsidian подключен', description: `База знаний "${handle.name}" привязана.` });
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        toast({ variant: 'destructive', title: 'Ошибка подключения' });
-      }
+      if (err.name !== 'AbortError') toast({ variant: 'destructive', title: 'Ошибка подключения' });
     } finally {
       setObsidianLoading(false);
     }
@@ -213,9 +200,8 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         await syncToObsidian({ type: 'profile', payload: values });
       }
 
-      toast({ title: 'Профиль успешно сохранен' });
+      toast({ title: 'Профиль обновлен' });
     } catch (e: any) {
-      console.error("Save error:", e);
       toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setLoading(false);
@@ -293,14 +279,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                     {obsidianLoading ? <Loader2 className="animate-spin h-4 w-4" /> : obsidianVault ? <><ShieldCheck className="mr-2 h-4 w-4" /> {obsidianVault.toUpperCase()}</> : 'ПОДКЛЮЧИТЬ ПАПКУ'}
                   </Button>
                </div>
-               {!isObsidianSupported && (
-                 <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-start gap-3">
-                    <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] font-bold text-orange-200/60 uppercase leading-relaxed">
-                      Safari не поддерживает прямой доступ к папкам. Используйте Chrome или Edge для работы с Obsidian на Mac.
-                    </p>
-                 </div>
-               )}
             </Card>
           </div>
 
@@ -376,15 +354,15 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           </div>
 
           {isSpecialist && (
-            <div className="space-y-6 animate-in slide-in-from-top-4">
+            <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
-                    <p className="text-xs text-white/40 font-medium">Управление локальными файлами и медиа пациентов.</p>
+                    <p className="text-xs text-white/40 font-medium">Управление локальными файлами и записями о пациентах.</p>
                  </div>
-                 <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20 gap-2">
-                    <Briefcase className="h-4 w-4" /> ОТКРЫТЬ ДНЕВНИК
+                 <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20">
+                    ОТКРЫТЬ ДНЕВНИК
                  </Button>
               </Card>
             </div>

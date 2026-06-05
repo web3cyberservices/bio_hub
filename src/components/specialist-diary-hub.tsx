@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface FileNode {
   name: string;
@@ -142,8 +141,8 @@ export function SpecialistDiaryHub() {
     if (!isFileSystemSupported) {
       toast({ 
         variant: 'destructive', 
-        title: 'Не поддерживается', 
-        description: 'Ваш браузер (Safari) не поддерживает прямой доступ к папкам. Используйте Chrome или Edge.' 
+        title: 'Safari не поддерживается', 
+        description: 'Используйте Chrome или Edge для работы с папками на Mac.' 
       });
       return;
     }
@@ -220,7 +219,7 @@ export function SpecialistDiaryHub() {
           });
         }
       } catch (e) {
-        toast({ variant: 'destructive', title: 'Ошибка файла', description: 'Не удалось прочитать содержимое.' });
+        toast({ variant: 'destructive', title: 'Ошибка файла' });
       }
     }
   };
@@ -233,9 +232,9 @@ export function SpecialistDiaryHub() {
       await writable.write(activeFile.content);
       await writable.close();
       setActiveFile({ ...activeFile, originalContent: activeFile.content, isDirty: false });
-      toast({ title: 'Файл сохранен', description: `Изменения в ${activeFile.name} записаны на диск.` });
+      toast({ title: 'Файл сохранен' });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте права доступа к папке.' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
     } finally {
       setSaveLoading(false);
     }
@@ -251,9 +250,6 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        /**
-         * Dynamic Import to prevent HMR errors.
-         */
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
@@ -272,7 +268,7 @@ export function SpecialistDiaryHub() {
       
       reader.readAsDataURL(file);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось распознать голос.' });
+      toast({ variant: 'destructive', title: 'Ошибка ИИ' });
     } finally {
       setTranscribing(false);
     }
@@ -287,9 +283,6 @@ export function SpecialistDiaryHub() {
     setAiLoading(true);
 
     try {
-      /**
-       * Dynamic Import to prevent HMR errors.
-       */
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const response = await chatWithSpecialist({
@@ -315,19 +308,17 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-full bg-[#010411] text-white overflow-hidden border border-white/5 relative">
+    <div className="flex h-full bg-[#010411] text-white overflow-hidden border-t border-white/5 relative">
       {!isFileSystemSupported && (
-        <div className="absolute inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-10 text-center">
+        <div className="absolute inset-0 z-[1000] bg-black/95 backdrop-blur-md flex items-center justify-center p-10 text-center">
            <div className="max-w-md space-y-6">
               <div className="w-20 h-20 bg-orange-500/20 rounded-[2rem] flex items-center justify-center mx-auto border border-orange-500/30">
                  <AlertTriangle className="h-10 w-10 text-orange-500" />
               </div>
-              <h2 className="text-2xl font-black uppercase text-white">Браузер не поддерживается</h2>
+              <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Safari не поддерживается</h2>
               <p className="text-sm text-white/60 font-medium leading-relaxed">
-                Safari не поддерживает прямой доступ к локальным папкам. 
-                Пожалуйста, используйте <strong>Chrome или Edge</strong> для работы в Дневнике.
+                Для работы с локальными файлами и Obsidian на Mac, пожалуйста, используйте браузер на движке Chromium: <strong>Google Chrome или Microsoft Edge</strong>.
               </p>
-              <Button onClick={() => window.location.reload()} className="h-14 px-10 rounded-2xl bg-primary text-slate-950 font-black uppercase text-xs">ПОПРОБОВАТЬ СНОВА</Button>
            </div>
         </div>
       )}
@@ -342,7 +333,7 @@ export function SpecialistDiaryHub() {
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl flex items-center gap-2">
              <ShieldCheck className="h-3 w-3 text-emerald-400" />
-             <span className="text-[7px] font-black uppercase text-emerald-400/80 tracking-widest">Local Mode Active</span>
+             <span className="text-[7px] font-black uppercase text-emerald-400/80 tracking-widest">Local Workspace Active</span>
           </div>
         </div>
 
@@ -382,7 +373,7 @@ export function SpecialistDiaryHub() {
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
              <div className="relative"><div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" /><Database className="h-24 w-24 relative z-10" /></div>
-             <div className="text-center space-y-2"><p className="font-black uppercase tracking-[0.4em] text-lg">Knowledge Workspace</p><p className="text-xs font-bold uppercase tracking-widest">Выберите файл для редактирования</p></div>
+             <div className="text-center space-y-2"><p className="font-black uppercase tracking-[0.4em] text-lg text-white">Knowledge Node</p><p className="text-xs font-bold uppercase tracking-widest text-primary/40">Выберите файл для анализа</p></div>
           </div>
         ) : (
           <>
@@ -400,7 +391,7 @@ export function SpecialistDiaryHub() {
                   {activeFile.type !== 'text' && (
                     <Button onClick={handleTranscription} disabled={transcribing} className="h-9 rounded-xl px-4 bg-primary/10 text-primary border border-primary/30 font-black text-[10px] uppercase gap-2 hover:bg-primary/20">
                       {transcribing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Mic className="h-3 w-3" />}
-                      <span className="hidden sm:inline">В текст</span>
+                      <span className="hidden sm:inline">В ТЕКСТ</span>
                     </Button>
                   )}
                   <Button onClick={handleSaveFile} disabled={!activeFile.isDirty || saveLoading} className={cn("h-9 rounded-xl px-6 font-black text-[10px] uppercase transition-all shadow-lg", activeFile.isDirty ? "bg-primary text-slate-950 shadow-primary/20" : "bg-white/5 text-white/20")}>
@@ -432,7 +423,6 @@ export function SpecialistDiaryHub() {
                             </div>
                           )}
                        </div>
-                       <div className="text-center space-y-2"><p className="text-[10px] font-black uppercase text-white/40 tracking-[0.4em]">Media Control Hub</p><p className="text-xs text-primary/60 font-bold uppercase tracking-widest">{activeFile.mimeType}</p></div>
                     </div>
                  </div>
                )}
@@ -475,7 +465,7 @@ export function SpecialistDiaryHub() {
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
                        <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
-                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5 Flash</p><p className="text-[8px] font-bold text-primary uppercase">Optimized for BioTech</p></div>
+                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5 Flash</p><p className="text-[8px] font-bold text-primary uppercase">Optimized v1.0.26</p></div>
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
                        </div>
                     </div>
@@ -499,8 +489,4 @@ function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNod
       {node.isOpen && node.children && <div className="flex flex-col">{node.children.map((child, i) => <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />)}</div>}
     </div>
   );
-}
-
-function TreeNodeContainer({ node, onToggle, level = 0, activeFileName }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number, activeFileName?: string }) {
-  return <TreeNode node={node} onToggle={onToggle} level={level} activeFileName={activeFileName} />;
 }

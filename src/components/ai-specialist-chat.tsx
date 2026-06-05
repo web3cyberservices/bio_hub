@@ -81,8 +81,8 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
 
     try {
       /**
-       * DYNAMIC IMPORT: Breaks circular dependencies during HMR.
-       * This resolves the "Module factory not available" error.
+       * BREAK CIRCULAR DEPENDENCY: Dynamic import at the point of use.
+       * Prevents Turbopack panic and Module Factory errors.
        */
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       

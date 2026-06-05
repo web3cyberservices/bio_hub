@@ -19,7 +19,6 @@ import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-import { ProfileCabinet } from '@/components/profile-cabinet';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -40,13 +39,11 @@ import { MedicalCalculatorDialog } from '@/components/medical-calculator-dialog'
 import { MedicationHub } from '@/components/medication-hub';
 import { FastingHub } from '@/components/fasting-hub';
 import { SpecialistDiaryHub } from '@/components/specialist-diary-hub';
-import { useToast } from '@/hooks/use-toast';
 import { PWAInstallBanner } from '@/components/pwa-install-banner';
 
 function DashboardContent() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
-  const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -54,7 +51,6 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
-  const [directChatId, setDirectChatId] = useState<string>('');
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   useHealthAggregator();
@@ -73,7 +69,6 @@ function DashboardContent() {
     
     const activeChatParam = searchParams.get('activeChat');
     if (activeChatParam) {
-      setDirectChatId(activeChatParam);
       setActiveTab('chats');
     }
   }, [searchParams]);
@@ -82,8 +77,8 @@ function DashboardContent() {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
     }
-    if (!isSpecialist && activeTab === 'diary') {
-      setActiveTab('fasting');
+    if (!isSpecialist && (activeTab === 'diary' || activeTab === 'meals')) {
+       // Если пользователь перешел из специалиста, сбрасываем на дашборд
     }
   }, [isSpecialist, activeTab]);
 
@@ -179,7 +174,7 @@ function DashboardContent() {
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-               <span className="text-[8px] font-black uppercase text-emerald-400/80 tracking-widest">AES-256 Protocol Active</span>
+               <span className="text-[8px] font-black uppercase text-emerald-400/80 tracking-widest">Protocol 1.0.26 Secure</span>
             </div>
             <div className="flex items-center gap-2">
               {isSpecialist && <MedicalCalculatorDialog />}
@@ -243,7 +238,7 @@ function DashboardContent() {
               )}
               {activeTab === 'meals' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  {isSpecialist ? <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setDirectChatId(''); setActiveTab('chats'); }} /> : <MealsHub selectedDate={selectedDate} />}
+                  {isSpecialist ? <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setActiveTab('chats'); }} /> : <MealsHub selectedDate={selectedDate} />}
                 </div>
               )}
               {activeTab === 'meds' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><MedicationHub /></div>}
@@ -258,7 +253,7 @@ function DashboardContent() {
               {activeTab === 'chats' && (
                 <div className="h-full px-4 flex flex-col animate-in fade-in duration-300">
                   <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden h-full pb-40">
-                    <ChatInterface initialSpecialistId={directChatRecipientId} initialChatId={directChatId || ''} />
+                    <ChatInterface initialSpecialistId={directChatRecipientId} />
                   </div>
                 </div>
               )}

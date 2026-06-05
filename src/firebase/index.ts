@@ -13,7 +13,7 @@ import {
 
 /**
  * Safe Firebase Singleton Architecture for Next.js 15.
- * Prevents "initializeFirestore() has already been called" error during Fast Refresh.
+ * Prevents "initializeFirestore() has already been called" error during Fast Refresh and Vercel builds.
  */
 
 let app: FirebaseApp;
@@ -31,7 +31,7 @@ export function initializeFirebase() {
   // 2. Auth Initialization
   auth = getAuth(app);
   
-  // 3. Bulletproof Firestore Initialization
+  // 3. Bulletproof Firestore Initialization with strict try/catch
   try {
     firestore = initializeFirestore(app, {
       localCache: persistentLocalCache({
@@ -39,7 +39,7 @@ export function initializeFirebase() {
       })
     });
   } catch (error: any) {
-    // If already initialized or failed-precondition (multiple tabs etc)
+    // If already initialized or failed-precondition, use existing instance
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
       firestore = getFirestore(app);
     } else {
