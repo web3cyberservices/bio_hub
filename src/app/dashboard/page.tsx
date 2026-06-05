@@ -65,7 +65,8 @@ function DashboardContent() {
   }, [firestore, user?.uid]);
 
   const { data: userData } = useDoc<any>(userDocRef);
-  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
+  const isSpecialist = userData?.profileType === 'specialist';
+  const profileType = isSpecialist ? 'specialist' : 'user';
 
   useEffect(() => {
     setIsMounted(true);
@@ -80,10 +81,10 @@ function DashboardContent() {
 
   // Редирект для специалистов с неподходящих вкладок
   useEffect(() => {
-    if (profileType === 'specialist' && activeTab === 'fasting') {
+    if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
     }
-  }, [profileType, activeTab]);
+  }, [isSpecialist, activeTab]);
 
   useEffect(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return;
@@ -228,7 +229,7 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center gap-1.5 md:gap-2">
-              {profileType === 'specialist' && <MedicalCalculatorDialog />}
+              {isSpecialist && <MedicalCalculatorDialog />}
               <BeautyIndicatorsDialog />
               {userData?.gender === 'женский' && (
                 <CycleTrackerDialog selectedDate={selectedDate} />
@@ -268,7 +269,7 @@ function DashboardContent() {
           <div className="w-full h-full flex flex-col">
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center pt-0">
-                     {profileType === 'specialist' ? (
+                     {isSpecialist ? (
                        <div className="w-full h-full overflow-y-auto p-4 md:p-8 pb-32"><SpecialistBookingManager /></div>
                      ) : (
                        <RecommendationDisplay mode="dashboard" deviceData={dailyLogDoc} profileData={userData} data={recData?.data} actualMacros={actualMacros} />
@@ -324,8 +325,8 @@ function DashboardContent() {
               )}
               {activeTab === 'meals' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  {profileType === 'specialist' ? (
-                    <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setDirectChatId(null); setActiveTab('chats'); }} />
+                  {isSpecialist ? (
+                    <SpecialistPatientsView onStartChat={(id) => { setDirectChatRecipientId(id); setDirectChatId(''); setActiveTab('chats'); }} />
                   ) : (
                     <MealsHub selectedDate={selectedDate} />
                   )}
@@ -376,15 +377,15 @@ function DashboardContent() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
            <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-4 md:px-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-x-auto no-scrollbar">
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all shrink-0 p-2", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-5 w-5" /></button>
-              <button onClick={() => setActiveTab('meals')} className={cn("transition-all shrink-0 p-2", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <UserCheck className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}</button>
+              <button onClick={() => setActiveTab('meals')} className={cn("transition-all shrink-0 p-2", activeTab === 'meals' ? "text-[#00ffff]" : "text-white/30")}>{isSpecialist ? <UserCheck className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}</button>
               
-              {profileType === 'specialist' ? (
+              {isSpecialist ? (
                 <button onClick={() => setActiveTab('diary')} className={cn("transition-all shrink-0 p-2", activeTab === 'diary' ? "text-[#00ffff]" : "text-white/30")}><BookOpen className="h-5 w-5" /></button>
               ) : (
                 <button onClick={() => setActiveTab('fasting')} className={cn("transition-all shrink-0 p-2", activeTab === 'fasting' ? "text-[#00ffff]" : "text-white/30")}><Timer className="h-5 w-5" /></button>
               )}
               
-              <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all shrink-0 p-2", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{profileType === 'specialist' ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}</button>
+              <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all shrink-0 p-2", activeTab === 'dashboard' ? "text-[#00ffff]" : "text-white/30")}>{isSpecialist ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}</button>
               
               <UnifiedDataEntry selectedDate={selectedDate}><button className="h-12 w-12 md:h-14 md:w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.6)] shrink-0"><Plus className="h-7 w-7 text-white stroke-[3px]" /></button></UnifiedDataEntry>
               

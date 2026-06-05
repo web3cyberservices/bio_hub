@@ -18,10 +18,10 @@ import { sendAppNotification } from '@/app/actions/notifications';
 
 interface ChatInterfaceProps {
   initialSpecialistId?: string | null;
-  initialChatId?: string | null;
+  initialChatId?: string;
 }
 
-export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterfaceProps) {
+export function ChatInterface({ initialSpecialistId, initialChatId = '' }: ChatInterfaceProps) {
   const { user } = useUser();
   const { firestore } = useFirestore();
   const { toast } = useToast();
@@ -191,7 +191,7 @@ export function ChatInterface({ initialSpecialistId, initialChatId }: ChatInterf
           <>
             <div className="p-4 md:p-6 bg-white/5 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveChatId(null)}><ArrowLeft className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setActiveTab(null)}><ArrowLeft className="h-4 w-4" /></Button>
                 <Avatar className="h-10 w-10"><AvatarImage src={otherParticipant?.photo} /><AvatarFallback>{otherParticipant?.name?.charAt(0)}</AvatarFallback></Avatar>
                 <div><h3 className="font-black text-white">{otherParticipant?.name}</h3></div>
               </div>
