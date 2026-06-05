@@ -103,7 +103,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       toast({
         variant: 'destructive',
         title: 'Ошибка ИИ',
-        description: 'Не удалось получить ответ. Пожалуйста, попробуйте снова.',
+        description: 'Не удалось получить ответ.',
       });
     } finally {
       setLoading(false);

@@ -155,8 +155,8 @@ export function SpecialistDiaryHub() {
 
   const getFileType = (name: string): 'text' | 'audio' | 'video' => {
     const ext = name.split('.').pop()?.toLowerCase();
-    if (['mp3', 'wav', 'm4a', 'ogg'].includes(ext!)) return 'audio';
-    if (['mp4', 'webm', 'mov'].includes(ext!)) return 'video';
+    if (['mp3', 'wav', 'm4a', 'ogg', 'aac', 'flac'].includes(ext!)) return 'audio';
+    if (['mp4', 'webm', 'mov', 'mkv', 'avi'].includes(ext!)) return 'video';
     return 'text';
   };
 
@@ -244,7 +244,7 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        // Динамический импорт для транскрибации
+        // Динамический импорт серверного потока
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
@@ -294,7 +294,7 @@ export function SpecialistDiaryHub() {
       setDiaryChat(prev => [...prev, { role: 'assistant', text: response.text }]);
     } catch (error: any) {
       console.error("Diary AI Error:", error);
-      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось получить ответ от ассистента.' });
+      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось получить ответ.' });
     } finally {
       setAiLoading(false);
     }
@@ -303,7 +303,7 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-full bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
+    <div className="flex h-full bg-[#010411] text-white rounded-[2.5rem] md:rounded-none md:rounded-t-[3rem] overflow-hidden border border-white/5 shadow-2xl relative">
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">

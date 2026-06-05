@@ -78,7 +78,6 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Авто-редирект специалиста с вкладки голодания на дневник
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -218,8 +217,8 @@ function DashboardContent() {
               )}
               {activeTab === 'feed' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <div className="max-w-3xl mx-auto space-y-8 pb-10">
-                    <div className="flex justify-end mb-4 pt-4"><CreatePostDialog /></div>
+                  <div className="max-w-3xl mx-auto space-y-8 pb-10 pt-4">
+                    <div className="flex justify-end mb-4"><CreatePostDialog /></div>
                     {posts?.map((post) => (
                       <Card key={post.id} className="cyber-card p-6 md:p-8 space-y-6">
                           <div className="flex items-center justify-between">
@@ -251,10 +250,8 @@ function DashboardContent() {
               {activeTab === 'fasting' && !isSpecialist && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><FastingHub /></div>}
               
               {activeTab === 'diary' && isSpecialist && (
-                <div className="h-full px-4 flex flex-col animate-in fade-in duration-300 overflow-hidden">
-                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 h-full pb-40">
-                    <SpecialistDiaryHub />
-                  </div>
+                <div className="flex-1 min-h-0 h-full overflow-hidden pb-28">
+                  <SpecialistDiaryHub />
                 </div>
               )}
 

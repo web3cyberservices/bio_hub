@@ -35,15 +35,13 @@ export function initializeFirebase() {
     
     // 3. Безопасная инициализация Firestore с обработкой повторного вызова
     try {
-      // Пытаемся инициализировать с кэшем. 
-      // Если инстанс уже создан (HMR), это вызовет ошибку, которую мы перехватим.
       firestore = initializeFirestore(app, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager()
         })
       });
     } catch (e: any) {
-      // Если уже инициализировано - просто получаем текущий инстанс
+      // Если уже инициализировано (например, при HMR) — возвращаем существующий инстанс
       firestore = getFirestore(app);
     }
 
