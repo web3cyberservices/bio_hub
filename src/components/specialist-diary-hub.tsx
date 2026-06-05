@@ -216,6 +216,7 @@ export function SpecialistDiaryHub() {
     setAiLoading(true);
 
     try {
+      // Подгружаем действие чата динамически
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const response = await chatWithSpecialist({

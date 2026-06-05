@@ -78,7 +78,7 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
-  // Редирект для специалистов с неподходящих вкладок
+  // Принудительный редирект для специалистов с раздела голодания на дневник
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -341,7 +341,7 @@ function DashboardContent() {
                   <FastingHub />
                 </div>
               )}
-              {activeTab === 'diary' && (
+              {activeTab === 'diary' && isSpecialist && (
                 <div className="h-full px-4 pb-10 flex flex-col animate-in fade-in duration-300">
                   <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 overflow-hidden">
                     <SpecialistDiaryHub />

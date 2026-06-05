@@ -190,6 +190,21 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
   const isSpecialist = form.watch('profileType') === 'specialist';
 
+  const startVoiceInput = (fieldName: string, setter: (val: string) => void) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.onstart = () => setRecordingField(fieldName);
+    recognition.onend = () => setRecordingField(null);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const current = form.getValues(fieldName as any);
+      form.setValue(fieldName as any, (current ? current + ' ' : '') + transcript);
+    };
+    recognition.start();
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700 pb-32 px-4">
       <div className="flex items-center gap-4">
