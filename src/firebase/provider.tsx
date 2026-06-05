@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect, DependencyList } from 'react';
@@ -14,12 +13,6 @@ interface FirebaseProviderProps {
   auth: Auth | null;
 }
 
-interface UserAuthState {
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 export interface FirebaseContextState {
   areServicesAvailable: boolean;
   firebaseApp: FirebaseApp | null;
@@ -31,8 +24,6 @@ export interface FirebaseContextState {
 }
 
 const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
-
-// Технический пользователь для неавторизованных сессий
 const GUEST_USER = { uid: 'public-user', displayName: 'Гость' };
 
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -41,44 +32,38 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
 }) => {
-  const [userAuthState, setUserAuthState] = useState<UserAuthState>({
+  const [userState, setUserState] = useState<{user: User | null, loading: boolean, error: Error | null}>({
     user: null,
-    isUserLoading: true,
-    userError: null,
+    loading: true,
+    error: null
   });
 
   useEffect(() => {
     if (!auth) {
-      setUserAuthState({ user: null, isUserLoading: false, userError: null });
+      setUserState({ user: null, loading: false, error: null });
       return;
     }
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => {
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
-      },
-      (error) => {
-        setUserAuthState({ user: null, isUserLoading: false, userError: error as Error });
-      }
+      (u) => setUserState({ user: u, loading: false, error: null }),
+      (e) => setUserState({ user: null, loading: false, error: e as Error })
     );
     return () => unsubscribe();
   }, [auth]);
 
-  const contextValue = useMemo((): FirebaseContextState => {
-    return {
-      areServicesAvailable: !!(firebaseApp && firestore && auth),
-      firebaseApp,
-      firestore,
-      auth,
-      user: userAuthState.user,
-      isUserLoading: userAuthState.isUserLoading,
-      userError: userAuthState.userError,
-    };
-  }, [firebaseApp, firestore, auth, userAuthState]);
+  const value = useMemo(() => ({
+    areServicesAvailable: !!(firebaseApp && firestore && auth),
+    firebaseApp,
+    firestore,
+    auth,
+    user: userState.user,
+    isUserLoading: userState.loading,
+    userError: userState.error,
+  }), [firebaseApp, firestore, auth, userState]);
 
   return (
-    <FirebaseContext.Provider value={contextValue}>
+    <FirebaseContext.Provider value={value}>
       <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
@@ -87,17 +72,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 export const useFirebase = () => {
   const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    return {
-      areServicesAvailable: false,
-      firebaseApp: null,
-      firestore: null,
-      auth: null,
-      user: null,
-      isUserLoading: true,
-      userError: null,
-    };
-  }
+  if (!context) return { areServicesAvailable: false, firebaseApp: null, firestore: null, auth: null, user: null, isUserLoading: true, userError: null };
   return context;
 };
 
@@ -113,23 +88,13 @@ export const useFirestore = () => {
 
 export const useUser = () => {
   const { user, isUserLoading, userError } = useFirebase();
-  
-  // Возвращаем GUEST_USER только если загрузка завершена и реального пользователя нет
   const finalUser = isUserLoading ? null : (user || GUEST_USER);
-  
-  return { 
-    user: finalUser as (User | { uid: string; displayName: string }) | null, 
-    loading: isUserLoading, 
-    isUserLoading, 
-    userError 
-  };
+  return { user: finalUser as any, loading: isUserLoading, isUserLoading, userError };
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T & {__memo?: boolean} {
   const memoized = useMemo(factory, deps);
   const result = memoized as any;
-  if (result && typeof result === 'object') {
-    result.__memo = true;
-  }
+  if (result && typeof result === 'object') result.__memo = true;
   return result;
 }

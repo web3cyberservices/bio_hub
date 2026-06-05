@@ -12,11 +12,6 @@ export const metadata: Metadata = {
   icons: {
     icon: 'https://placehold.co/32x32/010411/00ffff?text=🧬',
     apple: 'https://placehold.co/180x180/010411/00ffff?text=🧬',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Bio Hub Pro',
   }
 };
 
@@ -43,18 +38,6 @@ export default function RootLayout({
           src="https://telegram.org/js/telegram-web-app.js" 
           strategy="beforeInteractive" 
         />
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(
-                  function(registration) { console.log('SW registered: ', registration.scope); },
-                  function(err) { console.log('SW registration failed: ', err); }
-                );
-              });
-            }
-          `
-        }} />
       </head>
       <body className="font-body antialiased" suppressHydrationWarning>
         <FirebaseClientProvider>

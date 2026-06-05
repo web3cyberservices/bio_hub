@@ -1,70 +1,49 @@
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
-import { 
-  getFirestore, 
-  Firestore,
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager
-} from 'firebase/firestore';
+import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { firebaseConfig } from './config';
 
 /**
- * BIO-HUB FIREBASE CORE (Next.js 16 Optimized)
- * Паттерн Safe Singleton для предотвращения ошибок HMR.
+ * BIO-HUB FIREBASE CORE - Safe Singleton
+ * Предотвращает ошибки повторной инициализации при HMR.
  */
 
 let app: FirebaseApp;
-let authInstance: Auth;
-let dbInstance: Firestore;
+let auth: Auth;
+let db: Firestore;
 
 export function initializeFirebase() {
-  if (typeof window === 'undefined') {
-    return { firebaseApp: null, auth: null, firestore: null };
-  }
+  if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-
-  if (!authInstance) {
-    authInstance = getAuth(app);
-  }
-  
-  if (!dbInstance) {
-    try {
-      dbInstance = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager()
-        })
-      });
-    } catch (error: any) {
-      // Игнорируем ошибку "already initialized", если она возникла при Fast Refresh
-      dbInstance = getFirestore(app);
+  try {
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
     }
+
+    if (!auth) auth = getAuth(app);
+    
+    if (!db) {
+      try {
+        db = initializeFirestore(app, {
+          localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
+      } catch (e) {
+        // Fallback если инициализация уже произошла
+        db = getFirestore(app);
+      }
+    }
+  } catch (err) {
+    console.error("Firebase Core Init Error:", err);
   }
 
-  return { firebaseApp: app, auth: authInstance, firestore: dbInstance };
+  return { firebaseApp: app, auth, firestore: db };
 }
 
-// Ленивые функции доступа для серверных компонентов и экшенов
-export const getSafeAuth = () => {
-  const { auth } = initializeFirebase();
-  return auth as Auth;
-};
-
-export const getSafeDb = () => {
-  const { firestore } = initializeFirebase();
-  return firestore as Firestore;
-};
-
-// Экспортируем хуки из провайдера (через barrel-файл провайдера для избежания циклов)
+// Прямые экспорты хуков из провайдера, чтобы избежать круговых зависимостей
 export { useFirebase, useAuth, useFirestore, useUser, useMemoFirebase } from './provider';
 export { useCollection } from './firestore/use-collection';
 export { useDoc } from './firestore/use-doc';
-export { errorEmitter } from './error-emitter';
-export { FirestorePermissionError } from './errors';
