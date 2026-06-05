@@ -1,8 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Оптимизированный поток чата с ИИ-специалистом.
- * Использует архитектуру Direct Generation для стабильности в Next.js 15.
+ * Использует Direct Generation для стабильности в Next.js 15.
  */
 
 import {ai} from '@/ai/genkit';
@@ -21,7 +20,7 @@ export async function chatWithSpecialist(input: {
 }) {
   const { message, history, userContext, fileContext } = input;
 
-  // Используем прямую генерацию вместо defineFlow для предотвращения HMR ошибок
+  // Direct generation to bypass HMR module factory errors in Next.js 15
   const response = await ai.generate({
     model: googleAI.model('gemini-2.5-flash'),
     system: `Вы — эксперт Bio Hub Pro (биохакинг/нутрициология).

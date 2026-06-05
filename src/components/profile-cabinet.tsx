@@ -25,7 +25,10 @@ import { cn } from '@/lib/utils';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
-// BREAK CIRCULAR DEPENDENCY: Use dynamic import for Heavy Dialogs
+/**
+ * BREAK CIRCULAR DEPENDENCY: Use dynamic import for Heavy Dialogs.
+ * This prevents Turbopack HMR "Module factory not available" errors.
+ */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
   { ssr: false }
@@ -121,7 +124,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
-      // DATA SANITIZATION: Replace nulls with empty strings to pass Zod validation
+      /**
+       * DATA SANITIZATION: Critical for Zod validation.
+       * Replaces nulls/undefined from Firestore with type-safe defaults.
+       */
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
@@ -131,6 +137,16 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             sanitizedData[key] = 'мужской';
           } else if (key === 'profileType') {
             sanitizedData[key] = 'user';
+          } else if (key === 'activityLevel') {
+             sanitizedData[key] = 'moderate';
+          } else if (key === 'healthGoal') {
+             sanitizedData[key] = 'поддержать текущее состояние';
+          } else if (key === 'smoking') {
+             sanitizedData[key] = 'нет';
+          } else if (key === 'alcohol') {
+             sanitizedData[key] = 'не употребляю';
+          } else if (key === 'workActivityType') {
+             sanitizedData[key] = 'mental';
           } else {
             sanitizedData[key] = '';
           }
@@ -146,7 +162,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({
         variant: 'destructive',
         title: 'Браузер не поддерживается',
-        description: 'Используйте Chrome или Edge для работы с папками Obsidian.',
+        description: 'Safari не поддерживает доступ к папкам. Используйте Chrome или Edge.',
       });
       return;
     }
@@ -342,6 +358,23 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             </Card>
           </div>
 
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <CardContent className="p-0 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                    <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                  <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                )} />
+              </CardContent>
+            </Card>
+          </div>
+
           {isSpecialist && (
             <div className="space-y-6 animate-in slide-in-from-top-4">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
@@ -363,12 +396,16 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
-                <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
+                <CardContent className="p-0 flex flex-col gap-4">
+                  <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
+                  <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
+                </CardContent>
              </Card>
              <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
-                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
-                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase w-full">Открыть архив</Button></AnalysisHistoryDialog>
+                <CardContent className="p-0 flex flex-col gap-4">
+                  <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
+                  <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase w-full">Открыть архив</Button></AnalysisHistoryDialog>
+                </CardContent>
              </Card>
           </div>
 

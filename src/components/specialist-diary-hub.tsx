@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface FileNode {
   name: string;
@@ -250,7 +251,9 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        // DYNAMIC IMPORT for stability
+        /**
+         * Dynamic Import to prevent HMR errors.
+         */
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
@@ -284,6 +287,9 @@ export function SpecialistDiaryHub() {
     setAiLoading(true);
 
     try {
+      /**
+       * Dynamic Import to prevent HMR errors.
+       */
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const response = await chatWithSpecialist({
@@ -493,4 +499,8 @@ function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNod
       {node.isOpen && node.children && <div className="flex flex-col">{node.children.map((child, i) => <TreeNode key={i} node={child} onToggle={onToggle} level={level + 1} activeFileName={activeFileName} />)}</div>}
     </div>
   );
+}
+
+function TreeNodeContainer({ node, onToggle, level = 0, activeFileName }: { node: FileNode, onToggle: (node: FileNode) => void, level?: number, activeFileName?: string }) {
+  return <TreeNode node={node} onToggle={onToggle} level={level} activeFileName={activeFileName} />;
 }
