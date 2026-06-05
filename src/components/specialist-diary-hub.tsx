@@ -242,7 +242,7 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
+    <div className="flex h-full min-h-0 bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
       {/* ЛЕВАЯ ПАНЕЛЬ */}
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">

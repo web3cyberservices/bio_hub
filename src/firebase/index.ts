@@ -26,10 +26,12 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // FIX: Check if firestore is already initialized to avoid "different options" error
+      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сначала пытаемся получить существующий экземпляр,
+      // чтобы избежать ошибки "initializeFirestore() has already been called with different options"
       try {
         firestore = getFirestore(app);
       } catch (e) {
+        // Если экземпляр не найден, инициализируем с нужными настройками кэша
         firestore = initializeFirestore(app, {
           cache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()

@@ -117,10 +117,14 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
 
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Ensure all schema fields have at least an empty string/0 to avoid "uncontrolled to controlled" warning
+      // Гарантируем наличие значений для всех полей схемы, чтобы избежать ошибки Controlled/Uncontrolled
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
-          sanitizedData[key] = (key === 'weight' || key === 'height' || key === 'workHoursPerDay') ? 0 : '';
+          if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
+            sanitizedData[key] = 0;
+          } else {
+            sanitizedData[key] = '';
+          }
         }
       });
       form.reset(sanitizedData); 
@@ -183,21 +187,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   };
 
   const isSpecialist = form.watch('profileType') === 'specialist';
-
-  const startVoiceInput = (fieldName: string) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.onstart = () => setRecordingField(fieldName);
-    recognition.onend = () => setRecordingField(null);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      const current = form.getValues(fieldName as any);
-      form.setValue(fieldName as any, (current ? current + ' ' : '') + transcript);
-    };
-    recognition.start();
-  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700 pb-32 px-4">

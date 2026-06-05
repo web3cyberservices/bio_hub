@@ -342,7 +342,7 @@ function DashboardContent() {
                 </div>
               )}
               {activeTab === 'diary' && isSpecialist && (
-                <div className="h-full px-4 pb-10 flex flex-col animate-in fade-in duration-300">
+                <div className="h-full px-4 pb-32 flex flex-col animate-in fade-in duration-300">
                   <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 overflow-hidden">
                     <SpecialistDiaryHub />
                   </div>
