@@ -116,29 +116,15 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
-      form.reset({ 
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        birthDate: userData.birthDate || '',
-        photoUrl: userData.photoUrl || '',
-        gender: (userData.gender as any) || 'мужской',
-        weight: userData.weight || 0,
-        height: userData.height || 0,
-        activityLevel: (userData.activityLevel as any) || 'moderate',
-        healthGoal: (userData.healthGoal as any) || 'поддержать текущее состояние',
-        smoking: (userData.smoking as any) || 'нет',
-        alcohol: (userData.alcohol as any) || 'не употребляю',
-        favoriteFoods: userData.favoriteFoods || '',
-        dislikedFoods: userData.dislikedFoods || '',
-        medications: userData.medications || '',
-        profileType: (userData.profileType as any) || 'user',
-        specialization: userData.specialization || '',
-        bio: userData.bio || '',
-        instagramUrl: userData.instagramUrl || '',
-        occupation: userData.occupation || '',
-        workActivityType: (userData.workActivityType as any) || 'mental',
-        workHoursPerDay: userData.workHoursPerDay || 0,
-      }); 
+      const sanitizedData: any = { ...userData };
+      // Санитизация данных для предотвращения uncontrolled input
+      Object.keys(profileSchema.shape).forEach(key => {
+        if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
+          sanitizedData[key] = key === 'weight' || key === 'height' || key === 'workHoursPerDay' ? 0 : '';
+        }
+      });
+      
+      form.reset(sanitizedData); 
       checkObsidianAccess();
     } 
   }, [userData, form]);
@@ -200,21 +186,6 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       router.push('/');
       toast({ title: 'Выход выполнен' });
     } catch (error) { toast({ variant: 'destructive', title: 'Ошибка выхода' }); }
-  };
-
-  const startVoiceInput = (fieldName: keyof ProfileValues) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ru-RU';
-    recognition.onstart = () => setRecordingField(fieldName);
-    recognition.onend = () => setRecordingField(null);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      const current = form.getValues(fieldName as any);
-      form.setValue(fieldName as any, (current ? current + ' ' : '') + transcript);
-    };
-    recognition.start();
   };
 
   const isSpecialist = form.watch('profileType') === 'specialist';

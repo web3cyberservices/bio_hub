@@ -54,7 +54,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isMounted, setIsMounted] = useState(false);
   const [directChatRecipientId, setDirectChatRecipientId] = useState<string | null>(null);
-  const [directChatId, setDirectChatId] = useState<string | null>(null);
+  const [directChatId, setDirectChatId] = useState<string>('');
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   useHealthAggregator();
@@ -66,7 +66,6 @@ function DashboardContent() {
 
   const { data: userData } = useDoc<any>(userDocRef);
   const isSpecialist = userData?.profileType === 'specialist';
-  const profileType = isSpecialist ? 'specialist' : 'user';
 
   useEffect(() => {
     setIsMounted(true);
@@ -337,7 +336,7 @@ function DashboardContent() {
                   <MedicationHub />
                 </div>
               )}
-              {activeTab === 'fasting' && (
+              {activeTab === 'fasting' && !isSpecialist && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
                   <FastingHub />
                 </div>
