@@ -16,24 +16,22 @@ let auth: Auth;
 let firestore: Firestore;
 
 /**
- * БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ (Safe Singleton Pattern)
- * Предотвращает ошибку "initializeFirestore() has already been called"
+ * Безопасная инициализация Firebase Singleton.
+ * Предотвращает ошибки повторной инициализации при HMR.
  */
 export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
   try {
-    // 1. Инициализация App
     if (!getApps().length) {
       app = initializeApp(firebaseConfig);
     } else {
       app = getApp();
     }
 
-    // 2. Инициализация Auth
     auth = getAuth(app);
     
-    // 3. Безопасная инициализация Firestore с обработкой повторного вызова
+    // Пытаемся получить существующий инстанс или создать новый
     try {
       firestore = initializeFirestore(app, {
         localCache: persistentLocalCache({
@@ -41,7 +39,7 @@ export function initializeFirebase() {
         })
       });
     } catch (e: any) {
-      // Если уже инициализировано (например, при HMR) — возвращаем существующий инстанс
+      // Если Firestore уже инициализирован, просто получаем ссылку
       firestore = getFirestore(app);
     }
 

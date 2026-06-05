@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -11,9 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { 
-  User, Loader2, Smartphone, ExternalLink, Activity, 
+  User, Loader2, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
-  Ban, Wine, Flame, Target, Clock, Utensils
+  Flame, Clock, Smartphone, ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -21,7 +22,12 @@ import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { AnalysisHistoryDialog } from './analysis-history-dialog';
+
+// Динамический импорт диалога истории для предотвращения ошибок HMR Turbopack
+const AnalysisHistoryDialog = dynamic(() => import('./analysis-history-dialog').then(m => m.AnalysisHistoryDialog), {
+  ssr: false,
+  loading: () => <Button variant="outline" className="h-14 w-full opacity-50" disabled>Загрузка архива...</Button>
+});
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -52,7 +58,7 @@ type ProfileValues = z.infer<typeof profileSchema>;
 export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () => void }) {
   const { user } = useUser();
   const { auth } = useAuth();
-  const { firestore } = useFirestore();
+  const { firestore } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -93,25 +99,20 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Санитарная очистка данных: замена null на пустые строки для Zod
+      // Глубокая санитарная очистка: убираем null, заменяем на значения по умолчанию для Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
+          const schemaKey = profileSchema.shape[key as keyof typeof profileSchema.shape];
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
             sanitizedData[key] = 0;
           } else if (key === 'gender') {
             sanitizedData[key] = 'мужской';
           } else if (key === 'profileType') {
             sanitizedData[key] = 'user';
-          } else if (key === 'workActivityType') {
-            sanitizedData[key] = 'mental';
           } else if (key === 'smoking') {
             sanitizedData[key] = 'нет';
           } else if (key === 'alcohol') {
             sanitizedData[key] = 'не употребляю';
-          } else if (key === 'activityLevel') {
-            sanitizedData[key] = 'moderate';
-          } else if (key === 'healthGoal') {
-            sanitizedData[key] = 'поддержать текущее состояние';
           } else {
             sanitizedData[key] = '';
           }
@@ -142,10 +143,10 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         updatedAt: new Date().toISOString() 
       }, { merge: true });
       
-      toast({ title: 'Профиль обновлен' });
+      toast({ title: 'Профиль успешно обновлен' });
     } catch (e: any) {
       console.error("Save error:", e);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения' });
+      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте данные и попробуйте снова.' });
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
           <Card className="cyber-card bg-blue-950/40 p-8 border-white/5">
             <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] overflow-hidden border-4 border-primary/20 bg-white/5 relative shadow-2xl">
                 {currentPhotoUrl ? (
                   <img src={currentPhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -236,14 +237,33 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
                 )} />
               </div>
               <FormField control={form.control} name="medications" render={({ field }) => (
-                 <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none" /></FormControl></FormItem>
+                 <FormItem><FormLabel>Лекарства и БАДы</FormLabel><FormControl><Textarea {...field} placeholder="Перечислите препараты..." className="min-h-[100px] rounded-2xl bg-white/5 border-white/10 resize-none text-white" /></FormControl></FormItem>
+              )} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="favoriteFoods" render={({ field }) => (<FormItem><FormLabel>Любимые продукты</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="dislikedFoods" render={({ field }) => (<FormItem><FormLabel>Исключить из рациона</FormLabel><FormControl><Input {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+              </div>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Работа и нагрузка</h3>
+            <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="occupation" render={({ field }) => (<FormItem><FormLabel>Профессия</FormLabel><FormControl><Input {...field} placeholder="Напр: Программист" className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>)} />
+                <FormField control={form.control} name="workActivityType" render={({ field }) => (
+                  <FormItem><FormLabel>Тип нагрузки</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger className="h-14 rounded-2xl bg-white/5 border-white/10"><SelectValue /></SelectTrigger></FormControl><SelectContent className="bg-slate-950 border-white/10 text-white"><SelectItem value="mental">Умственная</SelectItem><SelectItem value="physical">Физическая</SelectItem></SelectContent></Select></FormItem>
+                )} />
+              </div>
+              <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
+                <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
               )} />
             </Card>
           </div>
 
           {isSpecialist && (
             <div className="space-y-6 animate-in slide-in-from-top-4">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 4. Рабочее пространство</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> 5. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
@@ -260,6 +280,17 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ</>}
           </Button>
           
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Smartphone className="h-5 w-5 text-primary" /> Уведомления</h3>
+                <Button type="button" variant="outline" onClick={() => window.open(`https://t.me/web3cyberservices_bot?start=${user?.uid}`, '_blank')} className="h-14 rounded-xl bg-white/5 border-white/10 text-white gap-3 uppercase font-black">Telegram <ExternalLink className="h-3 w-3 opacity-30" /></Button>
+             </Card>
+             <Card className="cyber-card bg-blue-950/40 p-8 flex flex-col gap-4 border-white/5">
+                <h3 className="font-black uppercase flex items-center gap-2 text-white/60 text-xs tracking-widest"><Activity className="h-5 w-5 text-primary" /> Архив</h3>
+                <AnalysisHistoryDialog><Button type="button" className="h-14 rounded-xl bg-white/5 text-primary border-primary/20 font-black uppercase">Открыть архив</Button></AnalysisHistoryDialog>
+             </Card>
+          </div>
+
           <div className="pt-10 flex justify-center">
              <Button variant="ghost" onClick={handleLogout} className="text-red-400 hover:text-red-300 hover:bg-red-500/5 rounded-xl gap-2 font-black uppercase text-[10px] tracking-widest">
                 <LogOut className="h-4 w-4" /> ВЫЙТИ ИЗ СИСТЕМЫ

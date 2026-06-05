@@ -253,7 +253,7 @@ export function SpecialistDiaryHub() {
         
         setActiveFile(prev => prev ? {
           ...prev,
-          content: prev.content ? prev.content + '\n\n[TRANSCRIPTION]:\n' + transcription : transcription,
+          content: prev.content ? prev.content + '\n\n[AI TRANSCRIPTION]:\n' + transcription : transcription,
           isDirty: true,
           type: 'text' 
         } : null);
@@ -303,7 +303,8 @@ export function SpecialistDiaryHub() {
   if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
-    <div className="flex h-full bg-[#010411] text-white rounded-[2.5rem] md:rounded-none md:rounded-t-[3rem] overflow-hidden border border-white/5 shadow-2xl relative">
+    <div className="flex h-full bg-[#010411] text-white rounded-none md:rounded-t-[3rem] overflow-hidden border border-white/5 shadow-2xl relative">
+      {/* ЛЕВАЯ ПАНЕЛЬ: ПАЦИЕНТЫ И ФАЙЛЫ */}
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
@@ -350,6 +351,7 @@ export function SpecialistDiaryHub() {
         </ScrollArea>
       </div>
 
+      {/* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: РЕДАКТОР / ПЛЕЕР */}
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
@@ -413,6 +415,7 @@ export function SpecialistDiaryHub() {
         )}
       </div>
 
+      {/* ПРАВАЯ ПАНЕЛЬ: AI АНАЛИЗ */}
       <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
            <div className="p-4 border-b border-white/5 flex justify-center">
@@ -447,7 +450,7 @@ export function SpecialistDiaryHub() {
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Активная модель</label>
                        <div className="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center justify-between shadow-lg">
-                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5</p><p className="text-[8px] font-bold text-primary uppercase">Installed & Optimized</p></div>
+                          <div className="space-y-1"><p className="text-sm font-black text-white">BioGemini 2.5 Flash</p><p className="text-[8px] font-bold text-primary uppercase">Optimized for BioTech</p></div>
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
                        </div>
                     </div>

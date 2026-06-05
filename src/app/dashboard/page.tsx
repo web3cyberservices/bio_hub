@@ -250,7 +250,7 @@ function DashboardContent() {
               {activeTab === 'fasting' && !isSpecialist && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300"><FastingHub /></div>}
               
               {activeTab === 'diary' && isSpecialist && (
-                <div className="flex-1 min-h-0 h-full overflow-hidden pb-28">
+                <div className="flex-1 min-h-0 h-full overflow-hidden pb-28 pt-0">
                   <SpecialistDiaryHub />
                 </div>
               )}
