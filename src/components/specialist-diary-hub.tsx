@@ -227,7 +227,7 @@ export function SpecialistDiaryHub() {
     }
   };
 
-  if (patientsLoading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
+  if (patientsLoading) return <div className="flex h-full items-center justify-center bg-black"><Loader2 className="animate-spin h-12 w-12 text-primary opacity-20" /></div>;
 
   return (
     <div className="flex h-full bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">

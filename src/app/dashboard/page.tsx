@@ -78,6 +78,7 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
+  // Защита ролей: специалисты не видят голодание
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');
@@ -341,8 +342,8 @@ function DashboardContent() {
                 </div>
               )}
               {activeTab === 'diary' && isSpecialist && (
-                <div className="h-full px-4 pb-32 flex flex-col animate-in fade-in duration-300">
-                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4 overflow-hidden">
+                <div className="h-full px-4 pb-32 flex flex-col animate-in fade-in duration-300 overflow-hidden">
+                  <div className="flex-1 min-h-0 max-w-7xl w-full mx-auto pt-4">
                     <SpecialistDiaryHub />
                   </div>
                 </div>
@@ -372,6 +373,7 @@ function DashboardContent() {
           </div>
         </div>
 
+        {/* НИЖНЕЕ МЕНЮ */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
            <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 md:h-22 px-4 md:px-8 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-x-auto no-scrollbar">
               <button onClick={() => setActiveTab('feed')} className={cn("transition-all shrink-0 p-2", activeTab === 'feed' ? "text-[#00ffff]" : "text-white/30")}><LayoutGrid className="h-5 w-5" /></button>

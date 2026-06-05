@@ -26,15 +26,15 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE
-      // Пытаемся инициализировать с кэшем, если не получается (уже запущен) - берем текущий инстанс
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE (try/catch паттерн)
       try {
         firestore = initializeFirestore(app, {
-          cache: persistentLocalCache({
+          localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()
           })
         });
-      } catch (e) {
+      } catch (e: any) {
+        // Если уже инициализирован — возвращаем существующий инстанс
         firestore = getFirestore(app);
       }
 
