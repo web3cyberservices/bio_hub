@@ -11,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, ExternalLink, Activity, 
-  Info, Upload, LogOut, Briefcase, Clock, Save
+  Info, Upload, LogOut, Briefcase, Clock, Save, ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -56,7 +56,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const userDocRef = useMemoFirebase(() => user ? doc(firestore!, 'users', user.uid) : null, [user, firestore]);
+  const userDocRef = useMemoFirebase(() => user?.uid ? doc(firestore!, 'users', user.uid) : null, [user?.uid, firestore]);
   const { data: userData } = useDoc<any>(userDocRef);
 
   const form = useForm<ProfileValues>({
@@ -91,7 +91,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // Очистка данных для предотвращения ошибок uncontrolled input и валидации Zod
+      // Глубокая очистка данных: заменяем null/undefined на пустые строки или 0 для валидности Zod
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -117,20 +117,24 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   };
 
   const onSubmit = async (values: ProfileValues) => {
-    if (!user || !firestore) return;
+    if (!user?.uid || !firestore) return;
     setLoading(true);
     try {
-      // Сохраняем все поля, включая очищенные
+      // Сохраняем все данные, включая принудительную установку ID
       await setDoc(doc(firestore, 'users', user.uid), { 
         ...values, 
         id: user.uid, 
         updatedAt: new Date().toISOString() 
       }, { merge: true });
       
-      toast({ title: 'Профиль успешно сохранен' });
-    } catch (e) {
+      toast({ title: 'Профиль успешно обновлен' });
+    } catch (e: any) {
       console.error("Save error:", e);
-      toast({ variant: 'destructive', title: 'Ошибка сохранения', description: 'Проверьте соединение с интернетом.' });
+      toast({ 
+        variant: 'destructive', 
+        title: 'Ошибка сохранения', 
+        description: 'Не удалось синхронизировать данные с облаком.' 
+      });
     } finally {
       setLoading(false);
     }
@@ -210,22 +214,22 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           </div>
 
           {isSpecialist && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 3. Рабочее пространство</h3>
               <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
                  <div className="space-y-1 text-center md:text-left">
                     <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
                     <p className="text-xs text-white/40 font-medium">Управление локальными файлами и записями о пациентах.</p>
                  </div>
-                 <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20">
-                    ОТКРЫТЬ ДНЕВНИК
+                 <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20 gap-2">
+                    <ShieldCheck className="h-4 w-4" /> ОТКРЫТЬ ДНЕВНИК
                  </Button>
               </Card>
             </div>
           )}
 
           <Button type="submit" disabled={loading} className="w-full h-20 rounded-2xl bg-primary text-slate-950 font-black text-2xl shadow-[0_0_50px_rgba(0,255,255,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ПРОФИЛЬ</>}
+            {loading ? <Loader2 className="animate-spin h-8 w-8" /> : <><Save className="mr-3 h-8 w-8" /> СОХРАНИТЬ ИЗМЕНЕНИЯ</>}
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
