@@ -15,6 +15,10 @@ let app: FirebaseApp;
 let auth: Auth;
 let firestore: Firestore;
 
+/**
+ * Безопасная инициализация Firebase для Next.js 15.
+ * Предотвращает ошибки повторной инициализации при HMR.
+ */
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
     try {
@@ -26,17 +30,18 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE С TRY/CATCH
       try {
-        // Пытаемся получить уже созданный инстанс
-        firestore = getFirestore(app);
-      } catch (e) {
-        // Если не создан — инициализируем с настройками кэша
+        // Сначала пытаемся инициализировать с кэшем
         firestore = initializeFirestore(app, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()
           })
         });
+      } catch (e: any) {
+        // Если база уже инициализирована (ошибка code: 'failed-precondition' или сообщение 'already been called')
+        // Просто возвращаем существующий экземпляр
+        firestore = getFirestore(app);
       }
 
       return {
@@ -45,7 +50,7 @@ export function initializeFirebase() {
         firestore
       };
     } catch (error) {
-      console.error("Firebase Initialization Failed:", error);
+      console.error("Firebase Core Initialization Failed:", error);
     }
   }
 

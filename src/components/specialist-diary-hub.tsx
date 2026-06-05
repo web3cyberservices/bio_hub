@@ -59,7 +59,7 @@ export function SpecialistDiaryHub() {
 
   const [aiInput, setAiInput] = useState('');
   const [diaryChat, setDiaryChat] = useState<ChatMessage[]>([
-    { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать открытый файл или записи о пациенте.' }
+    { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать медиафайлы или записи о пациенте.' }
   ]);
   const [aiLoading, setAiLoading] = useState(false);
   
@@ -244,6 +244,7 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
+        // ДИНАМИЧЕСКИЙ ИМПОРТ ДЛЯ ПРЕДОТВРАЩЕНИЯ ОШИБОК HMR
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
@@ -252,7 +253,7 @@ export function SpecialistDiaryHub() {
         
         setActiveFile(prev => prev ? {
           ...prev,
-          content: prev.content ? prev.content + '\n\n[ТРАНСКРИПЦИЯ]:\n' + transcription : transcription,
+          content: prev.content ? prev.content + '\n\n[TRANSCRIPTION]:\n' + transcription : transcription,
           isDirty: true,
           type: 'text' 
         } : null);

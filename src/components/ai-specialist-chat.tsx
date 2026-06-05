@@ -37,7 +37,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист Bio Hub Pro. Чем я могу помочь вам в оптимизации вашего здоровья сегодня?' }
+    { role: 'model', content: 'Здравствуйте! Я ваш ИИ-специалист Bio Hub Pro. Чем я могу помочь вам сегодня?' }
   ]);
   
   const userDocRef = useMemoFirebase(() => {
@@ -70,7 +70,6 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setInput(prev => (prev ? prev + ' ' : '') + transcript);
-      toast({ title: 'Голос распознан' });
     };
     recognition.start();
   };
@@ -84,7 +83,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     setLoading(true);
 
     try {
-      // ДИНАМИЧЕСКИЙ ИМПОРТ ДЛЯ ПРЕДОТВРАЩЕНИЯ ОШИБОК HMR И MODULE FACTORY
+      // КРИТИЧЕСКИ: Используем динамический импорт для предотвращения ошибок HMR / Module Factory
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const history = messages.map(m => ({ role: m.role, content: m.content }));
@@ -93,19 +92,19 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
         history: history,
         userContext: userData ? {
           firstName: userData.firstName || 'Пациент',
-          healthGoal: userData.healthGoal || 'поддержание здоровья',
-          weight: userData.weight || 70,
-          activityLevel: userData.activityLevel || 'moderate',
+          healthGoal: userData.healthGoal,
+          weight: userData.weight,
+          activityLevel: userData.activityLevel,
         } : undefined
       });
       
       setMessages(prev => [...prev, { role: 'model', content: response.text }]);
-    } catch (error) {
-      console.error("Specialist Chat Error:", error);
+    } catch (error: any) {
+      console.error("AI Chat Error:", error);
       toast({
         variant: 'destructive',
-        title: 'Ошибка связи',
-        description: 'Специалист временно недоступен.',
+        title: 'Ошибка ИИ',
+        description: 'Не удалось получить ответ. Попробуйте обновить страницу.',
       });
     } finally {
       setLoading(false);
@@ -138,7 +137,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
       <div className="p-4 md:p-8 bg-black/20 border-t border-white/5 shrink-0">
         <div className="relative flex items-center gap-4">
           <div className="relative flex-1">
-            <Input placeholder="Спросите об анализах, питании или здоровье..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/10 border-none px-6 md:px-8 font-bold text-white placeholder:text-white/20 focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32" />
+            <Input placeholder="Спросите об анализах или питании..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} className="h-14 md:h-16 rounded-2xl md:rounded-[2rem] bg-primary/10 border-none px-6 md:px-8 font-bold text-white placeholder:text-white/20 focus-visible:ring-4 focus-visible:ring-primary/5 shadow-inner pr-24 md:pr-32" />
             <div className="absolute right-12 md:right-16 top-1/2 -translate-y-1/2"><Button type="button" variant="ghost" size="icon" onClick={startVoiceInput} className={cn("h-10 w-10 md:h-12 md:w-12 rounded-full transition-all", isRecording ? "bg-red-500 text-white animate-pulse" : "bg-white/10 text-primary")}><Mic className="h-4 w-4 md:h-5 md:w-5" /></Button></div>
           </div>
           <Button size="icon" onClick={handleSend} disabled={loading || !input.trim()} className="h-14 md:h-16 w-14 md:w-16 rounded-xl md:rounded-2xl bg-primary shadow-xl shadow-primary/20 shrink-0"><Send className="h-5 w-5 md:h-6 md:w-6 text-slate-950" /></Button>

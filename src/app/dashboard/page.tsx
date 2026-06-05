@@ -101,8 +101,6 @@ function DashboardContent() {
         }
       });
       setUnreadTotal(count);
-    }, (error) => {
-      console.error("Unread monitor error:", error);
     });
 
     return () => unsubscribe();
@@ -115,31 +113,6 @@ function DashboardContent() {
       return format(new Date(), 'yyyy-MM-dd');
     }
   }, [selectedDate]);
-
-  const [periodDaysMap, setPeriodDaysMap] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    if (!firestore || !user?.uid) return;
-    
-    const q = query(collection(firestore, user.uid === 'public-user' ? 'public-logs' : 'users', user.uid, 'dailyLogs'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const map: Record<string, number> = {};
-      snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any))
-        .filter(log => log.cycle?.isStart === true && log.cycle?.active === true)
-        .forEach(start => {
-          const startDate = start.timestamp?.toDate?.() || (start.date ? new Date(start.date + 'T00:00:00') : null);
-          if (!startDate || !isValid(startDate)) return;
-          const duration = start.cycle?.periodDuration || 5;
-          for (let i = 0; i < duration; i++) {
-            const d = addDays(startDate, i);
-            if (isValid(d)) map[format(d, 'yyyy-MM-dd')] = i + 1;
-          }
-        });
-      setPeriodDaysMap(map);
-    });
-    return () => unsubscribe();
-  }, [firestore, user?.uid]);
 
   const dailyLogRef = useMemoFirebase(() => {
     if (!firestore || !user?.uid || !dateKey) return null;
@@ -210,27 +183,27 @@ function DashboardContent() {
             <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg shadow-[#00ffff]/5"><HeartPulse className="h-6 w-6 md:h-7 md:w-7 text-[#00ffff]" /></div>
             <h1 className="text-lg md:text-2xl font-black text-white leading-none uppercase hidden xs:block">Bio Hub Pro</h1>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-4">
+          <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                <span className="text-[8px] font-black uppercase text-emerald-500/80 tracking-widest">AES-256 Protocol Active</span>
             </div>
-            <div className="flex items-center gap-1.5 md:gap-2">
+            <div className="flex items-center gap-2">
               {isSpecialist && <MedicalCalculatorDialog />}
               <BeautyIndicatorsDialog />
               {userData?.gender === 'женский' && <CycleTrackerDialog selectedDate={selectedDate} />}
             </div>
             <Popover>
               <PopoverTrigger asChild>
-                <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg shadow-[#00ffff]/5 hover:bg-[#00ffff]/10 transition-all">
+                <button className="h-10 px-3 md:px-6 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2 shadow-lg hover:bg-[#00ffff]/10 transition-all">
                   <CalendarIcon className="h-4 w-4 shrink-0" />
                   <span className="hidden sm:inline">{format(selectedDate, 'd MMM yyyy', { locale: ru })}</span>
                   <span className="sm:hidden">{format(selectedDate, 'd MMM', { locale: ru })}</span>
-                  <ChevronDown className="h-3 w-3 opacity-50 hidden xs:block" />
+                  <ChevronDown className="h-3 w-3 opacity-50" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[600] bg-transparent" align="end">
-                <Calendar mode="single" selected={selectedDate} onSelect={(date) => date && setSelectedDate(date)} initialFocus locale={ru} periodDays={periodDaysMap} />
+                <Calendar mode="single" selected={selectedDate} onSelect={(date) => date && setSelectedDate(date)} initialFocus locale={ru} />
               </PopoverContent>
             </Popover>
           </div>
