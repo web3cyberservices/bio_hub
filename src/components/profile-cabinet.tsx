@@ -8,13 +8,12 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   User, Loader2, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
-  Flame, Clock, Smartphone, ExternalLink, Database, BookOpen
+  Smartphone, ExternalLink, Database, BookOpen
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -26,7 +25,8 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * BREAK CIRCULAR DEPENDENCY: Dynamic import for heavy dialogs.
+ * BREAK CIRCULAR DEPENDENCY: Dynamic import for memory-heavy dialogs.
+ * Prevents Turbopack HMR Loop.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -261,7 +261,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
           <div className="space-y-6">
             <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 0. Obsidian Sync</h3>
             <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20">
-               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+               <div className="flex flex-col md:flex-row items-between justify-between gap-6">
                   <div className="flex items-center gap-5">
                      <div className="w-16 h-16 rounded-2xl bg-black/40 flex items-center justify-center border border-white/10">
                         <BookOpen className="h-8 w-8 text-white" />

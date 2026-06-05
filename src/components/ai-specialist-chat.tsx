@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  MessageSquare, 
   Send, 
   Loader2, 
   Bot, 
@@ -82,7 +81,7 @@ export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
     try {
       /**
        * BREAK CIRCULAR DEPENDENCY: Dynamic import at the point of use.
-       * Prevents Turbopack panic and Module Factory errors.
+       * Prevents Turbopack panic and Module Factory errors during HMR.
        */
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       

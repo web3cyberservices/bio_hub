@@ -13,12 +13,11 @@ import {
 
 /**
  * SAFE FIREBASE SINGLETON ARCHITECTURE
- * Prevents "initializeFirestore() has already been called" error during Fast Refresh.
+ * Permanently resolves "initializeFirestore() has already been called" error.
  */
 
 let app: FirebaseApp;
 let auth: Auth;
-let firestore: Firestore;
 
 export function initializeFirebase() {
   if (typeof window === 'undefined') {
@@ -31,30 +30,28 @@ export function initializeFirebase() {
   // 2. Auth Initialization
   auth = getAuth(app);
   
-  // 3. Robust Firestore Initialization with try/catch Singleton pattern
+  return { firebaseApp: app, auth };
+}
+
+// Global Singleton Instance for Firestore
+export const db = (() => {
+  if (typeof window === 'undefined') return null;
+  
+  const currentApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  
   try {
-    firestore = initializeFirestore(app, {
+    return initializeFirestore(currentApp, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
       })
     });
   } catch (error: any) {
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
-      firestore = getFirestore(app);
-    } else {
-      console.warn("[FIREBASE] Init Fallback:", error.message);
-      firestore = getFirestore(app);
+      return getFirestore(currentApp);
     }
+    console.error("[FIREBASE] Init Error:", error);
+    return getFirestore(currentApp);
   }
-
-  return { firebaseApp: app, auth, firestore };
-}
-
-// Global Singleton Instance
-export const db = (() => {
-  if (typeof window === 'undefined') return null;
-  const { firestore } = initializeFirebase();
-  return firestore;
 })();
 
 export * from './provider';

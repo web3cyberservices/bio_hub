@@ -102,6 +102,7 @@ function DashboardContent() {
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
+        {/* GEOMETRY FIX:pt-0 for Diary to align with Header, pt-4 for others */}
         <div className={cn("flex-1 min-h-0 overflow-hidden relative", activeTab === 'diary' ? "pt-0" : "pt-4")}>
             <div className="w-full h-full flex flex-col">
               {activeTab === 'dashboard' && (

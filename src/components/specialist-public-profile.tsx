@@ -88,6 +88,10 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     const link = typeof window !== 'undefined' ? `${window.location.origin}/specialist/${specialistId}` : '';
     
     try {
+      /**
+       * SAFE CLIPBOARD ACCESS
+       * Added try/catch to handle Permissions Policy blocks in restricted environments.
+       */
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
         toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете отправить её в мессенджеры.' });
@@ -96,7 +100,6 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
       }
     } catch (err) {
       console.warn('Copy failed:', err);
-      // Fallback for restricted environments
       toast({ 
         title: 'Копирование недоступно', 
         description: 'Ваш браузер заблокировал доступ к буферу обмена.',
