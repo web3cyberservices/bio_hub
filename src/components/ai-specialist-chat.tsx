@@ -31,7 +31,7 @@ interface AISpecialistChatProps {
 
 export function AISpecialistChat({ onBack, className }: AISpecialistChatProps) {
   const { user } = useUser();
-  const { firestore } = useFirestore();
+  const { firestore } = useFirebase();
   const [isRecording, setIsRecording] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

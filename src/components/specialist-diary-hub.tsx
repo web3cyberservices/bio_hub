@@ -5,6 +5,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card } from '@/components/ui/card';
 import { 
   BookOpen, FileText, ShieldCheck, Loader2, RefreshCw, 
   Database, Zap, Folder, FolderOpen,
