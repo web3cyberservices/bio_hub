@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -60,6 +59,14 @@ function DashboardContent() {
 
   useHealthAggregator();
 
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: userData } = useDoc<any>(userDocRef);
+  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
+
   useEffect(() => {
     setIsMounted(true);
     setSelectedDate(startOfToday());
@@ -70,6 +77,13 @@ function DashboardContent() {
       setActiveTab('chats');
     }
   }, [searchParams]);
+
+  // Редирект для специалистов с неподходящих вкладок
+  useEffect(() => {
+    if (profileType === 'specialist' && activeTab === 'fasting') {
+      setActiveTab('diary');
+    }
+  }, [profileType, activeTab]);
 
   useEffect(() => {
     if (!firestore || !user?.uid || user.uid === 'public-user') return;
@@ -102,14 +116,6 @@ function DashboardContent() {
       return format(new Date(), 'yyyy-MM-dd');
     }
   }, [selectedDate]);
-  
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user?.uid]);
-
-  const { data: userData } = useDoc<any>(userDocRef);
-  const profileType = userData?.profileType === 'specialist' ? 'specialist' : 'user';
 
   const [periodDaysMap, setPeriodDaysMap] = useState<Record<string, number>>({});
 
@@ -347,7 +353,7 @@ function DashboardContent() {
                   <div className="flex-1 min-h-0 max-w-6xl w-full mx-auto pt-4 overflow-hidden">
                     <ChatInterface 
                       initialSpecialistId={directChatRecipientId} 
-                      initialChatId={directChatId}
+                      initialChatId={directChatId || ''}
                     />
                   </div>
                 </div>
@@ -359,7 +365,9 @@ function DashboardContent() {
               )}
               {activeTab === 'profile' && (
                 <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar animate-in fade-in duration-300">
-                  <div className="max-w-5xl mx-auto pt-4"><ProfileCabinet /></div>
+                  <div className="max-w-5xl mx-auto pt-4">
+                    <ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} />
+                  </div>
                 </div>
               )}
           </div>

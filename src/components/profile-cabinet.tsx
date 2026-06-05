@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, Send, ExternalLink, Activity, 
   Pill, Mic, Briefcase, Info, 
-  Upload, LogOut, Database, BookOpen, Timer
+  Upload, LogOut, Database, BookOpen, Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -51,7 +51,7 @@ const profileSchema = z.object({
 
 type ProfileValues = z.infer<typeof profileSchema>;
 
-export function ProfileCabinet() {
+export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () => void }) {
   const { user } = useUser();
   const { auth } = useAuth();
   const { firestore } = useFirestore();
@@ -122,22 +122,22 @@ export function ProfileCabinet() {
         lastName: userData.lastName || '',
         birthDate: userData.birthDate || '',
         photoUrl: userData.photoUrl || '',
-        gender: userData.gender || 'мужской',
+        gender: (userData.gender as any) || 'мужской',
         weight: userData.weight || 0,
         height: userData.height || 0,
-        activityLevel: userData.activityLevel || 'moderate',
-        healthGoal: userData.healthGoal || 'поддержать текущее состояние',
-        smoking: userData.smoking || 'нет',
-        alcohol: userData.alcohol || 'не употребляю',
+        activityLevel: (userData.activityLevel as any) || 'moderate',
+        healthGoal: (userData.healthGoal as any) || 'поддержать текущее состояние',
+        smoking: (userData.smoking as any) || 'нет',
+        alcohol: (userData.alcohol as any) || 'не употребляю',
         favoriteFoods: userData.favoriteFoods || '',
         dislikedFoods: userData.dislikedFoods || '',
         medications: userData.medications || '',
-        profileType: userData.profileType || 'user',
+        profileType: (userData.profileType as any) || 'user',
         specialization: userData.specialization || '',
         bio: userData.bio || '',
         instagramUrl: userData.instagramUrl || '',
         occupation: userData.occupation || '',
-        workActivityType: userData.workActivityType || 'mental',
+        workActivityType: (userData.workActivityType as any) || 'mental',
         workHoursPerDay: userData.workHoursPerDay || 0,
       }); 
       checkObsidianAccess();
@@ -217,6 +217,8 @@ export function ProfileCabinet() {
     };
     recognition.start();
   };
+
+  const isSpecialist = form.watch('profileType') === 'specialist';
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-700 pb-32 px-4">
@@ -298,7 +300,7 @@ export function ProfileCabinet() {
                 )} />
               </div>
               <FormField control={form.control} name="workHoursPerDay" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Timer className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Clock className="h-4 w-4" /> Рабочих часов в день</FormLabel><FormControl><Input type="number" {...field} className="h-14 rounded-2xl bg-white/5 border-white/10 text-white" /></FormControl></FormItem>
               )} />
             </Card>
           </div>
@@ -307,8 +309,23 @@ export function ProfileCabinet() {
             {loading ? <Loader2 className="animate-spin h-8 w-8" /> : 'СОХРАНИТЬ И СИНХРОНИЗИРОВАТЬ'}
           </Button>
 
+          {isSpecialist && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#00ffff]/60 px-2 flex items-center gap-2"><Briefcase className="h-4 w-4" /> 4. Рабочее пространство</h3>
+              <Card className="cyber-card bg-[#00ffff]/5 p-8 border-[#00ffff]/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                 <div className="space-y-1 text-center md:text-left">
+                    <h4 className="text-xl font-black text-white uppercase tracking-tight">Дневник специалиста</h4>
+                    <p className="text-xs text-white/40 font-medium">Управление локальными файлами и записями о пациентах.</p>
+                 </div>
+                 <Button type="button" onClick={onNavigateToDiary} className="h-14 px-10 rounded-2xl bg-[#00ffff] text-slate-950 font-black uppercase text-xs shadow-xl shadow-[#00ffff]/20">
+                    ОТКРЫТЬ ДНЕВНИК
+                 </Button>
+              </Card>
+            </div>
+          )}
+
           <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> 4. Интеграция Obsidian</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 px-2 flex items-center gap-2"><Database className="h-4 w-4" /> {isSpecialist ? '5' : '4'}. Интеграция Obsidian</h3>
             <Card className="cyber-card bg-blue-950/40 p-8 space-y-6 border-white/5">
                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="space-y-2 flex-1">

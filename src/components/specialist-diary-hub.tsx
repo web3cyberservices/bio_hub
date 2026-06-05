@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -217,7 +216,6 @@ export function SpecialistDiaryHub() {
     setAiLoading(true);
 
     try {
-      // Динамический импорт для предотвращения HMR ошибок при инициализации
       const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
       
       const response = await chatWithSpecialist({
@@ -410,7 +408,12 @@ export function SpecialistDiaryHub() {
                          rows={3}
                          value={aiInput}
                          onChange={(e) => setAiInput(e.target.value)}
-                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleDiaryChatSend())}
+                         onKeyDown={(e) => {
+                           if (e.key === 'Enter' && !e.shiftKey) {
+                             e.preventDefault();
+                             handleSendAiQuery();
+                           }
+                         }}
                          placeholder="Спросить ИИ о записях..." 
                          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10"
                        />
@@ -437,7 +440,6 @@ export function SpecialistDiaryHub() {
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
                        </div>
                     </div>
-                    {/* Список моделей... */}
                  </div>
               </TabsContent>
            </div>
@@ -477,4 +479,3 @@ function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNod
     </div>
   );
 }
-
