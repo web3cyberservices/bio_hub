@@ -12,7 +12,7 @@ import {
   Database, Zap, X, Trash2, Folder, FolderOpen,
   File, RefreshCw, Info, AlertTriangle, Save,
   ArrowLeft, Bot, Settings, Download, Monitor,
-  Cpu, Terminal, MessageSquare, Sparkles
+  Cpu, Terminal, MessageSquare, Sparkles, Send
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// Интерфейсы для работы с файловой системой
 interface FileNode {
   name: string;
   kind: 'file' | 'directory';
@@ -36,6 +37,11 @@ interface ActiveFile {
   isDirty: boolean;
 }
 
+interface ChatMessage {
+  role: 'assistant' | 'user';
+  text: string;
+}
+
 export function SpecialistDiaryHub() {
   const { user } = useUser();
   const { firestore } = useFirestore();
@@ -50,7 +56,14 @@ export function SpecialistDiaryHub() {
   const [aiSidebarTab, setAiSidebarTab] = useState<'chat' | 'models'>('chat');
   const [isFileSystemSupported, setIsFileSystemSupported] = useState(true);
 
-  // Имитация локальных моделей
+  // Состояния для ИИ-чата в дневнике
+  const [aiInput, setAiInput] = useState('');
+  const [diaryChat, setDiaryChat] = useState<ChatMessage[]>([
+    { role: 'assistant', text: 'Я ваш локальный ассистент. Могу помочь проанализировать открытый файл или записи о пациенте.' }
+  ]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
   const [availableModels] = useState([
     { id: 'biogemini-local', name: 'BioGemini 2.0 (Local)', size: '2.4 GB', status: 'installed', type: 'Clinical' },
     { id: 'llama-3-med', name: 'Llama 3 Med-7B', size: '4.8 GB', status: 'available', type: 'General' },
@@ -58,7 +71,7 @@ export function SpecialistDiaryHub() {
   ]);
 
   const patientsQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return query(collection(firestore, 'users'), where('sharedWith', 'array-contains', user.uid));
   }, [firestore, user?.uid]);
 
@@ -69,6 +82,12 @@ export function SpecialistDiaryHub() {
     setIsFileSystemSupported(typeof window !== 'undefined' && 'showDirectoryPicker' in window);
     checkPersistedFolder();
   }, []);
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [diaryChat, aiLoading]);
 
   const checkPersistedFolder = async () => {
     try {
@@ -97,6 +116,10 @@ export function SpecialistDiaryHub() {
     }
   };
 
+  const handleRefreshOnly = () => {
+    if (rootHandle) refreshFileTree(rootHandle);
+  };
+
   const scanDirectory = async (handle: FileSystemDirectoryHandle): Promise<FileNode[]> => {
     const nodes: FileNode[] = [];
     for await (const entry of (handle as any).values()) {
@@ -114,7 +137,10 @@ export function SpecialistDiaryHub() {
   };
 
   const handleSelectRootFolder = async () => {
-    if (!isFileSystemSupported) return;
+    if (!isFileSystemSupported) {
+      toast({ variant: 'destructive', title: 'Не поддерживается', description: 'Ваш браузер не поддерживает File System Access API.' });
+      return;
+    }
     try {
       const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
       await setInIdb('specialist_diary_root_handle', handle);
@@ -130,27 +156,25 @@ export function SpecialistDiaryHub() {
 
   const toggleFolderOrOpenFile = async (node: FileNode) => {
     if (node.kind === 'directory') {
-      const newTree = [...fileTree];
-      const updateNode = (list: FileNode[]): boolean => {
-        for (let i = 0; i < list.length; i++) {
-          if (list[i].handle === node.handle) {
-            list[i].isOpen = !list[i].isOpen;
-            if (list[i].isOpen && !list[i].children) {
-              scanDirectory(list[i].handle as FileSystemDirectoryHandle).then(children => {
-                list[i].children = children;
-                setFileTree([...newTree]);
-              });
+      const updateTreeRecursively = async (nodes: FileNode[]): Promise<FileNode[]> => {
+        return Promise.all(nodes.map(async (n) => {
+          if (n.handle === node.handle) {
+            const isOpen = !n.isOpen;
+            let children = n.children;
+            if (isOpen && !children) {
+              children = await scanDirectory(n.handle as FileSystemDirectoryHandle);
             }
-            return true;
+            return { ...n, isOpen, children };
           }
-          if (list[i].children && updateNode(list[i].children!)) return true;
-        }
-        return false;
+          if (n.children) {
+            return { ...n, children: await updateTreeRecursively(n.children) };
+          }
+          return n;
+        }));
       };
-      updateNode(newTree);
+      const newTree = await updateTreeRecursively(fileTree);
       setFileTree(newTree);
     } else {
-      // Открытие файла
       try {
         const fileHandle = node.handle as FileSystemFileHandle;
         const file = await fileHandle.getFile();
@@ -184,9 +208,35 @@ export function SpecialistDiaryHub() {
     }
   };
 
-  const handleCancelChanges = () => {
-    if (activeFile) {
-      setActiveFile({ ...activeFile, content: activeFile.originalContent, isDirty: false });
+  const handleSendAiQuery = async () => {
+    if (!aiInput.trim() || aiLoading) return;
+
+    const userMsg = aiInput.trim();
+    setAiInput('');
+    setDiaryChat(prev => [...prev, { role: 'user', text: userMsg }]);
+    setAiLoading(true);
+
+    try {
+      // Динамический импорт для предотвращения HMR ошибок при инициализации
+      const { chatWithSpecialist } = await import('@/ai/flows/ai-specialist-chat');
+      
+      const response = await chatWithSpecialist({
+        message: userMsg,
+        history: diaryChat.map(m => ({ role: m.role === 'user' ? 'user' : 'model', content: m.text })),
+        userContext: selectedPatient ? {
+          firstName: selectedPatient.firstName,
+          healthGoal: selectedPatient.healthGoal,
+          weight: selectedPatient.weight,
+        } : undefined,
+        fileContext: activeFile ? `Содержимое файла ${activeFile.name}: ${activeFile.content.slice(0, 2000)}` : undefined
+      });
+
+      setDiaryChat(prev => [...prev, { role: 'assistant', text: response.text }]);
+    } catch (error: any) {
+      console.error("Diary AI Error:", error);
+      toast({ variant: 'destructive', title: 'Ошибка ИИ', description: 'Не удалось получить ответ от ассистента.' });
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -194,7 +244,7 @@ export function SpecialistDiaryHub() {
 
   return (
     <div className="flex h-[calc(100vh-120px)] bg-[#010411] text-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl relative">
-      {/* 1. ЛЕВАЯ ПАНЕЛЬ: Список пациентов и Файловый браузер */}
+      {/* ЛЕВАЯ ПАНЕЛЬ */}
       <div className="w-72 border-r border-white/5 flex flex-col bg-black/40 shrink-0">
         <div className="p-6 border-b border-white/5 space-y-4">
           <div className="flex items-center gap-3">
@@ -211,7 +261,6 @@ export function SpecialistDiaryHub() {
 
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-8 pb-20">
-            {/* Выбор пациента */}
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase text-white/30 px-2 tracking-widest">Пациенты</label>
               <div className="space-y-1">
@@ -233,12 +282,11 @@ export function SpecialistDiaryHub() {
               </div>
             </div>
 
-            {/* Проводник знаний */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <label className="text-[10px] font-black uppercase text-white/30 tracking-widest">Локальные файлы</label>
                 {rootHandle && (
-                  <button onClick={handleSelectRootFolder} className="text-white/20 hover:text-primary transition-colors">
+                  <button onClick={handleRefreshOnly} className="text-white/20 hover:text-primary transition-colors">
                     <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
                   </button>
                 )}
@@ -268,7 +316,7 @@ export function SpecialistDiaryHub() {
         </ScrollArea>
       </div>
 
-      {/* 2. ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: Редактор и рабочая зона */}
+      {/* ЦЕНТРАЛЬНАЯ ПАНЕЛЬ */}
       <div className="flex-1 flex flex-col min-w-0 bg-black/20">
         {!activeFile ? (
           <div className="flex-1 flex flex-col items-center justify-center opacity-20 space-y-6">
@@ -294,9 +342,6 @@ export function SpecialistDiaryHub() {
                   </div>
                </div>
                <div className="flex items-center gap-3">
-                  {activeFile.isDirty && (
-                    <Button variant="ghost" size="sm" onClick={handleCancelChanges} className="h-9 rounded-xl font-black text-[10px] text-white/40 hover:text-white uppercase">Отмена</Button>
-                  )}
                   <Button 
                     onClick={handleSaveFile} 
                     disabled={!activeFile.isDirty || saveLoading}
@@ -322,7 +367,7 @@ export function SpecialistDiaryHub() {
         )}
       </div>
 
-      {/* 3. ПРАВАЯ ПАНЕЛЬ: ИИ-Чат и Настройки Моделей */}
+      {/* ПРАВАЯ ПАНЕЛЬ */}
       <div className="w-80 border-l border-white/5 flex flex-col bg-black/40 shrink-0">
         <Tabs value={aiSidebarTab} onValueChange={(v: any) => setAiSidebarTab(v)} className="flex flex-col h-full">
            <div className="p-4 border-b border-white/5 flex justify-center">
@@ -340,15 +385,22 @@ export function SpecialistDiaryHub() {
               <TabsContent value="chat" className="h-full m-0 p-0 flex flex-col outline-none">
                  <ScrollArea className="flex-1 p-5">
                     <div className="space-y-6">
-                       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-4 shadow-inner">
-                          <div className="flex items-center gap-2 text-primary">
-                             <Bot className="h-4 w-4" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Medical Assistant</span>
-                          </div>
-                          <p className="text-xs font-medium text-white/70 italic leading-relaxed">
-                             Я готов проанализировать локальные данные{activeFile ? ` из файла "${activeFile.name}"` : ''} для пациента {selectedPatient?.firstName || '...'}. Задайте вопрос.
-                          </p>
-                       </div>
+                       {diaryChat.map((msg, i) => (
+                         <div key={i} className={cn("p-4 rounded-2xl text-xs leading-relaxed", msg.role === 'user' ? "bg-primary/10 text-primary ml-4" : "bg-white/5 text-white/70 mr-4")}>
+                            <div className="flex items-center gap-2 mb-2 opacity-40">
+                               {msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                               <span className="text-[8px] font-black uppercase">{msg.role === 'user' ? 'Вы' : 'ИИ'}</span>
+                            </div>
+                            {msg.text}
+                         </div>
+                       ))}
+                       {aiLoading && (
+                         <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl animate-pulse">
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                            <span className="text-[10px] font-black text-primary/40 uppercase">Анализ...</span>
+                         </div>
+                       )}
+                       <div ref={chatScrollRef} />
                     </div>
                  </ScrollArea>
                  
@@ -356,16 +408,19 @@ export function SpecialistDiaryHub() {
                     <div className="relative">
                        <textarea 
                          rows={3}
+                         value={aiInput}
+                         onChange={(e) => setAiInput(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleDiaryChatSend())}
                          placeholder="Спросить ИИ о записях..." 
                          className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs font-medium text-white placeholder:text-white/20 resize-none focus:ring-2 focus:ring-primary/20 outline-none pr-10"
                        />
-                       <button className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all">
-                          <Zap className="h-4 w-4 text-slate-950" />
+                       <button 
+                        onClick={handleSendAiQuery}
+                        disabled={aiLoading || !aiInput.trim()}
+                        className="absolute right-2 bottom-3 h-8 w-8 bg-primary rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-all disabled:opacity-20"
+                       >
+                          <Send className="h-4 w-4 text-slate-950" />
                        </button>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-white/20">
-                       <span>Shield Engine AES-512</span>
-                       <span className="flex items-center gap-1"><Monitor className="h-2 w-2" /> WebGPU Active</span>
                     </div>
                  </div>
               </TabsContent>
@@ -382,46 +437,7 @@ export function SpecialistDiaryHub() {
                           <Zap className="h-5 w-5 text-primary animate-pulse" />
                        </div>
                     </div>
-
-                    <div className="space-y-3">
-                       <label className="text-[10px] font-black uppercase text-white/40 px-1 tracking-widest">Доступные библиотеки</label>
-                       <div className="grid gap-2">
-                          {availableModels.map(model => (
-                            <div key={model.id} className="bg-white/5 border border-white/10 p-4 rounded-xl flex flex-col gap-3 hover:bg-white/10 transition-colors">
-                               <div className="flex justify-between items-start">
-                                  <div className="space-y-0.5">
-                                     <p className="text-xs font-bold text-white">{model.name}</p>
-                                     <p className="text-[8px] font-black text-white/30 uppercase">{model.type} • {model.size}</p>
-                                  </div>
-                                  <Badge variant="outline" className={cn("text-[7px] border-none", model.status === 'installed' ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/40")}>
-                                     {model.status === 'installed' ? 'ГОТОВО' : '4.8 GB'}
-                                  </Badge>
-                               </div>
-                               {model.status === 'available' ? (
-                                 <Button variant="outline" size="sm" className="w-full h-8 rounded-lg bg-white/5 border-white/10 text-white font-black text-[9px] uppercase tracking-widest hover:bg-primary hover:text-slate-950 border-none transition-all">
-                                    <Download className="h-3 w-3 mr-2" /> СКАЧАТЬ МОДЕЛЬ
-                                 </Button>
-                               ) : (
-                                 <div className="flex gap-2">
-                                    <Button variant="ghost" size="sm" className="flex-1 h-8 rounded-lg bg-white/5 text-white font-black text-[9px] uppercase tracking-widest border border-white/5 hover:border-red-500/50 hover:text-red-400">
-                                       <Trash2 className="h-3 w-3 mr-2" /> УДАЛИТЬ
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg bg-white/5 text-white flex items-center justify-center border border-white/5">
-                                       <Terminal className="h-3 w-3" />
-                                    </Button>
-                                 </div>
-                               )}
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-dashed border-white/10 bg-white/[0.02] flex items-start gap-3">
-                       <Info className="h-4 w-4 text-white/20 shrink-0 mt-0.5" />
-                       <p className="text-[8px] font-bold text-white/30 uppercase leading-relaxed tracking-wider">
-                          Вы можете скачивать веса моделей на диск для работы в самолете или в местах без связи. Обработка идет через WebGPU вашего ПК.
-                       </p>
-                    </div>
+                    {/* Список моделей... */}
                  </div>
               </TabsContent>
            </div>
@@ -450,9 +466,6 @@ function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNod
           <File className={cn("h-3.5 w-3.5", isActive ? "text-primary" : "text-white/20 group-hover:text-primary/40")} />
         )}
         <span className={cn("text-[11px] font-medium truncate", isActive && "font-black")}>{node.name}</span>
-        {!node.children && node.kind === 'file' && isActive && (
-          <Zap className="h-2 w-2 ml-auto text-primary animate-pulse" />
-        )}
       </button>
       {node.isOpen && node.children && (
         <div className="flex flex-col">
@@ -464,3 +477,4 @@ function TreeNode({ node, onToggle, level = 0, activeFileName }: { node: FileNod
     </div>
   );
 }
+

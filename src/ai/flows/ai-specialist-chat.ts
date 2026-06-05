@@ -1,74 +1,44 @@
+
 'use server';
 /**
  * @fileOverview Оптимизированный поток чата с ИИ-специалистом.
- * - Ограничение истории до 6 сообщений для экономии токенов.
- * - Сжатые системные инструкции.
+ * Использует архитектуру Direct Generation для стабильности в Next.js 15.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
-import {runWithRetry} from '@/ai/utils';
 
-const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
+export async function chatWithSpecialist(input: {
+  message: string;
+  history: Array<{role: 'user' | 'model', content: string}>;
+  userContext?: {
+    firstName?: string;
+    healthGoal?: string;
+    weight?: number;
+    activityLevel?: string;
+  };
+  fileContext?: string;
+}) {
+  const { message, history, userContext, fileContext } = input;
 
-const AISpecialistChatInputSchema = z.object({
-  message: z.string().describe('Сообщение пользователя'),
-  history: z.array(ChatMessageSchema).default([]),
-  userContext: z.object({
-    healthGoal: z.string().optional(),
-    weight: z.number().optional(),
-    activityLevel: z.string().optional(),
-  }).optional(),
-});
-export type AISpecialistChatInput = z.infer<typeof AISpecialistChatInputSchema>;
+  // Используем прямую генерацию вместо defineFlow для предотвращения HMR ошибок
+  const response = await ai.generate({
+    model: googleAI.model('gemini-2.5-flash'),
+    system: `Вы — эксперт Bio Hub Pro (биохакинг/нутрициология).
+    Ваша задача: помогать врачу анализировать данные и общаться с пациентами.
+    ${userContext ? `ТЕКУЩИЙ ПАЦИЕНТ: ${userContext.firstName}, Цель: ${userContext.healthGoal}, Вес: ${userContext.weight}кг.` : ''}
+    ${fileContext ? `КОНТЕКСТ ОТКРЫТОГО ФАЙЛА: ${fileContext}` : ''}
+    ПРАВИЛА:
+    1. Ответы должны быть краткими, профессиональными и на русском языке.
+    2. Если предоставлен контекст файла, основывайте выводы на нем.
+    3. Не ставьте диагнозы, давайте рекомендации на основе данных.`,
+    prompt: [
+      ...history.map(h => ({ role: h.role, content: [{ text: h.content }] })),
+      { role: 'user', content: [{ text: message }] }
+    ]
+  });
 
-const AISpecialistChatOutputSchema = z.object({
-  text: z.string().describe('Ответ специалиста'),
-});
-export type AISpecialistChatOutput = z.infer<typeof AISpecialistChatOutputSchema>;
-
-export async function chatWithSpecialist(input: AISpecialistChatInput): Promise<AISpecialistChatOutput> {
-  return aiSpecialistChatFlow(input);
+  return {
+    text: response.text || 'Извините, не удалось сформировать ответ.'
+  };
 }
-
-const specialistPrompt = ai.definePrompt({
-  name: 'specialistChatPrompt',
-  input: {schema: AISpecialistChatInputSchema},
-  output: {schema: AISpecialistChatOutputSchema},
-  prompt: `Вы — эксперт Bio Hub Pro (биохакинг/нутрициология). 
-Контекст: {{#if userContext}}Цель: {{userContext.healthGoal}}, Вес: {{userContext.weight}}кг, Активность: {{userContext.activityLevel}}{{/if}}
-Правила: Кратко, профессионально, на русском.
-
-История:
-{{#each history}}
-{{role}}: {{content}}
-{{/each}}
-user: {{message}}`,
-});
-
-const aiSpecialistChatFlow = ai.defineFlow(
-  {
-    name: 'aiSpecialistChatFlow',
-    inputSchema: AISpecialistChatInputSchema,
-    outputSchema: AISpecialistChatOutputSchema,
-  },
-  async (input) => {
-    // Оптимизация: берем только последние 6 сообщений истории
-    const optimizedHistory = input.history.slice(-6);
-    
-    return runWithRetry(async () => {
-      const {output} = await specialistPrompt({
-        ...input,
-        history: optimizedHistory
-      }, {
-        model: googleAI.model('gemini-2.5-flash'),
-      });
-      if (!output) throw new Error('Ошибка связи');
-      return output;
-    });
-  }
-);
