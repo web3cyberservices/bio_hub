@@ -26,7 +26,7 @@ import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
  * BREAK CIRCULAR DEPENDENCY: Dynamic import for memory-heavy dialogs.
- * Prevents Turbopack HMR Loop.
+ * Prevents Turbopack HMR Loop and "Module factory not available" error.
  */
 const AnalysisHistoryDialog = dynamic(
   () => import('./analysis-history-dialog').then((mod) => mod.AnalysisHistoryDialog),
@@ -123,7 +123,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     };
 
     if (userData) {
-      // DATA SANITIZATION: Critical for Zod validation
+      // DATA SANITIZATION: Critical for Zod validation to prevent submission blocks
       const sanitizedData: any = { ...userData };
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
@@ -157,7 +157,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
     if (!isObsidianSupported) {
       toast({
         variant: 'destructive',
-        title: 'Safari не поддерживается',
+        title: 'Браузер не поддерживается',
         description: 'Используйте Chrome или Edge для работы с локальными папками.',
       });
       return;

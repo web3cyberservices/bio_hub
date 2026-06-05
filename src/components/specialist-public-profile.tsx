@@ -89,8 +89,8 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     
     try {
       /**
-       * SAFE CLIPBOARD ACCESS
-       * Added try/catch to handle Permissions Policy blocks in restricted environments.
+       * SAFE CLIPBOARD ACCESS: Added try/catch to handle Permissions Policy blocks.
+       * Prevents фатальную ошибку в консоли при блокировке доступа к буферу обмена.
        */
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
@@ -99,10 +99,10 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
         throw new Error('Clipboard not available');
       }
     } catch (err) {
-      console.warn('Copy failed:', err);
+      console.warn('Clipboard copy failed:', err);
       toast({ 
         title: 'Копирование недоступно', 
-        description: 'Ваш браузер заблокировал доступ к буферу обмена.',
+        description: 'Ваш браузер или окружение заблокировало доступ к буферу обмена.',
         variant: 'destructive'
       });
     }

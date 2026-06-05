@@ -33,7 +33,7 @@ export function initializeFirebase() {
   return { firebaseApp: app, auth };
 }
 
-// Global Singleton Instance for Firestore
+// Global Singleton Instance for Firestore with HMR Protection
 export const db = (() => {
   if (typeof window === 'undefined') return null;
   
