@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -89,20 +90,30 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
     
     try {
       /**
-       * SAFE CLIPBOARD ACCESS: Added try/catch to handle Permissions Policy blocks.
-       * Prevents фатальную ошибку в консоли при блокировке доступа к буферу обмена.
+       * SAFE CLIPBOARD HANDLING: Added more defensive checks for browser policy.
        */
-      if (navigator.clipboard && window.isSecureContext) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
-        toast({ title: 'Ссылка скопирована', description: 'Теперь вы можете отправить её в мессенджеры.' });
+        toast({ title: 'Ссылка скопирована' });
       } else {
-        throw new Error('Clipboard not available');
+        // Fallback for restricted environments
+        const textArea = document.createElement("textarea");
+        textArea.value = link;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          toast({ title: 'Ссылка скопирована' });
+        } catch (err) {
+          throw new Error('Fallback copy failed');
+        }
+        document.body.removeChild(textArea);
       }
     } catch (err) {
-      console.warn('Clipboard copy failed:', err);
+      console.warn('Clipboard access failed:', err);
       toast({ 
-        title: 'Копирование недоступно', 
-        description: 'Ваш браузер или окружение заблокировало доступ к буферу обмена.',
+        title: 'Копирование ограничено', 
+        description: 'Ваш браузер заблокировал доступ к буферу обмена.',
         variant: 'destructive'
       });
     }
@@ -149,7 +160,7 @@ export function SpecialistPublicProfile({ specialistId, onBack, onStartChat }: S
           <ArrowLeft className="h-4 w-4" /> Назад
         </Button>
         <Button variant="ghost" onClick={handleCopyLink} className="rounded-xl gap-2 text-primary hover:bg-primary/5 transition-all uppercase font-black text-[10px]">
-          <Share2 className="h-4 w-4" /> Копировать ссылку
+          <Share2 className="h-4 w-4" /> Поделиться
         </Button>
       </div>
 

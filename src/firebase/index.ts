@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -12,8 +13,8 @@ import {
 } from 'firebase/firestore';
 
 /**
- * SAFE FIREBASE SINGLETON ARCHITECTURE
- * Фикс для Next.js 16 и Turbopack: предотвращает ошибку "already been called".
+ * BIO-HUB FIREBASE CORE (v16.2 Optimized)
+ * Использование паттерна Safe Singleton для предотвращения ошибок HMR.
  */
 
 let app: FirebaseApp;
@@ -31,30 +32,40 @@ export function initializeFirebase() {
     app = getApp();
   }
 
-  authInstance = getAuth(app);
+  if (!authInstance) {
+    authInstance = getAuth(app);
+  }
   
-  try {
-    dbInstance = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
-    });
-  } catch (error: any) {
-    dbInstance = getFirestore(app);
+  if (!dbInstance) {
+    try {
+      dbInstance = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (error: any) {
+      // Игнорируем ошибку "already initialized", если она возникла при HMR
+      dbInstance = getFirestore(app);
+    }
   }
 
   return { firebaseApp: app, auth: authInstance, firestore: dbInstance };
 }
 
-// Экспорт для использования в компонентах без провайдера
-export const auth = typeof window !== 'undefined' ? getAuth(getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)) : null as unknown as Auth;
-export const db = typeof window !== 'undefined' ? (getApps().length > 0 ? getFirestore(getApp()) : null as unknown as Firestore) : null as unknown as Firestore;
+// Ленивые функции доступа
+export const getSafeAuth = () => {
+  const { auth } = initializeFirebase();
+  return auth as Auth;
+};
 
-export * from './provider';
-export * from './client-provider';
-export * from './firestore/use-collection';
-export * from './firestore/use-doc';
-export * from './non-blocking-updates';
-export * from './non-blocking-login';
-export * from './errors';
-export * from './error-emitter';
+export const getSafeDb = () => {
+  const { firestore } = initializeFirebase();
+  return firestore as Firestore;
+};
+
+// Экспортируем основные утилиты напрямую для лучшей работы Turbopack
+export { useFirebase, useAuth, useFirestore, useUser, useMemoFirebase } from './provider';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
+export { errorEmitter } from './error-emitter';
+export { FirestorePermissionError } from './errors';
