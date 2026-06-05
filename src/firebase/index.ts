@@ -14,6 +14,7 @@ import {
 /**
  * SAFE FIREBASE SINGLETON ARCHITECTURE
  * Permanently resolves "initializeFirestore() has already been called" error.
+ * Optimized for Next.js 15 Fast Refresh.
  */
 
 let app: FirebaseApp;
@@ -24,10 +25,10 @@ export function initializeFirebase() {
     return { firebaseApp: null, auth: null, firestore: null };
   }
 
-  // 1. App Initialization
+  // 1. App Initialization Singleton
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   
-  // 2. Auth Initialization
+  // 2. Auth Initialization Singleton
   auth = getAuth(app);
   
   return { firebaseApp: app, auth };
@@ -40,16 +41,18 @@ export const db = (() => {
   const currentApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   
   try {
+    // Try primary initialization with persistent cache
     return initializeFirestore(currentApp, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
       })
     });
   } catch (error: any) {
+    // If already initialized (common during HMR), return the existing instance
     if (error.message?.includes('already been called') || error.code === 'failed-precondition') {
       return getFirestore(currentApp);
     }
-    console.error("[FIREBASE] Init Error:", error);
+    console.error("[FIREBASE] Critical Init Error:", error);
     return getFirestore(currentApp);
   }
 })();

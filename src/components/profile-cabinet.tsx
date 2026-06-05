@@ -25,7 +25,7 @@ import { get as getInIdb, set as setInIdb } from 'idb-keyval';
 import { syncToObsidian } from '@/lib/obsidian-sync';
 
 /**
- * BREAK CIRCULAR DEPENDENCY: Dynamic import for memory-heavy dialogs.
+ * BREAK CIRCULAR DEPENDENCY: Dynamic import for heavy dialogs.
  * Prevents Turbopack HMR Loop and "Module factory not available" error.
  */
 const AnalysisHistoryDialog = dynamic(
