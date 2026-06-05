@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { 
   User, Loader2, Smartphone, ExternalLink, Activity, 
   Pill, Briefcase, Info, Upload, LogOut, Save, ShieldCheck,
-  Ban, Wine, Flame, Target, Clock
+  Ban, Wine, Flame, Target, Clock, Utensils
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
@@ -93,7 +93,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
   useEffect(() => {
     if (userData) {
       const sanitizedData: any = { ...userData };
-      // КРИТИЧЕСКИ: Заменяем все null на пустые строки/нули для корректной работы uncontrolled inputs и валидации Zod
+      // Санитарная очистка данных для Zod и Controlled Inputs
       Object.keys(profileSchema.shape).forEach(key => {
         if (sanitizedData[key] === undefined || sanitizedData[key] === null) {
           if (key === 'weight' || key === 'height' || key === 'workHoursPerDay') {
@@ -148,7 +148,7 @@ export function ProfileCabinet({ onNavigateToDiary }: { onNavigateToDiary?: () =
       toast({ 
         variant: 'destructive', 
         title: 'Ошибка сохранения', 
-        description: 'Убедитесь, что все поля заполнены корректно.' 
+        description: 'Проверьте корректность введенных данных.' 
       });
     } finally {
       setLoading(false);

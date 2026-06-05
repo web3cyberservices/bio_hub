@@ -244,7 +244,7 @@ export function SpecialistDiaryHub() {
       
       reader.onloadend = async () => {
         const base64 = reader.result as string;
-        // ДИНАМИЧЕСКИЙ ИМПОРТ ДЛЯ ПРЕДОТВРАЩЕНИЯ ОШИБОК HMR
+        // Динамический импорт для транскрибации
         const { transcribeMedia } = await import('@/ai/flows/transcribe-media');
         const transcription = await transcribeMedia({
           mediaDataUri: base64,
