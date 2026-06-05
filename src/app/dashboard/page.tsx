@@ -15,7 +15,7 @@ import {
   Timer,
   BookOpen
 } from 'lucide-react';
-import { format, startOfToday, addDays, isValid } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
@@ -71,13 +71,14 @@ function DashboardContent() {
     setIsMounted(true);
     setSelectedDate(startOfToday());
     
-    const activeChat = searchParams.get('activeChat');
-    if (activeChat) {
-      setDirectChatId(activeChat);
+    const activeChatParam = searchParams.get('activeChat');
+    if (activeChatParam) {
+      setDirectChatId(activeChatParam);
       setActiveTab('chats');
     }
   }, [searchParams]);
 
+  // Авто-редирект специалиста с вкладки голодания
   useEffect(() => {
     if (isSpecialist && activeTab === 'fasting') {
       setActiveTab('diary');

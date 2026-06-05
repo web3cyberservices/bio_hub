@@ -30,18 +30,17 @@ export function initializeFirebase() {
 
       auth = getAuth(app);
       
-      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE С TRY/CATCH
+      // БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ FIRESTORE
+      // Пытаемся получить существующий экземпляр, чтобы избежать ошибки "already been called"
       try {
-        // Сначала пытаемся инициализировать с кэшем
+        firestore = getFirestore(app);
+      } catch (e) {
+        // Если база еще не создана, инициализируем с кэшем
         firestore = initializeFirestore(app, {
           localCache: persistentLocalCache({
             tabManager: persistentMultipleTabManager()
           })
         });
-      } catch (e: any) {
-        // Если база уже инициализирована (ошибка code: 'failed-precondition' или сообщение 'already been called')
-        // Просто возвращаем существующий экземпляр
-        firestore = getFirestore(app);
       }
 
       return {
