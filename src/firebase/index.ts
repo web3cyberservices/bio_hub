@@ -13,8 +13,7 @@ import {
 
 /**
  * SAFE FIREBASE SINGLETON ARCHITECTURE
- * Permanently resolves "initializeFirestore() has already been called" error.
- * Optimized for Next.js 16 Fast Refresh and Turbopack.
+ * Фикс для Next.js 16 и Turbopack: предотвращает ошибку "already been called".
  */
 
 let app: FirebaseApp;
@@ -35,21 +34,19 @@ export function initializeFirebase() {
   authInstance = getAuth(app);
   
   try {
-    // Try primary initialization with persistent cache
     dbInstance = initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
       })
     });
   } catch (error: any) {
-    // If already initialized (common during HMR), return the existing instance
     dbInstance = getFirestore(app);
   }
 
   return { firebaseApp: app, auth: authInstance, firestore: dbInstance };
 }
 
-// Legacy constant exports for components that don't use the provider
+// Экспорт для использования в компонентах без провайдера
 export const auth = typeof window !== 'undefined' ? getAuth(getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)) : null as unknown as Auth;
 export const db = typeof window !== 'undefined' ? (getApps().length > 0 ? getFirestore(getApp()) : null as unknown as Firestore) : null as unknown as Firestore;
 

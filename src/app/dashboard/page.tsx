@@ -11,17 +11,17 @@ import {
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { PWAInstallBanner } from '@/components/pwa-install-banner';
+import { UnifiedDataEntry } from '@/components/unified-data-entry';
 
-// Dynamic imports to break circular dependencies and reduce bundle size
+// Динамические импорты для стабильности сборки
 const ChatInterface = dynamic(() => import('@/components/chat-interface').then(m => m.ChatInterface), { ssr: false });
 const SpecialistDiaryHub = dynamic(() => import('@/components/specialist-diary-hub').then(m => m.SpecialistDiaryHub), { ssr: false });
 const RecommendationDisplay = dynamic(() => import('@/components/recommendation-display').then(m => m.RecommendationDisplay), { ssr: false });
@@ -29,11 +29,12 @@ const MealsHub = dynamic(() => import('@/components/meals-hub').then(m => m.Meal
 const ActivitiesHub = dynamic(() => import('@/components/activities-hub').then(m => m.ActivitiesHub), { ssr: false });
 const SpecialistPatientsView = dynamic(() => import('@/components/specialist-patients-view').then(m => m.SpecialistPatientsView), { ssr: false });
 const ProfileCabinet = dynamic(() => import('@/components/profile-cabinet').then(m => m.ProfileCabinet), { ssr: false });
+const SocialFeed = dynamic(() => import('@/components/social-feed').then(m => m.SocialFeed), { ssr: false });
+const FastingHub = dynamic(() => import('@/components/fasting-hub').then(m => m.FastingHub), { ssr: false });
 
 function DashboardContent() {
   const { user, loading: userLoading } = useUser();
   const { firestore } = useFirestore();
-  const router = useRouter();
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -41,7 +42,7 @@ function DashboardContent() {
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user?.uid]);
 
@@ -102,9 +103,13 @@ function DashboardContent() {
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
-        {/* GEOMETRY FIX:pt-0 for Diary to align with Header, pt-4 for others */}
         <div className={cn("flex-1 min-h-0 overflow-hidden relative", activeTab === 'diary' ? "pt-0" : "pt-4")}>
             <div className="w-full h-full flex flex-col">
+              {activeTab === 'feed' && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar">
+                  <SocialFeed />
+                </div>
+              )}
               {activeTab === 'dashboard' && (
                 <div className="h-full w-full overflow-hidden flex items-center justify-center">
                      {isSpecialist ? (
@@ -142,6 +147,11 @@ function DashboardContent() {
                   <ChatInterface />
                 </div>
               )}
+              {activeTab === 'fasting' && !isSpecialist && (
+                <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar">
+                  <FastingHub />
+                </div>
+              )}
               {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ActivitiesHub selectedDate={selectedDate} /></div>}
               {activeTab === 'profile' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} /></div>}
           </div>
@@ -153,18 +163,18 @@ function DashboardContent() {
               <button onClick={() => setActiveTab('meals')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'meals' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 {isSpecialist ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}
               </button>
-              {isSpecialist ? (
-                <button onClick={() => setActiveTab('diary')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'diary' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}><BookOpen className="h-6 w-6" /></button>
-              ) : (
-                <button onClick={() => setActiveTab('fasting')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'fasting' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}><Timer className="h-6 w-6" /></button>
-              )}
+              <button onClick={() => setActiveTab('feed')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'feed' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
+                <LayoutGrid className="h-6 w-6" />
+              </button>
               <button onClick={() => setActiveTab('dashboard')} className={cn("transition-all p-3 rounded-2xl", activeTab === 'dashboard' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 {isSpecialist ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
               </button>
               
-              <div className="h-14 w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.4)] active:scale-90 transition-transform cursor-pointer">
-                <Plus className="h-7 w-7 text-black stroke-[3px]" />
-              </div>
+              <UnifiedDataEntry selectedDate={selectedDate}>
+                <div className="h-14 w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-[0_0_25px_rgba(0,255,255,0.4)] active:scale-90 transition-transform cursor-pointer">
+                  <Plus className="h-7 w-7 text-black stroke-[3px]" />
+                </div>
+              </UnifiedDataEntry>
 
               <button onClick={() => setActiveTab('chats')} className={cn("transition-all p-3 rounded-2xl relative", activeTab === 'chats' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30 hover:text-white/60")}>
                 <MessageSquare className="h-6 w-6" />
