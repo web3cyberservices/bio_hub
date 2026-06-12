@@ -4,8 +4,7 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, ShieldCheck,
-  LayoutGrid, Activity, Calendar as CalendarIcon,
+  HeartPulse, LayoutGrid, Activity, Calendar as CalendarIcon,
   BarChart3, Zap, Settings, UserCheck, BookOpen
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
@@ -92,7 +91,7 @@ function DashboardContent() {
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {activeTab === 'feed' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><SocialFeed /></div>}
-          {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest">Аналитика...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
+          {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest italic">Био-аналитика в процессе разработки...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
           {activeTab === 'meals' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6">{isSpecialist ? <SpecialistPatientsView /> : <MealsHub selectedDate={selectedDate} />}</div>}
           {activeTab === 'diary' && isSpecialist && <div className="flex-1 h-full"><SpecialistDiaryHub /></div>}
           {activeTab === 'chats' && <div className="h-full px-4 flex flex-col pb-40 no-scrollbar pt-6"><ChatInterface /></div>}

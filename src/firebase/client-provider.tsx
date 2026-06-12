@@ -10,7 +10,7 @@ interface FirebaseClientProviderProps {
 
 /**
  * Клиентский провайдер Firebase. 
- * Гарантирует инициализацию только на стороне клиента.
+ * Гарантирует инициализацию только на стороне клиента один раз.
  */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   // Инициализируем Firebase строго на стороне клиента один раз.

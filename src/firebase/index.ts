@@ -5,15 +5,19 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
-/**
- * BIO-HUB FIREBASE CORE - Safe Singleton
- * Предотвращает ошибки повторной инициализации при HMR и SSR в Next.js 16.
- */
+// Направленные экспорты хуков из провайдера, чтобы избежать круговых зависимостей
+export { useAuth, useFirestore, useUser, useFirebase, useMemoFirebase } from './provider';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
+/**
+ * BIO-HUB FIREBASE CORE - Safe Singleton
+ * Предотвращает ошибки повторной инициализации при HMR в Next.js 16.
+ */
 export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
@@ -24,26 +28,19 @@ export function initializeFirebase() {
       app = getApp();
     }
 
-    if (!auth) auth = getAuth(app);
+    auth = getAuth(app);
     
-    if (!db) {
-      try {
-        db = initializeFirestore(app, {
-          localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-        });
-      } catch (e) {
-        // Fallback если инициализация уже произошла
-        db = getFirestore(app);
-      }
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      });
+    } catch (e) {
+      db = getFirestore(app);
     }
+
+    return { firebaseApp: app, auth, firestore: db };
   } catch (err) {
     console.error("Firebase Core Init Error:", err);
+    return { firebaseApp: null, auth: null, firestore: null };
   }
-
-  return { firebaseApp: app, auth, firestore: db };
 }
-
-// Прямые экспорты хуков для использования в приложении
-export { useFirebase, useAuth, useFirestore, useUser, useMemoFirebase } from './provider';
-export { useCollection } from './firestore/use-collection';
-export { useDoc } from './firestore/use-doc';
