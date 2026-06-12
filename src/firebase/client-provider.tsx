@@ -8,6 +8,10 @@ interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Клиентский провайдер Firebase. 
+ * Гарантирует инициализацию только на стороне клиента.
+ */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   // Инициализируем Firebase строго на стороне клиента один раз.
   const firebaseServices = useMemo(() => initializeFirebase(), []);

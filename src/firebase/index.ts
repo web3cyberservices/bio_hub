@@ -7,7 +7,7 @@ import { firebaseConfig } from './config';
 
 /**
  * BIO-HUB FIREBASE CORE - Safe Singleton
- * Предотвращает ошибки повторной инициализации при HMR и SSR.
+ * Предотвращает ошибки повторной инициализации при HMR и SSR в Next.js 16.
  */
 
 let app: FirebaseApp;
@@ -43,7 +43,7 @@ export function initializeFirebase() {
   return { firebaseApp: app, auth, firestore: db };
 }
 
-// Прямые экспорты хуков из провайдера, БЕЗ экспорта самих провайдеров (во избежание циклов)
+// Прямые экспорты хуков для использования в приложении
 export { useFirebase, useAuth, useFirestore, useUser, useMemoFirebase } from './provider';
 export { useCollection } from './firestore/use-collection';
 export { useDoc } from './firestore/use-doc';
