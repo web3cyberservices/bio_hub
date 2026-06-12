@@ -6,7 +6,7 @@ import {
   Utensils, Loader2, Plus, MessageSquare, 
   HeartPulse, ShieldCheck,
   LayoutGrid, Activity, Calendar as CalendarIcon,
-  BarChart3, Zap, Settings, UserCheck
+  BarChart3, Zap, Settings, UserCheck, BookOpen
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -90,14 +90,14 @@ function DashboardContent() {
       </header>
       
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
-        <div className="flex-1 min-h-0 overflow-hidden relative pt-4">
-          {activeTab === 'feed' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><SocialFeed /></div>}
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+          {activeTab === 'feed' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><SocialFeed /></div>}
           {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest">Аналитика...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
-          {activeTab === 'meals' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar">{isSpecialist ? <SpecialistPatientsView /> : <MealsHub selectedDate={selectedDate} />}</div>}
+          {activeTab === 'meals' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6">{isSpecialist ? <SpecialistPatientsView /> : <MealsHub selectedDate={selectedDate} />}</div>}
           {activeTab === 'diary' && isSpecialist && <div className="flex-1 h-full"><SpecialistDiaryHub /></div>}
-          {activeTab === 'chats' && <div className="h-full px-4 flex flex-col pb-40 no-scrollbar"><ChatInterface /></div>}
-          {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ActivitiesHub selectedDate={selectedDate} /></div>}
-          {activeTab === 'profile' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar"><ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} /></div>}
+          {activeTab === 'chats' && <div className="h-full px-4 flex flex-col pb-40 no-scrollbar pt-6"><ChatInterface /></div>}
+          {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><ActivitiesHub selectedDate={selectedDate} /></div>}
+          {activeTab === 'profile' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} /></div>}
         </div>
 
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
