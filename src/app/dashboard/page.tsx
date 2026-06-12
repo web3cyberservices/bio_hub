@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
@@ -5,13 +6,12 @@ import { useRouter } from 'next/navigation';
 import { 
   Utensils, Loader2, Plus, MessageSquare, 
   HeartPulse, LayoutGrid, Activity, Calendar as CalendarIcon,
-  BarChart3, Zap, Settings, UserCheck, BookOpen
+  BarChart3, Zap, Settings, UserCheck, Timer
 } from 'lucide-react';
 import { format, startOfToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,6 +27,7 @@ const SpecialistPatientsView = dynamic(() => import('@/components/specialist-pat
 const ProfileCabinet = dynamic(() => import('@/components/profile-cabinet').then(m => m.ProfileCabinet), { ssr: false });
 const ChatInterface = dynamic(() => import('@/components/chat-interface').then(m => m.ChatInterface), { ssr: false });
 const SpecialistDiaryHub = dynamic(() => import('@/components/specialist-diary-hub').then(m => m.SpecialistDiaryHub), { ssr: false });
+const FastingHub = dynamic(() => import('@/components/fasting-hub').then(m => m.FastingHub), { ssr: false });
 
 function DashboardContent() {
   const { user, loading: userLoading } = useUser();
@@ -91,8 +92,9 @@ function DashboardContent() {
       <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {activeTab === 'feed' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><SocialFeed /></div>}
-          {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest italic">Био-аналитика в процессе разработки...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
+          {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest italic">Био-аналитика специалиста...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
           {activeTab === 'meals' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6">{isSpecialist ? <SpecialistPatientsView /> : <MealsHub selectedDate={selectedDate} />}</div>}
+          {activeTab === 'fasting' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><FastingHub /></div>}
           {activeTab === 'diary' && isSpecialist && <div className="flex-1 h-full"><SpecialistDiaryHub /></div>}
           {activeTab === 'chats' && <div className="h-full px-4 flex flex-col pb-40 no-scrollbar pt-6"><ChatInterface /></div>}
           {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><ActivitiesHub selectedDate={selectedDate} /></div>}
@@ -100,27 +102,37 @@ function DashboardContent() {
         </div>
 
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
-           <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 px-6 flex items-center justify-between shadow-2xl">
-              <button onClick={() => setActiveTab('meals')} className={cn("p-3 rounded-2xl transition-all", activeTab === 'meals' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                {isSpecialist ? <UserCheck className="h-6 w-6" /> : <Utensils className="h-6 w-6" />}
+           <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 px-4 flex items-center justify-between shadow-2xl">
+              <button onClick={() => setActiveTab('meals')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'meals' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                {isSpecialist ? <UserCheck className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}
               </button>
-              <button onClick={() => setActiveTab('feed')} className={cn("p-3 rounded-2xl transition-all", activeTab === 'feed' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <LayoutGrid className="h-6 w-6" />
+              
+              <button onClick={() => setActiveTab('feed')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'feed' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                <LayoutGrid className="h-5 w-5" />
               </button>
-              <button onClick={() => setActiveTab('dashboard')} className={cn("p-3 rounded-2xl transition-all", activeTab === 'dashboard' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                {isSpecialist ? <BarChart3 className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
+
+              <button onClick={() => setActiveTab('dashboard')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'dashboard' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                {isSpecialist ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}
               </button>
+              
               <UnifiedDataEntry selectedDate={selectedDate}>
                 <div className="h-14 w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-xl cursor-pointer active:scale-90 transition-transform">
                   <Plus className="h-7 w-7 text-black stroke-[3px]" />
                 </div>
               </UnifiedDataEntry>
-              <button onClick={() => setActiveTab('chats')} className={cn("p-3 rounded-2xl transition-all relative", activeTab === 'chats' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <MessageSquare className="h-6 w-6" />
-                {unreadTotal > 0 && <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-[8px] font-black">{unreadTotal}</span>}
+
+              <button onClick={() => setActiveTab('chats')} className={cn("p-2.5 rounded-2xl transition-all relative", activeTab === 'chats' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                <MessageSquare className="h-5 w-5" />
+                {unreadTotal > 0 && <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 bg-red-500 rounded-full flex items-center justify-center text-[7px] font-black">{unreadTotal}</span>}
               </button>
-              <button onClick={() => setActiveTab('activities')} className={cn("p-3 rounded-2xl transition-all", activeTab === 'activities' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}><Zap className="h-6 w-6" /></button>
-              <button onClick={() => setActiveTab('profile')} className={cn("p-3 rounded-2xl transition-all", activeTab === 'profile' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}><Settings className="h-6 w-6" /></button>
+
+              <button onClick={() => setActiveTab('activities')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'activities' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                <Zap className="h-5 w-5" />
+              </button>
+
+              <button onClick={() => setActiveTab('profile')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'profile' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
+                <Settings className="h-5 w-5" />
+              </button>
            </div>
         </div>
       </main>

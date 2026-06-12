@@ -6,19 +6,14 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
-// Направленные экспорты хуков из провайдера
-export { useAuth, useFirestore, useUser, useFirebase, useMemoFirebase } from './provider';
-export { useCollection } from './firestore/use-collection';
-export { useDoc } from './firestore/use-doc';
-
+/**
+ * BIO-HUB FIREBASE CORE - Safe Singleton
+ * Предотвращает ошибки повторной инициализации при HMR в Next.js 16.2.
+ */
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-/**
- * BIO-HUB FIREBASE CORE - Safe Singleton
- * Предотвращает ошибки повторной инициализации при HMR в Next.js 15/16.
- */
 export function initializeFirebase() {
   if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
 
@@ -31,13 +26,11 @@ export function initializeFirebase() {
 
     auth = getAuth(app);
     
-    // Безопасная инициализация Firestore с кешированием
     try {
       db = initializeFirestore(app, {
         localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
       });
     } catch (e) {
-      // Если Firestore уже инициализирован (HMR), получаем текущий инстанс
       db = getFirestore(app);
     }
 
@@ -47,3 +40,8 @@ export function initializeFirebase() {
     return { firebaseApp: null, auth: null, firestore: null };
   }
 }
+
+// Прямые экспорты хуков из провайдера во избежание круговых зависимостей
+export { useAuth, useFirestore, useUser, useFirebase, useMemoFirebase } from './provider';
+export { useCollection } from './firestore/use-collection';
+export { useDoc } from './firestore/use-doc';
