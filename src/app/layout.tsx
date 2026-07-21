@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -16,7 +15,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "VPN PRO Premium",
-  description: "Secure High-End VLESS VPN Tunneling for Professionals.",
+  description: "Безопасное высокотехнологичное VLESS туннелирование для профессионалов.",
 };
 
 export default function RootLayout({
@@ -27,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning className="dark">
       <head>
-        {/* Инлайновый стиль для предотвращения белого экрана при загрузке */}
         <style dangerouslySetInnerHTML={{ __html: `
           body { background-color: #02040a !important; color: #f1f5f9 !important; margin: 0; padding: 0; font-family: sans-serif; }
           .loading-fallback { display: flex; align-items: center; justify-content: center; height: 100vh; }

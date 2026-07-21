@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -46,7 +45,6 @@ export default function VpnAuthPage() {
 
   return (
     <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
       
@@ -70,7 +68,7 @@ export default function VpnAuthPage() {
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
                 <Globe className="w-3 h-3" />
-                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Premium Network Access</p>
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Премиальный доступ к сети</p>
               </div>
             </div>
           </CardHeader>
@@ -81,7 +79,7 @@ export default function VpnAuthPage() {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-cyan-400" />
                 <Input
                   name="username"
-                  placeholder="Username"
+                  placeholder="Имя пользователя"
                   required
                   className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none"
                 />
@@ -91,7 +89,7 @@ export default function VpnAuthPage() {
                 <Input
                   name="password"
                   type="password"
-                  placeholder="Password"
+                  placeholder="Пароль"
                   required
                   className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none"
                 />
@@ -107,9 +105,9 @@ export default function VpnAuthPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : isLogin ? (
-                  <><LogIn className="w-4 h-4 mr-2"/> Connect to Network</>
+                  <><LogIn className="w-4 h-4 mr-2"/> Подключиться к сети</>
                 ) : (
-                  <><UserPlus className="w-4 h-4 mr-2"/> Initialize Account</>
+                  <><UserPlus className="w-4 h-4 mr-2"/> Создать аккаунт</>
                 )}
               </Button>
               
@@ -118,7 +116,7 @@ export default function VpnAuthPage() {
                 className="text-slate-500 hover:text-cyan-400 text-xs font-bold transition-colors uppercase tracking-widest"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? "New user? Create Access" : "Have access? Secure Login"}
+                {isLogin ? "Новый пользователь? Создать доступ" : "Есть доступ? Войти в систему"}
               </button>
             </CardFooter>
           </form>
