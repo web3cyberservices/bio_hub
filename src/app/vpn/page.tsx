@@ -56,21 +56,21 @@ export default function VpnAuthPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
-        className="w-full max-w-[380px] relative z-10"
+        className="w-full max-w-[400px] relative z-10"
       >
-        <Card className="glass-panel rounded-[3rem] border-white/5 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)]">
-          <CardHeader className="space-y-6 text-center pt-10 pb-4">
+        <Card className="glass-panel rounded-[3.5rem] border-white/5 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.6)]">
+          <CardHeader className="space-y-6 text-center pt-12 pb-6">
             <div className="flex justify-center relative">
               <motion.div 
                 animate={{ 
                   filter: [
-                    'drop-shadow(0 0 10px rgba(95, 173, 134, 0.3))',
-                    'drop-shadow(0 0 25px rgba(95, 173, 134, 0.5))',
-                    'drop-shadow(0 0 10px rgba(95, 173, 134, 0.3))'
+                    'drop-shadow(0 0 15px rgba(95, 173, 134, 0.2))',
+                    'drop-shadow(0 0 35px rgba(95, 173, 134, 0.4))',
+                    'drop-shadow(0 0 15px rgba(95, 173, 134, 0.2))'
                   ]
                 }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="relative w-36 h-36"
+                transition={{ duration: 5, repeat: Infinity }}
+                className="relative w-40 h-40"
               >
                  <Image 
                    src="/fonts/logo512x512.png" 
@@ -82,31 +82,31 @@ export default function VpnAuthPage() {
               </motion.div>
             </div>
             
-            <div className="space-y-2">
-              <CardTitle className="brand-title text-xl justify-center text-white tracking-[0.7em]">
+            <div className="space-y-3">
+              <CardTitle className="brand-title text-2xl justify-center text-white tracking-[0.7em]">
                 CYBER<span className="text-[#5fad86]">ARMOR</span>
               </CardTitle>
-              <p className="text-[8px] font-black tracking-[0.4em] uppercase text-white/25">Terminal Access v2.4</p>
+              <p className="text-[10px] font-black tracking-[0.5em] uppercase text-white/90">ПРИВАТНЫЙ ТЕРМИНАЛ</p>
             </div>
           </CardHeader>
           
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-3 px-8 pb-4">
+            <CardContent className="space-y-4 px-10 pb-6">
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <User className="w-4 h-4 text-[#5fad86]/70 group-focus-within:text-[#5fad86] transition-colors" />
+                  <User className="w-4 h-4 text-[#5fad86] opacity-60 group-focus-within:opacity-100 transition-opacity" />
                 </div>
                 <Input
                   name="username"
                   placeholder="ЛОГИН"
                   required
                   autoComplete="username"
-                  className="h-12 pl-11 bg-black/40 border-white/5 rounded-2xl text-[#5fad86] placeholder:text-[#5fad86]/20 focus:border-[#5fad86]/30 focus:ring-0 outline-none transition-all font-black tracking-[0.15em] text-[10px]"
+                  className="h-14 pl-12 bg-black/60 border-white/5 rounded-[1.25rem] text-[#5fad86] placeholder:text-[#5fad86] focus:border-[#5fad86]/30 focus:ring-0 outline-none transition-all font-black tracking-[0.2em] text-[11px]"
                 />
               </div>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <Lock className="w-4 h-4 text-[#5fad86]/70 group-focus-within:text-[#5fad86] transition-colors" />
+                  <Lock className="w-4 h-4 text-[#5fad86] opacity-60 group-focus-within:opacity-100 transition-opacity" />
                 </div>
                 <Input
                   name="password"
@@ -114,34 +114,34 @@ export default function VpnAuthPage() {
                   placeholder="ПАРОЛЬ"
                   required
                   autoComplete="current-password"
-                  className="h-12 pl-11 bg-black/40 border-white/5 rounded-2xl text-[#5fad86] placeholder:text-[#5fad86]/20 focus:border-[#5fad86]/30 focus:ring-0 outline-none transition-all font-black tracking-[0.15em] text-[10px]"
+                  className="h-14 pl-12 bg-black/60 border-white/5 rounded-[1.25rem] text-[#5fad86] placeholder:text-[#5fad86] focus:border-[#5fad86]/30 focus:ring-0 outline-none transition-all font-black tracking-[0.2em] text-[11px]"
                 />
               </div>
             </CardContent>
             
-            <CardFooter className="flex flex-col space-y-6 px-8 pb-10">
+            <CardFooter className="flex flex-col space-y-8 px-10 pb-12">
               <Button 
                 type="submit" 
-                className="w-full h-12 btn-cyber-primary rounded-2xl text-[10px]"
+                className="w-full h-14 btn-cyber-primary rounded-[1.25rem] text-[11px]"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                 ) : isLogin ? (
-                  <><LogIn className="w-4 h-4 mr-2"/> Войти</>
+                  <><LogIn className="w-4 h-4 mr-2"/> ВОЙТИ В СЕТЬ</>
                 ) : (
-                  <><UserPlus className="w-4 h-4 mr-2"/> Создать</>
+                  <><UserPlus className="w-4 h-4 mr-2"/> СОЗДАТЬ АККАУНТ</>
                 )}
               </Button>
               
               <button
                 type="button"
-                className="text-white/20 hover:text-[#5fad86] text-[8px] font-black transition-all uppercase tracking-[0.3em] flex items-center justify-center gap-2 group"
+                className="text-white hover:text-white/80 text-[10px] font-black transition-all uppercase tracking-[0.4em] flex items-center justify-center gap-3 group"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                <div className="h-[1px] w-4 bg-white/5" />
+                <div className="h-[1px] w-6 bg-white/20 group-hover:w-8 transition-all" />
                 {isLogin ? "РЕГИСТРАЦИЯ" : "ВХОД В ТЕРМИНАЛ"}
-                <div className="h-[1px] w-4 bg-white/5" />
+                <div className="h-[1px] w-6 bg-white/20 group-hover:w-8 transition-all" />
               </button>
             </CardFooter>
           </form>
