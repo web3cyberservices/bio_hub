@@ -26,7 +26,7 @@ export async function registerVpnUser(username: string) {
       console.error(`[VPN-ACTION] Marzban не вернул ссылок для ${username}`);
       return { 
         success: false, 
-        error: 'Сервер VPN не вернул ключ доступа. Убедитесь, что Inbound активен в панели Marzban.' 
+        error: 'Сервер VPN не вернул ключ доступа. Проверьте логи Marzban (возможна ошибка 422/400).' 
       };
     }
 
@@ -34,7 +34,7 @@ export async function registerVpnUser(username: string) {
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(link, username);
     
-    console.log(`[VPN-ACTION] Ключ сохранен в БД для ${username}`);
+    console.log(`[VPN-ACTION] Ключ успешно обновлен в БД для ${username}`);
     return { success: true, link };
   } catch (error: any) {
     console.error("[VPN-ACTION] Critical Error:", error.message);
@@ -164,11 +164,12 @@ export async function buySubscription(months: number) {
     // Сразу генерируем/обновляем ключ в Marzban
     const vpnResult = await registerVpnUser(me.username);
     
+    revalidatePath('/dashboard');
+    
     if (!vpnResult.success) {
-      console.warn("[BUY] Подписка продлена, но ключ не сгенерирован:", vpnResult.error);
+      return { success: true, warning: 'Подписка продлена, но ключ не сгенерирован: ' + vpnResult.error };
     }
     
-    revalidatePath('/dashboard');
     return { success: true };
   } catch (e: any) {
     console.error("[BUY] Ошибка покупки:", e);

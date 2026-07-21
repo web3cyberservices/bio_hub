@@ -86,8 +86,11 @@ export default function Dashboard() {
     setPurchasing(true);
     const result = await buySubscription(months);
     if (result.success) {
-      toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
-      // Небольшая задержка перед обновлением, чтобы Marzban успел применить изменения
+      if (result.warning) {
+        toast({ title: "Внимание", description: result.warning, variant: "default" });
+      } else {
+        toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
+      }
       setTimeout(() => loadData(false), 500);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
@@ -99,10 +102,10 @@ export default function Dashboard() {
     setRegenerating(true);
     const result = await regenerateVpnKey();
     if (result.success) {
-      toast({ title: "Успех", description: "VLESS ключ успешно обновлен" });
+      toast({ title: "Успех", description: "VLESS ключ успешно получен" });
       await loadData(false);
     } else {
-      toast({ title: "Ошибка", description: result.error, variant: "destructive" });
+      toast({ title: "Ошибка API Marzban", description: result.error, variant: "destructive" });
     }
     setRegenerating(false);
   };
@@ -358,11 +361,22 @@ export default function Dashboard() {
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                       <Key className="w-10 h-10 text-slate-700" />
                     </div>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">
-                      {!isActive ? "Ключи появятся после активации подписки" : "Генерация ключа... Нажмите обновить"}
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto leading-relaxed">
+                      {!isActive 
+                        ? "Ключи появятся после активации подписки" 
+                        : "Ключ не найден в системе. Попробуйте обновить вручную."}
                     </p>
                     {!isActive && <Button onClick={() => setActiveTab('status')} className="bg-cyan-600 rounded-xl px-8">Купить подписку</Button>}
-                    {isActive && <Button onClick={() => loadData(false)} variant="outline" className="rounded-xl border-white/10"><RefreshCw className="w-4 h-4 mr-2" /> Обновить</Button>}
+                    {isActive && (
+                      <Button 
+                        onClick={handleRegenerateKey} 
+                        disabled={regenerating}
+                        className="bg-cyan-600 rounded-xl px-8"
+                      >
+                        {regenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />} 
+                        Обновить и получить ключ
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
