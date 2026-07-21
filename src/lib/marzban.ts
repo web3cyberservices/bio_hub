@@ -1,6 +1,6 @@
 /**
  * @fileOverview Marzban API Service Layer (Zero-Trust).
- * Оптимизированная интеграция с поддержкой автоматической отладки ошибок 400/422.
+ * Оптимизированная интеграция с поддержкой автоматической отладки.
  */
 
 const MARZBAN_API_URL = process.env.MARZBAN_API_URL || 'http://127.0.0.1:8000';
@@ -17,9 +17,6 @@ export interface MarzbanProfile {
   status: string;
 }
 
-/**
- * Получает токен. В случае 401 сбрасывает кэш.
- */
 async function getAdminToken(forceRefresh = false): Promise<string> {
   if (!forceRefresh && cachedToken && Date.now() < tokenExpiration) {
     return cachedToken;
@@ -33,7 +30,6 @@ async function getAdminToken(forceRefresh = false): Promise<string> {
   formData.append('username', USERNAME);
   formData.append('password', PASSWORD);
 
-  console.log(`[MARZBAN] Auth request to ${MARZBAN_API_URL}`);
   const response = await fetch(`${MARZBAN_API_URL}/api/admin/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -51,15 +47,10 @@ async function getAdminToken(forceRefresh = false): Promise<string> {
   return cachedToken!;
 }
 
-/**
- * Генерирует пользователя. Если VLESS отклоняется сервером (400/422),
- * делает fallback на создание без прокси, чтобы избежать "заглушек".
- */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
-  console.log(`[MARZBAN] Syncing user: ${options.username}`);
   const token = await getAdminToken();
 
-  // 1. Попытка создать/обновить с VLESS
+  // Попытка создать пользователя с VLESS
   const createPayload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
@@ -76,16 +67,12 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     body: JSON.stringify(createPayload)
   });
 
-  // Если юзер уже есть
   if (response.status === 409) {
     return await getMarzbanUser(options.username);
   }
 
-  // Если 400 или 422 (VLESS disabled или плохой inbound)
-  if (!response.ok && (response.status === 422 || response.status === 400)) {
-    console.warn(`[MARZBAN] Server rejected VLESS config (Status ${response.status}). Trying fallback...`);
-    
-    // Fallback: создаем "голого" юзера, Marzban сам применит доступные протоколы
+  if (!response.ok) {
+    // Fallback: создаем "голого" пользователя, если VLESS отклонен (422)
     const fallbackResponse = await fetch(`${MARZBAN_API_URL}/api/user`, {
       method: 'POST',
       headers: {
@@ -99,11 +86,9 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     });
 
     if (!fallbackResponse.ok && fallbackResponse.status !== 409) {
-      throw new Error(`Marzban API Error: ${await fallbackResponse.text()}`);
+      const err = await fallbackResponse.text();
+      throw new Error(`Marzban API Error: ${err}`);
     }
-  } else if (!response.ok) {
-    const errorMsg = await response.text();
-    throw new Error(`Marzban API Error (${response.status}): ${errorMsg}`);
   }
 
   return await getMarzbanUser(options.username);
@@ -117,7 +102,6 @@ async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   
   if (!response.ok) {
     if (response.status === 401) {
-       // Пробуем обновить токен один раз
        const newToken = await getAdminToken(true);
        const retry = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
          headers: { 'Authorization': `Bearer ${newToken}` }

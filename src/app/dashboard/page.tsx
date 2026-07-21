@@ -87,7 +87,8 @@ export default function Dashboard() {
     const result = await buySubscription(months);
     if (result.success) {
       toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
-      await loadData(false);
+      // Небольшая задержка перед обновлением, чтобы Marzban успел применить изменения
+      setTimeout(() => loadData(false), 500);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
     }
@@ -321,7 +322,7 @@ export default function Dashboard() {
 
             {activeTab === 'keys' && !isAdmin && (
               <div className="space-y-6">
-                {isActive && vpnData?.vpn?.links[0] ? (
+                {(isActive && vpnData?.vpn?.links?.length > 0) ? (
                   <Card className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
                     <CardContent className="p-10 text-center space-y-8">
                       <div className="inline-block p-6 bg-white rounded-[2rem] shadow-2xl">
@@ -357,8 +358,11 @@ export default function Dashboard() {
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                       <Key className="w-10 h-10 text-slate-700" />
                     </div>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Ключи появятся после активации подписки</p>
-                    <Button onClick={() => setActiveTab('status')} className="bg-cyan-600 rounded-xl px-8">Купить подписку</Button>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">
+                      {!isActive ? "Ключи появятся после активации подписки" : "Генерация ключа... Нажмите обновить"}
+                    </p>
+                    {!isActive && <Button onClick={() => setActiveTab('status')} className="bg-cyan-600 rounded-xl px-8">Купить подписку</Button>}
+                    {isActive && <Button onClick={() => loadData(false)} variant="outline" className="rounded-xl border-white/10"><RefreshCw className="w-4 h-4 mr-2" /> Обновить</Button>}
                   </div>
                 )}
               </div>
@@ -408,7 +412,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                       <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Версия ПО</p>
-                      <p className="text-xs font-bold text-white">2.5.1 (Stable)</p>
+                      <p className="text-xs font-bold text-white">2.6.0 (Stable)</p>
                     </div>
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                       <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Защита</p>

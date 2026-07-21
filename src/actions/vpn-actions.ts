@@ -12,28 +12,33 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(username: string) {
   try {
-    const dataLimit = 50 * 1024 * 1024 * 1024;
+    const dataLimit = 50 * 1024 * 1024 * 1024; // 50GB
     
+    console.log(`[VPN-ACTION] Запрос генерации для: ${username}`);
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 
     });
     
-    if (!vpnProfile.links || vpnProfile.links.length === 0) {
-      console.error(`[VPN-ACTION] Marzban returned no links for ${username}. CHECK XRAY CONFIG!`);
+    const link = vpnProfile.links && vpnProfile.links.length > 0 ? vpnProfile.links[0] : null;
+
+    if (!link) {
+      console.error(`[VPN-ACTION] Marzban не вернул ссылок для ${username}`);
       return { 
         success: false, 
-        error: 'Marzban API вернул 0 ссылок. Убедитесь, что VLESS Inbound активен в панели.' 
+        error: 'Сервер VPN не вернул ключ доступа. Убедитесь, что Inbound активен в панели Marzban.' 
       };
     }
 
+    // Сохраняем ссылку в БД
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
-      .run(vpnProfile.links[0], username);
+      .run(link, username);
     
-    return { success: true, link: vpnProfile.links[0] };
+    console.log(`[VPN-ACTION] Ключ сохранен в БД для ${username}`);
+    return { success: true, link };
   } catch (error: any) {
-    console.error("[VPN-ACTION] Key Gen Critical Error:", error.message);
-    return { success: false, error: `Ошибка сервиса: ${error.message}` };
+    console.error("[VPN-ACTION] Critical Error:", error.message);
+    return { success: false, error: `Ошибка: ${error.message}` };
   }
 }
 
@@ -111,7 +116,6 @@ export async function getVpnMe() {
       const verified = await jwtVerify(token, JWT_SECRET);
       payload = verified.payload;
     } catch (e) {
-      console.warn("[AUTH] Session invalid, clearing cookie:", (e as Error).message);
       cookieStore.delete('vpn_token');
       return null;
     }
@@ -153,15 +157,21 @@ export async function buySubscription(months: number) {
     
     newExpire.setMonth(newExpire.getMonth() + months);
     
+    // Обновляем дату подписки
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Синхронизируем с Marzban сразу
+    // Сразу генерируем/обновляем ключ в Marzban
     const vpnResult = await registerVpnUser(me.username);
+    
+    if (!vpnResult.success) {
+      console.warn("[BUY] Подписка продлена, но ключ не сгенерирован:", vpnResult.error);
+    }
     
     revalidatePath('/dashboard');
     return { success: true };
   } catch (e: any) {
+    console.error("[BUY] Ошибка покупки:", e);
     return { error: 'Ошибка при оплате' };
   }
 }
