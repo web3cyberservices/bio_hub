@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { TelegramInit } from "@/components/telegram-init";
 
-// Используем Montserrat как надежную альтернативу TT Fors, пока файл не загружен
-const montserrat = Montserrat({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-tt-fors", // Сохраняем переменную для совместимости с CSS
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
   display: 'swap',
 });
 
@@ -40,7 +40,8 @@ export default function RootLayout({
           }
         `}} />
       </head>
-      <body className={`${montserrat.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
+      <body className={`${spaceGrotesk.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
+        <TelegramInit />
         <div className="relative flex min-h-screen flex-col">
           {children}
         </div>

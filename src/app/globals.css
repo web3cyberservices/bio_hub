@@ -25,7 +25,7 @@
   --input: 222 47% 12%;
   --ring: 191 97% 50%;
   --radius: 1.25rem;
-  --font-sans: var(--font-tt-fors), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
