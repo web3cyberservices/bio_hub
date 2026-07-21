@@ -556,7 +556,7 @@ function FirebaseClientProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/src/firebase/client-provider.tsx",
-        lineNumber: 17,
+        lineNumber: 18,
         columnNumber: 5
     }, this);
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 
-type Tab = 'status' | 'keys' | 'help' | 'settings' | 'chats';
+type Tab = 'status' | 'keys' | 'help' | 'settings' | 'support';
 
 export default function VpnDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
@@ -67,9 +68,9 @@ export default function VpnDashboard() {
   const NAV_ITEMS = [
     { id: 'status', icon: Activity, label: 'Статус' },
     { id: 'keys', icon: Key, label: 'Ключи' },
-    { id: 'chats', icon: MessageSquare, label: 'Поддержка' },
-    { id: 'help', icon: HelpCircle, label: 'Инструкции' },
-    { id: 'settings', icon: Settings, label: 'Настройки' },
+    { id: 'support', icon: MessageSquare, label: 'Чат' },
+    { id: 'help', icon: HelpCircle, label: 'Инфо' },
+    { id: 'settings', icon: Settings, label: 'Опции' },
   ];
 
   return (
@@ -142,12 +143,12 @@ export default function VpnDashboard() {
           </div>
         )}
 
-        {activeTab === 'chats' && (
+        {activeTab === 'support' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-center py-10">
             <MessageSquare className="w-16 h-16 text-cyan-500/20 mx-auto mb-4" />
             <h2 className="text-xl font-bold">Поддержка пользователей</h2>
-            <p className="text-slate-400">Если у вас возникли проблемы с подключением, напишите нашему боту.</p>
-            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto mt-4">
+            <p className="text-slate-400 px-6">Если у вас возникли проблемы с подключением, напишите нашему боту в Telegram.</p>
+            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto mt-4 rounded-xl h-12">
               Открыть Telegram чат
             </Button>
           </div>
