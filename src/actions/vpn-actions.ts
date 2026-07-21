@@ -19,11 +19,13 @@ export async function vpnLogin(formData: FormData) {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
+      console.log(`[AUTH] Пользователь ${username} не найден`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      console.log(`[AUTH] Неверный пароль для ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -38,6 +40,7 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
+    // secure: false для работы по HTTP на IP-адресе сервера
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
       secure: false, 
@@ -46,9 +49,10 @@ export async function vpnLogin(formData: FormData) {
       path: '/'
     });
 
+    console.log(`[AUTH] Успешный вход: ${username} (${user.role})`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Ошибка входа:', error);
+    console.error('[AUTH] Критическая ошибка входа:', error);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -112,7 +116,6 @@ export async function buySubscription(months: number) {
     const now = new Date();
     let newExpire = new Date();
     
-    // Если подписка еще активна, продлеваем её, иначе начинаем с текущего момента
     if (me.expiresAt && new Date(me.expiresAt) > now) {
       newExpire = new Date(me.expiresAt);
     }
@@ -134,19 +137,28 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
 
-    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users').all();
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE role != "admin"').all();
     
     return users.map((u: any) => {
-      const isActive = u.expires_at && new Date(u.expires_at) > new Date();
+      const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
+      const isActive = expiresAtDate && expiresAtDate > new Date();
+      
+      // Имитация трафика для демо
+      const trafficUsed = (Math.random() * 80).toFixed(1);
+      const trafficLimit = "100.0 GB";
+
       return {
         ...u,
         status: isActive ? 'online' : 'expired',
         protocol: 'VLESS + Reality',
-        expire: u.expires_at ? new Date(u.expires_at).toLocaleDateString() : 'Нет подписки',
-        traffic: (Math.random() * 50).toFixed(1) + ' GB'
+        expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Нет подписки',
+        rawExpire: u.expires_at,
+        traffic: `${trafficUsed} GB / ${trafficLimit}`,
+        usagePercent: Math.round((parseFloat(trafficUsed) / 100) * 100)
       };
     });
   } catch (e) {
+    console.error('[ADMIN] Ошибка получения пользователей:', e);
     return { error: 'Ошибка получения списка' };
   }
 }

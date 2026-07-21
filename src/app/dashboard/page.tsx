@@ -11,14 +11,13 @@ import {
   Copy,
   Globe,
   Lock,
-  Download,
-  Upload,
   Terminal,
-  Clock,
-  ChevronRight,
   CreditCard,
-  CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Users,
+  Database,
+  Calendar,
+  ChevronRight
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -28,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 
 type Tab = 'status' | 'keys' | 'nodes' | 'admin' | 'settings';
 
@@ -96,7 +96,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Синхронизация профиля...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Загрузка данных...</p>
       </div>
     );
   }
@@ -105,14 +105,14 @@ export default function Dashboard() {
   const isActive = vpnData?.isActive;
   
   const navItems = isAdmin ? [
-    { id: 'admin', icon: Terminal, label: 'Админ' },
+    { id: 'admin', icon: Terminal, label: 'Панель' },
     { id: 'nodes', icon: Globe, label: 'Узлы' },
-    { id: 'settings', icon: Settings, label: 'Опции' }
+    { id: 'settings', icon: Settings, label: 'Профиль' }
   ] : [
     { id: 'status', icon: Activity, label: 'Статус' },
     { id: 'keys', icon: Key, label: 'Ключи' },
     { id: 'nodes', icon: Globe, label: 'Узлы' },
-    { id: 'settings', icon: Settings, label: 'Опции' }
+    { id: 'settings', icon: Settings, label: 'Профиль' }
   ];
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-xl font-black italic leading-none">VPN <span className="text-cyan-400">PRO</span></h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                {isAdmin ? 'Администратор системы' : 'Безопасный туннель'}
+                {isAdmin ? 'Системный мониторинг' : 'Личный кабинет'}
               </p>
             </div>
           </div>
@@ -153,40 +153,73 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            {/* АДМИНКА */}
+            {/* АДМИН ПАНЕЛЬ */}
             {activeTab === 'admin' && isAdmin && (
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="glass-panel p-4 rounded-2xl border-white/5">
-                    <p className="text-xl font-black">{adminUsers.length}</p>
+                  <div className="glass-panel p-5 rounded-3xl border-white/5">
+                    <Users className="w-4 h-4 text-cyan-400 mb-2" />
+                    <p className="text-2xl font-black">{adminUsers.length}</p>
                     <p className="text-[8px] text-slate-500 uppercase font-black">Пользователи</p>
                   </div>
-                  <div className="glass-panel p-4 rounded-2xl border-white/5">
-                    <p className="text-xl font-black">{adminUsers.filter(u => u.status === 'online').length}</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">С подпиской</p>
+                  <div className="glass-panel p-5 rounded-3xl border-white/5">
+                    <Activity className="w-4 h-4 text-emerald-400 mb-2" />
+                    <p className="text-2xl font-black">{adminUsers.filter(u => u.status === 'online').length}</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Активные</p>
                   </div>
-                  <div className="glass-panel p-4 rounded-2xl border-white/5">
-                    <p className="text-xl font-black">1.2 TB</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">Трафик</p>
+                  <div className="glass-panel p-5 rounded-3xl border-white/5">
+                    <Database className="w-4 h-4 text-purple-400 mb-2" />
+                    <p className="text-2xl font-black">1.2 TB</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Общий трафик</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Список клиентов</h3>
+                <div className="space-y-4">
+                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Управление клиентами</h3>
                   {adminUsers.map((user) => (
-                    <div key={user.id} className="glass-panel p-4 rounded-2xl border-white/5 flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-2 h-2 rounded-full ${user.status === 'online' ? 'bg-emerald-500' : 'bg-red-500/50'}`} />
-                        <div>
-                          <p className="font-bold text-sm text-white">{user.username}</p>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase">{user.protocol}</p>
+                    <Card key={user.id} className="glass-panel border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-2.5 h-2.5 rounded-full ${user.status === 'online' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500/50'}`} />
+                            <div>
+                              <p className="font-bold text-base text-white">{user.username}</p>
+                              <p className="text-[9px] text-slate-500 font-bold uppercase">{user.protocol}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                             <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-full ${user.status === 'online' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                               {user.status === 'online' ? 'Активен' : 'Истек'}
+                             </span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-cyan-400">{user.traffic}</p>
-                        <p className="text-[8px] text-slate-500 font-bold uppercase">До: {user.expire}</p>
-                      </div>
-                    </div>
+
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
+                                <Calendar className="w-3 h-3 mr-1" /> Окончание подписки
+                              </div>
+                              <p className="text-sm font-bold text-slate-200">{user.expireDate}</p>
+                            </div>
+                            <div className="space-y-1 text-right">
+                              <div className="flex items-center justify-end text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
+                                <Database className="w-3 h-3 mr-1" /> Трафик (Использовано)
+                              </div>
+                              <p className="text-sm font-bold text-cyan-400">{user.traffic}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[8px] uppercase font-black text-slate-600 mb-1">
+                              <span>Нагрузка канала</span>
+                              <span>{user.usagePercent}%</span>
+                            </div>
+                            <Progress value={user.usagePercent} className="h-1 bg-white/5" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -201,21 +234,21 @@ export default function Dashboard() {
                       <CardContent className="p-10 text-center">
                         <div className="mb-8 relative inline-block">
                           <div className="w-40 h-40 rounded-full border-4 border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
-                            <Lock className="w-14 h-14 text-cyan-400" />
+                            <Shield className="w-14 h-14 text-cyan-400" />
                           </div>
                           <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#02040a]" />
                         </div>
-                        <h2 className="text-3xl font-black mb-2 uppercase italic text-white">Активно</h2>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-10">Подписка до {new Date(vpnData.expiresAt).toLocaleDateString()}</p>
+                        <h2 className="text-3xl font-black mb-2 uppercase italic text-white">Защищено</h2>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-10">Подписка активна до {new Date(vpnData.expiresAt).toLocaleDateString()}</p>
                         
                         <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/5">
                           <div className="text-left">
-                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Загрузка</p>
-                              <p className="text-sm font-bold text-cyan-400">128.4 Mbps</p>
+                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Пинг</p>
+                              <p className="text-sm font-bold text-cyan-400">34 ms</p>
                           </div>
                           <div className="text-right">
-                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Отдача</p>
-                              <p className="text-sm font-bold text-white">45.2 Mbps</p>
+                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Локация</p>
+                              <p className="text-sm font-bold text-white">Германия</p>
                           </div>
                         </div>
                       </CardContent>
@@ -261,27 +294,29 @@ export default function Dashboard() {
                         <QRCodeSVG value={vpnData?.vpn?.links[0] || ""} size={200} />
                       </div>
                       <div className="space-y-4">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ваш персональный VLESS ключ</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Персональный VLESS ключ</p>
                         <div className="p-4 bg-black/40 border border-white/5 rounded-2xl break-all font-mono text-[10px] text-slate-400 text-left">
                           {vpnData?.vpn?.links[0]}
                         </div>
                         <Button 
                           onClick={() => copyKey(vpnData?.vpn?.links[0])} 
-                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold"
+                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold transition-transform active:scale-95"
                         >
-                          <Copy className="w-5 h-5 mr-3" /> Копировать в буфер
+                          <Copy className="w-5 h-5 mr-3" /> Копировать ключ
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="py-20 text-center space-y-4">
-                    <Lock className="w-10 h-10 text-slate-700 mx-auto" />
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Ключи появятся после покупки подписки</p>
+                  <div className="py-20 text-center space-y-6">
+                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
+                      <Lock className="w-10 h-10 text-slate-700" />
+                    </div>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Ключи появятся после покупки подписки</p>
                     <Button 
                       onClick={() => setActiveTab('status')}
                       variant="outline" 
-                      className="border-white/10 bg-white/5 rounded-xl text-[10px] uppercase font-black"
+                      className="border-cyan-500/20 bg-cyan-500/5 rounded-xl text-[10px] uppercase font-black text-cyan-400 px-8"
                     >
                       К тарифам
                     </Button>
@@ -296,20 +331,28 @@ export default function Dashboard() {
                 {[
                   { name: 'Германия (Франкфурт)', ping: '38ms', load: '12%', active: true },
                   { name: 'Нидерланды (Амстердам)', ping: '42ms', load: '24%', active: false },
-                  { name: 'Турция (Стамбул)', ping: '61ms', load: '45%', active: false }
+                  { name: 'Турция (Стамбул)', ping: '61ms', load: '45%', active: false },
+                  { name: 'Финляндия (Хельсинки)', ping: '28ms', load: '8%', active: false }
                 ].map((node) => (
-                  <div key={node.name} className={`p-5 rounded-2xl border ${node.active ? 'bg-cyan-500/5 border-cyan-500/20' : 'bg-slate-900/40 border-white/5'}`}>
+                  <div key={node.name} className={`p-5 rounded-3xl border transition-all ${node.active ? 'bg-cyan-500/5 border-cyan-500/20' : 'bg-slate-900/40 border-white/5'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${node.active ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'}`}>
-                            <Globe className="w-5 h-5" />
+                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${node.active ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'}`}>
+                            <Globe className="w-6 h-6" />
                          </div>
                          <div>
                             <p className="font-bold text-sm text-white">{node.name}</p>
-                            <p className="text-[9px] text-slate-500 font-bold uppercase">Задержка: {node.ping} • Нагрузка: {node.load}</p>
+                            <p className="text-[9px] text-slate-500 font-bold uppercase">Пинг: {node.ping} • Загрузка: {node.load}</p>
                          </div>
                       </div>
-                      <div className={`w-2 h-2 rounded-full ${node.active ? 'bg-cyan-400' : 'bg-slate-700'}`} />
+                      {node.active ? (
+                        <div className="flex items-center space-x-2">
+                           <span className="text-[8px] font-black text-cyan-400 uppercase">Оптимально</span>
+                           <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                        </div>
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-slate-700" />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -317,24 +360,43 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'settings' && (
-              <div className="glass-panel p-8 rounded-[2rem] space-y-6">
-                <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-2xl">
-                  <Avatar className="w-12 h-12 rounded-xl">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-bold text-white">{vpnData?.username}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase">{vpnData?.role === 'admin' ? 'Администратор' : isActive ? 'Подписка активна' : 'Подписка истекла'}</p>
+              <div className="space-y-6">
+                <div className="glass-panel p-8 rounded-[2rem] space-y-6">
+                  <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-2xl">
+                    <Avatar className="w-14 h-14 rounded-2xl">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
+                    </Avatar>
+                    <div>
+                      <p className="text-base font-bold text-white">{vpnData?.username}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        {vpnData?.role === 'admin' ? 'Администратор системы' : isActive ? 'Статус: Премиум' : 'Статус: Базовый'}
+                      </p>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Версия ПО</p>
+                      <p className="text-xs font-bold text-white">2.4.0 (Stable)</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Безопасность</p>
+                      <p className="text-xs font-bold text-emerald-500">AES-256-GCM</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="destructive" 
+                    className="w-full h-14 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                    onClick={async () => { await vpnLogout(); router.push('/vpn'); }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" /> Завершить сеанс
+                  </Button>
                 </div>
-                
-                <Button 
-                  variant="destructive" 
-                  className="w-full h-14 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20"
-                  onClick={async () => { await vpnLogout(); router.push('/vpn'); }}
-                >
-                  <LogOut className="w-4 h-4 mr-2" /> Завершить сеанс
-                </Button>
+
+                <div className="text-center">
+                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">VPN PRO • 2026 EDITION</p>
+                </div>
               </div>
             )}
           </motion.div>
@@ -342,7 +404,7 @@ export default function Dashboard() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 p-6 flex justify-center">
-        <div className="bg-[#0f172a]/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex justify-between items-center px-4 py-2 shadow-2xl w-full max-w-md">
+        <div className="bg-[#0f172a]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex justify-between items-center px-4 py-2 shadow-2xl w-full max-w-md">
           {navItems.map((item) => (
             <button
               key={item.id}
