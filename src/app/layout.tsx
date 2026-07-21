@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -34,10 +35,10 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-[#020617] text-slate-50 antialiased min-h-screen`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-[#020617] text-slate-50 antialiased min-h-screen overflow-x-hidden`} suppressHydrationWarning>
         <FirebaseClientProvider>
           <TelegramInit />
-          <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+          <div className="relative flex min-h-screen flex-col">
             {children}
           </div>
           <Toaster />
