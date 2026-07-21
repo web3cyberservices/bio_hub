@@ -19,6 +19,7 @@ import {
   Zap,
   Navigation,
   UserX,
+  Users,
   RotateCcw,
   ExternalLink
 } from 'lucide-react';
@@ -68,6 +69,9 @@ export default function Dashboard() {
       if (data.role === 'admin') {
         const users = await getAllVpnUsers();
         setAdminUsers(Array.isArray(users) ? users : []);
+      } else {
+        // Redirect non-admin if they are on admin tab
+        if (activeTab === 'admin') setActiveTab('status');
       }
     } catch (e) {
       console.error('[DASHBOARD] Error loading data:', e);

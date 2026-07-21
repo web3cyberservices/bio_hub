@@ -27,11 +27,10 @@ async function getAdminToken(): Promise<string> {
   }
 
   if (!USERNAME || !PASSWORD) {
-    throw new Error('MARZBAN_USERNAME or MARZBAN_PASSWORD is not set in environment variables');
+    console.error('[MARZBAN] Ошибка: Не заданы MARZBAN_USERNAME или MARZBAN_PASSWORD в .env');
+    throw new Error('Креды администратора не настроены на сервере');
   }
 
-  console.log(`[MARZBAN] Authenticating at ${MARZBAN_API_URL}...`);
-  
   const formData = new URLSearchParams();
   formData.append('username', USERNAME);
   formData.append('password', PASSWORD);
@@ -45,7 +44,8 @@ async function getAdminToken(): Promise<string> {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Authentication failed: ${response.status} ${err}`);
+      console.error(`[MARZBAN] Ошибка авторизации (${response.status}): ${err}`);
+      throw new Error(`Ошибка авторизации в API: ${response.status}`);
     }
 
     const data = await response.json();
@@ -53,7 +53,7 @@ async function getAdminToken(): Promise<string> {
     tokenExpiration = Date.now() + 15 * 60 * 1000; // 15 mins
     return cachedToken!;
   } catch (error: any) {
-    console.error('[MARZBAN] Auth Error:', error.message);
+    console.error('[MARZBAN] Auth Exception:', error.message);
     throw error;
   }
 }
@@ -62,7 +62,7 @@ async function getAdminToken(): Promise<string> {
  * Генерирует пользователя в Marzban
  */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
-  console.log(`[MARZBAN] Creating/Syncing user: ${options.username}`);
+  console.log(`[MARZBAN] Запрос на создание/синхронизацию: ${options.username}`);
   
   try {
     const token = await getAdminToken();
@@ -86,19 +86,19 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
       
       // 409 Conflict = User exists, just fetch it
       if (response.status === 409) {
-        console.log(`[MARZBAN] User ${options.username} exists, fetching data...`);
+        console.log(`[MARZBAN] Пользователь ${options.username} уже существует, получаем данные...`);
         return await getMarzbanUser(options.username);
       }
       
-      throw new Error(`Marzban API Error (${response.status}): ${errorText}`);
+      console.error(`[MARZBAN] Ошибка API (${response.status}): ${errorText}`);
+      throw new Error(`API Error ${response.status}: ${errorText}`);
     }
 
     const result = await response.json();
-    console.log(`[MARZBAN] User ${options.username} created successfully.`);
+    console.log(`[MARZBAN] Пользователь ${options.username} успешно создан.`);
     return result;
   } catch (error: any) {
-    console.error('[MARZBAN] User Generation Error:', error.message);
-    // Rethrow to let action handle it
+    console.error('[MARZBAN] Критическая ошибка генерации:', error.message);
     throw error;
   }
 }
@@ -108,14 +108,19 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
  */
 async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
-  const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
+  try {
+    const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Не удалось получить данные пользователя: ${response.status}`);
     }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Marzban user: ${response.status}`);
+    return await response.json();
+  } catch (e: any) {
+    console.error(`[MARZBAN] Ошибка при получении юзера ${username}:`, e.message);
+    throw e;
   }
-  return await response.json();
 }
