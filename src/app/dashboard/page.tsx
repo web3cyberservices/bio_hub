@@ -16,7 +16,8 @@ import {
   Users,
   Database,
   Calendar,
-  ChevronRight
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -42,12 +43,15 @@ export default function Dashboard() {
   const [vpnData, setVpnData] = useState<any>(null);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    else setRefreshing(true);
+    
     try {
       const data = await getVpnMe();
       if (!data) {
@@ -66,6 +70,7 @@ export default function Dashboard() {
       console.error(e);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -87,7 +92,7 @@ export default function Dashboard() {
     const result = await buySubscription(months);
     if (result.success) {
       toast({ title: "Успех", description: `Подписка на ${months} мес. активирована` });
-      await loadData();
+      await loadData(false);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
     }
@@ -104,7 +109,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Загрузка данных...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Инициализация...</p>
       </div>
     );
   }
@@ -131,11 +136,20 @@ export default function Dashboard() {
             <div>
               <h1 className="text-xl font-black italic leading-none">VPN <span className="text-cyan-400">PRO</span></h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                {isAdmin ? 'Системный мониторинг' : 'Личный кабинет'}
+                {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full hover:bg-white/5"
+                onClick={() => loadData(false)}
+                disabled={refreshing}
+             >
+                <RefreshCw className={`w-4 h-4 text-slate-400 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
+             </Button>
              <Avatar className="w-10 h-10 rounded-xl border border-white/10">
                 <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
                 <AvatarFallback>{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
@@ -159,63 +173,74 @@ export default function Dashboard() {
                   <div className="glass-panel p-5 rounded-3xl border-white/5">
                     <Users className="w-4 h-4 text-cyan-400 mb-2" />
                     <p className="text-2xl font-black">{adminUsers.length}</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">Пользователи</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Клиенты</p>
                   </div>
                   <div className="glass-panel p-5 rounded-3xl border-white/5">
                     <Activity className="w-4 h-4 text-emerald-400 mb-2" />
                     <p className="text-2xl font-black">{adminUsers.filter(u => u.status === 'online').length}</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">Активные</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Подписки</p>
                   </div>
                   <div className="glass-panel p-5 rounded-3xl border-white/5">
                     <Database className="w-4 h-4 text-purple-400 mb-2" />
                     <p className="text-2xl font-black">1.2 TB</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">Общий трафик</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Трафик</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Управление клиентами</h3>
+                  <div className="flex justify-between items-center px-2">
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Список пользователей</h3>
+                    <span className="text-[9px] text-slate-600 font-bold uppercase">Всего: {adminUsers.length}</span>
+                  </div>
+                  
                   {adminUsers.map((user) => (
                     <Card key={user.id} className="glass-panel border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors">
                       <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center space-x-3">
-                            <div className={`w-2.5 h-2.5 rounded-full ${user.status === 'online' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500/50'}`} />
+                            <div className={`w-2.5 h-2.5 rounded-full ${user.hasKey ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500/50'}`} />
                             <div>
                               <p className="font-bold text-base text-white">{user.username}</p>
-                              <p className="text-[9px] text-slate-500 font-bold uppercase">{user.protocol}</p>
+                              <div className="flex items-center space-x-2 mt-0.5">
+                                <span className="text-[9px] text-slate-500 font-bold uppercase">{user.protocol}</span>
+                                <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                                <span className="text-[9px] text-slate-500 font-bold uppercase flex items-center">
+                                  <Clock className="w-2.5 h-2.5 mr-1" /> c {user.createdDate}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
-                             <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-full ${user.status === 'online' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
-                               {user.status === 'online' ? 'Активен' : 'Истек'}
-                             </span>
+                             <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full ${user.hasKey ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                               {user.hasKey ? <Key className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                               <span className="text-[8px] font-black uppercase">
+                                 {user.hasKey ? 'Ключ выдан' : 'Без ключа'}
+                               </span>
+                             </div>
                           </div>
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
-                                <Calendar className="w-3 h-3 mr-1" /> Окончание подписки
-                              </div>
-                              <p className="text-sm font-bold text-slate-200">{user.expireDate}</p>
-                            </div>
-                            <div className="space-y-1 text-right">
-                              <div className="flex items-center justify-end text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
-                                <Database className="w-3 h-3 mr-1" /> Трафик (Использовано)
-                              </div>
-                              <p className="text-sm font-bold text-cyan-400">{user.traffic}</p>
-                            </div>
-                          </div>
-                          
+                        <div className="grid grid-cols-2 gap-6 mb-4">
                           <div className="space-y-1">
-                            <div className="flex justify-between text-[8px] uppercase font-black text-slate-600 mb-1">
-                              <span>Нагрузка канала</span>
-                              <span>{user.usagePercent}%</span>
+                            <div className="flex items-center text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
+                              <Calendar className="w-3 h-3 mr-1" /> Истекает
                             </div>
-                            <Progress value={user.usagePercent} className="h-1 bg-white/5" />
+                            <p className={`text-sm font-bold ${user.hasKey ? 'text-slate-200' : 'text-slate-500'}`}>{user.expireDate}</p>
                           </div>
+                          <div className="space-y-1 text-right">
+                            <div className="flex items-center justify-end text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
+                              <Database className="w-3 h-3 mr-1" /> Потребление
+                            </div>
+                            <p className="text-sm font-bold text-cyan-400">{user.traffic}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[8px] uppercase font-black text-slate-600">
+                            <span>Нагрузка порта</span>
+                            <span>{user.usagePercent}%</span>
+                          </div>
+                          <Progress value={user.usagePercent} className="h-1.5 bg-white/5" />
                         </div>
                       </CardContent>
                     </Card>

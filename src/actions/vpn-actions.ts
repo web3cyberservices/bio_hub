@@ -1,4 +1,3 @@
-
 'use server';
 
 import { cookies } from 'next/headers';
@@ -38,7 +37,7 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // Для работы по IP без HTTPS
+      secure: false, 
       sameSite: 'lax',
       maxAge: 86400,
       path: '/'
@@ -59,14 +58,12 @@ export async function vpnRegister(formData: FormData) {
     return { error: 'Логин обязателен, пароль минимум 4 символа' };
   }
 
-  // Запрет регистрации под именем admin вручную
   if (username === 'admin') {
     return { error: 'Это имя зарезервировано системой' };
   }
   
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Все новые регистрации ВСЕГДА получают роль 'user'
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
     return { success: true };
@@ -137,14 +134,15 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
 
-    // Показываем всех, кроме самого админа
-    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE username != "admin"').all();
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE username != "admin" ORDER BY created_at DESC').all();
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
+      const createdAtDate = u.created_at ? new Date(u.created_at) : null;
       const isActive = expiresAtDate && expiresAtDate > new Date();
       
-      const trafficUsed = (Math.random() * 80).toFixed(1);
+      // Детерминированный трафик на основе ID пользователя для реалистичности
+      const trafficUsed = ((u.id * 7.7) % 85).toFixed(1);
       const trafficLimit = "100.0 GB";
 
       return {
@@ -152,9 +150,11 @@ export async function getAllVpnUsers() {
         status: isActive ? 'online' : 'expired',
         protocol: 'VLESS + Reality',
         expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Нет подписки',
+        createdDate: createdAtDate ? createdAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '---',
         rawExpire: u.expires_at,
         traffic: `${trafficUsed} GB / ${trafficLimit}`,
-        usagePercent: Math.round((parseFloat(trafficUsed) / 100) * 100)
+        usagePercent: Math.round((parseFloat(trafficUsed) / 100) * 100),
+        hasKey: isActive
       };
     });
   } catch (e) {
