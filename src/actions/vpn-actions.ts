@@ -14,7 +14,6 @@ export async function registerVpnUser(username: string) {
   try {
     const dataLimit = 100 * 1024 * 1024 * 1024; // 100GB
     
-    // Принудительно запрашиваем API Marzban
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 
@@ -26,11 +25,10 @@ export async function registerVpnUser(username: string) {
     if (!link) {
       return { 
         success: false, 
-        error: 'Marzban не вернул ссылок. Проверьте, активен ли VLESS Inbound в панели.' 
+        error: 'Marzban не вернул ссылок. Проверьте конфигурацию.' 
       };
     }
 
-    // Сохраняем актуальный ключ в нашу БД
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(link, username);
     
@@ -123,6 +121,7 @@ export async function getVpnMe() {
 
     const now = new Date();
     const expiresAt = user.expires_at ? new Date(user.expires_at) : null;
+    const lastPurchaseAt = user.last_purchase_at ? new Date(user.last_purchase_at) : null;
     const isAdmin = user.role === 'admin';
     const isActive = isAdmin || (expiresAt && expiresAt > now);
 
@@ -130,6 +129,7 @@ export async function getVpnMe() {
       username: user.username,
       role: user.role,
       expiresAt: user.expires_at,
+      lastPurchaseAt: user.last_purchase_at,
       isActive: !!isActive,
       vpn: { 
         status: isActive ? 'active' : 'expired', 
@@ -155,10 +155,9 @@ export async function buySubscription(months: number) {
     
     newExpire.setMonth(newExpire.getMonth() + months);
     
-    db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
-      .run(newExpire.toISOString(), me.username);
+    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
+      .run(newExpire.toISOString(), now.toISOString(), me.username);
 
-    // Сразу генерируем ключ и сохраняем в БД
     await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');

@@ -132,10 +132,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#5fad86] flex flex-col items-center justify-center">
-        <div className="relative scale-75">
-          <div className="w-10 h-10 border-4 border-white/10 border-t-cyan-400 rounded-full animate-spin shadow-[0_0_15px_rgba(34,211,238,0.3)]" />
-        </div>
-        <p className="mt-4 text-[8px] font-black text-white/40 uppercase tracking-[0.4em] animate-pulse">Initializing Identity...</p>
+        <div className="w-8 h-8 border-4 border-white/10 border-t-cyan-400 rounded-full animate-spin" />
       </div>
     );
   }
@@ -151,159 +148,131 @@ export default function Dashboard() {
     { id: 'settings', icon: Settings, label: 'ПРОФИЛЬ' }
   ];
 
+  const getSubDates = () => {
+    if (!vpnData?.expiresAt) return null;
+    const end = new Date(vpnData.expiresAt);
+    const start = vpnData.lastPurchaseAt ? new Date(vpnData.lastPurchaseAt) : new Date(new Date().setMonth(end.getMonth() - 1));
+    return {
+      start: start.toLocaleDateString('ru-RU'),
+      end: end.toLocaleDateString('ru-RU')
+    };
+  };
+
+  const dates = getSubDates();
+
   return (
     <div className="h-screen bg-[#5fad86] text-white selection:bg-cyan-500/40 overflow-hidden flex flex-col">
-      <header className="flex-none bg-[#5fad86]/90 backdrop-blur-xl border-b border-black/5 px-4 py-4">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 rounded-2xl bg-black/40 flex items-center justify-center shadow-lg border border-white/5 relative">
-              <Shield className="w-5 h-5 text-cyan-400 relative z-10" />
-            </div>
-            <div>
-              <h1 className="brand-title text-lg tracking-[0.3em]">
-                CYBER<span className="text-cyan-400">ARMOR</span>
-              </h1>
-            </div>
+      <header className="flex-none px-4 py-3">
+        <div className="max-w-xl mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <Shield className="w-5 h-5 text-black" />
+            <h1 className="brand-title text-sm tracking-[0.4em]">CYBER<span className="text-black/40">ARMOR</span></h1>
           </div>
           <div className="flex items-center space-x-3">
-             <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-xl hover:bg-black/10 h-10 w-10 group"
-                onClick={() => loadData(false)}
-                disabled={refreshing}
-             >
-                <RefreshCw className={`w-4 h-4 text-white/30 group-hover:text-cyan-400 transition-colors ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
+             <Button variant="ghost" size="icon" onClick={() => loadData(false)} disabled={refreshing} className="w-8 h-8 rounded-xl">
+                <RefreshCw className={`w-3.5 h-3.5 text-black/40 ${refreshing ? 'animate-spin' : ''}`} />
              </Button>
-             <Avatar className="w-10 h-10 rounded-xl border border-white/10 shadow-xl bg-black/40">
+             <Avatar className="w-8 h-8 rounded-xl border border-white/10 bg-black/40">
                 <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
-                <AvatarFallback className="bg-black/60 font-black text-[10px] text-cyan-400">{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="text-[8px]">{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
              </Avatar>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-2xl mx-auto w-full p-6 overflow-hidden relative">
+      <main className="flex-1 max-w-xl mx-auto w-full p-4 overflow-hidden relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.15 }}
             className="h-full"
           >
             {activeTab === 'admin' && isAdmin && (
-              <div className="space-y-6 h-full overflow-y-auto pb-24 custom-scrollbar">
-                <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-4 h-full overflow-y-auto pb-20 custom-scrollbar">
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { icon: Users, val: adminUsers.length, label: 'ID', color: 'text-cyan-400' },
                     { icon: Activity, val: adminUsers.filter(u => u.hasKey).length, label: 'ON', color: 'text-emerald-400' },
                     { icon: Database, val: '1.4T', label: 'NET', color: 'text-purple-400' }
                   ].map((stat, i) => (
-                    <div key={i} className="glass-panel p-4 rounded-3xl relative group overflow-hidden">
-                      <stat.icon className={`w-4 h-4 ${stat.color} mb-1`} />
-                      <p className="text-xl font-black">{stat.val}</p>
-                      <p className="text-[8px] text-white/30 uppercase font-black tracking-widest">{stat.label}</p>
+                    <div key={i} className="glass-panel p-3 rounded-2xl">
+                      <stat.icon className={`w-3.5 h-3.5 ${stat.color} mb-1`} />
+                      <p className="text-lg font-black">{stat.val}</p>
+                      <p className="text-[7px] text-white/30 uppercase font-black tracking-widest">{stat.label}</p>
                     </div>
                   ))}
                 </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.5em] px-2">Реестр</h3>
-                  {adminUsers.length > 0 ? adminUsers.map((user) => (
-                    <Card key={user.id} className="glass-panel border-white/5 rounded-3xl overflow-hidden bg-transparent group hover:border-white/10 transition-all">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-2.5 h-2.5 rounded-full ${user.hasKey ? 'bg-emerald-400' : 'bg-red-400/30'}`} />
-                            <p className="font-black text-base text-white">{user.username}</p>
+                <div className="space-y-2">
+                  {adminUsers.map((user) => (
+                    <Card key={user.id} className="glass-panel border-white/5 rounded-2xl bg-transparent">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-2 h-2 rounded-full ${user.hasKey ? 'bg-emerald-400' : 'bg-red-400/30'}`} />
+                            <p className="font-black text-sm text-white">{user.username}</p>
                           </div>
-                          <span className="text-[8px] text-white/30 font-black uppercase px-2 py-1 rounded-full bg-white/5 border border-white/5">{user.protocol}</span>
+                          <span className="text-[7px] text-white/30 font-black uppercase px-2 py-0.5 rounded-full bg-white/5">{user.protocol}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-[11px] mb-3">
-                          <div>
-                            <p className="text-[8px] text-white/20 uppercase font-black">Истекает</p>
-                            <p className="font-bold text-white/80">{user.expireDate}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[8px] text-white/20 uppercase font-black">Трафик</p>
-                            <p className="font-bold text-cyan-400">{user.traffic}</p>
-                          </div>
-                        </div>
-                        <Progress value={user.usagePercent} className="h-1.5 bg-black/40 rounded-full" />
+                        <Progress value={user.usagePercent} className="h-1 bg-black/40 rounded-full" />
                       </CardContent>
                     </Card>
-                  )) : (
-                    <div className="py-12 text-center glass-panel rounded-3xl border-dashed border-white/10">
-                      <UserX className="w-10 h-10 text-white/10 mx-auto mb-3" />
-                      <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.5em]">Нет данных</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
 
             {activeTab === 'status' && !isAdmin && (
-              <div className="space-y-6 h-full overflow-y-auto pb-24 custom-scrollbar">
+              <div className="space-y-4 h-full overflow-y-auto pb-20 custom-scrollbar">
                 {isActive ? (
                   <>
-                    <Card className="glass-panel border-white/10 rounded-[3rem] overflow-hidden bg-transparent shadow-xl">
-                      <CardContent className="p-8 text-center">
-                        <div className="mb-6 relative inline-block">
-                          <div className="absolute inset-0 bg-cyan-400/10 blur-[40px] rounded-full scale-125" />
-                          <div className="w-24 h-24 rounded-[2rem] border border-white/10 bg-black/40 flex items-center justify-center relative z-10 neon-glow shadow-lg">
-                            <Shield className="w-12 h-12 text-white drop-shadow-[0_0_8px_rgba(34,211,238,0.3)]" />
-                          </div>
-                          <div className="absolute -top-1 -right-1 w-8 h-8 bg-cyan-400 rounded-xl border-2 border-[#0d1612] flex items-center justify-center shadow-md">
-                            <Zap className="w-4 h-4 text-black" />
+                    <Card className="glass-panel border-white/10 rounded-[2.5rem] bg-transparent shadow-xl">
+                      <CardContent className="p-6 text-center">
+                        <div className="mb-4 relative inline-block">
+                          <div className="w-16 h-16 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center relative z-10 neon-glow">
+                            <Shield className="w-8 h-8 text-white" />
                           </div>
                         </div>
-                        <h2 className="brand-title text-2xl mb-2 justify-center text-white tracking-[0.4em]">ЗАЩИЩЕНО</h2>
-                        <p className="text-white/30 text-[9px] font-black uppercase tracking-[0.5em] mb-6">Туннель активен</p>
+                        <h2 className="brand-title text-sm mb-1 justify-center text-white tracking-[0.3em]">ПОДПИСКА АКТИВИРОВАНА</h2>
+                        <p className="text-cyan-400/80 text-[9px] font-black uppercase tracking-[0.2em] mb-4">
+                          {dates ? `с ${dates.start} по ${dates.end}` : 'Туннель активен'}
+                        </p>
                         
-                        <div className="inline-flex items-center justify-center space-x-3 text-[10px] font-black text-white/70 uppercase tracking-[0.2em] bg-white/5 py-2 px-6 rounded-2xl mx-auto border border-white/5 mb-8">
-                            <Calendar className="w-4 h-4 text-cyan-400" />
-                            <span>{vpnData.expiresAt ? new Date(vpnData.expiresAt).toLocaleDateString('ru-RU') : 'Бессрочно'}</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/5">
-                          <div className="text-left flex items-start space-x-3">
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                                <Zap className="w-4 h-4 text-cyan-400" />
-                              </div>
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                          <div className="text-left flex items-start space-x-2">
+                              <Zap className="w-3.5 h-3.5 text-cyan-400 mt-1" />
                               <div>
-                                <p className="text-[8px] text-white/20 uppercase font-black">Пинг</p>
-                                <p className="text-sm font-black text-cyan-400">34ms</p>
+                                <p className="text-[7px] text-white/20 uppercase font-black">Пинг</p>
+                                <p className="text-xs font-black text-white">34ms</p>
                               </div>
                           </div>
-                          <div className="text-right flex items-start justify-end space-x-3">
+                          <div className="text-right flex items-start justify-end space-x-2">
                               <div>
-                                <p className="text-[8px] text-white/20 uppercase font-black">Шлюз</p>
-                                <p className="text-sm font-black text-white">Германия</p>
+                                <p className="text-[7px] text-white/20 uppercase font-black">Шлюз</p>
+                                <p className="text-xs font-black text-white">Германия</p>
                               </div>
-                              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                                <Globe className="w-4 h-4 text-white/30" />
-                              </div>
+                              <Globe className="w-3.5 h-3.5 text-white/30 mt-1" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <div className="space-y-3">
-                        <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.5em] px-2">Пакеты доступа</h3>
-                        <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-3 pt-2">
+                        <h3 className="text-[10px] font-black text-[#2d5440] uppercase tracking-[0.4em] text-center w-full">ПРОДЛИТЬ ПОДПИСКУ</h3>
+                        <div className="grid grid-cols-2 gap-2">
                             {PLANS.map((plan) => (
                                 <button
                                     key={plan.months}
                                     onClick={() => handleBuy(plan.months)}
                                     disabled={purchasing}
-                                    className="glass-panel p-5 rounded-3xl hover:bg-white/5 transition-all text-left group border border-white/5 active:scale-95"
+                                    className="glass-panel p-4 rounded-2xl hover:bg-white/5 transition-all text-left group border border-white/5 active:scale-95"
                                 >
-                                    <p className="text-[9px] text-white/20 uppercase font-black mb-1">{plan.label}</p>
+                                    <p className="text-[8px] text-white/20 uppercase font-black mb-1">{plan.label}</p>
                                     <div className="flex items-center justify-between">
-                                      <p className="text-base font-black text-white group-hover:text-cyan-400">{plan.price}</p>
-                                      <ArrowRight className="w-4 h-4 text-cyan-400 opacity-0 group-hover:opacity-100 transition-all" />
+                                      <p className="text-sm font-black text-white group-hover:text-cyan-400">{plan.price}</p>
+                                      <ArrowRight className="w-3.5 h-3.5 text-cyan-400 opacity-0 group-hover:opacity-100" />
                                     </div>
                                 </button>
                             ))}
@@ -311,28 +280,27 @@ export default function Dashboard() {
                     </div>
                   </>
                 ) : (
-                  <div className="space-y-10 text-center py-8">
-                    <div className="space-y-5">
-                      <div className="w-20 h-20 bg-black/40 rounded-[2rem] flex items-center justify-center mx-auto border border-white/5 shadow-xl">
-                        <Lock className="w-10 h-10 text-white/10" />
+                  <div className="space-y-6 text-center py-4">
+                    <div className="space-y-4">
+                      <div className="w-16 h-16 bg-black/40 rounded-2xl flex items-center justify-center mx-auto border border-white/5">
+                        <Lock className="w-8 h-8 text-white/10" />
                       </div>
-                      <div className="space-y-2">
-                        <h2 className="brand-title text-2xl justify-center text-white tracking-[0.4em]">ДОСТУП ОГРАНИЧЕН</h2>
-                        <p className="text-white/30 text-[9px] font-black uppercase tracking-[0.5em] max-w-[240px] mx-auto">Требуется активация зашифрованного соединения</p>
+                      <div className="space-y-1">
+                        <h2 className="brand-title text-sm justify-center text-white tracking-[0.3em]">ДОСТУП ОГРАНИЧЕН</h2>
+                        <p className="text-white/30 text-[8px] font-black uppercase tracking-[0.3em]">Требуется активация</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       {PLANS.map((plan) => (
                         <button
                           key={plan.months}
                           onClick={() => handleBuy(plan.months)}
                           disabled={purchasing}
-                          className={`relative p-5 rounded-[2rem] border transition-all text-left group active:scale-95 ${plan.popular ? 'bg-white/10 border-white/20 shadow-lg' : 'glass-panel border-white/5'}`}
+                          className={`relative p-4 rounded-2xl border transition-all text-left group active:scale-95 ${plan.popular ? 'bg-white/10 border-white/20' : 'glass-panel border-white/5'}`}
                         >
-                          {plan.popular && <span className="absolute -top-2 left-6 bg-cyan-400 text-black text-[8px] font-black uppercase px-3 py-1 rounded-full border-2 border-[#0d1612]">ЛУЧШИЙ</span>}
-                          <p className="text-white/20 text-[9px] font-black uppercase mb-1">{plan.label}</p>
-                          <p className="text-lg font-black text-white group-hover:text-cyan-400">{plan.price}</p>
+                          <p className="text-white/20 text-[8px] font-black uppercase mb-1">{plan.label}</p>
+                          <p className="text-sm font-black text-white group-hover:text-cyan-400">{plan.price}</p>
                         </button>
                       ))}
                     </div>
@@ -342,80 +310,64 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'keys' && !isAdmin && (
-              <div className="space-y-6 h-full overflow-y-auto pb-24 custom-scrollbar">
+              <div className="space-y-4 h-full overflow-y-auto pb-20 custom-scrollbar">
                 {(isActive && vpnData?.vpn?.links?.length > 0) ? (
-                  <Card className="glass-panel rounded-[3rem] overflow-hidden bg-transparent shadow-xl">
-                    <CardContent className="p-8 text-center space-y-6">
-                      <div className="inline-block p-6 bg-white rounded-3xl shadow-lg group">
-                        <div className="relative z-10">
-                          <QRCodeSVG value={vpnData?.vpn?.links[0]} size={180} level="H" includeMargin={false} />
-                        </div>
+                  <Card className="glass-panel rounded-[2.5rem] bg-transparent shadow-xl">
+                    <CardContent className="p-6 text-center space-y-4">
+                      <div className="inline-block p-4 bg-white rounded-2xl shadow-lg">
+                        <QRCodeSVG value={vpnData?.vpn?.links[0]} size={140} level="H" />
                       </div>
-                      <div className="space-y-4">
-                        <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.5em]">Токен доступа</p>
-                        <div className="p-4 bg-black/60 border border-white/5 rounded-2xl break-all font-mono text-[10px] text-white/20 text-left leading-tight shadow-inner">
+                      <div className="space-y-3">
+                        <p className="text-[8px] text-white/30 font-black uppercase tracking-[0.3em]">Токен доступа</p>
+                        <div className="p-3 bg-black/60 border border-white/5 rounded-xl break-all font-mono text-[8px] text-white/20 text-left">
                           {vpnData?.vpn?.links[0]}
                         </div>
-                        <div className="grid grid-cols-1 gap-3 pt-4">
-                          <Button 
-                            onClick={() => copyKey(vpnData?.vpn?.links[0])} 
-                            className="w-full bg-white text-black hover:bg-white/90 h-14 rounded-2xl font-black text-[12px] uppercase transition-all cyber-button"
-                          >
-                            <Copy className="w-5 h-5 mr-3" /> Копировать ключ
+                        <div className="grid grid-cols-1 gap-2 pt-2">
+                          <Button onClick={() => copyKey(vpnData?.vpn?.links[0])} className="w-full bg-white text-black hover:bg-white/90 h-11 rounded-xl font-black text-[10px] uppercase tracking-[0.2em]">
+                            <Copy className="w-4 h-4 mr-2" /> Копировать
                           </Button>
-                          <Button 
-                            onClick={handleRegenerateKey}
-                            disabled={regenerating}
-                            variant="outline"
-                            className="w-full border-white/10 bg-black/40 h-14 rounded-2xl text-white/40 font-black text-[12px] uppercase active:scale-95"
-                          >
-                            {regenerating ? <RefreshCw className="w-5 h-5 mr-3 animate-spin text-cyan-400" /> : <RotateCcw className="w-5 h-5 mr-3" />}
-                            Синхронизировать
+                          <Button onClick={handleRegenerateKey} disabled={regenerating} variant="outline" className="w-full border-white/10 bg-black/40 h-11 rounded-xl text-white/40 font-black text-[10px] uppercase">
+                            {regenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+                            Синхронизация
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="py-16 text-center space-y-8">
-                    <div className="w-20 h-20 bg-black/40 rounded-[2rem] flex items-center justify-center mx-auto border border-white/5 shadow-xl">
-                       <Key className="w-10 h-10 text-white/10" />
+                  <div className="py-12 text-center space-y-6">
+                    <div className="w-16 h-16 bg-black/40 rounded-2xl flex items-center justify-center mx-auto border border-white/5">
+                       <Key className="w-8 h-8 text-white/10" />
                     </div>
-                    <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.5em] max-w-[240px] mx-auto">
-                      {!isActive 
-                        ? "Реестр пуст" 
-                        : "Требуется синхронизация"}
-                    </p>
-                    <Button onClick={() => setActiveTab('status')} className="bg-white text-black rounded-2xl px-10 h-14 font-black uppercase text-[12px] tracking-[0.3em] shadow-xl cyber-button">Инициализировать</Button>
+                    <Button onClick={() => setActiveTab('status')} className="bg-white text-black rounded-xl px-8 h-12 font-black uppercase text-[10px] tracking-[0.2em]">Инициализировать</Button>
                   </div>
                 )}
               </div>
             )}
 
             {activeTab === 'nodes' && (
-              <div className="space-y-4 h-full overflow-y-auto pb-24 custom-scrollbar">
-                <h3 className="text-[9px] font-black text-white/30 uppercase tracking-[0.5em] px-2 mb-2">Активные шлюзы</h3>
+              <div className="space-y-3 h-full overflow-y-auto pb-20 custom-scrollbar">
                 {[
                   { name: 'FRK-01 Германия', ping: '38ms', load: '12%', active: true },
                   { name: 'AMS-04 Нидерланды', ping: '42ms', load: '24%', active: false },
                   { name: 'IST-02 Турция', ping: '61ms', load: '45%', active: false }
                 ].map((node) => (
-                  <div key={node.name} className={`p-5 rounded-[2rem] border transition-all active:scale-[0.98] ${node.active ? 'bg-white/10 border-white/20 shadow-lg' : 'glass-panel border-white/5 opacity-50'}`}>
+                  <div key={node.name} className={`p-4 rounded-2xl border transition-all ${node.active ? 'bg-white/10 border-white/20' : 'glass-panel border-white/5 opacity-50'}`}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-md ${node.active ? 'bg-white text-black border-white' : 'bg-white/5 text-white/20 border-white/5'}`}>
-                            <Globe className="w-6 h-6" />
+                      <div className="flex items-center space-x-3">
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${node.active ? 'bg-white text-black' : 'bg-white/5 text-white/20'}`}>
+                            <Globe className="w-5 h-5" />
                          </div>
                          <div>
-                            <p className="font-black text-base text-white">{node.name}</p>
-                            <p className="text-[10px] text-white/30 font-black uppercase tracking-tighter flex items-center gap-3">
-                              <span className="flex items-center gap-1.5"><Zap className="w-3 h-3" /> {node.ping}</span>
+                            <p className="font-black text-sm text-white">{node.name}</p>
+                            <p className="text-[8px] text-white/30 font-black uppercase flex items-center gap-2">
+                              <span>{node.ping}</span>
                               <span className="w-1 h-1 bg-white/10 rounded-full" />
-                              <span>Загрузка {node.load}</span>
+                              <span>{node.load}</span>
                             </p>
                          </div>
                       </div>
-                      {node.active && <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.6)] animate-pulse" />}
+                      {node.active && <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.6)]" />}
                     </div>
                   </div>
                 ))}
@@ -424,37 +376,18 @@ export default function Dashboard() {
 
             {activeTab === 'settings' && (
               <div className="h-full flex flex-col justify-start">
-                <div className="glass-panel p-8 rounded-[3rem] space-y-8 shadow-xl">
-                  <div className="flex items-center space-x-5 p-4 bg-black/40 rounded-2xl border border-white/5">
-                    <Avatar className="w-16 h-16 rounded-2xl border border-white/10">
+                <div className="glass-panel p-6 rounded-[2.5rem] space-y-6">
+                  <div className="flex items-center space-x-4 p-3 bg-black/40 rounded-xl border border-white/5">
+                    <Avatar className="w-12 h-12 rounded-xl">
                       <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
                     </Avatar>
-                    <div className="space-y-1">
-                      <p className="text-xl font-black text-white leading-none">{vpnData?.username}</p>
-                      <p className="text-[10px] text-cyan-400 font-black uppercase tracking-[0.3em] flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-                        {isAdmin ? 'Root Доступ' : isActive ? 'Premium Аккаунт' : 'Базовый'}
-                      </p>
+                    <div className="space-y-0.5">
+                      <p className="text-lg font-black text-white">{vpnData?.username}</p>
+                      <p className="text-[8px] text-cyan-400 font-black uppercase tracking-[0.2em]">{isAdmin ? 'Root Access' : 'Premium'}</p>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                      <p className="text-[9px] text-white/20 uppercase font-black mb-1">Протокол</p>
-                      <p className="text-[11px] font-black text-white">XRAY REALITY</p>
-                    </div>
-                    <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                      <p className="text-[9px] text-white/20 uppercase font-black mb-1">Сборка</p>
-                      <p className="text-[11px] font-black text-cyan-400">2026.4.F</p>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant="destructive" 
-                    className="w-full h-14 rounded-2xl bg-red-500/5 text-red-300 border border-red-500/10 hover:bg-red-500/10 font-black uppercase text-[11px] active:scale-95 transition-all"
-                    onClick={async () => { await vpnLogout(); router.push('/vpn'); }}
-                  >
-                    <LogOut className="w-4 h-4 mr-3" /> Завершить сессию
+                  <Button variant="destructive" className="w-full h-11 rounded-xl bg-red-500/5 text-red-300 border border-red-500/10 font-black uppercase text-[9px] tracking-[0.2em]" onClick={async () => { await vpnLogout(); router.push('/vpn'); }}>
+                    <LogOut className="w-3.5 h-3.5 mr-2" /> Завершить сессию
                   </Button>
                 </div>
               </div>
@@ -463,17 +396,12 @@ export default function Dashboard() {
         </AnimatePresence>
       </main>
 
-      <nav className="flex-none p-6 flex justify-center pointer-events-none">
-        <div className="bg-black/90 backdrop-blur-[20px] border border-white/5 rounded-[2rem] flex justify-between items-center px-4 py-2 shadow-2xl w-full max-w-[320px] pointer-events-auto">
+      <nav className="flex-none p-4 flex justify-center">
+        <div className="bg-black/90 backdrop-blur-xl border border-white/5 rounded-3xl flex justify-between items-center px-2 py-1.5 shadow-2xl w-full max-w-[280px]">
           {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as Tab)}
-              className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all relative group ${activeTab === item.id ? 'text-cyan-400' : 'text-white/20 hover:text-white/40'}`}
-            >
-              <item.icon className={`w-6 h-6 transition-all ${activeTab === item.id ? 'scale-110' : ''}`} />
-              <span className={`text-[8px] font-black uppercase mt-1 ${activeTab === item.id ? 'block' : 'hidden'}`}>{item.label}</span>
-              {activeTab === item.id && <motion.div layoutId="nav-active" className="absolute -bottom-1 w-1 h-1 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)]" />}
+            <button key={item.id} onClick={() => setActiveTab(item.id as Tab)} className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all relative ${activeTab === item.id ? 'text-cyan-400' : 'text-white/20'}`}>
+              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'scale-110' : ''}`} />
+              <span className={`text-[7px] font-black uppercase mt-1 ${activeTab === item.id ? 'block' : 'hidden'}`}>{item.label}</span>
             </button>
           ))}
         </div>
