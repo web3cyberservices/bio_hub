@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -17,7 +18,8 @@ import {
   Database,
   Calendar,
   RefreshCw,
-  Clock
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -85,7 +87,7 @@ export default function Dashboard() {
     if (isAdmin && activeTab === 'status') {
       setActiveTab('admin');
     }
-  }, [isAdmin, activeTab]);
+  }, [isAdmin]);
 
   const handleBuy = async (months: number) => {
     setPurchasing(true);
@@ -263,7 +265,20 @@ export default function Dashboard() {
                           <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#02040a]" />
                         </div>
                         <h2 className="text-3xl font-black mb-2 uppercase italic text-white">Защищено</h2>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-10">Подписка активна до {new Date(vpnData.expiresAt).toLocaleDateString()}</p>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Подписка активна</p>
+                        
+                        <div className="flex flex-col space-y-2 mb-10">
+                            <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <Calendar className="w-3 h-3" />
+                                <span>До {new Date(vpnData.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                            </div>
+                            {vpnData.lastPurchaseAt && (
+                                <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    <span>Продлено {new Date(vpnData.lastPurchaseAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</span>
+                                </div>
+                            )}
+                        </div>
                         
                         <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/5">
                           <div className="text-left">
@@ -277,6 +292,20 @@ export default function Dashboard() {
                         </div>
                       </CardContent>
                     </Card>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        {PLANS.map((plan) => (
+                            <button
+                                key={plan.months}
+                                onClick={() => handleBuy(plan.months)}
+                                disabled={purchasing}
+                                className="glass-panel p-5 rounded-3xl border-white/5 hover:border-white/10 transition-all text-left"
+                            >
+                                <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Продлить на {plan.label}</p>
+                                <p className="text-lg font-black text-white">{plan.price}</p>
+                            </button>
+                        ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-8 text-center">

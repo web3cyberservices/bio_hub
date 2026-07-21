@@ -15,6 +15,7 @@ db.exec(`
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
     expires_at DATETIME DEFAULT NULL,
+    last_purchase_at DATETIME DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);

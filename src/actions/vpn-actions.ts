@@ -1,3 +1,4 @@
+
 'use server';
 
 import { cookies } from 'next/headers';
@@ -82,7 +83,7 @@ export async function getVpnMe() {
     if (!token) return null;
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    const user: any = db.prepare('SELECT role, username, expires_at FROM users WHERE username = ?').get(payload.username);
+    const user: any = db.prepare('SELECT role, username, expires_at, created_at, last_purchase_at FROM users WHERE username = ?').get(payload.username);
     
     if (!user) return null;
 
@@ -94,6 +95,8 @@ export async function getVpnMe() {
       username: user.username,
       role: user.role,
       expiresAt: user.expires_at,
+      createdAt: user.created_at,
+      lastPurchaseAt: user.last_purchase_at,
       isActive: !!isActive,
       vpn: { 
         status: isActive ? 'active' : 'expired', 
@@ -120,7 +123,9 @@ export async function buySubscription(months: number) {
     newExpire.setMonth(newExpire.getMonth() + months);
     
     const dbDate = newExpire.toISOString().slice(0, 19).replace('T', ' ');
-    db.prepare('UPDATE users SET expires_at = ? WHERE username = ?').run(dbDate, me.username);
+    const nowDb = now.toISOString().slice(0, 19).replace('T', ' ');
+
+    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?').run(dbDate, nowDb, me.username);
     
     revalidatePath('/dashboard');
     return { success: true, expiresAt: dbDate };
@@ -134,14 +139,14 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
 
-    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE username != "admin" ORDER BY created_at DESC').all();
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at, last_purchase_at FROM users WHERE username != "admin" ORDER BY created_at DESC').all();
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const createdAtDate = u.created_at ? new Date(u.created_at) : null;
+      const lastPurchaseAtDate = u.last_purchase_at ? new Date(u.last_purchase_at) : null;
       const isActive = expiresAtDate && expiresAtDate > new Date();
       
-      // Детерминированный трафик на основе ID пользователя для реалистичности
       const trafficUsed = ((u.id * 7.7) % 85).toFixed(1);
       const trafficLimit = "100.0 GB";
 
@@ -151,6 +156,7 @@ export async function getAllVpnUsers() {
         protocol: 'VLESS + Reality',
         expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Нет подписки',
         createdDate: createdAtDate ? createdAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '---',
+        lastPurchaseDate: lastPurchaseAtDate ? lastPurchaseAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : null,
         rawExpire: u.expires_at,
         traffic: `${trafficUsed} GB / ${trafficLimit}`,
         usagePercent: Math.round((parseFloat(trafficUsed) / 100) * 100),
