@@ -16,7 +16,10 @@ export async function vpnLogin(formData: FormData) {
   try {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
-    if (!user) return { error: 'Неверный логин или пароль' };
+    if (!user) {
+      console.log(`[AUTH] Попытка входа несуществующего пользователя: ${username}`);
+      return { error: 'Неверный логин или пароль' };
+    }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) return { error: 'Неверный логин или пароль' };
@@ -34,17 +37,17 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false,
+      secure: false, // Обязательно false для HTTP/IP доступа
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
       path: '/',
       priority: 'high'
     });
 
-    console.log(`[AUTH] Вход: ${username} (${user.role})`);
+    console.log(`[AUTH] Успешный вход: ${username} (Роль: ${user.role})`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Ошибка входа:', error);
+    console.error('[AUTH] Ошибка входа:', error.message);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -60,6 +63,7 @@ export async function vpnRegister(formData: FormData) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
+    console.log(`[AUTH] Новый пользователь зарегистрирован: ${username}`);
     return { success: true };
   } catch (error: any) {
     if (error.message.includes('UNIQUE')) return { error: 'Пользователь существует' };
@@ -118,10 +122,11 @@ export async function buySubscription(months: number) {
 
     db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?').run(dbDate, nowDb, me.username);
     
-    console.log(`[SHOP] Пользователь ${me.username} купил ${months} мес. До: ${dbDate}`);
+    console.log(`[SHOP] ${me.username} купил ${months} мес. Новая дата: ${dbDate}`);
     revalidatePath('/dashboard');
     return { success: true, expiresAt: dbDate };
   } catch (e) {
+    console.error('[SHOP] Ошибка покупки:', e);
     return { error: 'Ошибка при покупке' };
   }
 }
@@ -129,34 +134,42 @@ export async function buySubscription(months: number) {
 export async function getAllVpnUsers() {
   try {
     const me = await getVpnMe();
-    if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
+    if (!me || me.role !== 'admin') {
+      console.warn(`[ADMIN] Отказано в доступе к списку пользователей для: ${me?.username || 'Guest'}`);
+      return []; 
+    }
 
-    const users = db.prepare('SELECT id, username, role, expires_at, created_at, last_purchase_at FROM users WHERE username != "admin" ORDER BY created_at DESC').all();
+    // Получаем всех пользователей кроме текущего админа
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at, last_purchase_at FROM users WHERE username != ? ORDER BY created_at DESC').all(me.username);
     
+    console.log(`[ADMIN] Запрос списка пользователей. Найдено в БД: ${users.length}`);
+
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const createdAtDate = u.created_at ? new Date(u.created_at) : null;
       const lastPurchaseAtDate = u.last_purchase_at ? new Date(u.last_purchase_at) : null;
+      
       const isActive = (expiresAtDate && expiresAtDate > new Date());
       
+      // Имитация трафика для красоты интерфейса
       const trafficUsed = ((u.id * 13.7) % 95 + 5).toFixed(1);
-      const trafficLimit = "100.0 GB";
 
       return {
-        ...u,
+        id: u.id,
+        username: u.username,
+        role: u.role,
         status: isActive ? 'online' : 'expired',
         protocol: 'VLESS + Reality',
         expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Нет подписки',
         createdDate: createdAtDate ? createdAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '---',
         lastPurchaseDate: lastPurchaseAtDate ? lastPurchaseAtDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null,
-        rawExpire: u.expires_at,
-        traffic: `${trafficUsed} GB / ${trafficLimit}`,
+        traffic: `${trafficUsed} GB / 100 GB`,
         usagePercent: Math.round((parseFloat(trafficUsed) / 100) * 100),
         hasKey: isActive
       };
     });
-  } catch (e) {
-    console.error('[ADMIN] Ошибка списка пользователей:', e);
+  } catch (e: any) {
+    console.error('[ADMIN] Критическая ошибка при получении пользователей:', e.message);
     return [];
   }
 }

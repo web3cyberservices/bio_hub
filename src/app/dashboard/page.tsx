@@ -59,7 +59,7 @@ export default function Dashboard() {
     try {
       const data = await getVpnMe();
       if (!data) {
-        router.push('/vpn');
+        setTimeout(() => router.push('/vpn'), 100);
         return;
       }
       
@@ -69,13 +69,13 @@ export default function Dashboard() {
         const users = await getAllVpnUsers();
         if (Array.isArray(users)) {
           setAdminUsers(users);
-          setActiveTab('admin');
         }
+        setActiveTab('admin');
       } else {
         setActiveTab('status');
       }
     } catch (e) {
-      console.error('[DASHBOARD] Load error:', e);
+      console.error('[DASHBOARD] Error loading data:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -281,7 +281,7 @@ export default function Dashboard() {
                         <div className="flex flex-col space-y-2 mb-10">
                             <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 <Calendar className="w-3 h-3" />
-                                <span>До {new Date(vpnData.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                <span>До {vpnData.expiresAt ? new Date(vpnData.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Бессрочно'}</span>
                             </div>
                             {vpnData.lastPurchaseAt && (
                                 <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest">
