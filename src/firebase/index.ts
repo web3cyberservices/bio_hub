@@ -1,4 +1,3 @@
-
 'use client';
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
@@ -6,8 +5,9 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth, onAuthStateChanged, type User } from 'firebase/auth';
 import { useState, useEffect } from 'react';
 
+// Эти переменные должны быть в .env файле на вашем сервере
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'fake-key',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
@@ -20,7 +20,10 @@ let db: Firestore;
 let auth: Auth;
 
 export function initializeFirebase() {
-  if (typeof window === 'undefined') return { app: null, db: null, auth: null };
+  // На сервере инициализируем только если есть projectId
+  if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    return { app: null, db: null, auth: null };
+  }
   
   if (!getApps().length) {
     app = initializeApp(firebaseConfig);
@@ -34,14 +37,14 @@ export function initializeFirebase() {
   return { app, db, auth };
 }
 
-export function getSafeDb(): Firestore {
+export function getSafeDb(): Firestore | null {
   const { db: dbInstance } = initializeFirebase();
-  return dbInstance!;
+  return dbInstance;
 }
 
-export function getSafeAuth(): Auth {
+export function getSafeAuth(): Auth | null {
   const { auth: authInstance } = initializeFirebase();
-  return authInstance!;
+  return authInstance;
 }
 
 export function useAuth() {
@@ -65,9 +68,6 @@ export function useAuth() {
   return { user, loading, auth: getSafeAuth() };
 }
 
-/**
- * useUser hook to be used in client components
- */
 export function useUser() {
   return useAuth();
 }

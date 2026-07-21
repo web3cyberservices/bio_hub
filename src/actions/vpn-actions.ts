@@ -7,18 +7,18 @@ import { getSafeDb } from '@/firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-min-32-chars-long-enough-for-hs256');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-min-32-chars-for-dev-only');
 
 export async function vpnLogin(formData: FormData) {
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
 
   try {
-    // Режим прототипа: мгновенный вход для тестовых аккаунтов
+    // Прототип: быстрый вход для тестов (всегда работает)
     if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
       const role = username === 'admin' ? 'admin' : 'user';
       const token = await new SignJWT({ 
-        uid: 'prototype-uid-' + username, 
+        uid: 'proto-' + username, 
         role,
         username 
       })
@@ -39,9 +39,9 @@ export async function vpnLogin(formData: FormData) {
       return { success: true, role };
     }
 
-    // Стандартная логика через Firestore
+    // Попытка входа через Firestore
     const db = getSafeDb();
-    if (!db) throw new Error('Database not initialized');
+    if (!db) return { error: 'База данных не настроена' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -75,7 +75,7 @@ export async function vpnLogin(formData: FormData) {
     return { success: true, role: userData.role };
   } catch (error) {
     console.error('Login Error:', error);
-    return { error: 'Ошибка сервера при входе' };
+    return { error: 'Ошибка сервера' };
   }
 }
 
@@ -85,7 +85,7 @@ export async function vpnRegister(formData: FormData) {
   
   try {
     const db = getSafeDb();
-    if (!db) throw new Error('Database not initialized');
+    if (!db) return { error: 'База данных не инициализирована. Проверьте .env файл.' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -93,10 +93,11 @@ export async function vpnRegister(formData: FormData) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Попытка создать пользователя в Marzban (если API настроено)
     try {
       await createMarzbanUser(username);
     } catch (e) {
-      console.warn('Marzban integration skipped:', e);
+      console.warn('Marzban integration skipped during register');
     }
 
     await addDoc(collection(db, 'vpn_users'), {
@@ -125,7 +126,7 @@ export async function getVpnMe() {
     try {
       marzbanData = await getMarzbanUser(payload.username as string);
     } catch (e) {
-      console.warn('Marzban data fetch failed:', e);
+      // Игнорируем ошибки Marzban для прототипа
     }
     
     return {
