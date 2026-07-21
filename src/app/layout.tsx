@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "VPN PRO Premium",
-  description: "Безопасное высокотехнологичное VLESS туннелирование для профессионалов.",
+  description: "Защищенный высокоскоростной VLESS туннель для доступа к сети.",
 };
 
 export default function RootLayout({
@@ -33,13 +33,6 @@ export default function RootLayout({
             margin: 0; 
             padding: 0; 
             font-family: sans-serif; 
-          }
-          .loading-fallback { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            background: #02040a;
           }
         `}} />
       </head>

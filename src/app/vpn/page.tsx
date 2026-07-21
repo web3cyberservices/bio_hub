@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserPlus, LogIn, Lock, User, Globe } from 'lucide-react';
+import { Shield, UserPlus, LogIn, Lock, User, Globe, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function VpnAuthPage() {
@@ -25,7 +25,7 @@ export default function VpnAuthPage() {
 
     if (result?.error) {
       toast({ 
-        title: "Ошибка", 
+        title: "Ошибка доступа", 
         description: result.error, 
         variant: "destructive" 
       });
@@ -35,7 +35,7 @@ export default function VpnAuthPage() {
       } else {
         toast({ 
           title: "Успех", 
-          description: "Аккаунт создан. Пожалуйста, войдите." 
+          description: "Аккаунт создан. Используйте свои данные для входа." 
         });
         setIsLogin(true);
       }
@@ -69,7 +69,7 @@ export default function VpnAuthPage() {
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
                 <Globe className="w-3 h-3" />
-                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Премиальный доступ к сети</p>
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Защищенный туннель связи</p>
               </div>
             </div>
           </CardHeader>
@@ -95,6 +95,17 @@ export default function VpnAuthPage() {
                   className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none transition-all"
                 />
               </div>
+
+              {isLogin && (
+                <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl flex items-start space-x-3">
+                  <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                    Для теста используйте: <br/>
+                    Логин: <span className="text-cyan-400">admin</span> / Пароль: <span className="text-cyan-400">admin</span> <br/>
+                    Или <span className="text-cyan-400">user</span> / <span className="text-cyan-400">user</span>
+                  </p>
+                </div>
+              )}
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-6 px-8 pb-12 pt-6">
@@ -106,7 +117,7 @@ export default function VpnAuthPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : isLogin ? (
-                  <><LogIn className="w-4 h-4 mr-2"/> Подключиться к сети</>
+                  <><LogIn className="w-4 h-4 mr-2"/> Войти в систему</>
                 ) : (
                   <><UserPlus className="w-4 h-4 mr-2"/> Создать аккаунт</>
                 )}
@@ -114,10 +125,10 @@ export default function VpnAuthPage() {
               
               <button
                 type="button"
-                className="text-slate-500 hover:text-cyan-400 text-xs font-bold transition-colors uppercase tracking-widest"
+                className="text-slate-500 hover:text-cyan-400 text-[10px] font-bold transition-colors uppercase tracking-[0.2em]"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? "Новый пользователь? Регистрация" : "Есть доступ? Войти"}
+                {isLogin ? "Нет доступа? Регистрация" : "Уже есть аккаунт? Войти"}
               </button>
             </CardFooter>
           </form>

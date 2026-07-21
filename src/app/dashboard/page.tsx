@@ -18,7 +18,8 @@ import {
   MoreVertical,
   HelpCircle,
   MessageSquare,
-  User
+  User,
+  ExternalLink
 } from 'lucide-react';
 import { getVpnMe, vpnLogout } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -60,14 +61,14 @@ export default function VpnDashboard() {
   const copyKey = (link: string) => {
     if (!link) return;
     navigator.clipboard.writeText(link);
-    toast({ title: "Успех", description: "VLESS ссылка скопирована в буфер обмена" });
+    toast({ title: "Успех", description: "VLESS ключ скопирован в буфер обмена" });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Синхронизация...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Инициализация туннеля...</p>
       </div>
     );
   }
@@ -95,7 +96,7 @@ export default function VpnDashboard() {
             </div>
             <div>
               <h1 className="text-xl font-black italic leading-none">VPN <span className="text-cyan-400">PRO</span></h1>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Корпоративный туннель v2.5</p>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Премиальный доступ • Reality-V2</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -132,20 +133,20 @@ export default function VpnDashboard() {
                       )}
                     </div>
                     <h2 className="text-3xl font-black mb-2 uppercase italic tracking-tighter text-white">
-                      {vpnData?.vpn?.status === 'active' ? 'Система защищена' : 'Не защищено'}
+                      {vpnData?.vpn?.status === 'active' ? 'Подключено' : 'Отключено'}
                     </h2>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] mb-10">Протокол Reality-V2 • Шифрование AES</p>
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-10">Сквозное шифрование AES-256-GCM</p>
                     
                     <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/5">
                        <div className="text-left">
-                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Период обслуживания</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Активен до</p>
                           <p className="text-base font-bold text-white">
-                            {vpnData?.vpn?.expire ? new Date(vpnData.vpn.expire * 1000).toLocaleDateString() : 'Бессрочно'}
+                            {vpnData?.vpn?.expire ? new Date(vpnData.vpn.expire * 1000).toLocaleDateString('ru-RU') : 'Бессрочно'}
                           </p>
                        </div>
                        <div className="text-right">
-                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Трафик</p>
-                          <p className="text-base font-bold text-cyan-400">Безлимит GB</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-2">Объем данных</p>
+                          <p className="text-base font-bold text-cyan-400">Безлимитный</p>
                        </div>
                     </div>
                   </CardContent>
@@ -155,12 +156,12 @@ export default function VpnDashboard() {
                   <div className="glass-panel p-6 rounded-3xl group hover:border-cyan-500/20 transition-all">
                     <Download className="w-5 h-5 text-emerald-400 mb-4" />
                     <p className="text-2xl font-black">128.4 <span className="text-[10px] font-normal text-slate-500 uppercase">Мбит/с</span></p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Загрузка</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Входящий</p>
                   </div>
                   <div className="glass-panel p-6 rounded-3xl group hover:border-blue-500/20 transition-all">
                     <Upload className="w-5 h-5 text-blue-400 mb-4" />
                     <p className="text-2xl font-black">45.2 <span className="text-[10px] font-normal text-slate-500 uppercase">Мбит/с</span></p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Отдача</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Исходящий</p>
                   </div>
                 </div>
               </div>
@@ -176,7 +177,7 @@ export default function VpnDashboard() {
                           <QRCodeSVG value={vpnLink} size={200} />
                         </div>
                         <div className="space-y-3">
-                          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Ваш личный VLESS ключ</p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ваша VLESS-конфигурация</p>
                           <div className="p-4 bg-black/60 border border-white/10 rounded-2xl break-all font-mono text-[10px] text-slate-400 leading-relaxed text-left relative group">
                             {vpnLink}
                             <button 
@@ -191,11 +192,11 @@ export default function VpnDashboard() {
                           onClick={() => copyKey(vpnLink)} 
                           className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold text-lg cyber-button shadow-xl shadow-cyan-950/40"
                         >
-                          <Copy className="w-5 h-5 mr-3" /> Копировать конфигурацию
+                          <Copy className="w-5 h-5 mr-3" /> Скопировать ключ
                         </Button>
                       </>
                     ) : (
-                      <div className="py-24 text-slate-600 italic font-medium">Инициализация инфраструктуры... Ключи не найдены.</div>
+                      <div className="py-24 text-slate-600 italic font-medium">Конфигурации не найдены. Обратитесь в поддержку.</div>
                     )}
                   </CardContent>
                 </Card>
@@ -204,7 +205,7 @@ export default function VpnDashboard() {
 
             {activeTab === 'nodes' && (
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-2 mb-4">Премиум узлы</h3>
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-2 mb-4">Доступные локации</h3>
                 {[
                   { name: 'Германия Core', city: 'Франкфурт', ping: '38ms', flag: '🇩🇪', load: '12%', active: true },
                   { name: 'Нидерланды Main', city: 'Амстердам', ping: '42ms', flag: '🇳🇱', load: '24%', active: false },
@@ -217,7 +218,7 @@ export default function VpnDashboard() {
                         <span className="text-3xl filter saturate-[0.8]">{node.flag}</span>
                         <div>
                           <p className="font-bold text-lg text-white">{node.name}</p>
-                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{node.city} • НАГРУЗКА: {node.load}</p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{node.city} • Нагрузка: {node.load}</p>
                         </div>
                       </div>
                       <div className="text-right flex items-center space-x-3">
@@ -235,7 +236,7 @@ export default function VpnDashboard() {
               <div className="space-y-6">
                 <div className="glass-panel p-8 rounded-[2rem] space-y-6">
                   <div className="space-y-4">
-                     <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Управление аккаунтом</h3>
+                     <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Данные профиля</h3>
                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="flex items-center space-x-4">
                            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-cyan-400">
@@ -243,19 +244,19 @@ export default function VpnDashboard() {
                            </div>
                            <div>
                               <p className="text-sm font-bold text-white">{vpnData?.username}</p>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Уровень доступа: {vpnData?.role}</p>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Уровень доступа: {vpnData?.role === 'admin' ? 'Администратор' : 'Премиум'}</p>
                            </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-500/10 rounded-lg">Изм.</Button>
+                        <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-500/10 rounded-lg">Изменить</Button>
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Системные настройки</h3>
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Системные опции</h3>
                     {[
-                      { label: 'Умные уведомления', icon: RefreshCw, active: true },
-                      { label: 'Автоматический Kill Switch', icon: Shield, active: false },
-                      { label: 'Ускорение UDP', icon: Zap, active: true }
+                      { label: 'Push-уведомления', icon: RefreshCw, active: true },
+                      { label: 'Kill Switch (авто)', icon: Shield, active: false },
+                      { label: 'Оптимизация UDP', icon: Zap, active: true }
                     ].map((opt) => (
                       <div key={opt.label} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="flex items-center space-x-4">
@@ -277,7 +278,7 @@ export default function VpnDashboard() {
                       router.push('/vpn');
                     }}
                   >
-                    <LogOut className="w-4 h-4 mr-2" /> Завершить сессию
+                    <LogOut className="w-4 h-4 mr-2" /> Завершить сеанс
                   </Button>
                 </div>
               </div>
@@ -286,7 +287,7 @@ export default function VpnDashboard() {
             {['speed', 'chat', 'help'].includes(activeTab) && (
               <div className="glass-panel p-20 rounded-[2.5rem] text-center italic text-slate-600 border-white/5">
                 <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-slate-800" />
-                Модуль синхронизируется с облаком...
+                Модуль синхронизируется с сервером...
               </div>
             )}
           </motion.div>
