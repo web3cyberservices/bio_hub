@@ -55,7 +55,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-color: #02040a;
+    background-color: #02040a !important;
   }
 }
 
@@ -75,7 +75,6 @@
   transform: scale(0.96);
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }

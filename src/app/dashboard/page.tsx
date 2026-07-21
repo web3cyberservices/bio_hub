@@ -18,8 +18,7 @@ import {
   MoreVertical,
   HelpCircle,
   MessageSquare,
-  User,
-  ExternalLink
+  User
 } from 'lucide-react';
 import { getVpnMe, vpnLogout } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -28,6 +27,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Tab = 'status' | 'keys' | 'nodes' | 'speed' | 'chat' | 'help' | 'settings';
 
@@ -78,7 +78,7 @@ export default function VpnDashboard() {
   const navItems = [
     { id: 'status', icon: Activity, label: 'Статус' },
     { id: 'keys', icon: Key, label: 'Ключи' },
-    { id: 'nodes', icon: Globe, label: 'Узлы' },
+    { id: 'nodes', icon: Локации, label: 'Узлы' },
     { id: 'speed', icon: Zap, label: 'Скорость' },
     { id: 'chat', icon: MessageSquare, label: 'Чат' },
     { id: 'help', icon: HelpCircle, label: 'Помощь' },
@@ -87,7 +87,6 @@ export default function VpnDashboard() {
 
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-100 font-sans selection:bg-cyan-500/20 pb-32">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-[#02040a]/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -103,9 +102,10 @@ export default function VpnDashboard() {
              <button onClick={loadData} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
                <RefreshCw className="w-4 h-4 text-cyan-400" />
              </button>
-             <button className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
-               <MoreVertical className="w-4 h-4 text-slate-400" />
-             </button>
+             <Avatar className="w-10 h-10 rounded-xl border border-white/10">
+                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
+                <AvatarFallback>{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
+             </Avatar>
           </div>
         </div>
       </header>
@@ -294,7 +294,6 @@ export default function VpnDashboard() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 p-6 flex justify-center">
         <div className="bg-[#0f172a]/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex justify-between items-center px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md">
           {navItems.map((item) => (
