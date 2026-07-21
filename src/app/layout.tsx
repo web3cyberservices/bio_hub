@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -18,7 +19,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "VPN PRO 2026",
-  description: "Управление вашим персональным VPN доступом.",
+  description: "Advanced VLESS VPN Panel for Telegram.",
 };
 
 export default function RootLayout({
@@ -34,10 +35,10 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-slate-950 text-slate-50 antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-slate-950 text-slate-50 antialiased min-h-screen`} suppressHydrationWarning>
         <FirebaseClientProvider>
           <TelegramInit />
-          <div className="relative flex min-h-screen flex-col">
+          <div className="relative flex min-h-screen flex-col overflow-x-hidden">
             {children}
           </div>
           <Toaster />

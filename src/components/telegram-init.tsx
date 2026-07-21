@@ -18,7 +18,7 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Синхронизация цветов с темой Telegram
+      // Безопасная установка цветов без HSL конфликтов
       const root = document.documentElement;
       if (tg.themeParams?.bg_color) {
         root.style.setProperty('--background', tg.themeParams.bg_color);
@@ -30,8 +30,8 @@ export function TelegramInit() {
         root.style.setProperty('--primary', tg.themeParams.button_color);
       }
       
-      // Установка цвета заголовка
-      tg.setHeaderColor(tg.themeParams?.header_bg_color || 'bg_color');
+      tg.setHeaderColor(tg.themeParams?.header_bg_color || '#020617');
+      tg.setBackgroundColor(tg.themeParams?.bg_color || '#020617');
     }
   }, []);
 
