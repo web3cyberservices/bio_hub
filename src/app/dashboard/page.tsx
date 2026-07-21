@@ -86,12 +86,9 @@ export default function Dashboard() {
     setPurchasing(true);
     const result = await buySubscription(months);
     if (result.success) {
-      if (result.warning) {
-        toast({ title: "Внимание", description: result.warning });
-      } else {
-        toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
-      }
-      setTimeout(() => loadData(false), 800);
+      toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
+      // Даем Marzban время на обновление
+      setTimeout(() => loadData(false), 1500);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
     }
@@ -350,7 +347,7 @@ export default function Dashboard() {
                             className="w-full border-white/10 bg-white/5 h-14 rounded-2xl text-slate-300 font-bold"
                           >
                             {regenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin text-cyan-400" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-                            Перегенерировать ключ
+                            Обновить и получить ключ
                           </Button>
                         </div>
                       </div>

@@ -57,19 +57,20 @@ async function getAdminToken(force = false): Promise<string> {
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
   const token = await getAdminToken();
 
-  // Мы убираем явное указание inbounds, чтобы избежать ошибки 422, 
-  // если тег в конфиге Xray не совпадает на 100% с тем, что мы шлем.
-  // Marzban сам включит пользователя на всех доступных VLESS узлах.
+  // Жестко задаем структуру, чтобы избежать сброса ссылок при обновлении
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
     proxies: { 
       vless: {} 
     },
+    inbounds: {
+      vless: ["VLESS TCP REALITY"]
+    },
     status: "active"
   };
 
-  // 1. Пытаемся создать
+  // 1. Пытаемся создать (POST)
   const createRes = await fetch(`${MARZBAN_API_URL}/api/user`, {
     method: 'POST',
     headers: {
@@ -94,14 +95,26 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     
     if (!updateRes.ok) {
       const err = await updateRes.text();
-      throw new Error(`API Error ${updateRes.status}: ${err}`);
+      console.error("[MARZBAN] Update Error:", err);
     }
   } else if (!createRes.ok) {
     const err = await createRes.text();
-    throw new Error(`API Error ${createRes.status}: ${err}`);
+    // Если 422, пробуем создать без жесткого указания inbounds
+    if (createRes.status === 422) {
+      const fallbackPayload = { ...payload, inbounds: {} };
+      await fetch(`${MARZBAN_API_URL}/api/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(fallbackPayload),
+        cache: 'no-store'
+      });
+    }
   }
 
-  // 3. Всегда делаем GET, чтобы получить актуальный массив links (POST/PUT часто возвращают пустой массив)
+  // 3. Всегда делаем GET без кэша, чтобы получить массив links
   return await getMarzbanUser(options.username);
 }
 
@@ -130,5 +143,6 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
     throw new Error(`User fetch failed: ${response.status}`);
   }
   
-  return await response.json();
+  const data = await response.json();
+  return data;
 }

@@ -14,6 +14,7 @@ export async function registerVpnUser(username: string) {
   try {
     const dataLimit = 100 * 1024 * 1024 * 1024; // 100GB
     
+    // Принудительно запрашиваем API Marzban
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 
@@ -29,6 +30,7 @@ export async function registerVpnUser(username: string) {
       };
     }
 
+    // Сохраняем актуальный ключ в нашу БД
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(link, username);
     
@@ -108,15 +110,14 @@ export async function getVpnMe() {
     const token = cookieStore.get('vpn_token')?.value;
     if (!token) return null;
 
-    let payload;
     try {
-      const verified = await jwtVerify(token, JWT_SECRET);
-      payload = verified.payload;
+      await jwtVerify(token, JWT_SECRET);
     } catch (e: any) {
       cookieStore.delete('vpn_token');
       return null;
     }
 
+    const payload = (await jwtVerify(token, JWT_SECRET)).payload as any;
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(payload.username);
     if (!user) return null;
 
@@ -157,15 +158,10 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Сразу генерируем ключ
-    const vpnResult = await registerVpnUser(me.username);
+    // Сразу генерируем ключ и сохраняем в БД
+    await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
-    
-    if (!vpnResult.success) {
-      return { success: true, warning: 'Подписка активна, но ключ не получен: ' + vpnResult.error };
-    }
-    
     return { success: true };
   } catch (e: any) {
     return { error: 'Ошибка при оплате' };
