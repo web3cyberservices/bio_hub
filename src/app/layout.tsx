@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "VPN PRO Premium | 2026 Edition",
+  title: "LumeVPN Premium | 2026 Edition",
   description: "Ультраскоростной VLESS туннель нового поколения. Версия Июль 2026.",
 };
 

@@ -50,6 +50,10 @@ export default function Dashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     else setRefreshing(true);
@@ -75,10 +79,6 @@ export default function Dashboard() {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const isAdmin = vpnData?.role === 'admin';
   const isActive = vpnData?.isActive;
@@ -136,7 +136,7 @@ export default function Dashboard() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black italic leading-none">VPN <span className="text-cyan-400">PRO</span></h1>
+              <h1 className="text-xl font-black italic leading-none">Lume<span className="text-cyan-400">VPN</span></h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
                 {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
@@ -168,7 +168,6 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            {/* АДМИН ПАНЕЛЬ */}
             {activeTab === 'admin' && isAdmin && (
               <div className="space-y-6">
                 <div className="grid grid-cols-3 gap-4">
@@ -251,7 +250,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* СТАТУС ПОЛЬЗОВАТЕЛЯ */}
             {activeTab === 'status' && !isAdmin && (
               <div className="space-y-8">
                 {isActive ? (
@@ -337,7 +335,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* КЛЮЧИ ПОЛЬЗОВАТЕЛЯ */}
             {activeTab === 'keys' && !isAdmin && (
               <div className="space-y-6">
                 {isActive ? (
@@ -448,7 +445,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">VPN PRO • 2026 EDITION</p>
+                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">LumeVPN • 2026 EDITION</p>
                 </div>
               </div>
             )}

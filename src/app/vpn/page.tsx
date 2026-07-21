@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -65,7 +66,7 @@ export default function VpnAuthPage() {
             
             <div className="space-y-2">
               <CardTitle className="text-4xl font-black tracking-tight text-white italic uppercase">
-                VPN <span className="text-cyan-400">PRO</span>
+                Lume<span className="text-cyan-400">VPN</span>
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
                 <Globe className="w-3 h-3" />

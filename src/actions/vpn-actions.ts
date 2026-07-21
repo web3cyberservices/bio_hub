@@ -7,24 +7,21 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'premium-vpn-secret-key-must-be-very-long-and-secure-123456');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'lume-vpn-secret-key-must-be-very-long-and-secure-123456');
 
 export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
   const password = formData.get('password') as string;
 
   try {
-    console.log(`[AUTH] Попытка входа: ${username}`);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      console.log(`[AUTH] Пользователь ${username} не найден`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[AUTH] Неверный пароль для ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -39,7 +36,6 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
-    // Принудительно отключаем secure для работы по IP без HTTPS
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
       secure: false, 
@@ -48,10 +44,9 @@ export async function vpnLogin(formData: FormData) {
       path: '/'
     });
 
-    console.log(`[AUTH] Успешный вход: ${username}, кука установлена`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Критическая ошибка входа:', error);
+    console.error('[AUTH] Error:', error);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -87,7 +82,6 @@ export async function getVpnMe() {
     const token = cookieStore.get('vpn_token')?.value;
     
     if (!token) {
-      console.log('[AUTH] Токен не найден в куках');
       return null;
     }
 
@@ -95,7 +89,6 @@ export async function getVpnMe() {
     const user: any = db.prepare('SELECT role, username, expires_at, created_at, last_purchase_at FROM users WHERE username = ?').get(payload.username);
     
     if (!user) {
-      console.log(`[AUTH] Пользователь из токена (${payload.username}) не найден в БД`);
       return null;
     }
 
@@ -112,11 +105,10 @@ export async function getVpnMe() {
       isActive: !!isActive,
       vpn: { 
         status: isActive ? 'active' : 'expired', 
-        links: isActive ? [`vless://${user.username}@premium.vpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#VPN_PRO_${user.username}`] : [] 
+        links: isActive ? [`vless://${user.username}@premium.lumevpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#LumeVPN_${user.username}`] : [] 
       }
     };
   } catch (e: any) {
-    console.error('[AUTH] Ошибка проверки токена:', e.message);
     return null;
   }
 }
@@ -177,7 +169,6 @@ export async function getAllVpnUsers() {
       };
     });
   } catch (e) {
-    console.error('[ADMIN] Ошибка получения пользователей:', e);
     return { error: 'Ошибка получения списка' };
   }
 }
