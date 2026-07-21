@@ -92,7 +92,8 @@ export async function getVpnMe() {
 
     const now = new Date();
     const expiresAt = user.expires_at ? new Date(user.expires_at) : null;
-    const isActive = user.role === 'admin' || (expiresAt && expiresAt > now);
+    const isAdmin = user.role === 'admin';
+    const isActive = isAdmin || (expiresAt && expiresAt > now);
 
     return {
       username: user.username,
@@ -105,8 +106,8 @@ export async function getVpnMe() {
         links: user.vpn_link ? [user.vpn_link] : [] 
       }
     };
-  } catch (e) {
-    console.error("[AUTH] Session invalid, clearing cookie:", e);
+  } catch (e: any) {
+    console.error("[AUTH] Session invalid, clearing cookie:", e.message);
     cookieStore.delete('vpn_token');
     return null;
   }
@@ -146,9 +147,14 @@ export async function buySubscription(months: number) {
 export async function getAllVpnUsers() {
   try {
     const me = await getVpnMe();
-    if (!me || me.role !== 'admin') return [];
+    if (!me || me.role !== 'admin') {
+      console.warn("[ADMIN] Access denied for user:", me?.username);
+      return [];
+    }
 
-    const users = db.prepare('SELECT * FROM users WHERE role != ? ORDER BY created_at DESC').all('admin');
+    // SQLite: используем одинарные кавычки для строк
+    const users = db.prepare("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC").all();
+    console.log(`[ADMIN] Найдено пользователей в БД: ${users.length}`);
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;

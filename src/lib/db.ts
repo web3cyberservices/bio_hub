@@ -25,7 +25,7 @@ db.exec(`
 function runMigrations() {
   console.log('[DB] Запуск миграций...');
   try {
-    const tableInfo = db.prepare("PRAGMA table_info(users)").all() as any[];
+    const tableInfo = db.prepare('PRAGMA table_info(users)').all() as any[];
     const columns = tableInfo.map(c => c.name.toLowerCase());
     
     // Добавляем колонки по одной, если их нет
@@ -59,12 +59,16 @@ function runMigrations() {
 runMigrations();
 
 // Инициализация админа
-const adminRow = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
-if (adminRow.count === 0) {
-  const adminPass = bcrypt.hashSync('admin', 10);
-  db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)')
-    .run('admin', adminPass, 'admin', '2099-01-01T00:00:00.000Z');
-  console.log('[DB] Дефолтный админ создан');
+try {
+  const adminRow = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
+  if (adminRow && adminRow.count === 0) {
+    const adminPass = bcrypt.hashSync('admin', 10);
+    db.prepare("INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, 'admin', '2099-01-01T00:00:00.000Z')")
+      .run('admin', adminPass);
+    console.log('[DB] Дефолтный админ создан');
+  }
+} catch (e) {
+  console.error('[DB] Ошибка при проверке админа:', e);
 }
 
 export async function saveUserToDb(data: { uid: string, username: string, vpn_link: string }) {
