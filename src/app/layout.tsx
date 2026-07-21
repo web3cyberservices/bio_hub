@@ -1,13 +1,12 @@
-
 import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const montserrat = Montserrat({ 
-  subsets: ["latin", "cyrillic"], 
-  variable: "--font-montserrat",
-  weight: ['300', '400', '500', '700', '900'],
+// Используем Montserrat как надежную альтернативу TT Fors, пока файл не загружен
+const montserrat = Montserrat({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-tt-fors", // Сохраняем переменную для совместимости с CSS
   display: 'swap',
 });
 
