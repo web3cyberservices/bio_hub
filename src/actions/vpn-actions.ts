@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
-import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'premium-vpn-secret-key-must-be-very-long-and-secure-123456');
 
@@ -20,23 +19,18 @@ export async function vpnLogin(formData: FormData) {
   }
 
   try {
-    // Проверяем наличие таблицы и пользователя
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      console.log(`[AUTH] Пользователь не найден в БД: ${username}`);
-      return { error: 'Пользователь не найден' };
+      console.log(`[AUTH] Пользователь не найден: ${username}`);
+      return { error: 'Неверный логин или пароль' };
     }
-
-    console.log(`[AUTH] Пользователь найден, проверяем пароль...`);
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[AUTH] Неверный пароль для пользователя: ${username}`);
-      return { error: 'Неверный пароль' };
+      console.log(`[AUTH] Неверный пароль: ${username}`);
+      return { error: 'Неверный логин или пароль' };
     }
-
-    console.log(`[AUTH] Пароль верный. Генерируем токен...`);
 
     const token = await new SignJWT({ 
       uid: user.id.toString(), 
@@ -49,20 +43,18 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
-    // ВАЖНО: secure: false для работы по HTTP (без SSL) на IP-адресе
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // Отключаем принудительный HTTPS для тестов на IP
+      secure: false, // Для работы по IP без SSL
       sameSite: 'lax',
       maxAge: 86400,
       path: '/'
     });
 
-    console.log(`[AUTH] Вход выполнен успешно: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Критическая ошибка при входе:', error);
-    return { error: 'Ошибка сервера. Проверьте логи PM2.' };
+    console.error('[AUTH] Ошибка входа:', error);
+    return { error: 'Ошибка сервера' };
   }
 }
 
@@ -75,18 +67,15 @@ export async function vpnRegister(formData: FormData) {
   }
   
   try {
-    console.log(`[AUTH] Регистрация нового пользователя: ${username}`);
     const hashedPassword = await bcrypt.hash(password, 10);
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
-
     return { success: true };
   } catch (error: any) {
     if (error.message.includes('UNIQUE constraint failed')) {
-      return { error: 'Это имя пользователя уже занято' };
+      return { error: 'Пользователь уже существует' };
     }
-    console.error('[AUTH] Ошибка регистрации:', error);
-    return { error: 'Ошибка при создании аккаунта' };
+    return { error: 'Ошибка регистрации' };
   }
 }
 
@@ -94,24 +83,42 @@ export async function getVpnMe() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('vpn_token')?.value;
-    if (!token) {
-      console.log('[AUTH] Токен не найден в куках');
-      return null;
-    }
+    if (!token) return null;
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    
-    // Получаем актуальные данные из БД
     const user: any = db.prepare('SELECT role, username FROM users WHERE username = ?').get(payload.username);
     
     return {
       username: payload.username,
       role: user?.role || payload.role,
-      vpn: { status: 'active', expire: null, links: ['vless://premium-access-link-placeholder'] }
+      vpn: { 
+        status: 'active', 
+        expire: null, 
+        links: [`vless://${payload.username}@premium.vpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#VPN_PRO_${payload.username}`] 
+      }
     };
   } catch (e) {
-    console.error('[AUTH] Ошибка проверки токена:', e);
     return null;
+  }
+}
+
+export async function getAllVpnUsers() {
+  try {
+    const me = await getVpnMe();
+    if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
+
+    const users = db.prepare('SELECT id, username, role, created_at FROM users').all();
+    
+    // Имитируем данные о подключениях (в реальности брать из API Marzban)
+    return users.map((u: any) => ({
+      ...u,
+      status: Math.random() > 0.3 ? 'online' : 'offline',
+      protocol: 'VLESS + Reality',
+      expire: 'Бессрочно',
+      traffic: (Math.random() * 50).toFixed(1) + ' GB'
+    }));
+  } catch (e) {
+    return { error: 'Ошибка получения списка' };
   }
 }
 
