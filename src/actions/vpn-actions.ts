@@ -6,7 +6,8 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-const SECRET_KEY_STR = process.env.JWT_SECRET || 'lume-vpn-secret-key-must-be-very-long-and-secure-123456-fixed-2026';
+// Используем стабильный секретный ключ
+const SECRET_KEY_STR = process.env.JWT_SECRET || 'lume-vpn-super-secure-permanent-secret-key-2026-stable-version';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function vpnLogin(formData: FormData) {
@@ -14,6 +15,7 @@ export async function vpnLogin(formData: FormData) {
   const password = formData.get('password') as string;
 
   try {
+    console.log(`[AUTH] Login attempt for: ${username}`);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
@@ -38,19 +40,21 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
-    // Устанавливаем максимально совместимые настройки для HTTP/IP
+    
+    // Настройки кук, максимально совместимые с HTTP и прямым IP доступом
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // Обязательно false для работы без HTTPS (по IP)
+      secure: false, // ОБЯЗАТЕЛЬНО false для работы без HTTPS (по IP)
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 24 часа
-      path: '/'
+      path: '/',
+      priority: 'high'
     });
 
-    console.log(`[AUTH] Success login: ${username}, token set.`);
+    console.log(`[AUTH] Login successful: ${username}. Cookie vpn_token set.`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Login Error:', error);
+    console.error('[AUTH] Login Exception:', error);
     return { error: 'Ошибка сервера при входе' };
   }
 }
@@ -83,9 +87,11 @@ export async function vpnRegister(formData: FormData) {
 export async function getVpnMe() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('vpn_token')?.value;
+    const tokenCookie = cookieStore.get('vpn_token');
+    const token = tokenCookie?.value;
     
     if (!token) {
+      console.log('[AUTH] No vpn_token cookie found in request headers');
       return null;
     }
 
@@ -93,7 +99,7 @@ export async function getVpnMe() {
     const user: any = db.prepare('SELECT role, username, expires_at, created_at, last_purchase_at FROM users WHERE username = ?').get(payload.username);
     
     if (!user) {
-      console.log(`[AUTH] Token valid but user not in DB: ${payload.username}`);
+      console.log(`[AUTH] Token valid but user ${payload.username} missing from DB`);
       return null;
     }
 
@@ -114,7 +120,7 @@ export async function getVpnMe() {
       }
     };
   } catch (e: any) {
-    console.error('[AUTH] Session validation failed:', e.message);
+    console.error('[AUTH] Session validation error:', e.message);
     return null;
   }
 }

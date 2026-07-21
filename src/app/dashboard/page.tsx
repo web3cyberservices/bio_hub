@@ -56,10 +56,14 @@ export default function Dashboard() {
     try {
       const data = await getVpnMe();
       if (!data) {
-        console.log('[DASHBOARD] Session not found, redirecting...');
-        router.push('/vpn');
+        console.warn('[DASHBOARD] Session validation failed on client check');
+        // Даем небольшую задержку перед редиректом, чтобы избежать ложных срабатываний
+        setTimeout(() => {
+          router.push('/vpn');
+        }, 500);
         return;
       }
+      
       setVpnData(data);
       
       if (data.role === 'admin') {
@@ -68,6 +72,8 @@ export default function Dashboard() {
           setAdminUsers(users);
           setActiveTab('admin');
         }
+      } else {
+        setActiveTab('status');
       }
     } catch (e) {
       console.error('[DASHBOARD] Load error:', e);
@@ -106,7 +112,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Инициализация...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Проверка авторизации...</p>
       </div>
     );
   }
