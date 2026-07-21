@@ -1,3 +1,4 @@
+
 'use server';
 
 import { cookies } from 'next/headers';
@@ -7,32 +8,30 @@ import db, { saveUserToDb } from '@/lib/db';
 import { generateMarzbanUser } from '@/lib/marzban';
 import { revalidatePath } from 'next/cache';
 
-const SECRET_KEY_STR = 'lume-vpn-super-secure-permanent-secret-key-2026-stable-version';
+const SECRET_KEY_STR = 'cyber-armor-vpn-super-secure-permanent-secret-key-2026-stable-version';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 /**
  * Регистрация VPN пользователя в Marzban (Zero-Trust)
  */
 export async function registerVpnUser(firebaseUid: string, username: string) {
-  console.log(`[ZERO-TRUST] Starting VPN registration for: ${username}`);
+  console.log(`[CYBER-ARMOR] Starting VPN registration for: ${username}`);
   try {
-    // Создаем пользователя в Marzban (50GB лимит)
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit: 50 * 1024 * 1024 * 1024 
     });
     
-    // Сохраняем в БД
     await saveUserToDb({ 
       uid: firebaseUid, 
       username: username, 
       vpn_link: vpnProfile.links[0] 
     });
     
-    console.log(`[ZERO-TRUST] VPN Key generated and saved for ${username}`);
+    console.log(`[CYBER-ARMOR] VPN Key generated and saved for ${username}`);
     return { success: true, link: vpnProfile.links[0] };
   } catch (error: any) {
-    console.error("[ZERO-TRUST] VPN Gen Failed:", error.message);
+    console.error("[CYBER-ARMOR] VPN Gen Failed:", error.message);
     return { success: false, error: "VPN Service Error" };
   }
 }
@@ -57,7 +56,7 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // Обязательно false для HTTP/IP доступа
+      secure: false, 
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
       path: '/',
@@ -114,6 +113,7 @@ export async function getVpnMe() {
       }
     };
   } catch (e) {
+    console.error("[AUTH] Token check failed:", e);
     return null;
   }
 }
@@ -133,11 +133,9 @@ export async function buySubscription(months: number) {
     const dbDate = newExpire.toISOString();
     const nowDb = now.toISOString();
 
-    // Обновляем даты в БД
     db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
       .run(dbDate, nowDb, me.username);
 
-    // Генерируем VPN ключ, если его еще нет
     if (!me.vpn.links[0]) {
       const firebaseUid = `local_${me.username}_${Date.now()}`;
       await registerVpnUser(firebaseUid, me.username);
@@ -158,6 +156,8 @@ export async function getAllVpnUsers() {
 
     const users = db.prepare('SELECT * FROM users WHERE username != ? ORDER BY created_at DESC').all(me.username);
     
+    console.log(`[ADMIN] Clients found in DB: ${users.length}`);
+
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const isActive = (expiresAtDate && expiresAtDate > new Date());
@@ -168,12 +168,14 @@ export async function getAllVpnUsers() {
         status: isActive ? 'online' : 'expired',
         protocol: 'VLESS + Reality',
         expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU') : 'Нет подписки',
+        createdDate: u.created_at ? new Date(u.created_at).toLocaleDateString('ru-RU') : 'N/A',
         lastPurchaseDate: u.last_purchase_at ? new Date(u.last_purchase_at).toLocaleString('ru-RU') : null,
         traffic: u.vpn_link ? '12 GB / 50 GB' : '0 GB / 0 GB',
         usagePercent: u.vpn_link ? 24 : 0
       };
     });
-  } catch (e) {
+  } catch (e: any) {
+    console.error("[ADMIN] Client list error:", e.message);
     return [];
   }
 }

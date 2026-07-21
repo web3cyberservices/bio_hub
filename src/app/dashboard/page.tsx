@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -111,7 +112,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">LumeVPN Core Engine...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Cyber Armor Engine...</p>
       </div>
     );
   }
@@ -136,7 +137,7 @@ export default function Dashboard() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black italic leading-none">Lume<span className="text-cyan-400">VPN</span></h1>
+              <h1 className="text-xl font-black italic leading-none">Cyber<span className="text-cyan-400">Armor</span></h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
                 {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
@@ -276,7 +277,7 @@ export default function Dashboard() {
                           <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#02040a]" />
                         </div>
                         <h2 className="text-3xl font-black mb-2 uppercase italic text-white">Защищено</h2>
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Подписка активна</p>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Cyber Armor Active</p>
                         
                         <div className="flex flex-col space-y-2 mb-10">
                             <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -475,7 +476,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">LumeVPN • 2026 PREMIUM EDITION</p>
+                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">Cyber Armor VPN • 2026 PREMIUM EDITION</p>
                 </div>
               </div>
             )}

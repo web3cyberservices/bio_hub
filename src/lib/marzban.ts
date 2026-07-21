@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Marzban API Service Layer (Zero-Trust).
  */
@@ -31,12 +32,11 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     });
 
     if (!response.ok) {
-      // Если API недоступно, возвращаем мок для теста (в продакшене выкинуть ошибку)
       console.warn('Marzban API unreachable, returning mock link for:', options.username);
       return {
         id: Date.now(),
         username: options.username,
-        links: [`vless://${options.username}@premium.lumevpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#LumeVPN_${options.username}`]
+        links: [`vless://${options.username}@premium.cyberarmor.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#CyberArmor_${options.username}`]
       };
     }
 

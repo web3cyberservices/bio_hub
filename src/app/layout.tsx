@@ -15,8 +15,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LumeVPN Premium | 2026 Edition",
-  description: "Ультраскоростной VLESS туннель нового поколения. Версия Июль 2026.",
+  title: "Cyber Armor VPN | 2026 Premium Edition",
+  description: "Ультраскоростной VLESS туннель нового поколения. Защита военного уровня. Версия 2026.",
 };
 
 export default function RootLayout({

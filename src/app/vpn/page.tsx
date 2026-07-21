@@ -66,11 +66,11 @@ export default function VpnAuthPage() {
             
             <div className="space-y-2">
               <CardTitle className="text-4xl font-black tracking-tight text-white italic uppercase">
-                Lume<span className="text-cyan-400">VPN</span>
+                Cyber<span className="text-cyan-400">Armor</span>
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
                 <Globe className="w-3 h-3" />
-                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Защищенный туннель связи</p>
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase">Private Security Infrastructure</p>
               </div>
             </div>
           </CardHeader>
