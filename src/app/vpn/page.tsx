@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -8,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ShieldCheck, UserPlus, LogIn } from 'lucide-react';
+import { Shield, UserPlus, LogIn, Lock, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function VpnAuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,7 +35,7 @@ export default function VpnAuthPage() {
       } else {
         toast({ 
           title: "Успех", 
-          description: "Регистрация прошла успешно. Теперь войдите." 
+          description: "Регистрация успешна. Войдите в аккаунт." 
         });
         setIsLogin(true);
       }
@@ -44,62 +44,93 @@ export default function VpnAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-card border-border shadow-2xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <ShieldCheck className="w-10 h-10 text-primary" />
+    <div className="min-h-screen bg-[#02040a] flex items-center justify-center p-6 selection:bg-cyan-500/30">
+      {/* Background Orbs */}
+      <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="glass-card border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <CardHeader className="space-y-2 text-center pb-8 pt-10">
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/20 rotate-6">
+                <Shield className="w-10 h-10 text-white -rotate-6" />
+              </div>
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            VPN PRO 2026
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {isLogin ? "Войдите в панель управления" : "Создайте новый аккаунт"}
-          </p>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                name="username"
-                placeholder="Имя пользователя"
-                required
-                autoComplete="username"
-                className="bg-background border-input focus:ring-primary"
-              />
-            </div>
-            <div className="space-y-2">
-              <Input
-                name="password"
-                type="password"
-                placeholder="Пароль"
-                required
-                autoComplete="current-password"
-                className="bg-background border-input focus:ring-primary"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              type="submit" 
-              className="w-full font-semibold"
-              disabled={loading}
-            >
-              {loading ? "Загрузка..." : isLogin ? <><LogIn className="w-4 h-4 mr-2"/> Войти</> : <><UserPlus className="w-4 h-4 mr-2"/> Создать</>}
-            </Button>
-            <Button
-              type="button"
-              variant="link"
-              className="text-primary hover:text-primary/80 text-sm"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? "Нет аккаунта? Регистрация" : "Уже есть аккаунт? Войти"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+            <CardTitle className="text-4xl font-black tracking-tighter italic">
+              VPN <span className="text-cyan-400">PRO</span>
+            </CardTitle>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
+              {isLogin ? "Авторизация в системе" : "Создание нового профиля"}
+            </p>
+          </CardHeader>
+          
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-5 px-8">
+              <div className="space-y-2">
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Input
+                    name="username"
+                    placeholder="Имя пользователя"
+                    required
+                    autoComplete="username"
+                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-sm font-medium"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Input
+                    name="password"
+                    type="password"
+                    placeholder="Ваш пароль"
+                    required
+                    autoComplete="current-password"
+                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-sm font-medium"
+                  />
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="flex flex-col space-y-4 px-8 pb-10 pt-4">
+              <Button 
+                type="submit" 
+                className="w-full h-14 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xs tracking-widest uppercase"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                ) : isLogin ? (
+                  <><LogIn className="w-4 h-4 mr-2"/> Войти в панель</>
+                ) : (
+                  <><UserPlus className="w-4 h-4 mr-2"/> Зарегистрироваться</>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-slate-500 hover:text-white text-xs font-bold tracking-tighter"
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "НЕТ АККАУНТА? РЕГИСТРАЦИЯ" : "УЖЕ ЕСТЬ АККАУНТ? ВОЙТИ"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+        
+        <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
+          Powered by CyberGuard Technologies
+        </p>
+      </motion.div>
     </div>
   );
 }

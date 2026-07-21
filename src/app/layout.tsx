@@ -13,12 +13,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#020617",
+  themeColor: "#02040a",
 };
 
 export const metadata: Metadata = {
-  title: "VPN PRO 2026",
-  description: "Advanced VLESS VPN Panel for Telegram.",
+  title: "VPN PRO Premium",
+  description: "Secure High-End VLESS VPN Tunnel for Telegram WebApp.",
 };
 
 export default function RootLayout({
@@ -34,10 +34,10 @@ export default function RootLayout({
           strategy="beforeInteractive" 
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-[#020617] text-slate-50 antialiased min-h-screen`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen selection:bg-cyan-500/30`} suppressHydrationWarning>
         <FirebaseClientProvider>
           <TelegramInit />
-          <div className="relative flex min-h-screen flex-col">
+          <div className="relative flex min-h-screen flex-col overflow-x-hidden">
             {children}
           </div>
           <Toaster />
