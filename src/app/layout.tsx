@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -14,8 +15,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "VPN PRO Premium",
-  description: "Защищенный высокоскоростной VLESS туннель для доступа к сети.",
+  title: "VPN PRO Premium | 2026 Edition",
+  description: "Ультраскоростной VLESS туннель нового поколения. Версия Июль 2026.",
 };
 
 export default function RootLayout({

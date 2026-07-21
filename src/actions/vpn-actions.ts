@@ -13,19 +13,15 @@ export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
   const password = formData.get('password') as string;
 
-  console.log(`[AUTH] Попытка входа: ${username}`);
-
   try {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      console.log(`[AUTH] Пользователь ${username} не найден`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[AUTH] Неверный пароль для ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -40,19 +36,17 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
-    // secure: false для работы по HTTP на IP-адресе сервера
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, 
+      secure: false, // Для работы по IP без HTTPS
       sameSite: 'lax',
       maxAge: 86400,
       path: '/'
     });
 
-    console.log(`[AUTH] Успешный вход: ${username} (${user.role})`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Критическая ошибка входа:', error);
+    console.error('[AUTH] Ошибка входа:', error);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -64,9 +58,15 @@ export async function vpnRegister(formData: FormData) {
   if (!username || password.length < 4) {
     return { error: 'Логин обязателен, пароль минимум 4 символа' };
   }
+
+  // Запрет регистрации под именем admin вручную
+  if (username === 'admin') {
+    return { error: 'Это имя зарезервировано системой' };
+  }
   
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    // Все новые регистрации ВСЕГДА получают роль 'user'
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
     return { success: true };
@@ -91,7 +91,7 @@ export async function getVpnMe() {
 
     const now = new Date();
     const expiresAt = user.expires_at ? new Date(user.expires_at) : null;
-    const isActive = expiresAt && expiresAt > now;
+    const isActive = user.role === 'admin' || (expiresAt && expiresAt > now);
 
     return {
       username: user.username,
@@ -137,13 +137,13 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
 
-    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE role != "admin"').all();
+    // Показываем всех, кроме самого админа
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users WHERE username != "admin"').all();
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const isActive = expiresAtDate && expiresAtDate > new Date();
       
-      // Имитация трафика для демо
       const trafficUsed = (Math.random() * 80).toFixed(1);
       const trafficLimit = "100.0 GB";
 
