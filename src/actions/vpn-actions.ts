@@ -14,19 +14,20 @@ export async function registerVpnUser(username: string) {
   try {
     const dataLimit = 50 * 1024 * 1024 * 1024; // 50GB
     
-    console.log(`[VPN-ACTION] Запрос генерации для: ${username}`);
+    console.log(`[VPN-ACTION] Запрос генерации/обновления для: ${username}`);
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 
     });
     
-    const link = vpnProfile.links && vpnProfile.links.length > 0 ? vpnProfile.links[0] : null;
+    const links = vpnProfile.links || [];
+    const link = links.length > 0 ? links[0] : null;
 
     if (!link) {
-      console.error(`[VPN-ACTION] Marzban не вернул ссылок для ${username}`);
+      console.error(`[VPN-ACTION] Marzban не вернул ссылок для ${username}. Ответ API:`, vpnProfile);
       return { 
         success: false, 
-        error: 'Сервер VPN не вернул ключ доступа. Проверьте логи Marzban (возможна ошибка 422/400).' 
+        error: 'Сервер VPN не вернул ключ доступа. Убедитесь, что в Marzban настроены Hosts для VLESS.' 
       };
     }
 
@@ -38,7 +39,7 @@ export async function registerVpnUser(username: string) {
     return { success: true, link };
   } catch (error: any) {
     console.error("[VPN-ACTION] Critical Error:", error.message);
-    return { success: false, error: `Ошибка: ${error.message}` };
+    return { success: false, error: `Ошибка API Marzban: ${error.message}` };
   }
 }
 
@@ -115,7 +116,8 @@ export async function getVpnMe() {
     try {
       const verified = await jwtVerify(token, JWT_SECRET);
       payload = verified.payload;
-    } catch (e) {
+    } catch (e: any) {
+      console.error("[AUTH] JWT verify failed:", e.message);
       cookieStore.delete('vpn_token');
       return null;
     }
@@ -161,13 +163,13 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Сразу генерируем/обновляем ключ в Marzban
+    // Принудительно генерируем ключ
     const vpnResult = await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
     
     if (!vpnResult.success) {
-      return { success: true, warning: 'Подписка продлена, но ключ не сгенерирован: ' + vpnResult.error };
+      return { success: true, warning: 'Подписка продлена, но Marzban не вернул ключ: ' + vpnResult.error };
     }
     
     return { success: true };
@@ -194,8 +196,8 @@ export async function getAllVpnUsers() {
         status: active ? 'online' : 'expired',
         protocol: 'VLESS+REALITY',
         expireDate: exp ? exp.toLocaleDateString('ru-RU') : 'Нет подписки',
-        traffic: u.vpn_link ? '12 GB / 50 GB' : '0 GB',
-        usagePercent: u.vpn_link ? 24 : 0
+        traffic: '0 GB / 50 GB',
+        usagePercent: 0
       };
     });
   } catch (e: any) {

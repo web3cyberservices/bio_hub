@@ -1,9 +1,9 @@
 /**
  * @fileOverview Marzban API Service Layer (Zero-Trust).
- * Оптимизированная интеграция с поддержкой автоматической отладки.
+ * Интеграция с API Marzban для управления VLESS профилями.
  */
 
-const MARZBAN_API_URL = process.env.MARZBAN_API_URL || 'http://127.0.0.1:8000';
+const MARZBAN_API_URL = (process.env.MARZBAN_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const USERNAME = process.env.MARZBAN_USERNAME;
 const PASSWORD = process.env.MARZBAN_PASSWORD;
 
@@ -15,10 +15,11 @@ export interface MarzbanProfile {
   username: string;
   links: string[];
   status: string;
+  proxies?: any;
 }
 
-async function getAdminToken(forceRefresh = false): Promise<string> {
-  if (!forceRefresh && cachedToken && Date.now() < tokenExpiration) {
+async function getAdminToken(force = false): Promise<string> {
+  if (!force && cachedToken && Date.now() < tokenExpiration) {
     return cachedToken;
   }
 
@@ -37,8 +38,7 @@ async function getAdminToken(forceRefresh = false): Promise<string> {
   });
 
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Auth failed (${response.status}): ${err}`);
+    throw new Error(`Auth failed: ${response.status} ${await response.text()}`);
   }
 
   const data = await response.json();
@@ -48,53 +48,57 @@ async function getAdminToken(forceRefresh = false): Promise<string> {
 }
 
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
+  console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
-  // Попытка создать пользователя с VLESS
-  const createPayload = {
+  const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
     proxies: { vless: {} },
     status: "active"
   };
 
-  let response = await fetch(`${MARZBAN_API_URL}/api/user`, {
+  // 1. Пытаемся создать пользователя
+  const createRes = await fetch(`${MARZBAN_API_URL}/api/user`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify(createPayload)
+    body: JSON.stringify(payload)
   });
 
-  if (response.status === 409) {
-    return await getMarzbanUser(options.username);
+  if (!createRes.ok && createRes.status !== 409) {
+    const errorText = await createRes.text();
+    console.error(`[MARZBAN] Create error: ${createRes.status} ${errorText}`);
+    
+    // Если ошибка 422 или 400, пробуем создать без указания прокси (Marzban сам назначит дефолтные)
+    if (createRes.status === 422 || createRes.status === 400) {
+        await fetch(`${MARZBAN_API_URL}/api/user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ username: options.username, data_limit: payload.data_limit })
+        });
+    }
   }
 
-  if (!response.ok) {
-    // Fallback: создаем "голого" пользователя, если VLESS отклонен (422)
-    const fallbackResponse = await fetch(`${MARZBAN_API_URL}/api/user`, {
-      method: 'POST',
+  // 2. Если пользователь уже был, принудительно включаем VLESS (на случай если он был выключен)
+  if (createRes.status === 409) {
+    await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({
-        username: options.username,
-        data_limit: Math.floor(options.dataLimit)
-      })
+      body: JSON.stringify({ proxies: { vless: {} }, data_limit: payload.data_limit })
     });
-
-    if (!fallbackResponse.ok && fallbackResponse.status !== 409) {
-      const err = await fallbackResponse.text();
-      throw new Error(`Marzban API Error: ${err}`);
-    }
   }
 
+  // 3. Всегда запрашиваем профиль через GET, так как только этот эндпоинт стабильно возвращает ссылки
   return await getMarzbanUser(options.username);
 }
 
-async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
+export async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
   const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -102,14 +106,17 @@ async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   
   if (!response.ok) {
     if (response.status === 401) {
-       const newToken = await getAdminToken(true);
-       const retry = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
-         headers: { 'Authorization': `Bearer ${newToken}` }
-       });
-       if (!retry.ok) throw new Error(`User fetch failed: ${retry.status}`);
-       return await retry.json();
+        const freshToken = await getAdminToken(true);
+        const retry = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
+          headers: { 'Authorization': `Bearer ${freshToken}` }
+        });
+        if (!retry.ok) throw new Error(`User fetch failed: ${retry.status}`);
+        return await retry.json();
     }
     throw new Error(`Failed to fetch user ${username}: ${response.status}`);
   }
-  return await response.json();
+  
+  const data = await response.json();
+  console.log(`[MARZBAN] Профиль получен для ${username}, ссылок: ${data.links?.length || 0}`);
+  return data;
 }
