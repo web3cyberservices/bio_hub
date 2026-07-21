@@ -87,7 +87,6 @@ export default function Dashboard() {
     const result = await buySubscription(months);
     if (result.success) {
       toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
-      // Даем Marzban время на обновление
       setTimeout(() => loadData(false), 1500);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
@@ -142,7 +141,7 @@ export default function Dashboard() {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black italic leading-none">Cyber<span className="text-cyan-400">Armor</span></h1>
+              <h1 className="text-xl font-black leading-none tracking-tight uppercase">Cyber<span className="text-cyan-400">Armor</span></h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
                 {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
@@ -241,7 +240,7 @@ export default function Dashboard() {
                           </div>
                           <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#02040a]" />
                         </div>
-                        <h2 className="text-3xl font-black mb-2 uppercase italic text-white">Защищено</h2>
+                        <h2 className="text-3xl font-black mb-2 uppercase text-white tracking-tight">Защищено</h2>
                         <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">Cyber Armor Active</p>
                         
                         <div className="flex flex-col space-y-2 mb-10">
@@ -297,7 +296,7 @@ export default function Dashboard() {
                       <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                         <Lock className="w-10 h-10 text-red-500" />
                       </div>
-                      <h2 className="text-2xl font-black uppercase italic">Доступ ограничен</h2>
+                      <h2 className="text-2xl font-black uppercase tracking-tight">Доступ ограничен</h2>
                       <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">Выберите тариф для активации VLESS туннеля</p>
                     </div>
 

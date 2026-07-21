@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -59,13 +58,13 @@ export default function VpnAuthPage() {
         <Card className="bg-[#0f172a]/60 backdrop-blur-3xl border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
           <CardHeader className="space-y-6 text-center pt-12 pb-8">
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg shadow-cyan-500/20 rotate-3">
-                <Shield className="w-10 h-10 text-white -rotate-3" />
+              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <Shield className="w-10 h-10 text-white" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <CardTitle className="text-4xl font-black tracking-tight text-white italic uppercase">
+              <CardTitle className="text-4xl font-black tracking-widest text-white uppercase">
                 Cyber<span className="text-cyan-400">Armor</span>
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
