@@ -14,7 +14,7 @@ export async function registerVpnUser(username: string) {
   try {
     const dataLimit = 50 * 1024 * 1024 * 1024; // 50GB
     
-    console.log(`[VPN-ACTION] Запрос генерации/обновления для: ${username}`);
+    console.log(`[VPN-ACTION] Запрос генерации для: ${username}`);
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 

@@ -52,12 +52,15 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
-  // Убираем inbounds, чтобы Marzban сам выбрал доступные узлы и не выдавал 422
+  // Жестко фиксируем Payload, чтобы Marzban не сбрасывал ссылки (Payload Overwrite Fix)
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
     proxies: { 
       vless: {} 
+    },
+    inbounds: {
+      vless: ["VLESS TCP REALITY"] // Точное имя тега из вашего xray_config.json
     },
     status: "active"
   };
@@ -73,7 +76,7 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   });
 
   if (createRes.status === 409) {
-    console.log(`[MARZBAN] Пользователь существует, обновляем: ${options.username}`);
+    console.log(`[MARZBAN] Пользователь существует, выполняем жесткий апдейт: ${options.username}`);
     const updateRes = await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
       method: 'PUT',
       headers: {
@@ -86,14 +89,14 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     
     if (!updateRes.ok) {
       const err = await updateRes.text();
-      throw new Error(`API Error ${updateRes.status}: ${err}`);
+      throw new Error(`API Update Error ${updateRes.status}: ${err}`);
     }
   } else if (!createRes.ok) {
     const errorText = await createRes.text();
-    throw new Error(`API Error ${createRes.status}: ${errorText}`);
+    throw new Error(`API Create Error ${createRes.status}: ${errorText}`);
   }
 
-  // Принудительно запрашиваем профиль через GET без кэша, чтобы получить ссылки
+  // Принудительно запрашиваем профиль через GET без кэша, чтобы получить актуальные ссылки
   return await getMarzbanUser(options.username);
 }
 
@@ -104,7 +107,7 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json'
     },
-    cache: 'no-store' // Отключаем кэш Next.js
+    cache: 'no-store'
   });
   
   if (!response.ok) {
@@ -114,7 +117,7 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
           headers: { 'Authorization': `Bearer ${freshToken}` },
           cache: 'no-store'
         });
-        if (!retry.ok) throw new Error(`User fetch failed: ${retry.status}`);
+        if (!retry.ok) throw new Error(`User fetch failed after retry: ${retry.status}`);
         return await retry.json();
     }
     throw new Error(`Failed to fetch user ${username}: ${response.status}`);
