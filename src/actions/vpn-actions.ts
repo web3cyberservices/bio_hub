@@ -12,7 +12,7 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(username: string) {
   try {
-    const dataLimit = 50 * 1024 * 1024 * 1024; // 50GB
+    const dataLimit = 100 * 1024 * 1024 * 1024; // 100GB
     
     const vpnProfile = await generateMarzbanUser({ 
       username, 
@@ -25,11 +25,10 @@ export async function registerVpnUser(username: string) {
     if (!link) {
       return { 
         success: false, 
-        error: 'Marzban не вернул ссылок. Убедитесь, что для Inbound настроен Host.' 
+        error: 'Marzban не вернул ссылок. Проверьте, активен ли VLESS Inbound в панели.' 
       };
     }
 
-    // Сохраняем ссылку в БД
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(link, username);
     
@@ -158,7 +157,7 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Принудительно генерируем ключ в Marzban
+    // Сразу генерируем ключ
     const vpnResult = await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
@@ -190,7 +189,7 @@ export async function getAllVpnUsers() {
         status: active ? 'online' : 'expired',
         protocol: 'VLESS+REALITY',
         expireDate: exp ? exp.toLocaleDateString('ru-RU') : 'Нет подписки',
-        traffic: '0 GB / 50 GB',
+        traffic: '0 GB / 100 GB',
         usagePercent: 0
       };
     });

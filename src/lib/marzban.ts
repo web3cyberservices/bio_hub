@@ -27,7 +27,7 @@ async function getAdminToken(force = false): Promise<string> {
   }
 
   if (!USERNAME || !PASSWORD) {
-    throw new Error('Креды Marzban (USERNAME/PASSWORD) не настроены в .env');
+    throw new Error('Креды Marzban (USERNAME/PASSWORD) не настроены');
   }
 
   const formData = new URLSearchParams();
@@ -42,8 +42,6 @@ async function getAdminToken(force = false): Promise<string> {
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    console.error(`[MARZBAN AUTH ERROR] ${response.status}: ${errText}`);
     throw new Error(`Auth failed: ${response.status}`);
   }
 
@@ -57,23 +55,21 @@ async function getAdminToken(force = false): Promise<string> {
  * Синхронизация пользователя с Marzban (Создание или Обновление)
  */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
-  console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
-  // Payload с жесткой привязкой к тегу из вашего конфига
+  // Мы убираем явное указание inbounds, чтобы избежать ошибки 422, 
+  // если тег в конфиге Xray не совпадает на 100% с тем, что мы шлем.
+  // Marzban сам включит пользователя на всех доступных VLESS узлах.
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
     proxies: { 
       vless: {} 
     },
-    inbounds: {
-      vless: ["VLESS TCP REALITY"] // Точное имя тега из вашего xray_config.json
-    },
     status: "active"
   };
 
-  // 1. Пытаемся создать пользователя
+  // 1. Пытаемся создать
   const createRes = await fetch(`${MARZBAN_API_URL}/api/user`, {
     method: 'POST',
     headers: {
@@ -85,8 +81,7 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   });
 
   if (createRes.status === 409) {
-    // 2. Если пользователь уже существует, обновляем его настройки (PUT)
-    console.log(`[MARZBAN] Пользователь существует, обновляем профиль: ${options.username}`);
+    // 2. Если уже есть, обновляем (PUT)
     const updateRes = await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
       method: 'PUT',
       headers: {
@@ -99,19 +94,19 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     
     if (!updateRes.ok) {
       const err = await updateRes.text();
-      throw new Error(`API Update Error ${updateRes.status}: ${err}`);
+      throw new Error(`API Error ${updateRes.status}: ${err}`);
     }
   } else if (!createRes.ok) {
-    const errorText = await createRes.text();
-    throw new Error(`API Create Error ${createRes.status}: ${errorText}`);
+    const err = await createRes.text();
+    throw new Error(`API Error ${createRes.status}: ${err}`);
   }
 
-  // 3. Финальный GET запрос для получения актуальных ссылок (Links часто не возвращаются в POST/PUT)
+  // 3. Всегда делаем GET, чтобы получить актуальный массив links (POST/PUT часто возвращают пустой массив)
   return await getMarzbanUser(options.username);
 }
 
 /**
- * Получение данных пользователя (без кэширования Next.js)
+ * Получение данных пользователя без кэширования
  */
 export async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
@@ -120,7 +115,7 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json'
     },
-    cache: 'no-store' // КРИТИЧЕСКИ ВАЖНО для Next.js 15
+    cache: 'no-store'
   });
   
   if (!response.ok) {
@@ -130,12 +125,10 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
           headers: { 'Authorization': `Bearer ${freshToken}` },
           cache: 'no-store'
         });
-        if (!retry.ok) throw new Error(`User fetch failed after retry: ${retry.status}`);
         return await retry.json();
     }
-    throw new Error(`Failed to fetch user ${username}: ${response.status}`);
+    throw new Error(`User fetch failed: ${response.status}`);
   }
   
-  const data = await response.json();
-  return data;
+  return await response.json();
 }
