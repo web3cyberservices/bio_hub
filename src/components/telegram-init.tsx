@@ -1,7 +1,14 @@
-
 'use client';
 
 import { useEffect } from 'react';
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: any;
+    };
+  }
+}
 
 export function TelegramInit() {
   useEffect(() => {
@@ -10,12 +17,12 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Set theme colors based on Telegram theme
+      // Настройка цветов темы из Telegram
       const root = document.documentElement;
-      if (tg.themeParams.bg_color) {
+      if (tg.themeParams?.bg_color) {
         root.style.setProperty('--background', tg.themeParams.bg_color);
       }
-      if (tg.themeParams.text_color) {
+      if (tg.themeParams?.text_color) {
         root.style.setProperty('--foreground', tg.themeParams.text_color);
       }
     }
