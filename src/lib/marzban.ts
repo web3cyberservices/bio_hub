@@ -7,7 +7,6 @@ const MARZBAN_API_URL = process.env.MARZBAN_API_URL || 'http://127.0.0.1:8000';
 const USERNAME = process.env.MARZBAN_USERNAME;
 const PASSWORD = process.env.MARZBAN_PASSWORD;
 
-// In-Memory Cache для токена
 let cachedToken: string | null = null;
 let tokenExpiration: number = 0;
 
@@ -27,8 +26,8 @@ async function getAdminToken(): Promise<string> {
   }
 
   if (!USERNAME || !PASSWORD) {
-    console.error('[MARZBAN] Ошибка: Не заданы MARZBAN_USERNAME или MARZBAN_PASSWORD в .env');
-    throw new Error('Креды администратора не настроены на сервере');
+    console.error('[MARZBAN] Missing credentials in .env');
+    throw new Error('Креды Marzban (USERNAME/PASSWORD) не настроены');
   }
 
   const formData = new URLSearchParams();
@@ -44,16 +43,15 @@ async function getAdminToken(): Promise<string> {
 
     if (!response.ok) {
       const err = await response.text();
-      console.error(`[MARZBAN] Ошибка авторизации (${response.status}): ${err}`);
-      throw new Error(`Ошибка авторизации в API: ${response.status}`);
+      throw new Error(`Auth failed (${response.status}): ${err}`);
     }
 
     const data = await response.json();
     cachedToken = data.access_token;
-    tokenExpiration = Date.now() + 15 * 60 * 1000; // 15 mins
+    tokenExpiration = Date.now() + 15 * 60 * 1000;
     return cachedToken!;
   } catch (error: any) {
-    console.error('[MARZBAN] Auth Exception:', error.message);
+    console.error('[MARZBAN] Token Auth Error:', error.message);
     throw error;
   }
 }
@@ -62,13 +60,13 @@ async function getAdminToken(): Promise<string> {
  * Генерирует пользователя в Marzban
  */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
-  console.log(`[MARZBAN] Запрос на создание/синхронизацию: ${options.username}`);
+  console.log(`[MARZBAN] Syncing user: ${options.username}`);
   
   try {
     const token = await getAdminToken();
 
-    // Минималистичный payload для избежания 422 Unprocessable Entity
-    // Мы не указываем конкретные inbounds, чтобы Marzban использовал дефолтные
+    // Минимальный payload. Мы НЕ указываем inbounds, чтобы не ловить 422.
+    // Marzban сам назначит доступные прокси, если они включены.
     const response = await fetch(`${MARZBAN_API_URL}/api/user`, {
       method: 'POST',
       headers: {
@@ -78,28 +76,35 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
       body: JSON.stringify({
         username: options.username,
         data_limit: Math.floor(options.dataLimit),
-        proxies: { vless: {} } // Запрашиваем VLESS без указания конкретных тегов
+        proxies: { vless: {} }, // Запрашиваем VLESS. Если на сервере его нет, Marzban вернет 400.
+        status: "active"
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       
-      // 409 Conflict = Пользователь уже существует, просто получаем его данные
       if (response.status === 409) {
-        console.log(`[MARZBAN] Пользователь ${options.username} уже существует, получаем данные...`);
         return await getMarzbanUser(options.username);
       }
       
-      console.error(`[MARZBAN] Ошибка API (${response.status}): ${errorText}`);
-      throw new Error(`API Error ${response.status}: ${errorText}`);
+      // Если VLESS выключен (400), попробуем создать без привязки к прокси, чтобы просто создать юзера
+      if (response.status === 400 && errorText.includes('disabled')) {
+        console.warn(`[MARZBAN] VLESS is disabled on server. Creating user without proxies...`);
+        const fallbackResponse = await fetch(`${MARZBAN_API_URL}/api/user`, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+           body: JSON.stringify({ username: options.username, data_limit: Math.floor(options.dataLimit) })
+        });
+        if (fallbackResponse.ok) return await fallbackResponse.json();
+      }
+
+      throw new Error(`Marzban API ${response.status}: ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log(`[MARZBAN] Пользователь ${options.username} успешно создан.`);
-    return result;
+    return await response.json();
   } catch (error: any) {
-    console.error('[MARZBAN] Критическая ошибка генерации:', error.message);
+    console.error('[MARZBAN] Operation failed:', error.message);
     throw error;
   }
 }
@@ -109,19 +114,12 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
  */
 async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
-  try {
-    const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Не удалось получить данные пользователя: ${response.status}`);
-    }
-    return await response.json();
-  } catch (e: any) {
-    console.error(`[MARZBAN] Ошибка при получении юзера ${username}:`, e.message);
-    throw e;
+  const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user ${username}: ${response.status}`);
   }
+  return await response.json();
 }

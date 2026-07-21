@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
-import db, { saveUserToDb } from '@/lib/db';
+import db from '@/lib/db';
 import { generateMarzbanUser } from '@/lib/marzban';
 import { revalidatePath } from 'next/cache';
 
@@ -12,7 +12,6 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(username: string) {
   try {
-    // 50 GB Limit
     const dataLimit = 50 * 1024 * 1024 * 1024;
     
     const vpnProfile = await generateMarzbanUser({ 
@@ -21,7 +20,10 @@ export async function registerVpnUser(username: string) {
     });
     
     if (!vpnProfile.links || vpnProfile.links.length === 0) {
-      throw new Error('Marzban API returned no links');
+      console.warn(`[VPN-ACTION] Marzban returned no links for ${username}. Check if VLESS inbound is active.`);
+      // We still update the DB if user was created/synced, but report no links
+      db.prepare("UPDATE users SET vpn_link = '' WHERE username = ?").run(username);
+      return { success: false, error: 'Marzban API returned no links. Please check server VLESS config.' };
     }
 
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
@@ -39,10 +41,6 @@ export async function regenerateVpnKey() {
     const me = await getVpnMe();
     if (!me) return { error: 'Нужна авторизация' };
     
-    if (!me.isActive && me.role !== 'admin') {
-      return { error: 'Подписка неактивна.' };
-    }
-
     const result = await registerVpnUser(me.username);
     if (!result.success) return { error: result.error };
 
@@ -151,11 +149,10 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Generate/Sync Key with Marzban
     const vpnResult = await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
-    return vpnResult.success ? { success: true } : { error: vpnResult.error };
+    return { success: true }; // Subscription updated even if VPN sync failed (user can retry)
   } catch (e: any) {
     console.error("[SHOP] Buy error:", e.message);
     return { error: 'Ошибка при оплате' };

@@ -7,7 +7,6 @@ import {
   Settings, 
   Activity,
   LogOut,
-  Copy,
   Globe,
   Lock,
   Terminal,
@@ -19,7 +18,8 @@ import {
   Navigation,
   UserX,
   Users,
-  RotateCcw
+  RotateCcw,
+  Copy
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription, regenerateVpnKey } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -67,8 +67,6 @@ export default function Dashboard() {
       if (data.role === 'admin') {
         const users = await getAllVpnUsers();
         setAdminUsers(Array.isArray(users) ? users : []);
-      } else {
-        if (activeTab === 'admin') setActiveTab('status');
       }
     } catch (e) {
       console.error('[DASHBOARD] Error loading data:', e);
@@ -89,7 +87,7 @@ export default function Dashboard() {
     setPurchasing(true);
     const result = await buySubscription(months);
     if (result.success) {
-      toast({ title: "Успех", description: `Подписка на ${months} мес. активирована. Ключ сгенерирован.` });
+      toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
       await loadData(false);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
@@ -300,7 +298,7 @@ export default function Dashboard() {
                         <Lock className="w-10 h-10 text-red-500" />
                       </div>
                       <h2 className="text-2xl font-black uppercase italic">Доступ ограничен</h2>
-                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">Выберите тариф для активации VLESS туннеля и генерации ключа доступа</p>
+                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">Выберите тариф для активации VLESS туннеля</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
