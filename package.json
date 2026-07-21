@@ -1,9 +1,10 @@
+
 {
   "name": "vpn-pro-2026",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -43,6 +44,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
     "@types/react": "19.0.8",

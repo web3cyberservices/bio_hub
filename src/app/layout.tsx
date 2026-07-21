@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -25,7 +26,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen overflow-x-hidden`}>
+      <head>
+        {/* Инлайновый стиль для предотвращения белого экрана при загрузке */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          body { background-color: #02040a !important; color: #f1f5f9 !important; margin: 0; padding: 0; font-family: sans-serif; }
+          .loading-fallback { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        `}} />
+      </head>
+      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
         <div className="relative flex min-h-screen flex-col">
           {children}
         </div>
