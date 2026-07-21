@@ -17,13 +17,16 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Настройка цветов темы из Telegram
+      // Настройка темы на основе Telegram
       const root = document.documentElement;
       if (tg.themeParams?.bg_color) {
         root.style.setProperty('--background', tg.themeParams.bg_color);
       }
       if (tg.themeParams?.text_color) {
         root.style.setProperty('--foreground', tg.themeParams.text_color);
+      }
+      if (tg.themeParams?.button_color) {
+        root.style.setProperty('--primary', tg.themeParams.button_color);
       }
     }
   }, []);

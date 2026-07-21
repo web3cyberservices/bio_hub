@@ -11,10 +11,8 @@ import {
   ChevronRight,
   Copy,
   Zap,
-  LayoutGrid,
   MessageSquare
 } from 'lucide-react';
-import { useUser } from '@/firebase';
 import { getVpnMe, vpnLogout } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -26,7 +24,6 @@ import { QRCodeSVG } from 'qrcode.react';
 type Tab = 'status' | 'keys' | 'help' | 'settings' | 'chats';
 
 export default function VpnDashboard() {
-  const { user, loading: authLoading } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>('status');
   const [vpnData, setVpnData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -43,10 +40,8 @@ export default function VpnDashboard() {
       setVpnData(data);
       setLoading(false);
     }
-    if (!authLoading) {
-      loadData();
-    }
-  }, [authLoading, router]);
+    loadData();
+  }, [router]);
 
   const copyKey = (link: string) => {
     if (!link) return;
@@ -54,7 +49,7 @@ export default function VpnDashboard() {
     toast({ title: "Скопировано", description: "Ключ доступа скопирован в буфер обмена" });
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 p-6 space-y-4">
         <Skeleton className="h-12 w-full bg-slate-900 rounded-xl" />
@@ -73,8 +68,8 @@ export default function VpnDashboard() {
     { id: 'status', icon: Activity, label: 'Статус' },
     { id: 'keys', icon: Key, label: 'Ключи' },
     { id: 'chats', icon: MessageSquare, label: 'Поддержка' },
-    { id: 'help', icon: HelpCircle, label: 'Инфо' },
-    { id: 'settings', icon: Settings, label: 'Опции' },
+    { id: 'help', icon: HelpCircle, label: 'Инструкции' },
+    { id: 'settings', icon: Settings, label: 'Настройки' },
   ];
 
   return (
@@ -106,11 +101,11 @@ export default function VpnDashboard() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <p className="text-xs text-slate-500 uppercase font-bold">Сервер</p>
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-tight mb-1">Сервер</p>
                 <p className="text-lg font-bold text-cyan-400">Германия</p>
               </div>
               <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <p className="text-xs text-slate-500 uppercase font-bold">Протокол</p>
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-tight mb-1">Протокол</p>
                 <p className="text-lg font-bold text-purple-400">VLESS</p>
               </div>
             </div>
@@ -152,7 +147,7 @@ export default function VpnDashboard() {
             <MessageSquare className="w-16 h-16 text-cyan-500/20 mx-auto mb-4" />
             <h2 className="text-xl font-bold">Поддержка пользователей</h2>
             <p className="text-slate-400">Если у вас возникли проблемы с подключением, напишите нашему боту.</p>
-            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto">
+            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto mt-4">
               Открыть Telegram чат
             </Button>
           </div>
@@ -204,8 +199,8 @@ export default function VpnDashboard() {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2 pointer-events-none">
-        <div className="max-w-md mx-auto pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-2xl rounded-3xl flex justify-around items-center px-2 py-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2">
+        <div className="max-w-md mx-auto bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-2xl rounded-3xl flex justify-around items-center px-2 py-2">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
