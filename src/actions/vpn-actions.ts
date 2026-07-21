@@ -30,6 +30,31 @@ export async function registerVpnUser(firebaseUid: string, username: string) {
   }
 }
 
+export async function regenerateVpnKey() {
+  try {
+    const me = await getVpnMe();
+    if (!me) return { error: 'Нужна авторизация' };
+    if (!me.isActive && me.role !== 'admin') return { error: 'Подписка неактивна' };
+
+    const username = me.username;
+    // Генерируем новый профиль в Marzban
+    const vpnProfile = await generateMarzbanUser({ 
+      username, 
+      dataLimit: 50 * 1024 * 1024 * 1024 
+    });
+
+    // Обновляем только ссылку в БД, не трогая сроки подписки
+    db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
+      .run(vpnProfile.links[0], username);
+
+    revalidatePath('/dashboard');
+    return { success: true, link: vpnProfile.links[0] };
+  } catch (e: any) {
+    console.error("[VPN] Regeneration error:", e.message);
+    return { error: 'Ошибка при перегенерации ключа' };
+  }
+}
+
 export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
   const password = formData.get('password') as string;
@@ -148,13 +173,10 @@ export async function getAllVpnUsers() {
   try {
     const me = await getVpnMe();
     if (!me || me.role !== 'admin') {
-      console.warn("[ADMIN] Access denied for user:", me?.username);
       return [];
     }
 
-    // SQLite: используем одинарные кавычки для строк
     const users = db.prepare("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC").all();
-    console.log(`[ADMIN] Найдено пользователей в БД: ${users.length}`);
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;

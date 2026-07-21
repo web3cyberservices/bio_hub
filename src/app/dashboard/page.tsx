@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -22,9 +21,10 @@ import {
   CheckCircle2,
   Zap,
   Navigation,
-  UserX
+  UserX,
+  RotateCcw
 } from 'lucide-react';
-import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
+import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription, regenerateVpnKey } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -50,6 +50,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -71,9 +72,6 @@ export default function Dashboard() {
         if (Array.isArray(users)) {
           setAdminUsers(users);
         }
-        setActiveTab('admin');
-      } else {
-        setActiveTab('status');
       }
     } catch (e) {
       console.error('[DASHBOARD] Error loading data:', e);
@@ -100,6 +98,18 @@ export default function Dashboard() {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
     }
     setPurchasing(false);
+  };
+
+  const handleRegenerateKey = async () => {
+    setRegenerating(true);
+    const result = await regenerateVpnKey();
+    if (result.success) {
+      toast({ title: "Успех", description: "VLESS ключ успешно обновлен" });
+      await loadData(false);
+    } else {
+      toast({ title: "Ошибка", description: result.error, variant: "destructive" });
+    }
+    setRegenerating(false);
   };
 
   const copyKey = (link: string) => {
@@ -379,12 +389,30 @@ export default function Dashboard() {
                         <div className="p-4 bg-black/40 border border-white/5 rounded-2xl break-all font-mono text-[10px] text-slate-400 text-left">
                           {vpnData?.vpn?.links[0]}
                         </div>
-                        <Button 
-                          onClick={() => copyKey(vpnData?.vpn?.links[0])} 
-                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold transition-transform active:scale-95 shadow-lg shadow-cyan-900/20"
-                        >
-                          <Copy className="w-5 h-5 mr-3" /> Копировать VLESS ключ
-                        </Button>
+                        <div className="grid grid-cols-1 gap-3">
+                          <Button 
+                            onClick={() => copyKey(vpnData?.vpn?.links[0])} 
+                            className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold transition-transform active:scale-95 shadow-lg shadow-cyan-900/20"
+                          >
+                            <Copy className="w-5 h-5 mr-3" /> Копировать VLESS ключ
+                          </Button>
+                          <Button 
+                            onClick={handleRegenerateKey}
+                            disabled={regenerating}
+                            variant="outline"
+                            className="w-full border-white/10 bg-white/5 hover:bg-white/10 h-14 rounded-2xl text-slate-300 font-bold transition-all text-xs"
+                          >
+                            {regenerating ? (
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin text-cyan-400" />
+                            ) : (
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                            )}
+                            Перегенерировать ключ
+                          </Button>
+                        </div>
+                        <p className="text-[8px] text-slate-600 font-bold uppercase text-center mt-2 px-6">
+                          Перегенерация ключа создаст новую ссылку доступа. Старая ссылка перестанет работать. Срок подписки при этом не изменится.
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
