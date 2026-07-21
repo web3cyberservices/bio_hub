@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -25,7 +24,7 @@
   --border: 222 47% 12%;
   --input: 222 47% 12%;
   --ring: 191 97% 50%;
-  --radius: 1rem;
+  --radius: 1.25rem;
 }
 
 @theme inline {
@@ -56,7 +55,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-color: #02040a; /* Fallback */
+    background-color: #02040a;
   }
 }
 
@@ -74,4 +73,16 @@
 
 .cyber-button:active {
   transform: scale(0.96);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #02040a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 10px;
 }

@@ -27,8 +27,20 @@ export default function RootLayout({
     <html lang="ru" suppressHydrationWarning className="dark">
       <head>
         <style dangerouslySetInnerHTML={{ __html: `
-          body { background-color: #02040a !important; color: #f1f5f9 !important; margin: 0; padding: 0; font-family: sans-serif; }
-          .loading-fallback { display: flex; align-items: center; justify-content: center; height: 100vh; }
+          body { 
+            background-color: #02040a !important; 
+            color: #f1f5f9 !important; 
+            margin: 0; 
+            padding: 0; 
+            font-family: sans-serif; 
+          }
+          .loading-fallback { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: #02040a;
+          }
         `}} />
       </head>
       <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>

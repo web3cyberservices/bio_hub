@@ -67,6 +67,7 @@ export default function VpnDashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+        <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Синхронизация...</p>
       </div>
     );
   }
@@ -85,8 +86,8 @@ export default function VpnDashboard() {
 
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-100 font-sans selection:bg-cyan-500/20 pb-32">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-50 bg-[#02040a]/70 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[#02040a]/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/10">
@@ -119,7 +120,7 @@ export default function VpnDashboard() {
           >
             {activeTab === 'status' && (
               <div className="space-y-6">
-                <Card className="glass-panel rounded-[2.5rem] border-white/5 relative overflow-hidden">
+                <Card className="glass-panel rounded-[2.5rem] border-white/5 relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl rounded-full -mr-16 -mt-16" />
                   <CardContent className="p-10 text-center relative z-10">
                     <div className="mb-8 relative inline-block">
@@ -130,10 +131,10 @@ export default function VpnDashboard() {
                         <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,211,238,0.8)] border-4 border-[#02040a]" />
                       )}
                     </div>
-                    <h2 className="text-3xl font-black mb-2 uppercase italic tracking-tighter">
+                    <h2 className="text-3xl font-black mb-2 uppercase italic tracking-tighter text-white">
                       {vpnData?.vpn?.status === 'active' ? 'Система защищена' : 'Не защищено'}
                     </h2>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] mb-10">Протокол Reality-V2 • Шифрование</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] mb-10">Протокол Reality-V2 • Шифрование AES</p>
                     
                     <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/5">
                        <div className="text-left">
@@ -153,12 +154,12 @@ export default function VpnDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="glass-panel p-6 rounded-3xl group hover:border-cyan-500/20 transition-all">
                     <Download className="w-5 h-5 text-emerald-400 mb-4" />
-                    <p className="text-2xl font-black">128.4 <span className="text-[10px] font-normal text-slate-500">Мбит/с</span></p>
+                    <p className="text-2xl font-black">128.4 <span className="text-[10px] font-normal text-slate-500 uppercase">Мбит/с</span></p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Загрузка</p>
                   </div>
                   <div className="glass-panel p-6 rounded-3xl group hover:border-blue-500/20 transition-all">
                     <Upload className="w-5 h-5 text-blue-400 mb-4" />
-                    <p className="text-2xl font-black">45.2 <span className="text-[10px] font-normal text-slate-500">Мбит/с</span></p>
+                    <p className="text-2xl font-black">45.2 <span className="text-[10px] font-normal text-slate-500 uppercase">Мбит/с</span></p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Отдача</p>
                   </div>
                 </div>
@@ -188,9 +189,9 @@ export default function VpnDashboard() {
                         </div>
                         <Button 
                           onClick={() => copyKey(vpnLink)} 
-                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold text-lg cyber-button shadow-xl shadow-cyan-950"
+                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold text-lg cyber-button shadow-xl shadow-cyan-950/40"
                         >
-                          <Copy className="w-5 h-5 mr-3" /> Копировать VLESS конфигурацию
+                          <Copy className="w-5 h-5 mr-3" /> Копировать конфигурацию
                         </Button>
                       </>
                     ) : (
@@ -235,17 +236,17 @@ export default function VpnDashboard() {
                 <div className="glass-panel p-8 rounded-[2rem] space-y-6">
                   <div className="space-y-4">
                      <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Управление аккаунтом</h3>
-                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
+                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="flex items-center space-x-4">
                            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-cyan-400">
                               <User className="w-5 h-5" />
                            </div>
                            <div>
-                              <p className="text-sm font-bold">{vpnData?.username}</p>
-                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Уровень аккаунта: {vpnData?.role}</p>
+                              <p className="text-sm font-bold text-white">{vpnData?.username}</p>
+                              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Уровень доступа: {vpnData?.role}</p>
                            </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-500/10">Изм.</Button>
+                        <Button variant="ghost" size="sm" className="text-cyan-400 hover:bg-cyan-500/10 rounded-lg">Изм.</Button>
                      </div>
                   </div>
 
@@ -256,10 +257,10 @@ export default function VpnDashboard() {
                       { label: 'Автоматический Kill Switch', icon: Shield, active: false },
                       { label: 'Ускорение UDP', icon: Zap, active: true }
                     ].map((opt) => (
-                      <div key={opt.label} className="flex items-center justify-between p-4 bg-white/20 rounded-2xl border border-white/5">
+                      <div key={opt.label} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
                         <div className="flex items-center space-x-4">
                           <opt.icon className="w-4 h-4 text-slate-400" />
-                          <span className="text-sm font-bold">{opt.label}</span>
+                          <span className="text-sm font-bold text-slate-300">{opt.label}</span>
                         </div>
                         <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${opt.active ? 'bg-cyan-600' : 'bg-slate-800'}`}>
                           <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${opt.active ? 'right-1' : 'left-1'}`} />
@@ -270,7 +271,7 @@ export default function VpnDashboard() {
 
                   <Button 
                     variant="destructive" 
-                    className="w-full h-14 rounded-2xl mt-4 bg-red-500/10 text-red-500 border-0 hover:bg-red-500/20 font-bold"
+                    className="w-full h-14 rounded-2xl mt-4 bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 font-bold transition-all"
                     onClick={async () => {
                       await vpnLogout();
                       router.push('/vpn');
@@ -283,17 +284,18 @@ export default function VpnDashboard() {
             )}
             
             {['speed', 'chat', 'help'].includes(activeTab) && (
-              <div className="glass-panel p-20 rounded-[2.5rem] text-center italic text-slate-600">
-                Модуль синхронизируется...
+              <div className="glass-panel p-20 rounded-[2.5rem] text-center italic text-slate-600 border-white/5">
+                <RefreshCw className="w-8 h-8 mx-auto mb-4 animate-spin text-slate-800" />
+                Модуль синхронизируется с облаком...
               </div>
             )}
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* Futuristic Bottom Navigation */}
+      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 p-6 flex justify-center">
-        <div className="bg-[#0f172a]/80 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] flex justify-between items-center px-4 py-3 shadow-2xl w-full max-w-md">
+        <div className="bg-[#0f172a]/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex justify-between items-center px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] w-full max-w-md">
           {navItems.map((item) => (
             <button
               key={item.id}

@@ -45,6 +45,7 @@ export default function VpnAuthPage() {
 
   return (
     <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
       
@@ -54,7 +55,7 @@ export default function VpnAuthPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="bg-[#0f172a]/60 backdrop-blur-2xl border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <Card className="bg-[#0f172a]/60 backdrop-blur-3xl border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
           <CardHeader className="space-y-6 text-center pt-12 pb-8">
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg shadow-cyan-500/20 rotate-3">
@@ -81,7 +82,7 @@ export default function VpnAuthPage() {
                   name="username"
                   placeholder="Имя пользователя"
                   required
-                  className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none"
+                  className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none transition-all"
                 />
               </div>
               <div className="relative group">
@@ -91,7 +92,7 @@ export default function VpnAuthPage() {
                   type="password"
                   placeholder="Пароль"
                   required
-                  className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none"
+                  className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none transition-all"
                 />
               </div>
             </CardContent>
@@ -99,7 +100,7 @@ export default function VpnAuthPage() {
             <CardFooter className="flex flex-col space-y-6 px-8 pb-12 pt-6">
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-2xl cyber-button shadow-lg shadow-cyan-950"
+                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-2xl cyber-button shadow-lg shadow-cyan-950/40"
                 disabled={loading}
               >
                 {loading ? (
@@ -116,7 +117,7 @@ export default function VpnAuthPage() {
                 className="text-slate-500 hover:text-cyan-400 text-xs font-bold transition-colors uppercase tracking-widest"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? "Новый пользователь? Создать доступ" : "Есть доступ? Войти в систему"}
+                {isLogin ? "Новый пользователь? Регистрация" : "Есть доступ? Войти"}
               </button>
             </CardFooter>
           </form>
