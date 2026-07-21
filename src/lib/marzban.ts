@@ -52,10 +52,16 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
+  // Жестко задаем структуру для предотвращения деструктивной мутации
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
-    proxies: { vless: {} },
+    proxies: { 
+      vless: {} 
+    },
+    inbounds: { 
+      vless: ["VLESS TCP REALITY"] 
+    },
     status: "active"
   };
 
@@ -70,25 +76,31 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     cache: 'no-store'
   });
 
-  if (!createRes.ok && createRes.status !== 409) {
-    const errorText = await createRes.text();
-    console.error(`[MARZBAN] Create error: ${createRes.status} ${errorText}`);
-  }
-
-  // 2. Если пользователь уже был, принудительно обновляем (на случай если он был выключен)
+  // 2. Если пользователь уже существует (409), обновляем его (PUT) с тем же payload
   if (createRes.status === 409) {
-    await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
+    console.log(`[MARZBAN] Пользователь существует, обновляем: ${options.username}`);
+    const updateRes = await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ proxies: { vless: {} }, data_limit: payload.data_limit, status: "active" }),
+      body: JSON.stringify(payload),
       cache: 'no-store'
     });
+    
+    if (!updateRes.ok) {
+      const err = await updateRes.text();
+      console.error(`[MARZBAN] Update error: ${updateRes.status} ${err}`);
+      throw new Error(`API Error ${updateRes.status}: ${err}`);
+    }
+  } else if (!createRes.ok) {
+    const errorText = await createRes.text();
+    console.error(`[MARZBAN] Create error: ${createRes.status} ${errorText}`);
+    throw new Error(`API Error ${createRes.status}: ${errorText}`);
   }
 
-  // 3. Всегда запрашиваем профиль через GET с отключенным кэшем
+  // 3. Всегда запрашиваем профиль через GET, чтобы получить свежие ссылки (links)
   return await getMarzbanUser(options.username);
 }
 
