@@ -67,6 +67,8 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   try {
     const token = await getAdminToken();
 
+    // Удаляем конкретный инбаунд "VLESS TCP REALITY", так как он может называться иначе на сервере.
+    // Оставляем пустой объект или список, чтобы Marzban использовал дефолтные активные инбаунды.
     const response = await fetch(`${MARZBAN_API_URL}/api/user`, {
       method: 'POST',
       headers: {
@@ -77,7 +79,8 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
         username: options.username,
         data_limit: options.dataLimit,
         proxies: { vless: {} },
-        inbounds: { vless: ["VLESS TCP REALITY"] }
+        // Передаем пустые массивы, чтобы Marzban автоматически назначил все доступные инбаунды для этих протоколов
+        inbounds: { vless: [] }
       })
     });
 
