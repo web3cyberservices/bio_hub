@@ -21,12 +21,18 @@ export function TelegramInit() {
       const root = document.documentElement;
       root.classList.add('dark');
       
-      tg.setHeaderColor('#02040a');
-      tg.setBackgroundColor('#02040a');
-      
-      // Inform TG about primary theme color
-      if (tg.setBottomBarColor) {
-        tg.setBottomBarColor('#02040a');
+      // Check version for color methods support (v6.1+)
+      if (tg.isVersionAtLeast('6.1')) {
+        try {
+          tg.setHeaderColor('#02040a');
+          tg.setBackgroundColor('#02040a');
+          
+          if (tg.setBottomBarColor) {
+            tg.setBottomBarColor('#02040a');
+          }
+        } catch (e) {
+          console.warn("Telegram UI color customization is not supported in this environment", e);
+        }
       }
     }
   }, []);

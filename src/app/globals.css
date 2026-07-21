@@ -63,10 +63,6 @@
   @apply bg-slate-900/40 backdrop-blur-xl border border-white/5;
 }
 
-.neon-shadow {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
-}
-
 .neon-text {
   text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
 }

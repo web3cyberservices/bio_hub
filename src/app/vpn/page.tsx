@@ -45,7 +45,6 @@ export default function VpnAuthPage() {
 
   return (
     <div className="min-h-screen bg-[#02040a] flex items-center justify-center p-6 selection:bg-cyan-500/30">
-      {/* Background Orbs */}
       <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full" />
@@ -57,14 +56,14 @@ export default function VpnAuthPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="glass-card border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <Card className="glass-card border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden bg-slate-900/40">
           <CardHeader className="space-y-2 text-center pb-8 pt-10">
             <div className="flex justify-center mb-4">
               <div className="w-20 h-20 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/20 rotate-6">
                 <Shield className="w-10 h-10 text-white -rotate-6" />
               </div>
             </div>
-            <CardTitle className="text-4xl font-black tracking-tighter italic">
+            <CardTitle className="text-4xl font-black tracking-tighter italic text-white">
               VPN <span className="text-cyan-400">PRO</span>
             </CardTitle>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
@@ -82,7 +81,7 @@ export default function VpnAuthPage() {
                     placeholder="Имя пользователя"
                     required
                     autoComplete="username"
-                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-sm font-medium"
+                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-white text-sm font-medium"
                   />
                 </div>
               </div>
@@ -95,7 +94,7 @@ export default function VpnAuthPage() {
                     placeholder="Ваш пароль"
                     required
                     autoComplete="current-password"
-                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-sm font-medium"
+                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-white text-sm font-medium"
                   />
                 </div>
               </div>
@@ -104,7 +103,7 @@ export default function VpnAuthPage() {
             <CardFooter className="flex flex-col space-y-4 px-8 pb-10 pt-4">
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xs tracking-widest uppercase"
+                className="w-full h-14 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xs tracking-widest uppercase border-0"
                 disabled={loading}
               >
                 {loading ? (
@@ -118,7 +117,7 @@ export default function VpnAuthPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className="text-slate-500 hover:text-white text-xs font-bold tracking-tighter"
+                className="text-slate-500 hover:text-white text-xs font-bold tracking-tighter hover:bg-transparent"
                 onClick={() => setIsLogin(!isLogin)}
               >
                 {isLogin ? "НЕТ АККАУНТА? РЕГИСТРАЦИЯ" : "УЖЕ ЕСТЬ АККАУНТ? ВОЙТИ"}
@@ -126,10 +125,6 @@ export default function VpnAuthPage() {
             </CardFooter>
           </form>
         </Card>
-        
-        <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em]">
-          Powered by CyberGuard Technologies
-        </p>
       </motion.div>
     </div>
   );
