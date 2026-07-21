@@ -7,32 +7,33 @@ import db, { saveUserToDb } from '@/lib/db';
 import { generateMarzbanUser } from '@/lib/marzban';
 import { revalidatePath } from 'next/cache';
 
-const SECRET_KEY_STR = process.env.JWT_SECRET || 'lume-vpn-super-secure-permanent-secret-key-2026-stable-version';
+const SECRET_KEY_STR = 'lume-vpn-super-secure-permanent-secret-key-2026-stable-version';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 /**
- * Основной флоу регистрации VPN пользователя (Zero-Trust)
+ * Регистрация VPN пользователя в Marzban (Zero-Trust)
  */
 export async function registerVpnUser(firebaseUid: string, username: string) {
+  console.log(`[ZERO-TRUST] Starting VPN registration for: ${username}`);
   try {
-    // 1. Создаем пользователя в Marzban (50GB лимит)
+    // Создаем пользователя в Marzban (50GB лимит)
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit: 50 * 1024 * 1024 * 1024 
     });
     
-    // 2. Сохраняем привязку в локальной БД
+    // Сохраняем в БД
     await saveUserToDb({ 
       uid: firebaseUid, 
       username: username, 
       vpn_link: vpnProfile.links[0] 
     });
     
-    console.log(`[ZERO-TRUST] VPN Key generated for ${username} (UID: ${firebaseUid})`);
+    console.log(`[ZERO-TRUST] VPN Key generated and saved for ${username}`);
     return { success: true, link: vpnProfile.links[0] };
-  } catch (error) {
-    console.error("[ZERO-TRUST] VPN Gen Failed", error);
-    return { success: false, error: "Service Unavailable" };
+  } catch (error: any) {
+    console.error("[ZERO-TRUST] VPN Gen Failed:", error.message);
+    return { success: false, error: "VPN Service Error" };
   }
 }
 
@@ -42,7 +43,6 @@ export async function vpnLogin(formData: FormData) {
 
   try {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-
     if (!user) return { error: 'Неверный логин или пароль' };
 
     const isValid = await bcrypt.compare(password, user.password);
@@ -57,15 +57,16 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false,
+      secure: false, // Обязательно false для HTTP/IP доступа
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
       path: '/',
-      priority: 'high'
     });
 
+    console.log(`[AUTH] User logged in: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
+    console.error("[AUTH] Login error:", error.message);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -78,8 +79,7 @@ export async function vpnRegister(formData: FormData) {
   
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-    stmt.run(username, hashedPassword, 'user');
+    db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run(username, hashedPassword, 'user');
     return { success: true };
   } catch (error: any) {
     if (error.message.includes('UNIQUE')) return { error: 'Пользователь существует' };
@@ -133,16 +133,20 @@ export async function buySubscription(months: number) {
     const dbDate = newExpire.toISOString();
     const nowDb = now.toISOString();
 
-    // При покупке также инициируем генерацию ключа, если его еще нет
+    // Обновляем даты в БД
+    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
+      .run(dbDate, nowDb, me.username);
+
+    // Генерируем VPN ключ, если его еще нет
     if (!me.vpn.links[0]) {
-      await registerVpnUser(`local_${me.username}`, me.username);
+      const firebaseUid = `local_${me.username}_${Date.now()}`;
+      await registerVpnUser(firebaseUid, me.username);
     }
 
-    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?').run(dbDate, nowDb, me.username);
-    
     revalidatePath('/dashboard');
     return { success: true };
-  } catch (e) {
+  } catch (e: any) {
+    console.error("[SHOP] Buy error:", e.message);
     return { error: 'Ошибка при покупке' };
   }
 }
@@ -165,8 +169,8 @@ export async function getAllVpnUsers() {
         protocol: 'VLESS + Reality',
         expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU') : 'Нет подписки',
         lastPurchaseDate: u.last_purchase_at ? new Date(u.last_purchase_at).toLocaleString('ru-RU') : null,
-        traffic: '12 GB / 50 GB',
-        usagePercent: 24
+        traffic: u.vpn_link ? '12 GB / 50 GB' : '0 GB / 0 GB',
+        usagePercent: u.vpn_link ? 24 : 0
       };
     });
   } catch (e) {
