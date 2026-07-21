@@ -52,20 +52,16 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
-  // Жестко задаем структуру для предотвращения деструктивной мутации
+  // Убираем inbounds, чтобы Marzban сам выбрал доступные узлы и не выдавал 422
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
     proxies: { 
       vless: {} 
     },
-    inbounds: { 
-      vless: ["VLESS TCP REALITY"] 
-    },
     status: "active"
   };
 
-  // 1. Пытаемся создать пользователя
   const createRes = await fetch(`${MARZBAN_API_URL}/api/user`, {
     method: 'POST',
     headers: {
@@ -76,7 +72,6 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     cache: 'no-store'
   });
 
-  // 2. Если пользователь уже существует (409), обновляем его (PUT) с тем же payload
   if (createRes.status === 409) {
     console.log(`[MARZBAN] Пользователь существует, обновляем: ${options.username}`);
     const updateRes = await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
@@ -91,16 +86,14 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     
     if (!updateRes.ok) {
       const err = await updateRes.text();
-      console.error(`[MARZBAN] Update error: ${updateRes.status} ${err}`);
       throw new Error(`API Error ${updateRes.status}: ${err}`);
     }
   } else if (!createRes.ok) {
     const errorText = await createRes.text();
-    console.error(`[MARZBAN] Create error: ${createRes.status} ${errorText}`);
     throw new Error(`API Error ${createRes.status}: ${errorText}`);
   }
 
-  // 3. Всегда запрашиваем профиль через GET, чтобы получить свежие ссылки (links)
+  // Принудительно запрашиваем профиль через GET без кэша, чтобы получить ссылки
   return await getMarzbanUser(options.username);
 }
 
@@ -111,7 +104,7 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json'
     },
-    cache: 'no-store'
+    cache: 'no-store' // Отключаем кэш Next.js
   });
   
   if (!response.ok) {
@@ -128,6 +121,5 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
   }
   
   const data = await response.json();
-  console.log(`[MARZBAN] Профиль получен для ${username}, ссылок: ${data.links?.length || 0}`);
   return data;
 }

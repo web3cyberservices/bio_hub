@@ -91,7 +91,7 @@ export default function Dashboard() {
       } else {
         toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
       }
-      setTimeout(() => loadData(false), 500);
+      setTimeout(() => loadData(false), 800);
     } else {
       toast({ title: "Ошибка", description: result.error, variant: "destructive" });
     }
