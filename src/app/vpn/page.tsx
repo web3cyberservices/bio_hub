@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserPlus, LogIn, Lock, User } from 'lucide-react';
+import { UserPlus, LogIn, Lock, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function VpnAuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -59,7 +60,9 @@ export default function VpnAuthPage() {
             <div className="flex justify-center relative">
               <div className="absolute inset-0 bg-[#5fad86]/10 blur-2xl rounded-full scale-125" />
               <div className="relative w-20 h-20 bg-black/40 rounded-2xl flex items-center justify-center shadow-lg border border-white/10 neon-glow">
-                <Shield className="w-10 h-10 text-[#5fad86]" />
+                <div className="relative w-12 h-12">
+                   <Image src="/fonts/logo.png" alt="Logo" fill className="object-contain" priority />
+                </div>
               </div>
             </div>
             

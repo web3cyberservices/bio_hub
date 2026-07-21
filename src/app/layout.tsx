@@ -21,6 +21,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Cyber Armor VPN | 2026 Premium Edition",
   description: "Ультраскоростной VLESS туннель нового поколения. Защита военного уровня. Версия 2026.",
+  icons: {
+    icon: "/fonts/favicon.png",
+  },
 };
 
 export default function RootLayout({
