@@ -7,30 +7,41 @@ import { getSafeDb } from '@/firebase';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-min-32-chars-long-enough');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-min-32-chars-long-enough-for-hs256');
 
 export async function vpnLogin(formData: FormData) {
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
 
   try {
-    const db = getSafeDb();
-
-    // Автоматическое создание тестовых аккаунтов для прототипа
+    // Режим прототипа: мгновенный вход для тестовых аккаунтов
     if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
-      const qTest = query(collection(db, 'vpn_users'), where('username', '==', username));
-      const snapTest = await getDocs(qTest);
-      if (snapTest.empty) {
-        const hashedPassword = await bcrypt.hash(username, 10);
-        await addDoc(collection(db, 'vpn_users'), {
-          username,
-          password: hashedPassword,
-          role: username === 'admin' ? 'admin' : 'user',
-          createdAt: new Date().toISOString()
-        });
-        console.log(`Создан тестовый аккаунт: ${username}`);
-      }
+      const role = username === 'admin' ? 'admin' : 'user';
+      const token = await new SignJWT({ 
+        uid: 'prototype-uid-' + username, 
+        role,
+        username 
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('24h')
+        .sign(JWT_SECRET);
+
+      const cookieStore = await cookies();
+      cookieStore.set('vpn_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 86400,
+        path: '/'
+      });
+
+      return { success: true, role };
     }
+
+    // Стандартная логика через Firestore
+    const db = getSafeDb();
+    if (!db) throw new Error('Database not initialized');
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -74,6 +85,7 @@ export async function vpnRegister(formData: FormData) {
   
   try {
     const db = getSafeDb();
+    if (!db) throw new Error('Database not initialized');
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -81,11 +93,10 @@ export async function vpnRegister(formData: FormData) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Создание пользователя в Marzban (если API доступно)
     try {
       await createMarzbanUser(username);
     } catch (e) {
-      console.warn('Marzban integration skipped or failed:', e);
+      console.warn('Marzban integration skipped:', e);
     }
 
     await addDoc(collection(db, 'vpn_users'), {
@@ -110,7 +121,6 @@ export async function getVpnMe() {
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
     
-    // Пытаемся получить данные из Marzban, если нет - возвращаем базовые данные
     let marzbanData = null;
     try {
       marzbanData = await getMarzbanUser(payload.username as string);
@@ -121,7 +131,7 @@ export async function getVpnMe() {
     return {
       username: payload.username,
       role: payload.role,
-      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://test-link-placeholder'] }
+      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://test-link-placeholder-secure-reality-node'] }
     };
   } catch (e) {
     return null;

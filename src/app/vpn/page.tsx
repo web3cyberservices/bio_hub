@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserPlus, LogIn, Lock, User, Globe, Info } from 'lucide-react';
+import { Shield, UserPlus, LogIn, Lock, User, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function VpnAuthPage() {
@@ -82,6 +82,7 @@ export default function VpnAuthPage() {
                   name="username"
                   placeholder="Имя пользователя"
                   required
+                  autoComplete="username"
                   className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none transition-all"
                 />
               </div>
@@ -92,20 +93,10 @@ export default function VpnAuthPage() {
                   type="password"
                   placeholder="Пароль"
                   required
+                  autoComplete="current-password"
                   className="h-14 pl-12 bg-white/5 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:bg-white/10 outline-none transition-all"
                 />
               </div>
-
-              {isLogin && (
-                <div className="p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl flex items-start space-x-3">
-                  <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                    Для теста используйте: <br/>
-                    Логин: <span className="text-cyan-400">admin</span> / Пароль: <span className="text-cyan-400">admin</span> <br/>
-                    Или <span className="text-cyan-400">user</span> / <span className="text-cyan-400">user</span>
-                  </p>
-                </div>
-              )}
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-6 px-8 pb-12 pt-6">
