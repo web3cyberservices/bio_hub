@@ -30,12 +30,17 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <Script 
+          src="https://telegram.org/js/telegram-web-app.js" 
+          strategy="beforeInteractive" 
+        />
       </head>
-      <body className={`${inter.variable} antialiased bg-slate-950 text-slate-100`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
         <FirebaseClientProvider>
           <TelegramInit />
-          {children}
+          <div className="relative flex min-h-screen flex-col">
+            {children}
+          </div>
           <Toaster />
         </FirebaseClientProvider>
       </body>

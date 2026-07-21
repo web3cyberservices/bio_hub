@@ -1,9 +1,9 @@
 {
   "node": {
-    "40dcebffc110eaed25e53829863ab2e598a4e1650d": {
+    "40544ac0954e4d0ba64603e20664a04ed396719834": {
       "workers": {
         "app/vpn/page": {
-          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         }
       },
@@ -11,10 +11,10 @@
         "app/vpn/page": "action-browser"
       }
     },
-    "4057341f29d8a69f74d8942f3b2a099f0a76079d4d": {
+    "405f4b263320e1b89b8bc9b311f741c1b326343cd5": {
       "workers": {
         "app/vpn/page": {
-          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         }
       },
@@ -22,10 +22,10 @@
         "app/vpn/page": "action-browser"
       }
     },
-    "0016007e1d9647a25be4ccdf35fc7ae50dfddcb7c5": {
+    "00bae879c5d9f55d8a293de2c534d80ca2b04b67bc": {
       "workers": {
         "app/vpn/page": {
-          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         }
       },
@@ -33,10 +33,10 @@
         "app/vpn/page": "action-browser"
       }
     },
-    "00eff89e72232c595024e2a2d3329b48d02b55cb16": {
+    "007d30c2a85119552241a08d98d5a0ddc9ab694005": {
       "workers": {
         "app/vpn/page": {
-          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false
         }
       },

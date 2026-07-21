@@ -18,7 +18,7 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Настройка темы на основе Telegram
+      // Синхронизация цветов с темой Telegram
       const root = document.documentElement;
       if (tg.themeParams?.bg_color) {
         root.style.setProperty('--background', tg.themeParams.bg_color);
@@ -29,6 +29,9 @@ export function TelegramInit() {
       if (tg.themeParams?.button_color) {
         root.style.setProperty('--primary', tg.themeParams.button_color);
       }
+      
+      // Установка цвета заголовка
+      tg.setHeaderColor(tg.themeParams?.header_bg_color || 'bg_color');
     }
   }, []);
 

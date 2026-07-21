@@ -1,0 +1,11 @@
+
+{
+  "vpn_hero": {
+    "url": "https://picsum.photos/seed/vpn1/600/400",
+    "hint": "cybersecurity server"
+  },
+  "location_germany": {
+    "url": "https://picsum.photos/seed/germany/400/300",
+    "hint": "berlin city"
+  }
+}
