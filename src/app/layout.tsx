@@ -15,7 +15,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#090b11",
+  themeColor: "#5fad86",
 };
 
 export const metadata: Metadata = {
@@ -33,14 +33,14 @@ export default function RootLayout({
       <head>
         <style dangerouslySetInnerHTML={{ __html: `
           body { 
-            background-color: #090b11 !important; 
-            color: #f1f5f9 !important; 
+            background-color: #5fad86 !important; 
+            color: #ffffff !important; 
             margin: 0; 
             padding: 0; 
           }
         `}} />
       </head>
-      <body className={`${spaceGrotesk.variable} font-sans bg-[#090b11] text-slate-50 antialiased min-h-screen`}>
+      <body className={`${spaceGrotesk.variable} font-sans bg-[#5fad86] text-white antialiased min-h-screen`}>
         <TelegramInit />
         <div className="relative flex min-h-screen flex-col">
           {children}
