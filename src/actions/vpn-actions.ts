@@ -12,11 +12,15 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(firebaseUid: string, username: string) {
   try {
+    // 50 GB = 50 * 1024 * 1024 * 1024
+    const dataLimit = 50 * 1024 * 1024 * 1024;
+    
     const vpnProfile = await generateMarzbanUser({ 
       username, 
-      dataLimit: 50 * 1024 * 1024 * 1024 
+      dataLimit 
     });
     
+    // Сохраняем в БД
     saveUserToDb({ 
       uid: firebaseUid, 
       username: username, 
@@ -34,16 +38,21 @@ export async function regenerateVpnKey() {
   try {
     const me = await getVpnMe();
     if (!me) return { error: 'Нужна авторизация' };
-    if (!me.isActive && me.role !== 'admin') return { error: 'Подписка неактивна' };
+    
+    // Админы всегда могут, пользователи только с активной подпиской
+    if (!me.isActive && me.role !== 'admin') {
+      return { error: 'Подписка неактивна. Продлите доступ для генерации ключа.' };
+    }
 
     const username = me.username;
-    // Генерируем новый профиль в Marzban
+    console.log(`[CYBER-ARMOR] Перегенерация ключа для: ${username}`);
+
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit: 50 * 1024 * 1024 * 1024 
     });
 
-    // Обновляем только ссылку в БД, не трогая сроки подписки
+    // Обновляем ссылку в БД
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(vpnProfile.links[0], username);
 
@@ -81,6 +90,7 @@ export async function vpnLogin(formData: FormData) {
       path: '/',
     });
 
+    console.log(`[AUTH] Вход успешен: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
     console.error("[AUTH] Login error:", error.message);
@@ -99,17 +109,17 @@ export async function vpnRegister(formData: FormData) {
     db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run(username, hashedPassword, 'user');
     return { success: true };
   } catch (error: any) {
-    if (error.message.includes('UNIQUE')) return { error: 'Пользователь существует' };
+    if (error.message.includes('UNIQUE')) return { error: 'Пользователь с таким именем уже существует' };
     return { error: 'Ошибка регистрации' };
   }
 }
 
 export async function getVpnMe() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('vpn_token')?.value;
-  if (!token) return null;
-
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('vpn_token')?.value;
+    if (!token) return null;
+
     const { payload }: any = await jwtVerify(token, JWT_SECRET);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(payload.username);
     
@@ -132,7 +142,8 @@ export async function getVpnMe() {
       }
     };
   } catch (e: any) {
-    console.error("[AUTH] Session invalid, clearing cookie:", e.message);
+    // В случае ошибки подписи или истечения токена - очищаем куку
+    const cookieStore = await cookies();
     cookieStore.delete('vpn_token');
     return null;
   }
@@ -145,9 +156,12 @@ export async function buySubscription(months: number) {
 
     const now = new Date();
     let newExpire = new Date();
+    
+    // Если текущая подписка еще активна, продлеваем от даты её окончания
     if (me.expiresAt && new Date(me.expiresAt) > now) {
       newExpire = new Date(me.expiresAt);
     }
+    
     newExpire.setMonth(newExpire.getMonth() + months);
     
     const dbDate = newExpire.toISOString();
@@ -156,6 +170,7 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
       .run(dbDate, nowDb, me.username);
 
+    // Если у пользователя еще нет ключа, генерируем его
     if (!me.vpn.links[0]) {
       const firebaseUid = `local_${me.username}_${Date.now()}`;
       await registerVpnUser(firebaseUid, me.username);
@@ -165,16 +180,14 @@ export async function buySubscription(months: number) {
     return { success: true };
   } catch (e: any) {
     console.error("[SHOP] Buy error:", e.message);
-    return { error: 'Ошибка при покупке' };
+    return { error: 'Ошибка при обработке покупки' };
   }
 }
 
 export async function getAllVpnUsers() {
   try {
     const me = await getVpnMe();
-    if (!me || me.role !== 'admin') {
-      return [];
-    }
+    if (!me || me.role !== 'admin') return [];
 
     const users = db.prepare("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC").all();
     
