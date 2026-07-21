@@ -5,7 +5,6 @@ import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth, onAuthStateChanged, type User } from 'firebase/auth';
 import { useState, useEffect } from 'react';
 
-// Эти переменные должны быть в .env файле на вашем сервере
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -20,8 +19,8 @@ let db: Firestore;
 let auth: Auth;
 
 export function initializeFirebase() {
-  // На сервере инициализируем только если есть projectId
-  if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+  // Если ключи отсутствуют, не пытаемся инициализировать
+  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
     return { app: null, db: null, auth: null };
   }
   

@@ -14,7 +14,7 @@ export async function vpnLogin(formData: FormData) {
   const password = formData.get('password') as string;
 
   try {
-    // Прототипный вход для тестов
+    // Режим прототипа для мгновенного теста без БД
     if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
       const role = username === 'admin' ? 'admin' : 'user';
       const token = await new SignJWT({ 
@@ -40,7 +40,7 @@ export async function vpnLogin(formData: FormData) {
     }
 
     const db = getSafeDb();
-    if (!db) return { error: 'Конфигурация Firebase не найдена на сервере (.env)' };
+    if (!db) return { error: 'Конфигурация базы данных не найдена. Создайте .env файл на сервере.' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -84,15 +84,14 @@ export async function vpnRegister(formData: FormData) {
   
   try {
     const db = getSafeDb();
-    if (!db) return { error: 'База данных не подключена. Добавьте ключи в .env на сервере.' };
+    if (!db) return { error: 'База данных не подключена. Добавьте ключи Firebase в .env на сервере.' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
-    if (!snapshot.empty) return { error: 'Имя пользователя уже занято' };
+    if (!snapshot.empty) return { error: 'Это имя пользователя уже занято' };
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Пытаемся создать в Firestore
     await addDoc(collection(db, 'vpn_users'), {
       username,
       password: hashedPassword,
@@ -100,17 +99,17 @@ export async function vpnRegister(formData: FormData) {
       createdAt: new Date().toISOString()
     });
 
-    // Опционально: Marzban
+    // Интеграция с Marzban (если установлена на сервере)
     try {
       await createMarzbanUser(username);
     } catch (e) {
-      console.warn('Marzban integration skipped');
+      console.warn('Marzban не отвечает, пользователь создан только в БД');
     }
 
     return { success: true };
   } catch (error: any) {
     console.error('Register Error:', error);
-    return { error: 'Ошибка регистрации: ' + (error.message || 'проверьте правила доступа в Firebase') };
+    return { error: 'Ошибка регистрации: проверьте настройки Firestore или .env' };
   }
 }
 
@@ -126,13 +125,13 @@ export async function getVpnMe() {
     try {
       marzbanData = await getMarzbanUser(payload.username as string);
     } catch (e) {
-      // Игнорируем ошибки Marzban для прототипа
+      // Игнорируем для прототипа
     }
     
     return {
       username: payload.username,
       role: payload.role,
-      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://test-link-placeholder-secure-reality-node'] }
+      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://test-link-secure-reality-node'] }
     };
   } catch (e) {
     return null;
