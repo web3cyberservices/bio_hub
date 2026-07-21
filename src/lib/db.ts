@@ -3,7 +3,6 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 
-// Используем путь в корне проекта, чтобы база не удалялась при пересборке
 const dbPath = path.resolve(process.cwd(), 'vpn.db');
 console.log(`[DB] Путь к базе данных: ${dbPath}`);
 
@@ -17,6 +16,7 @@ db.exec(`
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
+    expires_at DATETIME DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -30,10 +30,12 @@ function seedDatabase() {
       const adminPass = bcrypt.hashSync('admin', 10);
       const userPass = bcrypt.hashSync('user', 10);
 
-      const insert = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+      const insert = db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)');
       
-      insert.run('admin', adminPass, 'admin');
-      insert.run('user', userPass, 'user');
+      // Админ всегда активен (условно далеко в будущем)
+      insert.run('admin', adminPass, 'admin', '2099-01-01 00:00:00');
+      // Обычный юзер без подписки
+      insert.run('user', userPass, 'user', null);
       console.log('[DB] Тестовые аккаунты созданы: admin/admin, user/user');
     }
   } catch (e) {

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'premium-vpn-secret-key-must-be-very-long-and-secure-123456');
 
@@ -14,21 +15,15 @@ export async function vpnLogin(formData: FormData) {
 
   console.log(`[AUTH] Попытка входа: ${username}`);
 
-  if (!username || !password) {
-    return { error: 'Введите логин и пароль' };
-  }
-
   try {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      console.log(`[AUTH] Пользователь не найден: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[AUTH] Неверный пароль: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -45,7 +40,7 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // Для работы по IP без SSL
+      secure: false, 
       sameSite: 'lax',
       maxAge: 86400,
       path: '/'
@@ -86,19 +81,51 @@ export async function getVpnMe() {
     if (!token) return null;
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    const user: any = db.prepare('SELECT role, username FROM users WHERE username = ?').get(payload.username);
+    const user: any = db.prepare('SELECT role, username, expires_at FROM users WHERE username = ?').get(payload.username);
     
+    if (!user) return null;
+
+    const now = new Date();
+    const expiresAt = user.expires_at ? new Date(user.expires_at) : null;
+    const isActive = expiresAt && expiresAt > now;
+
     return {
-      username: payload.username,
-      role: user?.role || payload.role,
+      username: user.username,
+      role: user.role,
+      expiresAt: user.expires_at,
+      isActive: !!isActive,
       vpn: { 
-        status: 'active', 
-        expire: null, 
-        links: [`vless://${payload.username}@premium.vpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#VPN_PRO_${payload.username}`] 
+        status: isActive ? 'active' : 'expired', 
+        links: isActive ? [`vless://${user.username}@premium.vpn.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#VPN_PRO_${user.username}`] : [] 
       }
     };
   } catch (e) {
     return null;
+  }
+}
+
+export async function buySubscription(months: number) {
+  try {
+    const me = await getVpnMe();
+    if (!me) return { error: 'Нужна авторизация' };
+
+    const now = new Date();
+    let newExpire = new Date();
+    
+    // Если подписка еще активна, продлеваем её, иначе начинаем с текущего момента
+    if (me.expiresAt && new Date(me.expiresAt) > now) {
+      newExpire = new Date(me.expiresAt);
+    }
+    
+    newExpire.setMonth(newExpire.getMonth() + months);
+    
+    const dbDate = newExpire.toISOString().slice(0, 19).replace('T', ' ');
+    db.prepare('UPDATE users SET expires_at = ? WHERE username = ?').run(dbDate, me.username);
+    
+    revalidatePath('/dashboard');
+    return { success: true, expiresAt: dbDate };
+  } catch (e) {
+    return { error: 'Ошибка при покупке' };
   }
 }
 
@@ -107,16 +134,18 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (me?.role !== 'admin') return { error: 'Доступ запрещен' };
 
-    const users = db.prepare('SELECT id, username, role, created_at FROM users').all();
+    const users = db.prepare('SELECT id, username, role, expires_at, created_at FROM users').all();
     
-    // Имитируем данные о подключениях (в реальности брать из API Marzban)
-    return users.map((u: any) => ({
-      ...u,
-      status: Math.random() > 0.3 ? 'online' : 'offline',
-      protocol: 'VLESS + Reality',
-      expire: 'Бессрочно',
-      traffic: (Math.random() * 50).toFixed(1) + ' GB'
-    }));
+    return users.map((u: any) => {
+      const isActive = u.expires_at && new Date(u.expires_at) > new Date();
+      return {
+        ...u,
+        status: isActive ? 'online' : 'expired',
+        protocol: 'VLESS + Reality',
+        expire: u.expires_at ? new Date(u.expires_at).toLocaleDateString() : 'Нет подписки',
+        traffic: (Math.random() * 50).toFixed(1) + ' GB'
+      };
+    });
   } catch (e) {
     return { error: 'Ошибка получения списка' };
   }
