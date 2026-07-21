@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -14,7 +13,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#000000",
+  themeColor: "#020617",
 };
 
 export const metadata: Metadata = {
@@ -28,14 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning className="dark">
       <head>
         <Script 
           src="https://telegram.org/js/telegram-web-app.js" 
           strategy="beforeInteractive" 
         />
       </head>
-      <body className={`${inter.variable} font-sans bg-background text-foreground antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-slate-950 text-slate-50 antialiased`} suppressHydrationWarning>
         <FirebaseClientProvider>
           <TelegramInit />
           <div className="relative flex min-h-screen flex-col">

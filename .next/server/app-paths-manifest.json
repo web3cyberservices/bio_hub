@@ -1,4 +1,4 @@
 {
-  "/page": "app/page.js",
-  "/vpn/page": "app/vpn/page.js"
+  "/vpn/page": "app/vpn/page.js",
+  "/page": "app/page.js"
 }
