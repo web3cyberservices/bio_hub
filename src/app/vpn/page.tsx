@@ -44,7 +44,7 @@ export default function VpnAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#090b11] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full" />
@@ -64,8 +64,8 @@ export default function VpnAuthPage() {
             </div>
             
             <div className="space-y-2">
-              <CardTitle className="text-4xl font-black tracking-[0.05em] text-white uppercase font-sans">
-                Cyber<span className="text-cyan-400">Armor</span>
+              <CardTitle className="text-4xl font-black tracking-tight text-white uppercase font-sans">
+                CYBER<span className="text-cyan-400">ARMOR</span>
               </CardTitle>
               <div className="flex items-center justify-center space-x-2 text-slate-500">
                 <Globe className="w-3 h-3" />

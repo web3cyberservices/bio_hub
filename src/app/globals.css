@@ -5,11 +5,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: 224 71% 2%;
+  --background: 225 31% 6%;
   --foreground: 213 31% 91%;
-  --card: 224 71% 4%;
+  --card: 225 31% 8%;
   --card-foreground: 213 31% 91%;
-  --popover: 224 71% 2%;
+  --popover: 225 31% 6%;
   --popover-foreground: 213 31% 91%;
   --primary: 191 97% 50%;
   --primary-foreground: 224 71% 2%;
@@ -57,7 +57,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased font-sans;
-    background-color: #02040a !important;
+    background-color: #090b11 !important;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
@@ -65,8 +65,8 @@
 }
 
 .glass-panel {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(20px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -84,7 +84,7 @@
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #02040a;
+  background: #090b11;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;

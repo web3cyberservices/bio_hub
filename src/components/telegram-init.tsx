@@ -24,11 +24,11 @@ export function TelegramInit() {
       // Check version for color methods support (v6.1+)
       if (tg.isVersionAtLeast('6.1')) {
         try {
-          tg.setHeaderColor('#02040a');
-          tg.setBackgroundColor('#02040a');
+          tg.setHeaderColor('#090b11');
+          tg.setBackgroundColor('#090b11');
           
           if (tg.setBottomBarColor) {
-            tg.setBottomBarColor('#02040a');
+            tg.setBottomBarColor('#090b11');
           }
         } catch (e) {
           console.warn("Telegram UI color customization is not supported in this environment", e);

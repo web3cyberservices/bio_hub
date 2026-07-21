@@ -122,7 +122,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[#090b11] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
         <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Cyber Armor Engine...</p>
       </div>
@@ -141,15 +141,17 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#02040a] text-slate-100 selection:bg-cyan-500/20 pb-32">
-      <header className="sticky top-0 z-50 bg-[#02040a]/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
+    <div className="min-h-screen bg-[#090b11] text-slate-100 selection:bg-cyan-500/20 pb-32">
+      <header className="sticky top-0 z-50 bg-[#090b11]/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black leading-none tracking-[0.05em] uppercase font-sans">Cyber<span className="text-cyan-400">Armor</span></h1>
+              <h1 className="text-xl font-black leading-none tracking-tight uppercase font-sans">
+                CYBER<span className="text-cyan-400">ARMOR</span>
+              </h1>
               <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.4em] mt-1">
                 {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
@@ -246,7 +248,7 @@ export default function Dashboard() {
                           <div className="w-40 h-40 rounded-full border-4 border-cyan-500/20 bg-cyan-500/5 flex items-center justify-center">
                             <Shield className="w-14 h-14 text-cyan-400" />
                           </div>
-                          <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#02040a]" />
+                          <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#090b11]" />
                         </div>
                         <h2 className="text-3xl font-black mb-2 uppercase text-white tracking-tight">Защищено</h2>
                         <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">Cyber Armor Active</p>
