@@ -1,10 +1,15 @@
 
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const montserrat = Montserrat({ 
+  subsets: ["latin", "cyrillic"], 
+  variable: "--font-montserrat",
+  weight: ['300', '400', '500', '700', '900'],
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -33,11 +38,10 @@ export default function RootLayout({
             color: #f1f5f9 !important; 
             margin: 0; 
             padding: 0; 
-            font-family: sans-serif; 
           }
         `}} />
       </head>
-      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
+      <body className={`${montserrat.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
         <div className="relative flex min-h-screen flex-col">
           {children}
         </div>
