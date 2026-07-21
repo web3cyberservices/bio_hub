@@ -20,10 +20,11 @@ export async function registerVpnUser(username: string) {
     });
     
     if (!vpnProfile.links || vpnProfile.links.length === 0) {
-      console.warn(`[VPN-ACTION] Marzban returned no links for ${username}. Check if VLESS inbound is active.`);
-      // We still update the DB if user was created/synced, but report no links
-      db.prepare("UPDATE users SET vpn_link = '' WHERE username = ?").run(username);
-      return { success: false, error: 'Marzban API returned no links. Please check server VLESS config.' };
+      console.error(`[VPN-ACTION] Marzban returned no links for ${username}. CHECK XRAY CONFIG!`);
+      return { 
+        success: false, 
+        error: 'Marzban API вернул 0 ссылок. Убедитесь, что VLESS Inbound активен в панели.' 
+      };
     }
 
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
@@ -31,8 +32,8 @@ export async function registerVpnUser(username: string) {
     
     return { success: true, link: vpnProfile.links[0] };
   } catch (error: any) {
-    console.error("[VPN-ACTION] Key Gen Failed:", error.message);
-    return { success: false, error: `VPN Service Error: ${error.message}` };
+    console.error("[VPN-ACTION] Key Gen Critical Error:", error.message);
+    return { success: false, error: `Ошибка сервиса: ${error.message}` };
   }
 }
 
@@ -47,7 +48,6 @@ export async function regenerateVpnKey() {
     revalidatePath('/dashboard');
     return { success: true, link: result.link };
   } catch (e: any) {
-    console.error("[VPN] Regeneration error:", e.message);
     return { error: 'Ошибка при перегенерации ключа' };
   }
 }
@@ -80,7 +80,6 @@ export async function vpnLogin(formData: FormData) {
 
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error("[AUTH] Login error:", error.message);
     return { error: 'Ошибка сервера' };
   }
 }
@@ -107,9 +106,17 @@ export async function getVpnMe() {
     const token = cookieStore.get('vpn_token')?.value;
     if (!token) return null;
 
-    const { payload }: any = await jwtVerify(token, JWT_SECRET);
+    let payload;
+    try {
+      const verified = await jwtVerify(token, JWT_SECRET);
+      payload = verified.payload;
+    } catch (e) {
+      console.warn("[AUTH] Session invalid, clearing cookie:", (e as Error).message);
+      cookieStore.delete('vpn_token');
+      return null;
+    }
+
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(payload.username);
-    
     if (!user) return null;
 
     const now = new Date();
@@ -149,12 +156,12 @@ export async function buySubscription(months: number) {
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
+    // Синхронизируем с Marzban сразу
     const vpnResult = await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
-    return { success: true }; // Subscription updated even if VPN sync failed (user can retry)
+    return { success: true };
   } catch (e: any) {
-    console.error("[SHOP] Buy error:", e.message);
     return { error: 'Ошибка при оплате' };
   }
 }
