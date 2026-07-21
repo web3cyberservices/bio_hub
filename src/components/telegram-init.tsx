@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -18,7 +17,7 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Безопасная установка цветов без HSL конфликтов
+      // Устанавливаем цвета темы Telegram, если они доступны
       const root = document.documentElement;
       if (tg.themeParams?.bg_color) {
         root.style.setProperty('--background', tg.themeParams.bg_color);
