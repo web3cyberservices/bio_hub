@@ -162,10 +162,10 @@ export default function Dashboard() {
       <header className="flex-none px-4 py-2">
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <div className="relative w-5 h-5">
-              <Image src="/fonts/logo512x512.png" alt="CyberArmor" fill className="object-contain opacity-80" />
+            <div className="relative w-6 h-6 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+              <Image src="/fonts/logo512x512.png" alt="CyberArmor" fill className="object-contain" />
             </div>
-            <h1 className="brand-title text-[10px] tracking-[0.5em] font-black">CYBER<span className="text-black/30">ARMOR</span></h1>
+            <h1 className="brand-title text-[10px] tracking-[0.6em] font-black">CYBER<span className="text-black/30">ARMOR</span></h1>
           </div>
           <div className="flex items-center space-x-2">
              <Button variant="ghost" size="icon" onClick={() => loadData(false)} disabled={refreshing} className="w-7 h-7 rounded-lg">
@@ -228,13 +228,13 @@ export default function Dashboard() {
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-50" />
                       <CardContent className="p-6 text-center relative z-10">
                         <div className="mb-4 relative inline-block">
-                          <div className="w-16 h-16 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center neon-glow">
-                            <div className="relative w-10 h-10">
+                          <div className="w-16 h-16 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(95,173,134,0.4)]">
+                            <div className="relative w-14 h-14">
                               <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
                             </div>
                           </div>
                         </div>
-                        <h2 className="brand-title text-xs mb-1 justify-center text-white tracking-[0.4em] font-black">ПОДПИСКА АКТИВИРОВАНА</h2>
+                        <h2 className="brand-title text-xs mb-1 justify-center text-white tracking-[0.5em] font-black">ПОДПИСКА АКТИВИРОВАНА</h2>
                         <p className="text-[#5fad86]/80 text-[8px] font-black uppercase tracking-[0.2em] mb-4">
                           {dates ? `с ${dates.start} по ${dates.end}` : 'Туннель активен'}
                         </p>
@@ -281,13 +281,13 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-6 text-center py-4">
                     <div className="space-y-4">
-                      <div className="w-16 h-16 bg-black/40 rounded-2xl flex items-center justify-center mx-auto border border-white/5 shadow-2xl">
-                        <div className="relative w-10 h-10 opacity-20">
+                      <div className="w-16 h-16 flex items-center justify-center mx-auto filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                        <div className="relative w-14 h-14 opacity-40">
                            <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <h2 className="brand-title text-xs justify-center text-white tracking-[0.4em] font-black uppercase">ДОСТУП ОГРАНИЧЕН</h2>
+                        <h2 className="brand-title text-xs justify-center text-white tracking-[0.5em] font-black uppercase">ДОСТУП ОГРАНИЧЕН</h2>
                         <p className="text-white/20 text-[7px] font-black uppercase tracking-[0.3em]">Требуется активация терминала</p>
                       </div>
                     </div>
@@ -315,7 +315,7 @@ export default function Dashboard() {
                 {(isActive && vpnData?.vpn?.links?.length > 0) ? (
                   <Card className="glass-panel rounded-[3rem] bg-transparent shadow-2xl overflow-hidden">
                     <CardContent className="p-6 text-center space-y-4">
-                      <div className="inline-block p-4 bg-white rounded-3xl shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                      <div className="inline-block p-4 bg-white rounded-3xl shadow-[0_0_30px_rgba(255,255,255,0.15)] relative">
                         <QRCodeSVG value={vpnData?.vpn?.links[0]} size={140} level="H" />
                       </div>
                       <div className="space-y-3">

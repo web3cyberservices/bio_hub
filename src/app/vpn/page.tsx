@@ -46,7 +46,7 @@ export default function VpnAuthPage() {
 
   return (
     <div className="min-h-screen bg-[#5fad86] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-black/10 blur-[150px] rounded-full" />
+      <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-black/20 blur-[150px] rounded-full" />
       <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-cyan-900/10 blur-[150px] rounded-full" />
       
       <motion.div 
@@ -56,18 +56,22 @@ export default function VpnAuthPage() {
         className="w-full max-w-[400px] relative z-10"
       >
         <Card className="glass-panel rounded-[3.5rem] border-white/5 overflow-hidden shadow-2xl">
-          <CardHeader className="space-y-6 text-center pt-10 pb-6">
-            <div className="flex justify-center relative">
-              <div className="absolute inset-0 bg-[#5fad86]/10 blur-2xl rounded-full scale-125" />
-              <div className="relative w-20 h-20 bg-black/40 rounded-2xl flex items-center justify-center shadow-lg border border-white/10 neon-glow">
-                <div className="relative w-12 h-12">
-                   <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" priority />
-                </div>
+          <CardHeader className="space-y-4 text-center pt-12 pb-6">
+            <div className="flex justify-center relative mb-2">
+              <div className="absolute inset-0 bg-[#5fad86]/20 blur-3xl rounded-full scale-150" />
+              <div className="relative w-32 h-32 filter drop-shadow-[0_0_20px_rgba(95,173,134,0.4)]">
+                 <Image 
+                   src="/fonts/logo512x512.png" 
+                   alt="Logo" 
+                   fill 
+                   className="object-contain" 
+                   priority 
+                 />
               </div>
             </div>
             
             <div className="space-y-1">
-              <CardTitle className="brand-title text-2xl justify-center text-white tracking-[0.4em]">
+              <CardTitle className="brand-title text-2xl justify-center text-white tracking-[0.6em] font-black">
                 CYBER<span className="text-[#5fad86]">ARMOR</span>
               </CardTitle>
               <p className="text-[9px] font-black tracking-[0.5em] uppercase text-white/20">Приватный терминал</p>
@@ -102,7 +106,7 @@ export default function VpnAuthPage() {
             <CardFooter className="flex flex-col space-y-6 px-10 pb-12">
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-[#5fad86] hover:bg-[#5fad86]/90 text-black font-black rounded-2xl shadow-[0_8px_20px_rgba(95,173,134,0.3)] transition-all active:scale-95 text-[11px] tracking-[0.3em] uppercase cyber-button"
+                className="w-full h-14 bg-[#5fad86] hover:bg-[#5fad86]/90 text-black font-black rounded-2xl shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all active:scale-95 text-[11px] tracking-[0.3em] uppercase cyber-button"
                 disabled={loading}
               >
                 {loading ? (
