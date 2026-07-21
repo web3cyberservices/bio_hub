@@ -1,28 +1,24 @@
+
 'use client';
 
-import React, { useMemo, type ReactNode } from 'react';
-import { FirebaseProvider } from './provider';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { initializeFirebase } from './index';
 
-interface FirebaseClientProviderProps {
-  children: ReactNode;
-}
+const FirebaseContext = createContext<{ initialized: boolean }>({ initialized: false });
 
-/**
- * Клиентский провайдер Firebase. 
- * Гарантирует инициализацию только на стороне клиента один раз.
- */
-export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  // Инициализируем Firebase строго на стороне клиента один раз.
-  const firebaseServices = useMemo(() => initializeFirebase(), []);
+export function FirebaseClientProvider({ children }: { children: React.ReactNode }) {
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    initializeFirebase();
+    setInitialized(true);
+  }, []);
 
   return (
-    <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
-    >
+    <FirebaseContext.Provider value={{ initialized }}>
       {children}
-    </FirebaseProvider>
+    </FirebaseContext.Provider>
   );
 }
+
+export const useFirebaseContext = () => useContext(FirebaseContext);

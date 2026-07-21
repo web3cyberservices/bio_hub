@@ -1,7 +1,0 @@
-{
-  "auth": {
-    "providers": {
-      "anonymous": true
-    }
-  }
-}

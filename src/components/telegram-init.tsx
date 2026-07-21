@@ -1,38 +1,25 @@
+
 'use client';
-/**
- * @fileOverview Обработчик инициализации Telegram Mini App и глубоких ссылок.
- * Исправлено: удалена конфликтующая директива 'use server'.
- */
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export function TelegramInit() {
-  const router = useRouter();
-
   useEffect(() => {
-    // Безопасный доступ к объекту Telegram WebApp
-    const tg = (window as any)?.Telegram?.WebApp;
-    
-    if (tg) {
-      // Сообщаем Telegram, что приложение готово
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
       tg.ready();
-      // Расширяем приложение на все доступное пространство
       tg.expand();
       
-      // Извлекаем параметр старта (ID специалиста из startapp)
-      // В Telegram WebApp параметр startapp попадает в start_param
-      const startParam = tg.initDataUnsafe?.start_param;
-
-      if (startParam) {
-        console.log("[TELEGRAM-DEEP-LINK] Обнаружен ID специалиста:", startParam);
-        
-        // Автоматический редирект на страницу специалиста
-        // Используем replace, чтобы не забивать историю переходов
-        router.replace(`/specialist/${startParam}`);
+      // Set theme colors based on Telegram theme
+      const root = document.documentElement;
+      if (tg.themeParams.bg_color) {
+        root.style.setProperty('--background', tg.themeParams.bg_color);
+      }
+      if (tg.themeParams.text_color) {
+        root.style.setProperty('--foreground', tg.themeParams.text_color);
       }
     }
-  }, [router]);
+  }, []);
 
   return null;
 }

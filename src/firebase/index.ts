@@ -1,47 +1,77 @@
 
 'use client';
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
-import { firebaseConfig } from './config';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getAuth, type Auth, onAuthStateChanged, type User } from 'firebase/auth';
+import { useState, useEffect } from 'react';
 
-/**
- * BIO-HUB FIREBASE CORE - Safe Singleton
- * Предотвращает ошибки повторной инициализации при HMR в Next.js 16.2.
- */
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'fake-key',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
 let app: FirebaseApp;
-let auth: Auth;
 let db: Firestore;
+let auth: Auth;
 
 export function initializeFirebase() {
-  if (typeof window === 'undefined') return { firebaseApp: null, auth: null, firestore: null };
-
-  try {
-    if (getApps().length === 0) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApp();
-    }
-
+  if (typeof window === 'undefined') return { app: null, db: null, auth: null };
+  
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
     auth = getAuth(app);
-    
-    try {
-      db = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-      });
-    } catch (e) {
-      db = getFirestore(app);
-    }
-
-    return { firebaseApp: app, auth, firestore: db };
-  } catch (err) {
-    console.error("Firebase Core Init Error:", err);
-    return { firebaseApp: null, auth: null, firestore: null };
+  } else {
+    app = getApps()[0];
+    db = getFirestore(app);
+    auth = getAuth(app);
   }
+  return { app, db, auth };
 }
 
-// Прямые экспорты хуков из провайдера во избежание круговых зависимостей
-export { useAuth, useFirestore, useUser, useFirebase, useMemoFirebase } from './provider';
-export { useCollection } from './firestore/use-collection';
-export { useDoc } from './firestore/use-doc';
+export function getSafeDb(): Firestore {
+  const { db: dbInstance } = initializeFirebase();
+  return dbInstance!;
+}
+
+export function getSafeAuth(): Auth {
+  const { auth: authInstance } = initializeFirebase();
+  return authInstance!;
+}
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { auth: authInstance } = initializeFirebase();
+    if (!authInstance) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(authInstance, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return { user, loading, auth: getSafeAuth() };
+}
+
+/**
+ * useUser hook to be used in client components
+ */
+export function useUser() {
+  return useAuth();
+}
+
+export function useFirestore() {
+  return { db: getSafeDb() };
+}

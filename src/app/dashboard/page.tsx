@@ -1,145 +1,138 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 import { 
-  Utensils, Loader2, Plus, MessageSquare, 
-  HeartPulse, LayoutGrid, Activity, Calendar as CalendarIcon,
-  BarChart3, Zap, Settings, UserCheck, Timer
+  Utensils, 
+  Activity, 
+  MessageSquare, 
+  Settings, 
+  Plus, 
+  Zap, 
+  LayoutGrid,
+  UserCheck,
+  BarChart3
 } from 'lucide-react';
-import { format, startOfToday } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
-import dynamic from 'next/dynamic';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { PWAInstallBanner } from '@/components/pwa-install-banner';
-import { UnifiedDataEntry } from '@/components/unified-data-entry';
+import { useUser, getSafeDb } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const SocialFeed = dynamic(() => import('@/components/social-feed').then(m => m.SocialFeed), { ssr: false });
-const RecommendationDisplay = dynamic(() => import('@/components/recommendation-display').then(m => m.RecommendationDisplay), { ssr: false });
-const MealsHub = dynamic(() => import('@/components/meals-hub').then(m => m.MealsHub), { ssr: false });
-const ActivitiesHub = dynamic(() => import('@/components/activities-hub').then(m => m.ActivitiesHub), { ssr: false });
-const SpecialistPatientsView = dynamic(() => import('@/components/specialist-patients-view').then(m => m.SpecialistPatientsView), { ssr: false });
-const ProfileCabinet = dynamic(() => import('@/components/profile-cabinet').then(m => m.ProfileCabinet), { ssr: false });
-const ChatInterface = dynamic(() => import('@/components/chat-interface').then(m => m.ChatInterface), { ssr: false });
-const SpecialistDiaryHub = dynamic(() => import('@/components/specialist-diary-hub').then(m => m.SpecialistDiaryHub), { ssr: false });
-const FastingHub = dynamic(() => import('@/components/fasting-hub').then(m => m.FastingHub), { ssr: false });
+// Tabs/Views (assuming these components exist in the project)
+import { BioScoreView } from '@/components/bio-score-view';
+import { DietPlanner } from '@/components/diet-planner';
+import { SocialFeed } from '@/components/social-feed';
+import { SyncCenter } from '@/components/sync-center';
+import { ChatList } from '@/components/chat-list';
+import { WorkoutLog } from '@/components/workout-log';
+import { ProfileCabinet } from '@/components/profile-cabinet';
 
-function DashboardContent() {
-  const { user, loading: userLoading } = useUser();
-  const { firestore } = useFirestore();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [unreadTotal, setUnreadTotal] = useState(0);
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user') return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user?.uid]);
-
-  const { data: userData } = useDoc<any>(userDocRef);
-  const isSpecialist = userData?.profileType === 'specialist';
-
-  useEffect(() => {
-    setSelectedDate(startOfToday());
-  }, []);
-
-  useEffect(() => {
-    if (!firestore || !user?.uid || user.uid === 'public-user') return;
-    const q = query(collection(firestore, 'chats'), where('participants', 'array-contains', user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let count = 0;
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.unreadCount) count += (data.unreadCount[user.uid] || 0);
-      });
-      setUnreadTotal(count);
-    });
-    return () => unsubscribe();
-  }, [firestore, user?.uid]);
-
-  if (userLoading || !user) return <div className="flex min-h-screen items-center justify-center bg-black"><Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" /></div>;
-
-  return (
-    <div className="flex min-h-screen flex-col bg-[#000000] text-white overflow-hidden relative h-screen w-screen">
-      <PWAInstallBanner />
-      <header className="fixed top-0 left-0 right-0 z-[500] bg-[#010411]/80 backdrop-blur-xl border-b border-white/5 h-20">
-        <div className="container mx-auto h-full flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/5 border border-[#00ffff]/30 flex items-center justify-center shadow-lg"><HeartPulse className="h-6 w-6 text-[#00ffff]" /></div>
-            <h1 className="text-lg font-black uppercase hidden xs:block tracking-tighter">Bio Hub Pro</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="h-10 px-4 rounded-full border border-[#00ffff]/20 bg-[#00ffff]/5 text-[#00ffff] font-black uppercase text-[10px] flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>{format(selectedDate, 'd MMM', { locale: ru })}</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border-none bg-transparent" align="end">
-                <Calendar mode="single" selected={selectedDate} onSelect={(d) => d && setSelectedDate(d)} locale={ru} />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </header>
-      
-      <main className="flex-1 relative w-full overflow-hidden flex flex-col pt-20">
-        <div className="flex-1 min-h-0 overflow-hidden relative">
-          {activeTab === 'feed' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><SocialFeed /></div>}
-          {activeTab === 'dashboard' && <div className="h-full w-full flex items-center justify-center">{isSpecialist ? <div className="p-10 text-center opacity-30 font-black uppercase tracking-widest italic">Био-аналитика специалиста...</div> : <RecommendationDisplay mode="dashboard" profileData={userData} />}</div>}
-          {activeTab === 'meals' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6">{isSpecialist ? <SpecialistPatientsView /> : <MealsHub selectedDate={selectedDate} />}</div>}
-          {activeTab === 'fasting' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><FastingHub /></div>}
-          {activeTab === 'diary' && isSpecialist && <div className="flex-1 h-full"><SpecialistDiaryHub /></div>}
-          {activeTab === 'chats' && <div className="h-full px-4 flex flex-col pb-40 no-scrollbar pt-6"><ChatInterface /></div>}
-          {activeTab === 'activities' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><ActivitiesHub selectedDate={selectedDate} /></div>}
-          {activeTab === 'profile' && <div className="overflow-y-auto h-full px-4 pb-40 no-scrollbar pt-6"><ProfileCabinet onNavigateToDiary={() => setActiveTab('diary')} /></div>}
-        </div>
-
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] w-[96vw] max-w-4xl">
-           <div className="bg-[#010411]/90 backdrop-blur-3xl border border-white/5 rounded-[3rem] h-20 px-4 flex items-center justify-between shadow-2xl">
-              <button onClick={() => setActiveTab('meals')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'meals' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                {isSpecialist ? <UserCheck className="h-5 w-5" /> : <Utensils className="h-5 w-5" />}
-              </button>
-              
-              <button onClick={() => setActiveTab('feed')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'feed' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <LayoutGrid className="h-5 w-5" />
-              </button>
-
-              <button onClick={() => setActiveTab('dashboard')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'dashboard' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                {isSpecialist ? <BarChart3 className="h-5 w-5" /> : <Activity className="h-5 w-5" />}
-              </button>
-              
-              <UnifiedDataEntry selectedDate={selectedDate}>
-                <div className="h-14 w-14 bg-[#00ffff] rounded-full flex items-center justify-center shadow-xl cursor-pointer active:scale-90 transition-transform">
-                  <Plus className="h-7 w-7 text-black stroke-[3px]" />
-                </div>
-              </UnifiedDataEntry>
-
-              <button onClick={() => setActiveTab('chats')} className={cn("p-2.5 rounded-2xl transition-all relative", activeTab === 'chats' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <MessageSquare className="h-5 w-5" />
-                {unreadTotal > 0 && <span className="absolute top-1.5 right-1.5 h-3.5 w-3.5 bg-red-500 rounded-full flex items-center justify-center text-[7px] font-black">{unreadTotal}</span>}
-              </button>
-
-              <button onClick={() => setActiveTab('activities')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'activities' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <Zap className="h-5 w-5" />
-              </button>
-
-              <button onClick={() => setActiveTab('profile')} className={cn("p-2.5 rounded-2xl transition-all", activeTab === 'profile' ? "text-[#00ffff] bg-[#00ffff]/10" : "text-white/30")}>
-                <Settings className="h-5 w-5" />
-              </button>
-           </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+type Tab = 'diet' | 'feed' | 'stats' | 'sync' | 'chat' | 'workouts' | 'profile';
 
 export default function DashboardPage() {
-  return <Suspense fallback={<div className='p-10 text-center text-primary font-black uppercase tracking-widest'>Bio-Hub Initializing...</div>}><DashboardContent /></Suspense>;
+  const { user, loading: authLoading } = useUser();
+  const [activeTab, setActiveTab] = useState<Tab>('stats');
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+      const db = getSafeDb();
+      if (!db) return;
+      const docRef = doc(db, 'profiles', user.uid);
+      try {
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          setProfile(snap.data());
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (!authLoading && user) {
+      loadProfile();
+    } else if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [user, authLoading]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 p-6 space-y-4">
+        <Skeleton className="h-12 w-full bg-slate-900" />
+        <Skeleton className="h-64 w-full bg-slate-900" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-32 bg-slate-900" />
+          <Skeleton className="h-32 bg-slate-900" />
+        </div>
+      </div>
+    );
+  }
+
+  const isSpecialist = profile?.role === 'specialist';
+
+  const NAV_ITEMS = [
+    { id: 'diet', icon: isSpecialist ? UserCheck : Utensils, label: isSpecialist ? 'Клиенты' : 'Питание' },
+    { id: 'feed', icon: LayoutGrid, label: 'Лента' },
+    { id: 'stats', icon: isSpecialist ? BarChart3 : Activity, label: isSpecialist ? 'Аналитика' : 'Дашборд' },
+    { id: 'sync', icon: Plus, label: 'Плюс', center: true },
+    { id: 'chat', icon: MessageSquare, label: 'Чаты' },
+    { id: 'workouts', icon: Zap, label: 'Нагрузки' },
+    { id: 'profile', icon: Settings, label: 'Профиль' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-950 pb-24 text-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+          BIO HUB <span className="text-slate-500 font-light text-sm ml-1">PRO</span>
+        </h1>
+        <div className="flex items-center space-x-2">
+          {profile?.bioScore && (
+            <div className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full flex items-center">
+              <span className="text-xs font-bold text-cyan-400 mr-1">BIO</span>
+              <span className="text-sm font-bold text-white">{profile.bioScore}</span>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main View Area */}
+      <main className="max-w-2xl mx-auto px-4 py-6">
+        {activeTab === 'stats' && <BioScoreView profile={profile} />}
+        {activeTab === 'diet' && <DietPlanner profile={profile} />}
+        {activeTab === 'feed' && <SocialFeed />}
+        {activeTab === 'sync' && <SyncCenter onSyncComplete={() => setActiveTab('stats')} />}
+        {activeTab === 'chat' && <ChatList />}
+        {activeTab === 'workouts' && <WorkoutLog />}
+        {activeTab === 'profile' && <ProfileCabinet user={user!} profile={profile} onUpdate={() => window.location.reload()} />}
+      </main>
+
+      {/* Modern Bottom Navigation - 7 Buttons Fixed */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2 pointer-events-none">
+        <div className="max-w-md mx-auto pointer-events-auto bg-slate-900/90 backdrop-blur-xl border border-slate-800 shadow-2xl rounded-3xl flex justify-between items-center px-4 py-2">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id as Tab)}
+              className={`flex flex-col items-center justify-center p-2 transition-all duration-300 relative ${
+                activeTab === item.id 
+                  ? 'text-cyan-400 scale-110' 
+                  : 'text-slate-500 hover:text-slate-300'
+              } ${item.center ? 'bg-cyan-500 text-white rounded-2xl -mt-8 shadow-lg shadow-cyan-500/40 p-3 hover:scale-105 active:scale-95' : ''}`}
+            >
+              <item.icon className={`${item.center ? 'w-6 h-6' : 'w-5 h-5'}`} />
+              {!item.center && <span className="text-[10px] mt-1 font-medium">{item.label}</span>}
+              {activeTab === item.id && !item.center && (
+                <span className="absolute -bottom-1 w-1 h-1 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
 }
