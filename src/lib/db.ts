@@ -6,7 +6,7 @@ const dbPath = path.resolve(process.cwd(), 'vpn.db');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
-// Инициализация таблиц
+// 1. Создаем базовую таблицу, если её нет
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,26 +14,28 @@ db.exec(`
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
     expires_at DATETIME DEFAULT NULL,
-    last_purchase_at DATETIME DEFAULT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
-// Миграция: Проверяем наличие новых колонок в существующей базе
-try {
-  const columns = db.prepare("PRAGMA table_info(users)").all() as any[];
-  const columnNames = columns.map(c => c.name);
-  
-  if (!columnNames.includes('last_purchase_at')) {
-    db.exec("ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL");
-    console.log('[DB] Добавлена колонка last_purchase_at');
+// 2. Робастная миграция для добавления новых колонок
+function runMigrations() {
+  try {
+    const tableInfo = db.prepare("PRAGMA table_info(users)").all() as any[];
+    const columns = tableInfo.map(c => c.name.toLowerCase());
+    
+    if (!columns.includes('last_purchase_at')) {
+      console.log('[DB] Добавление колонки last_purchase_at...');
+      db.exec("ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL");
+    }
+    
+    if (!columns.includes('created_at')) {
+      console.log('[DB] Добавление колонки created_at...');
+      db.exec("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+    }
+  } catch (e) {
+    console.error('[DB] Ошибка миграции:', e);
   }
-  if (!columnNames.includes('created_at')) {
-    db.exec("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
-    console.log('[DB] Добавлена колонка created_at');
-  }
-} catch (e) {
-  console.error('[DB] Ошибка миграции:', e);
 }
 
 function seedDatabase() {
@@ -47,9 +49,9 @@ function seedDatabase() {
 
       const insert = db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)');
       
-      // Единственный админ - логин 'admin'
+      // Единственный админ
       insert.run('admin', adminPass, 'admin', '2099-01-01 00:00:00');
-      // Тестовый обычный пользователь
+      // Тестовый пользователь
       insert.run('user', userPass, 'user', null);
       
       console.log('[DB] База готова. Доступ: admin/admin, user/user');
@@ -59,6 +61,7 @@ function seedDatabase() {
   }
 }
 
+runMigrations();
 seedDatabase();
 
 export default db;
