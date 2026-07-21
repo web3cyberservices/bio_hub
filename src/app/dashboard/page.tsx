@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -50,10 +49,6 @@ export default function Dashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     else setRefreshing(true);
@@ -61,6 +56,7 @@ export default function Dashboard() {
     try {
       const data = await getVpnMe();
       if (!data) {
+        console.log('[DASHBOARD] Session not found, redirecting...');
         router.push('/vpn');
         return;
       }
@@ -70,24 +66,23 @@ export default function Dashboard() {
         const users = await getAllVpnUsers();
         if (Array.isArray(users)) {
           setAdminUsers(users);
+          setActiveTab('admin');
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error('[DASHBOARD] Load error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const isAdmin = vpnData?.role === 'admin';
   const isActive = vpnData?.isActive;
-
-  useEffect(() => {
-    if (isAdmin && activeTab === 'status') {
-      setActiveTab('admin');
-    }
-  }, [isAdmin]);
 
   const handleBuy = async (months: number) => {
     setPurchasing(true);
@@ -178,8 +173,8 @@ export default function Dashboard() {
                   </div>
                   <div className="glass-panel p-5 rounded-3xl border-white/5">
                     <Activity className="w-4 h-4 text-emerald-400 mb-2" />
-                    <p className="text-2xl font-black">{adminUsers.filter(u => u.status === 'online').length}</p>
-                    <p className="text-[8px] text-slate-500 uppercase font-black">Подписки</p>
+                    <p className="text-2xl font-black">{adminUsers.filter(u => u.hasKey).length}</p>
+                    <p className="text-[8px] text-slate-500 uppercase font-black">Активны</p>
                   </div>
                   <div className="glass-panel p-5 rounded-3xl border-white/5">
                     <Database className="w-4 h-4 text-purple-400 mb-2" />

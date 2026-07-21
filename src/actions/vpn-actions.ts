@@ -1,4 +1,3 @@
-
 'use server';
 
 import { cookies } from 'next/headers';
@@ -7,7 +6,8 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'lume-vpn-secret-key-must-be-very-long-and-secure-123456');
+const SECRET_KEY_STR = process.env.JWT_SECRET || 'lume-vpn-secret-key-must-be-very-long-and-secure-123456-fixed-2026';
+const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
@@ -17,11 +17,13 @@ export async function vpnLogin(formData: FormData) {
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
+      console.log(`[AUTH] User not found: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      console.log(`[AUTH] Invalid password for: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -36,18 +38,20 @@ export async function vpnLogin(formData: FormData) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
+    // Устанавливаем максимально совместимые настройки для HTTP/IP
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, 
+      secure: false, // Обязательно false для работы без HTTPS (по IP)
       sameSite: 'lax',
-      maxAge: 86400,
+      maxAge: 60 * 60 * 24, // 24 часа
       path: '/'
     });
 
+    console.log(`[AUTH] Success login: ${username}, token set.`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Error:', error);
-    return { error: 'Ошибка сервера' };
+    console.error('[AUTH] Login Error:', error);
+    return { error: 'Ошибка сервера при входе' };
   }
 }
 
@@ -89,6 +93,7 @@ export async function getVpnMe() {
     const user: any = db.prepare('SELECT role, username, expires_at, created_at, last_purchase_at FROM users WHERE username = ?').get(payload.username);
     
     if (!user) {
+      console.log(`[AUTH] Token valid but user not in DB: ${payload.username}`);
       return null;
     }
 
@@ -109,6 +114,7 @@ export async function getVpnMe() {
       }
     };
   } catch (e: any) {
+    console.error('[AUTH] Session validation failed:', e.message);
     return null;
   }
 }
