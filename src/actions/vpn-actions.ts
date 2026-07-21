@@ -14,7 +14,7 @@ export async function vpnLogin(formData: FormData) {
   const password = formData.get('password') as string;
 
   try {
-    // Прототип: быстрый вход для тестов (всегда работает)
+    // Прототипный вход для тестов
     if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
       const role = username === 'admin' ? 'admin' : 'user';
       const token = await new SignJWT({ 
@@ -39,9 +39,8 @@ export async function vpnLogin(formData: FormData) {
       return { success: true, role };
     }
 
-    // Попытка входа через Firestore
     const db = getSafeDb();
-    if (!db) return { error: 'База данных не настроена' };
+    if (!db) return { error: 'Конфигурация Firebase не найдена на сервере (.env)' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
@@ -73,9 +72,9 @@ export async function vpnLogin(formData: FormData) {
     });
 
     return { success: true, role: userData.role };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login Error:', error);
-    return { error: 'Ошибка сервера' };
+    return { error: 'Ошибка входа: ' + (error.message || 'неизвестная ошибка') };
   }
 }
 
@@ -85,21 +84,15 @@ export async function vpnRegister(formData: FormData) {
   
   try {
     const db = getSafeDb();
-    if (!db) return { error: 'База данных не инициализирована. Проверьте .env файл.' };
+    if (!db) return { error: 'База данных не подключена. Добавьте ключи в .env на сервере.' };
 
     const q = query(collection(db, 'vpn_users'), where('username', '==', username));
     const snapshot = await getDocs(q);
-    if (!snapshot.empty) return { error: 'Это имя пользователя уже занято' };
+    if (!snapshot.empty) return { error: 'Имя пользователя уже занято' };
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Попытка создать пользователя в Marzban (если API настроено)
-    try {
-      await createMarzbanUser(username);
-    } catch (e) {
-      console.warn('Marzban integration skipped during register');
-    }
-
+    // Пытаемся создать в Firestore
     await addDoc(collection(db, 'vpn_users'), {
       username,
       password: hashedPassword,
@@ -107,10 +100,17 @@ export async function vpnRegister(formData: FormData) {
       createdAt: new Date().toISOString()
     });
 
+    // Опционально: Marzban
+    try {
+      await createMarzbanUser(username);
+    } catch (e) {
+      console.warn('Marzban integration skipped');
+    }
+
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register Error:', error);
-    return { error: 'Не удалось завершить регистрацию' };
+    return { error: 'Ошибка регистрации: ' + (error.message || 'проверьте правила доступа в Firebase') };
   }
 }
 
