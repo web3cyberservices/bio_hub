@@ -106,10 +106,18 @@ export default function Dashboard() {
     setRegenerating(false);
   };
 
-  const copyKey = (link: string) => {
-    if (!link) return;
-    navigator.clipboard.writeText(link);
-    toast({ title: "Успех", description: "Ключ скопирован" });
+  const copyKey = async (link: string) => {
+    if (!link) {
+      toast({ title: "Ошибка", description: "Ключ отсутствует", variant: "destructive" });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(link);
+      toast({ title: "Успех", description: "Ключ скопирован в буфер обмена" });
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      toast({ title: "Ошибка", description: "Не удалось скопировать ключ", variant: "destructive" });
+    }
   };
 
   if (loading) {
@@ -137,12 +145,12 @@ export default function Dashboard() {
       <header className="sticky top-0 z-50 bg-[#02040a]/80 backdrop-blur-2xl border-b border-white/5 px-6 py-5">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black leading-none tracking-tight uppercase">Cyber<span className="text-cyan-400">Armor</span></h1>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+              <h1 className="text-xl font-black leading-none tracking-[0.05em] uppercase font-sans">Cyber<span className="text-cyan-400">Armor</span></h1>
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.4em] mt-1">
                 {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
               </p>
             </div>
