@@ -18,7 +18,9 @@ import {
   Calendar,
   RefreshCw,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Zap,
+  Navigation
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -49,6 +51,10 @@ export default function Dashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     else setRefreshing(true);
@@ -56,11 +62,7 @@ export default function Dashboard() {
     try {
       const data = await getVpnMe();
       if (!data) {
-        console.warn('[DASHBOARD] Session validation failed on client check');
-        // Даем небольшую задержку перед редиректом, чтобы избежать ложных срабатываний
-        setTimeout(() => {
-          router.push('/vpn');
-        }, 500);
+        router.push('/vpn');
         return;
       }
       
@@ -82,10 +84,6 @@ export default function Dashboard() {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const isAdmin = vpnData?.role === 'admin';
   const isActive = vpnData?.isActive;
@@ -112,7 +110,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Проверка авторизации...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Инициализация LumeVPN...</p>
       </div>
     );
   }
@@ -280,38 +278,55 @@ export default function Dashboard() {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/5">
-                          <div className="text-left">
-                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Пинг</p>
-                              <p className="text-sm font-bold text-cyan-400">34 ms</p>
+                          <div className="text-left flex items-start space-x-3">
+                              <div className="p-2 bg-cyan-500/10 rounded-xl">
+                                <Zap className="w-4 h-4 text-cyan-400" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Пинг</p>
+                                <p className="text-sm font-bold text-cyan-400">34 ms</p>
+                              </div>
                           </div>
-                          <div className="text-right">
-                              <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Локация</p>
-                              <p className="text-sm font-bold text-white">Германия</p>
+                          <div className="text-right flex items-start justify-end space-x-3">
+                              <div>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Локация</p>
+                                <p className="text-sm font-bold text-white">Германия</p>
+                              </div>
+                              <div className="p-2 bg-white/5 rounded-xl">
+                                <Navigation className="w-4 h-4 text-slate-400" />
+                              </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {PLANS.map((plan) => (
-                            <button
-                                key={plan.months}
-                                onClick={() => handleBuy(plan.months)}
-                                disabled={purchasing}
-                                className="glass-panel p-5 rounded-3xl border-white/5 hover:border-white/10 transition-all text-left"
-                            >
-                                <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Продлить на {plan.label}</p>
-                                <p className="text-lg font-black text-white">{plan.price}</p>
-                            </button>
-                        ))}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-2">
+                           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Продлить доступ</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            {PLANS.map((plan) => (
+                                <button
+                                    key={plan.months}
+                                    onClick={() => handleBuy(plan.months)}
+                                    disabled={purchasing}
+                                    className="glass-panel p-5 rounded-3xl border-white/5 hover:border-white/10 transition-all text-left group"
+                                >
+                                    <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Пакет {plan.label}</p>
+                                    <p className="text-lg font-black text-white group-hover:text-cyan-400 transition-colors">{plan.price}</p>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-8 text-center">
                     <div className="space-y-2">
-                      <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                      <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="w-10 h-10 text-red-500" />
+                      </div>
                       <h2 className="text-2xl font-black uppercase italic">Доступ ограничен</h2>
-                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Выберите тариф для получения ключей доступа</p>
+                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Выберите тариф для получения VLESS ключа</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -322,11 +337,11 @@ export default function Dashboard() {
                           disabled={purchasing}
                           className={`relative p-6 rounded-3xl border transition-all text-left group ${plan.popular ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-white/5 border-white/5 hover:border-white/10'}`}
                         >
-                          {plan.popular && <span className="absolute -top-3 left-6 bg-cyan-500 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full">Хит</span>}
+                          {plan.popular && <span className="absolute -top-3 left-6 bg-cyan-500 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full">Популярно</span>}
                           <p className="text-slate-500 text-[10px] font-bold uppercase tracking-tighter mb-1">{plan.label}</p>
-                          <p className="text-xl font-black text-white">{plan.price}</p>
+                          <p className="text-xl font-black text-white group-hover:text-cyan-400 transition-colors">{plan.price}</p>
                           <div className="mt-4 flex items-center text-[10px] font-bold text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <CreditCard className="w-3 h-3 mr-2" /> Купить сейчас
+                            <CreditCard className="w-3 h-3 mr-2" /> Оформить подписку
                           </div>
                         </button>
                       ))}
@@ -341,19 +356,19 @@ export default function Dashboard() {
                 {isActive ? (
                   <Card className="glass-panel rounded-[2.5rem] border-white/5 overflow-hidden">
                     <CardContent className="p-10 text-center space-y-8">
-                      <div className="inline-block p-6 bg-white rounded-[2rem]">
+                      <div className="inline-block p-6 bg-white rounded-[2rem] shadow-2xl">
                         <QRCodeSVG value={vpnData?.vpn?.links[0] || ""} size={200} />
                       </div>
                       <div className="space-y-4">
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Персональный VLESS ключ</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ваш персональный конфиг</p>
                         <div className="p-4 bg-black/40 border border-white/5 rounded-2xl break-all font-mono text-[10px] text-slate-400 text-left">
                           {vpnData?.vpn?.links[0]}
                         </div>
                         <Button 
                           onClick={() => copyKey(vpnData?.vpn?.links[0])} 
-                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold transition-transform active:scale-95"
+                          className="w-full bg-cyan-600 hover:bg-cyan-500 h-16 rounded-2xl text-white font-bold transition-transform active:scale-95 shadow-lg shadow-cyan-900/20"
                         >
-                          <Copy className="w-5 h-5 mr-3" /> Копировать ключ
+                          <Copy className="w-5 h-5 mr-3" /> Копировать VLESS ключ
                         </Button>
                       </div>
                     </CardContent>
@@ -363,13 +378,13 @@ export default function Dashboard() {
                     <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5">
                       <Lock className="w-10 h-10 text-slate-700" />
                     </div>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Ключи появятся после покупки подписки</p>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto">Ключи доступа появятся после оплаты подписки</p>
                     <Button 
                       onClick={() => setActiveTab('status')}
                       variant="outline" 
                       className="border-cyan-500/20 bg-cyan-500/5 rounded-xl text-[10px] uppercase font-black text-cyan-400 px-8"
                     >
-                      К тарифам
+                      Перейти к тарифам
                     </Button>
                   </div>
                 )}
@@ -414,13 +429,13 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <div className="glass-panel p-8 rounded-[2rem] space-y-6">
                   <div className="flex items-center space-x-4 p-4 bg-white/5 rounded-2xl">
-                    <Avatar className="w-14 h-14 rounded-2xl">
+                    <Avatar className="w-14 h-14 rounded-2xl border border-white/5">
                       <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
                     </Avatar>
                     <div>
                       <p className="text-base font-bold text-white">{vpnData?.username}</p>
                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                        {vpnData?.role === 'admin' ? 'Администратор системы' : isActive ? 'Статус: Премиум' : 'Статус: Базовый'}
+                        {vpnData?.role === 'admin' ? 'Администратор системы' : isActive ? 'Статус: Премиум-доступ' : 'Статус: Базовый аккаунт'}
                       </p>
                     </div>
                   </div>
@@ -431,14 +446,14 @@ export default function Dashboard() {
                       <p className="text-xs font-bold text-white">2.4.0 (Stable)</p>
                     </div>
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                      <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Безопасность</p>
+                      <p className="text-[8px] text-slate-500 uppercase font-black mb-1">Шифрование</p>
                       <p className="text-xs font-bold text-emerald-500">AES-256-GCM</p>
                     </div>
                   </div>
                   
                   <Button 
                     variant="destructive" 
-                    className="w-full h-14 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                    className="w-full h-14 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all font-bold"
                     onClick={async () => { await vpnLogout(); router.push('/vpn'); }}
                   >
                     <LogOut className="w-4 h-4 mr-2" /> Завершить сеанс
@@ -446,7 +461,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="text-center">
-                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">LumeVPN • 2026 EDITION</p>
+                  <p className="text-[8px] text-slate-600 font-black uppercase tracking-[0.4em]">LumeVPN • 2026 PREMIUM EDITION</p>
                 </div>
               </div>
             )}
