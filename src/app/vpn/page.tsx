@@ -44,84 +44,77 @@ export default function VpnAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#02040a] flex items-center justify-center p-6 selection:bg-cyan-500/30">
-      <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center p-6">
+      {/* Background Decor */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full" />
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <Card className="glass-card border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden bg-slate-900/40">
-          <CardHeader className="space-y-2 text-center pb-8 pt-10">
-            <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-cyan-500/20 rotate-6">
-                <Shield className="w-10 h-10 text-white -rotate-6" />
-              </div>
+        <Card className="glass-card border-white/5 shadow-2xl overflow-hidden rounded-[2rem]">
+          <CardHeader className="space-y-4 text-center pt-10 pb-6">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+              <Shield className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-4xl font-black tracking-tighter italic text-white">
-              VPN <span className="text-cyan-400">PRO</span>
-            </CardTitle>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
-              {isLogin ? "Авторизация в системе" : "Создание нового профиля"}
-            </p>
+            <div>
+              <CardTitle className="text-3xl font-black tracking-tight text-white uppercase italic">
+                VPN <span className="text-cyan-400">PRO</span>
+              </CardTitle>
+              <p className="text-slate-500 text-[10px] font-bold tracking-[0.3em] uppercase mt-1">
+                Secure Enterprise Tunneling
+              </p>
+            </div>
           </CardHeader>
           
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-5 px-8">
-              <div className="space-y-2">
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input
-                    name="username"
-                    placeholder="Имя пользователя"
-                    required
-                    autoComplete="username"
-                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-white text-sm font-medium"
-                  />
-                </div>
+            <CardContent className="space-y-4 px-8">
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  name="username"
+                  placeholder="Username"
+                  required
+                  className="h-14 pl-12 bg-black/20 border-white/5 rounded-xl text-white placeholder:text-slate-600 focus:border-cyan-500/50 transition-all"
+                />
               </div>
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <Input
-                    name="password"
-                    type="password"
-                    placeholder="Ваш пароль"
-                    required
-                    autoComplete="current-password"
-                    className="h-14 pl-12 bg-black/40 border-white/5 rounded-2xl focus:ring-cyan-500 transition-all text-white text-sm font-medium"
-                  />
-                </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="Password"
+                  required
+                  className="h-14 pl-12 bg-black/20 border-white/5 rounded-xl text-white placeholder:text-slate-600 focus:border-cyan-500/50 transition-all"
+                />
               </div>
             </CardContent>
             
             <CardFooter className="flex flex-col space-y-4 px-8 pb-10 pt-4">
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 text-xs tracking-widest uppercase border-0"
+                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-xl shadow-cyan-500/10 transition-all active:scale-95"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : isLogin ? (
-                  <><LogIn className="w-4 h-4 mr-2"/> Войти в панель</>
+                  <><LogIn className="w-4 h-4 mr-2"/> Login to Secure</>
                 ) : (
-                  <><UserPlus className="w-4 h-4 mr-2"/> Зарегистрироваться</>
+                  <><UserPlus className="w-4 h-4 mr-2"/> Create Account</>
                 )}
               </Button>
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                className="text-slate-500 hover:text-white text-xs font-bold tracking-tighter hover:bg-transparent"
+                className="text-slate-500 hover:text-cyan-400 text-xs font-bold transition-colors uppercase tracking-widest"
                 onClick={() => setIsLogin(!isLogin)}
               >
-                {isLogin ? "НЕТ АККАУНТА? РЕГИСТРАЦИЯ" : "УЖЕ ЕСТЬ АККАУНТ? ВОЙТИ"}
-              </Button>
+                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+              </button>
             </CardFooter>
           </form>
         </Card>
