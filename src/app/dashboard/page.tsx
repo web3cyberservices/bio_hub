@@ -20,7 +20,8 @@ import {
   Clock,
   CheckCircle2,
   Zap,
-  Navigation
+  Navigation,
+  UserX
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -50,10 +51,6 @@ export default function Dashboard() {
   const [purchasing, setPurchasing] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const loadData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -85,6 +82,10 @@ export default function Dashboard() {
     }
   };
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const isAdmin = vpnData?.role === 'admin';
   const isActive = vpnData?.isActive;
 
@@ -110,7 +111,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#02040a] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">Инициализация LumeVPN...</p>
+        <p className="mt-4 text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">LumeVPN Core Engine...</p>
       </div>
     );
   }
@@ -193,7 +194,7 @@ export default function Dashboard() {
                     <span className="text-[9px] text-slate-600 font-bold uppercase">Всего: {adminUsers.length}</span>
                   </div>
                   
-                  {adminUsers.map((user) => (
+                  {adminUsers.length > 0 ? adminUsers.map((user) => (
                     <Card key={user.id} className="glass-panel border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-6">
@@ -234,6 +235,14 @@ export default function Dashboard() {
                             <p className="text-sm font-bold text-cyan-400">{user.traffic}</p>
                           </div>
                         </div>
+
+                        {user.lastPurchaseDate && (
+                          <div className="mb-4 p-2 bg-white/5 rounded-xl border border-white/5">
+                             <p className="text-[8px] text-slate-500 font-black uppercase flex items-center">
+                                <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-500" /> Последняя оплата: {user.lastPurchaseDate}
+                             </p>
+                          </div>
+                        )}
                         
                         <div className="space-y-1.5">
                           <div className="flex justify-between text-[8px] uppercase font-black text-slate-600">
@@ -244,7 +253,12 @@ export default function Dashboard() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  )) : (
+                    <div className="py-20 text-center glass-panel rounded-3xl border-dashed border-white/10">
+                      <UserX className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                      <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Клиентов пока нет</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -272,7 +286,7 @@ export default function Dashboard() {
                             {vpnData.lastPurchaseAt && (
                                 <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest">
                                     <CheckCircle2 className="w-3 h-3" />
-                                    <span>Продлено {new Date(vpnData.lastPurchaseAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</span>
+                                    <span>Продлено {new Date(vpnData.lastPurchaseAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
                             )}
                         </div>
