@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "VPN Pro Management",
+  title: "VPN PRO 2026",
   description: "Управление вашим персональным VPN доступом.",
 };
 

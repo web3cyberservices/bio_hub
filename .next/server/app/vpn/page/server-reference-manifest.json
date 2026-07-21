@@ -1,0 +1,49 @@
+{
+  "node": {
+    "40dcebffc110eaed25e53829863ab2e598a4e1650d": {
+      "workers": {
+        "app/vpn/page": {
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/vpn/page": "action-browser"
+      }
+    },
+    "4057341f29d8a69f74d8942f3b2a099f0a76079d4d": {
+      "workers": {
+        "app/vpn/page": {
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/vpn/page": "action-browser"
+      }
+    },
+    "0016007e1d9647a25be4ccdf35fc7ae50dfddcb7c5": {
+      "workers": {
+        "app/vpn/page": {
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/vpn/page": "action-browser"
+      }
+    },
+    "00eff89e72232c595024e2a2d3329b48d02b55cb16": {
+      "workers": {
+        "app/vpn/page": {
+          "moduleId": "[project]/.next-internal/server/app/vpn/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/vpn-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/vpn/page": "action-browser"
+      }
+    }
+  },
+  "edge": {}
+}

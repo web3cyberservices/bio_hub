@@ -12,7 +12,10 @@ import {
   ChevronRight,
   Copy,
   Zap,
-  MessageSquare
+  MessageSquare,
+  RefreshCw,
+  Globe,
+  Bell
 } from 'lucide-react';
 import { getVpnMe, vpnLogout } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -22,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 
-type Tab = 'status' | 'keys' | 'help' | 'settings' | 'support';
+type Tab = 'status' | 'keys' | 'support' | 'help' | 'settings';
 
 export default function VpnDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
@@ -31,18 +34,20 @@ export default function VpnDashboard() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function loadData() {
-      const data = await getVpnMe();
-      if (!data) {
-        router.push('/vpn');
-        return;
-      }
-      setVpnData(data);
-      setLoading(false);
+  const loadData = async () => {
+    setLoading(true);
+    const data = await getVpnMe();
+    if (!data) {
+      router.push('/vpn');
+      return;
     }
+    setVpnData(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
     loadData();
-  }, [router]);
+  }, []);
 
   const copyKey = (link: string) => {
     if (!link) return;
@@ -82,7 +87,12 @@ export default function VpnDashboard() {
             VPN PRO
           </h1>
         </div>
-        <div className="text-xs text-slate-500 font-mono">{vpnData.username}</div>
+        <div className="flex items-center space-x-3">
+          <button onClick={loadData} className="text-slate-500 hover:text-cyan-400 transition-colors">
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <div className="text-xs text-slate-500 font-mono">{vpnData.username}</div>
+        </div>
       </header>
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
@@ -91,7 +101,7 @@ export default function VpnDashboard() {
             <Card className="bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800 shadow-2xl overflow-hidden">
               <CardContent className="p-8 text-center">
                 <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${vpnData.vpn?.status === 'active' ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
-                  <Activity className={`w-10 h-10 ${vpnData.vpn?.status === 'active' ? 'text-emerald-500' : 'text-red-500'}`} />
+                  <Globe className={`w-10 h-10 ${vpnData.vpn?.status === 'active' ? 'text-emerald-500' : 'text-red-500'}`} />
                 </div>
                 <h2 className="text-2xl font-bold">{vpnData.vpn?.status === 'active' ? 'Соединение активно' : 'Требуется продление'}</h2>
                 <p className="text-slate-400 text-sm mt-2">
@@ -101,11 +111,11 @@ export default function VpnDashboard() {
             </Card>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
                 <p className="text-xs text-slate-500 uppercase font-bold tracking-tight mb-1">Сервер</p>
                 <p className="text-lg font-bold text-cyan-400">Германия</p>
               </div>
-              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+              <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
                 <p className="text-xs text-slate-500 uppercase font-bold tracking-tight mb-1">Протокол</p>
                 <p className="text-lg font-bold text-purple-400">VLESS</p>
               </div>
@@ -115,27 +125,27 @@ export default function VpnDashboard() {
 
         {activeTab === 'keys' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Card className="bg-slate-900 border-slate-800">
+            <Card className="bg-slate-900 border-slate-800 shadow-xl">
               <CardHeader>
                 <CardTitle className="text-lg">Ваш ключ доступа</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {vpnLink ? (
                   <div className="space-y-6">
-                    <div className="flex justify-center p-4 bg-white rounded-2xl">
+                    <div className="flex justify-center p-4 bg-white rounded-2xl shadow-inner">
                       <QRCodeSVG value={vpnLink} size={180} />
                     </div>
                     <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl break-all font-mono text-[10px] text-slate-400">
                       {vpnLink}
                     </div>
-                    <Button onClick={() => copyKey(vpnLink)} className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 rounded-xl">
+                    <Button onClick={() => copyKey(vpnLink)} className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 rounded-xl text-white font-bold transition-all">
                       <Copy className="w-4 h-4 mr-2" /> Копировать ключ
                     </Button>
                   </div>
                 ) : (
                   <div className="text-center py-10 space-y-4">
                     <Zap className="w-12 h-12 text-slate-700 mx-auto" />
-                    <p className="text-slate-500">Ключи пока не созданы</p>
+                    <p className="text-slate-500">Ключи пока не созданы. Обратитесь к администратору.</p>
                   </div>
                 )}
               </CardContent>
@@ -146,9 +156,9 @@ export default function VpnDashboard() {
         {activeTab === 'support' && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 text-center py-10">
             <MessageSquare className="w-16 h-16 text-cyan-500/20 mx-auto mb-4" />
-            <h2 className="text-xl font-bold">Поддержка пользователей</h2>
-            <p className="text-slate-400 px-6">Если у вас возникли проблемы с подключением, напишите нашему боту в Telegram.</p>
-            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto mt-4 rounded-xl h-12">
+            <h2 className="text-xl font-bold">Поддержка VPN PRO</h2>
+            <p className="text-slate-400 px-6">Если у вас возникли проблемы с подключением, напишите в наш чат.</p>
+            <Button className="bg-cyan-600 hover:bg-cyan-700 w-full max-w-xs mx-auto mt-4 rounded-xl h-12 text-white font-bold">
               Открыть Telegram чат
             </Button>
           </div>
@@ -162,7 +172,7 @@ export default function VpnDashboard() {
               { t: 'Android', d: 'Используйте v2rayNG' },
               { t: 'Windows', d: 'Используйте v2rayN' }
             ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800">
+              <div key={i} className="flex items-center justify-between p-4 bg-slate-900 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition-colors">
                 <div>
                   <p className="font-bold">{item.t}</p>
                   <p className="text-xs text-slate-500">{item.d}</p>
@@ -177,17 +187,20 @@ export default function VpnDashboard() {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold">Уведомления</p>
-                  <p className="text-xs text-slate-500">О сроке подписки в Telegram</p>
+                <div className="flex items-center space-x-3">
+                  <Bell className="w-5 h-5 text-cyan-400" />
+                  <div>
+                    <p className="font-bold">Уведомления</p>
+                    <p className="text-xs text-slate-500">О сроке подписки</p>
+                  </div>
                 </div>
-                <div className="w-10 h-6 bg-cyan-600 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                <div className="w-10 h-6 bg-cyan-600 rounded-full relative cursor-pointer">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
                 </div>
               </div>
               <Button 
                 variant="destructive" 
-                className="w-full h-12 rounded-xl"
+                className="w-full h-12 rounded-xl font-bold"
                 onClick={async () => {
                   await vpnLogout();
                   router.push('/vpn');
