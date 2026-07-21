@@ -7,24 +7,24 @@
 :root {
   --background: 149 32% 52%; /* #5fad86 */
   --foreground: 213 31% 98%;
-  --card: 149 30% 45%;
+  --card: 149 40% 12%; /* Значительно темнее для контраста */
   --card-foreground: 213 31% 98%;
-  --popover: 149 32% 48%;
+  --popover: 149 40% 15%;
   --popover-foreground: 213 31% 98%;
   --primary: 191 97% 50%;
   --primary-foreground: 224 71% 2%;
-  --secondary: 149 20% 40%;
+  --secondary: 149 30% 18%;
   --secondary-foreground: 213 31% 91%;
-  --muted: 149 20% 42%;
+  --muted: 149 20% 25%;
   --muted-foreground: 149 10% 85%;
   --accent: 191 97% 50%;
   --accent-foreground: 213 31% 91%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --border: 149 20% 45%;
-  --input: 149 20% 45%;
+  --border: 149 20% 20%;
+  --input: 149 20% 20%;
   --ring: 191 97% 50%;
-  --radius: 1.25rem;
+  --radius: 1.5rem;
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -59,25 +59,24 @@
     @apply bg-background text-foreground antialiased font-sans;
     background-color: #5fad86 !important;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold tracking-tight;
-  }
 }
 
 .brand-title {
   font-family: var(--font-sans);
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.15em; /* Широкий футуристичный трекинг */
   text-transform: uppercase;
-  font-style: normal;
+  font-style: normal; /* Прямой шрифт без наклона */
   display: flex;
   align-items: center;
+  line-height: 1;
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 20, 15, 0.75); /* Темный фон для блоков */
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .cyber-button {
@@ -97,6 +96,6 @@
   background: #5fad86;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 10px;
 }

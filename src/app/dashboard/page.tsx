@@ -66,6 +66,7 @@ export default function Dashboard() {
       if (data.role === 'admin') {
         const users = await getAllVpnUsers();
         setAdminUsers(Array.isArray(users) ? users : []);
+        if (activeTab === 'status') setActiveTab('admin');
       }
     } catch (e) {
       console.error('[DASHBOARD] Error loading data:', e);
@@ -122,10 +123,9 @@ export default function Dashboard() {
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
-      toast({ title: "Успех", description: "Ключ скопирован в буфер обмена" });
+      toast({ title: "Успех", description: "Ключ скопирован" });
     } catch (err) {
-      console.error('Failed to copy: ', err);
-      toast({ title: "Ошибка", description: "Не удалось скопировать ключ", variant: "destructive" });
+      toast({ title: "Ошибка", description: "Используйте долгое нажатие для копирования", variant: "destructive" });
     }
   };
 
@@ -133,52 +133,52 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-[#5fad86] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black text-white/50 uppercase tracking-widest animate-pulse">Cyber Armor Engine...</p>
+        <p className="mt-6 text-[10px] font-black text-white/50 uppercase tracking-[0.5em] animate-pulse">Cyber Armor Syncing...</p>
       </div>
     );
   }
   
   const navItems = isAdmin ? [
-    { id: 'admin', icon: Terminal, label: 'Панель' },
-    { id: 'nodes', icon: Globe, label: 'Узлы' },
-    { id: 'settings', icon: Settings, label: 'Профиль' }
+    { id: 'admin', icon: Terminal, label: 'SYSTEM' },
+    { id: 'nodes', icon: Globe, label: 'NODES' },
+    { id: 'settings', icon: Settings, label: 'PROFILE' }
   ] : [
-    { id: 'status', icon: Activity, label: 'Статус' },
-    { id: 'keys', icon: Key, label: 'Ключи' },
-    { id: 'nodes', icon: Globe, label: 'Узлы' },
-    { id: 'settings', icon: Settings, label: 'Профиль' }
+    { id: 'status', icon: Activity, label: 'STATUS' },
+    { id: 'keys', icon: Key, label: 'KEYS' },
+    { id: 'nodes', icon: Globe, label: 'NODES' },
+    { id: 'settings', icon: Settings, label: 'PROFILE' }
   ];
 
   return (
-    <div className="min-h-screen bg-[#5fad86] text-white selection:bg-white/20 pb-32">
-      <header className="sticky top-0 z-50 bg-[#5fad86]/80 backdrop-blur-2xl border-b border-white/10 px-6 py-5">
+    <div className="min-h-screen bg-[#5fad86] text-white selection:bg-cyan-500/30 pb-32">
+      <header className="sticky top-0 z-50 bg-[#5fad86]/80 backdrop-blur-2xl border-b border-black/10 px-6 py-6">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-lg border border-white/10">
-              <Shield className="w-6 h-6 text-white" />
+          <div className="flex items-center space-x-5">
+            <div className="w-12 h-12 rounded-2xl bg-black/30 flex items-center justify-center shadow-lg border border-white/10">
+              <Shield className="w-7 h-7 text-cyan-400" />
             </div>
             <div>
-              <h1 className="brand-title text-xl leading-none">
-                CYBER<span className="text-cyan-300">ARMOR</span>
+              <h1 className="brand-title text-2xl">
+                CYBER<span className="text-cyan-400">ARMOR</span>
               </h1>
-              <p className="text-[9px] text-white/60 font-bold uppercase tracking-[0.4em] mt-1">
-                {isAdmin ? 'System Intelligence' : 'Private Dashboard'}
+              <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.5em] mt-1">
+                {isAdmin ? 'Root Authority' : 'Private Access'}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
              <Button 
                 variant="ghost" 
                 size="icon" 
-                className="rounded-full hover:bg-white/10"
+                className="rounded-2xl hover:bg-black/20 h-11 w-11"
                 onClick={() => loadData(false)}
                 disabled={refreshing}
              >
-                <RefreshCw className={`w-4 h-4 text-white/70 ${refreshing ? 'animate-spin text-cyan-300' : ''}`} />
+                <RefreshCw className={`w-5 h-5 text-white/60 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
              </Button>
-             <Avatar className="w-10 h-10 rounded-xl border border-white/20">
+             <Avatar className="w-12 h-12 rounded-2xl border border-white/20 shadow-xl">
                 <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
-                <AvatarFallback>{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-black/40">{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
              </Avatar>
           </div>
         </div>
@@ -188,59 +188,60 @@ export default function Dashboard() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3 }}
           >
             {activeTab === 'admin' && isAdmin && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="glass-panel p-5 rounded-3xl">
-                    <Users className="w-4 h-4 text-cyan-300 mb-2" />
-                    <p className="text-2xl font-black">{adminUsers.length}</p>
-                    <p className="text-[8px] text-white/50 uppercase font-black">Клиенты</p>
+              <div className="space-y-8">
+                <div className="grid grid-cols-3 gap-5">
+                  <div className="glass-panel p-6 rounded-[2rem]">
+                    <Users className="w-5 h-5 text-cyan-400 mb-3" />
+                    <p className="text-3xl font-black">{adminUsers.length}</p>
+                    <p className="text-[9px] text-white/40 uppercase font-black tracking-widest">Clients</p>
                   </div>
-                  <div className="glass-panel p-5 rounded-3xl">
-                    <Activity className="w-4 h-4 text-emerald-300 mb-2" />
-                    <p className="text-2xl font-black">{adminUsers.filter(u => u.hasKey).length}</p>
-                    <p className="text-[8px] text-white/50 uppercase font-black">Активны</p>
+                  <div className="glass-panel p-6 rounded-[2rem]">
+                    <Activity className="w-5 h-5 text-emerald-400 mb-3" />
+                    <p className="text-3xl font-black">{adminUsers.filter(u => u.hasKey).length}</p>
+                    <p className="text-[9px] text-white/40 uppercase font-black tracking-widest">Active</p>
                   </div>
-                  <div className="glass-panel p-5 rounded-3xl">
-                    <Database className="w-4 h-4 text-purple-300 mb-2" />
-                    <p className="text-2xl font-black">1.2 TB</p>
-                    <p className="text-[8px] text-white/50 uppercase font-black">Трафик</p>
+                  <div className="glass-panel p-6 rounded-[2rem]">
+                    <Database className="w-5 h-5 text-purple-400 mb-3" />
+                    <p className="text-3xl font-black">1.4T</p>
+                    <p className="text-[9px] text-white/40 uppercase font-black tracking-widest">Traffic</p>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-white/50 uppercase tracking-widest px-2">Список пользователей</h3>
+                <div className="space-y-5">
+                  <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] px-3">Network Identities</h3>
                   {adminUsers.length > 0 ? adminUsers.map((user) => (
-                    <Card key={user.id} className="glass-panel border-white/10 rounded-3xl overflow-hidden bg-transparent">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className={`w-2 h-2 rounded-full ${user.hasKey ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400'}`} />
-                            <p className="font-bold text-white">{user.username}</p>
+                    <Card key={user.id} className="glass-panel border-white/5 rounded-[2.5rem] overflow-hidden bg-transparent">
+                      <CardContent className="p-8">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className={`w-3 h-3 rounded-full ${user.hasKey ? 'bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.6)]' : 'bg-red-400 shadow-[0_0_15px_rgba(248,113,113,0.4)]'}`} />
+                            <p className="font-black text-white tracking-wide">{user.username}</p>
                           </div>
-                          <span className="text-[9px] text-white/50 font-bold uppercase">{user.protocol}</span>
+                          <span className="text-[10px] text-white/40 font-black uppercase tracking-widest">{user.protocol}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div className="grid grid-cols-2 gap-6 text-sm mb-6">
                           <div>
-                            <p className="text-[8px] text-white/50 uppercase font-black">Истекает</p>
-                            <p className="font-bold">{user.expireDate}</p>
+                            <p className="text-[9px] text-white/30 uppercase font-black tracking-tighter mb-1">Expiration</p>
+                            <p className="font-bold text-white/90">{user.expireDate}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-[8px] text-white/50 uppercase font-black">Трафик</p>
-                            <p className="font-bold text-cyan-300">{user.traffic}</p>
+                            <p className="text-[9px] text-white/30 uppercase font-black tracking-tighter mb-1">Load</p>
+                            <p className="font-bold text-cyan-400">{user.traffic}</p>
                           </div>
                         </div>
-                        <Progress value={user.usagePercent} className="h-1 bg-white/10" />
+                        <Progress value={user.usagePercent} className="h-2 bg-white/5" />
                       </CardContent>
                     </Card>
                   )) : (
-                    <div className="py-20 text-center glass-panel rounded-3xl border-dashed">
-                      <UserX className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                      <p className="text-white/40 text-sm font-bold uppercase tracking-widest">Клиентов нет</p>
+                    <div className="py-24 text-center glass-panel rounded-[3rem] border-dashed border-white/10">
+                      <UserX className="w-16 h-16 text-white/10 mx-auto mb-6" />
+                      <p className="text-white/20 text-[11px] font-black uppercase tracking-[0.5em]">No Entities Found</p>
                     </div>
                   )}
                 </div>
@@ -250,86 +251,90 @@ export default function Dashboard() {
             {activeTab === 'status' && !isAdmin && (
               <div className="space-y-8">
                 {isActive ? (
-                  <div className="space-y-6">
-                    <Card className="glass-panel border-white/10 rounded-[2.5rem] overflow-hidden bg-transparent">
-                      <CardContent className="p-10 text-center">
-                        <div className="mb-8 relative inline-block">
-                          <div className="w-40 h-40 rounded-full border-4 border-white/20 bg-white/5 flex items-center justify-center">
-                            <Shield className="w-14 h-14 text-white" />
+                  <div className="space-y-8">
+                    <Card className="glass-panel border-white/5 rounded-[3.5rem] overflow-hidden bg-transparent">
+                      <CardContent className="p-12 text-center">
+                        <div className="mb-10 relative inline-block">
+                          <div className="w-48 h-48 rounded-[3rem] border-2 border-white/10 bg-black/20 flex items-center justify-center shadow-2xl">
+                            <Shield className="w-20 h-20 text-white shadow-cyan-500/50" />
                           </div>
-                          <div className="absolute top-4 right-4 w-6 h-6 bg-cyan-400 rounded-full animate-pulse border-4 border-[#5fad86]" />
+                          <div className="absolute -top-3 -right-3 w-10 h-10 bg-cyan-400 rounded-2xl animate-pulse border-8 border-[#5fad86] flex items-center justify-center shadow-lg">
+                            <Zap className="w-4 h-4 text-black" />
+                          </div>
                         </div>
-                        <h2 className="brand-title text-3xl mb-2 justify-center">ЗАЩИЩЕНО</h2>
-                        <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">Cyber Armor Active</p>
+                        <h2 className="brand-title text-4xl mb-3 justify-center text-white">PROTECTED</h2>
+                        <p className="text-white/40 text-[11px] font-black uppercase tracking-[0.5em] mb-10">Active Neural Encryption</p>
                         
-                        <div className="flex flex-col space-y-2 mb-10">
-                            <div className="flex items-center justify-center space-x-2 text-[10px] font-bold text-white/80 uppercase tracking-widest">
-                                <Calendar className="w-3 h-3" />
-                                <span>До {vpnData.expiresAt ? new Date(vpnData.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Бессрочно'}</span>
+                        <div className="flex flex-col space-y-3 mb-12">
+                            <div className="inline-flex items-center justify-center space-x-3 text-[11px] font-black text-white/70 uppercase tracking-[0.2em] bg-white/5 py-3 px-6 rounded-2xl mx-auto">
+                                <Calendar className="w-4 h-4 text-cyan-400" />
+                                <span>Until {vpnData.expiresAt ? new Date(vpnData.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Indefinite'}</span>
                             </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-8 pt-10 border-t border-white/10">
-                          <div className="text-left flex items-start space-x-3">
-                              <div className="p-2 bg-white/10 rounded-xl">
-                                <Zap className="w-4 h-4 text-cyan-300" />
+                        <div className="grid grid-cols-2 gap-10 pt-12 border-t border-white/5">
+                          <div className="text-left flex items-start space-x-4">
+                              <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                                <Zap className="w-5 h-5 text-cyan-400" />
                               </div>
                               <div>
-                                <p className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Пинг</p>
-                                <p className="text-sm font-bold text-cyan-300">34 ms</p>
+                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Latency</p>
+                                <p className="text-lg font-black text-cyan-400">34ms</p>
                               </div>
                           </div>
-                          <div className="text-right flex items-start justify-end space-x-3">
+                          <div className="text-right flex items-start justify-end space-x-4">
                               <div>
-                                <p className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Локация</p>
-                                <p className="text-sm font-bold text-white">Германия</p>
+                                <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mb-1">Gateway</p>
+                                <p className="text-lg font-black text-white">Germany</p>
                               </div>
-                              <div className="p-2 bg-white/10 rounded-xl">
-                                <Globe className="w-4 h-4 text-white/70" />
+                              <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                                <Globe className="w-5 h-5 text-white/50" />
                               </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <div className="space-y-4">
-                        <h3 className="text-[10px] font-black text-white/50 uppercase tracking-widest px-2">Продлить доступ</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-5">
+                        <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em] px-3">Upgrade Subscription</h3>
+                        <div className="grid grid-cols-2 gap-5">
                             {PLANS.map((plan) => (
                                 <button
                                     key={plan.months}
                                     onClick={() => handleBuy(plan.months)}
                                     disabled={purchasing}
-                                    className="glass-panel p-5 rounded-3xl hover:bg-white/10 transition-all text-left group"
+                                    className="glass-panel p-7 rounded-[2.5rem] hover:bg-white/5 transition-all text-left group border border-white/5 active:scale-95"
                                 >
-                                    <p className="text-[8px] text-white/50 uppercase font-black mb-1">{plan.label}</p>
-                                    <p className="text-lg font-black text-white group-hover:text-cyan-300 transition-colors">{plan.price}</p>
+                                    <p className="text-[10px] text-white/30 uppercase font-black tracking-tighter mb-2">{plan.label}</p>
+                                    <p className="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">{plan.price}</p>
                                 </button>
                             ))}
                         </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-8 text-center py-10">
-                    <div className="space-y-4">
-                      <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                        <Lock className="w-10 h-10 text-white" />
+                  <div className="space-y-10 text-center py-16">
+                    <div className="space-y-6">
+                      <div className="w-24 h-24 bg-black/20 rounded-[2.5rem] flex items-center justify-center mx-auto border-2 border-white/5 shadow-2xl">
+                        <Lock className="w-12 h-12 text-white/20" />
                       </div>
-                      <h2 className="brand-title text-2xl justify-center">ДОСТУП ОГРАНИЧЕН</h2>
-                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest max-w-xs mx-auto leading-relaxed">Выберите тариф для активации VLESS туннеля</p>
+                      <div className="space-y-2">
+                        <h2 className="brand-title text-3xl justify-center text-white">RESTRICTED</h2>
+                        <p className="text-white/30 text-[11px] font-black uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-loose">Initialize encrypted tunnel to bypass global filters</p>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       {PLANS.map((plan) => (
                         <button
                           key={plan.months}
                           onClick={() => handleBuy(plan.months)}
                           disabled={purchasing}
-                          className={`relative p-6 rounded-3xl border transition-all text-left group ${plan.popular ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                          className={`relative p-8 rounded-[2.5rem] border transition-all text-left group active:scale-95 ${plan.popular ? 'bg-white/10 border-white/20 shadow-2xl' : 'glass-panel border-white/5'}`}
                         >
-                          {plan.popular && <span className="absolute -top-3 left-6 bg-white text-[#5fad86] text-[8px] font-black uppercase px-2 py-1 rounded-full">Популярно</span>}
-                          <p className="text-white/50 text-[10px] font-bold uppercase tracking-tighter mb-1">{plan.label}</p>
-                          <p className="text-xl font-black text-white group-hover:text-cyan-300 transition-colors">{plan.price}</p>
+                          {plan.popular && <span className="absolute -top-3 left-8 bg-cyan-400 text-black text-[9px] font-black uppercase px-3 py-1 rounded-full shadow-lg">Optimal</span>}
+                          <p className="text-white/30 text-[10px] font-black uppercase tracking-tighter mb-2">{plan.label}</p>
+                          <p className="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">{plan.price}</p>
                         </button>
                       ))}
                     </div>
@@ -339,57 +344,60 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'keys' && !isAdmin && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {(isActive && vpnData?.vpn?.links?.length > 0) ? (
-                  <Card className="glass-panel rounded-[2.5rem] overflow-hidden bg-transparent">
-                    <CardContent className="p-10 text-center space-y-8">
-                      <div className="inline-block p-6 bg-white rounded-[2rem] shadow-2xl">
-                        <QRCodeSVG value={vpnData?.vpn?.links[0]} size={200} />
+                  <Card className="glass-panel rounded-[3.5rem] overflow-hidden bg-transparent">
+                    <CardContent className="p-12 text-center space-y-10">
+                      <div className="inline-block p-8 bg-white rounded-[3rem] shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+                        <QRCodeSVG value={vpnData?.vpn?.links[0]} size={220} />
                       </div>
-                      <div className="space-y-4">
-                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Ваш персональный конфиг</p>
-                        <div className="p-4 bg-black/20 border border-white/10 rounded-2xl break-all font-mono text-[10px] text-white/70 text-left">
+                      <div className="space-y-6">
+                        <p className="text-[11px] text-white/40 font-black uppercase tracking-[0.4em]">Personal Node Config</p>
+                        <div className="p-6 bg-black/40 border border-white/5 rounded-3xl break-all font-mono text-[11px] text-white/60 text-left leading-relaxed shadow-inner">
                           {vpnData?.vpn?.links[0]}
                         </div>
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 gap-4">
                           <Button 
                             onClick={() => copyKey(vpnData?.vpn?.links[0])} 
-                            className="w-full bg-white text-[#5fad86] hover:bg-white/90 h-16 rounded-2xl font-bold shadow-lg"
+                            className="w-full bg-white text-black hover:bg-white/90 h-18 rounded-3xl font-black shadow-2xl text-base tracking-widest uppercase transition-all active:scale-95"
                           >
-                            <Copy className="w-5 h-5 mr-3" /> Копировать ключ
+                            <Copy className="w-6 h-6 mr-3" /> Copy Access Key
                           </Button>
                           <Button 
                             onClick={handleRegenerateKey}
                             disabled={regenerating}
                             variant="outline"
-                            className="w-full border-white/20 bg-white/5 h-14 rounded-2xl text-white font-bold"
+                            className="w-full border-white/10 bg-black/20 h-16 rounded-3xl text-white font-black tracking-widest uppercase active:scale-95"
                           >
-                            {regenerating ? <RefreshCw className="w-4 h-4 mr-2 animate-spin text-cyan-300" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-                            Обновить и получить ключ
+                            {regenerating ? <RefreshCw className="w-5 h-5 mr-3 animate-spin text-cyan-400" /> : <RotateCcw className="w-5 h-5 mr-3" />}
+                            Reset Identity
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="py-20 text-center space-y-6">
-                    <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto border border-white/10">
-                      <Key className="w-10 h-10 text-white/30" />
+                  <div className="py-24 text-center space-y-8">
+                    <div className="w-24 h-24 bg-black/20 rounded-[2.5rem] flex items-center justify-center mx-auto border-2 border-white/5">
+                      <Key className="w-12 h-12 text-white/10" />
                     </div>
-                    <p className="text-white/50 text-sm font-bold uppercase tracking-widest max-w-[200px] mx-auto leading-relaxed">
-                      {!isActive 
-                        ? "Ключи появятся после активации подписки" 
-                        : "Ключ не найден в системе. Попробуйте обновить вручную."}
-                    </p>
-                    {!isActive && <Button onClick={() => setActiveTab('status')} className="bg-white text-[#5fad86] rounded-xl px-8 hover:bg-white/90">Купить подписку</Button>}
-                    {isActive && (
+                    <div className="space-y-2">
+                      <p className="text-white/30 text-xs font-black uppercase tracking-[0.4em] max-w-[240px] mx-auto leading-loose">
+                        {!isActive 
+                          ? "Credentials available after sub initialization" 
+                          : "Identity sync failure. Retry authorization."}
+                      </p>
+                    </div>
+                    {!isActive ? (
+                      <Button onClick={() => setActiveTab('status')} className="bg-white text-black rounded-2xl px-12 h-16 font-black uppercase tracking-widest active:scale-95">Initialize Sub</Button>
+                    ) : (
                       <Button 
                         onClick={handleRegenerateKey} 
                         disabled={regenerating}
-                        className="bg-white text-[#5fad86] rounded-xl px-8 hover:bg-white/90"
+                        className="bg-white text-black rounded-2xl px-12 h-16 font-black uppercase tracking-widest active:scale-95"
                       >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${regenerating ? 'animate-spin' : ''}`} /> 
-                        Обновить и получить ключ
+                        <RefreshCw className={`w-5 h-5 mr-3 ${regenerating ? 'animate-spin' : ''}`} /> 
+                        Retry Sync
                       </Button>
                     )}
                   </div>
@@ -398,25 +406,25 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'nodes' && (
-              <div className="space-y-4">
-                <h3 className="text-[10px] font-black text-white/50 uppercase tracking-widest px-2 mb-4">Доступные локации</h3>
+              <div className="space-y-6">
+                <h3 className="text-[11px] font-black text-white/40 uppercase tracking-[0.4em] px-3 mb-6">Available Gateways</h3>
                 {[
-                  { name: 'Германия (Франкфурт)', ping: '38ms', load: '12%', active: true },
-                  { name: 'Нидерланды (Амстердам)', ping: '42ms', load: '24%', active: false },
-                  { name: 'Турция (Стамбул)', ping: '61ms', load: '45%', active: false }
+                  { name: 'FRK-01 Germany', ping: '38ms', load: '12%', active: true },
+                  { name: 'AMS-04 Netherlands', ping: '42ms', load: '24%', active: false },
+                  { name: 'IST-02 Turkey', ping: '61ms', load: '45%', active: false }
                 ].map((node) => (
-                  <div key={node.name} className={`p-5 rounded-3xl border transition-all ${node.active ? 'bg-white/20 border-white/30' : 'bg-white/5 border-white/10'}`}>
+                  <div key={node.name} className={`p-7 rounded-[2.5rem] border transition-all active:scale-[0.98] ${node.active ? 'bg-white/10 border-white/20 shadow-xl' : 'glass-panel border-white/5 opacity-80'}`}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${node.active ? 'bg-white text-[#5fad86]' : 'bg-white/10 text-white/50'}`}>
-                            <Globe className="w-6 h-6" />
+                      <div className="flex items-center space-x-5">
+                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${node.active ? 'bg-white text-black border-white' : 'bg-white/5 text-white/30 border-white/5'}`}>
+                            <Globe className="w-7 h-7" />
                          </div>
                          <div>
-                            <p className="font-bold text-sm text-white">{node.name}</p>
-                            <p className="text-[9px] text-white/60 font-bold uppercase">Пинг: {node.ping} • Нагрузка: {node.load}</p>
+                            <p className="font-black text-base text-white tracking-wide">{node.name}</p>
+                            <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Ping: {node.ping} • Load: {node.load}</p>
                          </div>
                       </div>
-                      {node.active && <div className="w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.8)]" />}
+                      {node.active && <div className="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.8)]" />}
                     </div>
                   </div>
                 ))}
@@ -424,37 +432,37 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'settings' && (
-              <div className="space-y-6">
-                <div className="glass-panel p-8 rounded-[2rem] space-y-6">
-                  <div className="flex items-center space-x-4 p-4 bg-white/10 rounded-2xl">
-                    <Avatar className="w-14 h-14 rounded-2xl border border-white/20">
+              <div className="space-y-8">
+                <div className="glass-panel p-10 rounded-[3rem] space-y-10">
+                  <div className="flex items-center space-x-6 p-6 bg-white/5 rounded-3xl border border-white/5">
+                    <Avatar className="w-20 h-20 rounded-[1.5rem] border-2 border-white/20 shadow-2xl">
                       <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
                     </Avatar>
                     <div>
-                      <p className="text-base font-bold text-white">{vpnData?.username}</p>
-                      <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider">
-                        {isAdmin ? 'Администратор системы' : isActive ? 'Премиум доступ' : 'Базовый тариф'}
+                      <p className="text-xl font-black text-white tracking-tight">{vpnData?.username}</p>
+                      <p className="text-[10px] text-cyan-400 font-black uppercase tracking-[0.3em] mt-1">
+                        {isAdmin ? 'SYSTEM AUTHORITY' : isActive ? 'PREMIUM ACCESS' : 'BASE IDENTITY'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                      <p className="text-[8px] text-white/40 uppercase font-black mb-1">Версия ПО</p>
-                      <p className="text-xs font-bold text-white">2.8.0 (TT-Force)</p>
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="p-6 bg-black/20 rounded-3xl border border-white/5">
+                      <p className="text-[10px] text-white/20 uppercase font-black mb-2 tracking-widest">Version</p>
+                      <p className="text-sm font-black text-white">2.9.0-FORCE</p>
                     </div>
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                      <p className="text-[8px] text-white/40 uppercase font-black mb-1">Защита</p>
-                      <p className="text-xs font-bold text-cyan-300">REALITY ON</p>
+                    <div className="p-6 bg-black/20 rounded-3xl border border-white/5">
+                      <p className="text-[10px] text-white/20 uppercase font-black mb-2 tracking-widest">Protocol</p>
+                      <p className="text-sm font-black text-cyan-400">REALITY v2</p>
                     </div>
                   </div>
                   
                   <Button 
                     variant="destructive" 
-                    className="w-full h-14 rounded-2xl bg-red-500/20 text-red-100 border border-red-500/30 hover:bg-red-500/30"
+                    className="w-full h-18 rounded-3xl bg-red-500/10 text-red-100 border border-red-500/20 hover:bg-red-500/20 font-black uppercase tracking-[0.3em] active:scale-95"
                     onClick={async () => { await vpnLogout(); router.push('/vpn'); }}
                   >
-                    <LogOut className="w-4 h-4 mr-2" /> Завершить сеанс
+                    <LogOut className="w-5 h-5 mr-3" /> Terminate Session
                   </Button>
                 </div>
               </div>
@@ -464,15 +472,16 @@ export default function Dashboard() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 p-6 flex justify-center">
-        <div className="bg-[#5fad86]/90 backdrop-blur-3xl border border-white/20 rounded-[2.5rem] flex justify-between items-center px-4 py-2 shadow-2xl w-full max-w-md">
+        <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2.8rem] flex justify-between items-center px-6 py-3 shadow-[0_30px_60px_rgba(0,0,0,0.5)] w-full max-w-md">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as Tab)}
-              className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all ${activeTab === item.id ? 'text-white bg-white/20' : 'text-white/50 hover:text-white/80'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-[1.8rem] transition-all relative ${activeTab === item.id ? 'text-cyan-400 bg-white/5' : 'text-white/30 hover:text-white/60'}`}
             >
-              <item.icon className="w-5 h-5" />
-              <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'block' : 'hidden'}`}>{item.label}</span>
+              <item.icon className={`w-6 h-6 transition-transform ${activeTab === item.id ? 'scale-110' : ''}`} />
+              <span className={`text-[9px] font-black uppercase tracking-tighter mt-1.5 ${activeTab === item.id ? 'block' : 'hidden'}`}>{item.label}</span>
+              {activeTab === item.id && <motion.div layoutId="nav-active" className="absolute -bottom-1 w-1 h-1 bg-cyan-400 rounded-full" />}
             </button>
           ))}
         </div>
