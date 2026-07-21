@@ -6,62 +6,53 @@ const dbPath = path.resolve(process.cwd(), 'vpn.db');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
-// 1. Создаем базовую таблицу, если её нет
+// Создаем таблицу с поддержкой Firebase UID и VPN ссылок
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uid TEXT UNIQUE,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
     expires_at DATETIME DEFAULT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    last_purchase_at DATETIME DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    vpn_link TEXT
   )
 `);
 
-// 2. Робастная миграция для добавления новых колонок
+// Робастная миграция
 function runMigrations() {
   try {
     const tableInfo = db.prepare("PRAGMA table_info(users)").all() as any[];
     const columns = tableInfo.map(c => c.name.toLowerCase());
     
+    if (!columns.includes('uid')) {
+      db.exec("ALTER TABLE users ADD COLUMN uid TEXT UNIQUE");
+    }
+    if (!columns.includes('vpn_link')) {
+      db.exec("ALTER TABLE users ADD COLUMN vpn_link TEXT");
+    }
     if (!columns.includes('last_purchase_at')) {
-      console.log('[DB] Добавление колонки last_purchase_at...');
       db.exec("ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL");
     }
-    
-    if (!columns.includes('created_at')) {
-      console.log('[DB] Добавление колонки created_at...');
-      db.exec("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
-    }
   } catch (e) {
-    console.error('[DB] Ошибка миграции:', e);
+    console.error('[DB] Migration Error:', e);
   }
 }
 
-function seedDatabase() {
-  try {
-    const row = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
-    
-    if (row.count === 0) {
-      console.log('[DB] Инициализация системы...');
-      const adminPass = bcrypt.hashSync('admin', 10);
-      const userPass = bcrypt.hashSync('user', 10);
-
-      const insert = db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)');
-      
-      // Единственный админ
-      insert.run('admin', adminPass, 'admin', '2099-01-01 00:00:00');
-      // Тестовый пользователь
-      insert.run('user', userPass, 'user', null);
-      
-      console.log('[DB] База готова. Доступ: admin/admin, user/user');
-    }
-  } catch (e) {
-    console.error('[DB] Ошибка сидирования:', e);
-  }
+export async function saveUserToDb(data: { uid: string, username: string, vpn_link: string }) {
+  const stmt = db.prepare('UPDATE users SET uid = ?, vpn_link = ? WHERE username = ?');
+  return stmt.run(data.uid, data.vpn_link, data.username);
 }
 
 runMigrations();
-seedDatabase();
+
+// Seed admin only if not exists
+const row = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+if (row.count === 0) {
+  const adminPass = bcrypt.hashSync('admin', 10);
+  db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)').run('admin', adminPass, 'admin', '2099-01-01');
+}
 
 export default db;
