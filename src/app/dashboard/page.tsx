@@ -78,7 +78,7 @@ export default function VpnDashboard() {
   const navItems = [
     { id: 'status', icon: Activity, label: 'Статус' },
     { id: 'keys', icon: Key, label: 'Ключи' },
-    { id: 'nodes', icon: Локации, label: 'Узлы' },
+    { id: 'nodes', icon: Globe, label: 'Узлы' },
     { id: 'speed', icon: Zap, label: 'Скорость' },
     { id: 'chat', icon: MessageSquare, label: 'Чат' },
     { id: 'help', icon: HelpCircle, label: 'Помощь' },
