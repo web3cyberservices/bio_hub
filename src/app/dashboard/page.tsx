@@ -16,7 +16,8 @@ import {
   Database,
   ArrowRight,
   ShieldCheck,
-  Cpu
+  Cpu,
+  User
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription, regenerateVpnKey } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -26,7 +27,6 @@ import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
 import Image from 'next/image';
 
 type Tab = 'status' | 'keys' | 'nodes' | 'admin' | 'settings';
@@ -165,21 +165,23 @@ export default function Dashboard() {
       </div>
 
       <header className="flex-none px-6 py-4 relative z-20">
-        <div className="max-w-md mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="relative w-7 h-7 neon-glow-green">
-              <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
+        <div className="max-w-md mx-auto">
+          <div className="glass-panel px-5 py-3 rounded-full flex justify-between items-center shadow-2xl border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="relative w-7 h-7 neon-glow-green">
+                <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
+              </div>
+              <h1 className="brand-title text-[9px] tracking-[0.4em]">CYBER<span className="text-[#5fad86]">ARMOR</span></h1>
             </div>
-            <h1 className="brand-title text-[9px] tracking-[0.5em]">CYBER<span className="text-black/30">ARMOR</span></h1>
-          </div>
-          <div className="flex items-center space-x-3">
-             <Button variant="ghost" size="icon" onClick={() => loadData(false)} disabled={refreshing} className="w-8 h-8 rounded-xl bg-black/20 hover:bg-black/40 border border-white/5">
-                <RefreshCw className={`w-3.5 h-3.5 text-white/40 ${refreshing ? 'animate-spin' : ''}`} />
-             </Button>
-             <Avatar className="w-8 h-8 rounded-xl border border-white/10 bg-black/60 shadow-lg">
-                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
-                <AvatarFallback className="text-[8px]">{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
-             </Avatar>
+            <div className="flex items-center space-x-3">
+               <Button variant="ghost" size="icon" onClick={() => loadData(false)} disabled={refreshing} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/5">
+                  <RefreshCw className={`w-3.5 h-3.5 text-white/60 ${refreshing ? 'animate-spin' : ''}`} />
+               </Button>
+               <Avatar className="w-8 h-8 rounded-full border border-white/20 bg-black shadow-lg">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${vpnData?.username}`} />
+                  <AvatarFallback className="text-[8px]">{vpnData?.username?.substring(0,2).toUpperCase()}</AvatarFallback>
+               </Avatar>
+            </div>
           </div>
         </div>
       </header>
@@ -232,8 +234,8 @@ export default function Dashboard() {
               <div className="space-y-6 h-full overflow-y-auto pb-24 custom-scrollbar pt-2">
                 {isActive ? (
                   <>
-                    <Card className="glass-panel border-white/5 rounded-[2.5rem] bg-transparent shadow-2xl relative overflow-hidden group premium-card">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#5fad86]/5 to-transparent opacity-50" />
+                    <Card className="glass-panel border-white/10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group premium-card">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#5fad86]/10 to-transparent opacity-30" />
                       <CardContent className="p-8 text-center relative z-10">
                         <div className="mb-6 relative inline-block">
                           <motion.div 
@@ -253,14 +255,14 @@ export default function Dashboard() {
                         
                         <div className="grid grid-cols-2 gap-6 pt-6 border-t border-white/5">
                           <div className="text-left space-y-1">
-                              <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Latency</p>
+                              <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Задержка</p>
                               <div className="flex items-center gap-2">
                                 <Zap className="w-3 h-3 text-[#5fad86]" />
                                 <p className="text-xs font-black text-white">28 MS</p>
                               </div>
                           </div>
                           <div className="text-right space-y-1">
-                              <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Gateway</p>
+                              <p className="text-[7px] text-white/20 uppercase font-black tracking-widest">Шлюз</p>
                               <div className="flex items-center justify-end gap-2">
                                 <p className="text-xs font-black text-white">FINLAND</p>
                                 <Globe className="w-3 h-3 text-[#5fad86]/40" />
@@ -323,7 +325,7 @@ export default function Dashboard() {
             {activeTab === 'keys' && !isAdmin && (
               <div className="space-y-4 h-full overflow-y-auto pb-24 custom-scrollbar pt-2">
                 {(isActive && vpnData?.vpn?.links?.length > 0) ? (
-                  <Card className="glass-panel rounded-[2.5rem] bg-transparent shadow-2xl overflow-hidden premium-card">
+                  <Card className="glass-panel rounded-[2.5rem] shadow-2xl overflow-hidden premium-card">
                     <CardContent className="p-8 text-center space-y-6">
                       <div className="inline-block p-5 bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(255,255,255,0.1)] relative">
                         <QRCodeSVG value={vpnData?.vpn?.links[0]} size={160} level="H" />
@@ -347,7 +349,7 @@ export default function Dashboard() {
                   </Card>
                 ) : (
                   <div className="py-20 text-center space-y-6">
-                    <div className="w-20 h-20 bg-black/40 rounded-3xl flex items-center justify-center mx-auto border border-white/5 shadow-inner">
+                    <div className="w-20 h-20 glass-panel rounded-3xl flex items-center justify-center mx-auto border border-white/5 shadow-inner">
                        <Key className="w-8 h-8 text-white/10" />
                     </div>
                     <Button onClick={() => setActiveTab('status')} className="btn-cyber-primary rounded-2xl px-10 h-12 text-[9px]">АКТИВИРОВАТЬ</Button>
@@ -364,7 +366,7 @@ export default function Dashboard() {
                   { id: 'NED-04', name: 'NETHERLANDS', ping: '--', load: '0%', active: false, soon: true },
                   { id: 'TUR-02', name: 'TURKEY-PRX', ping: '--', load: '0%', active: false, soon: true }
                 ].map((node) => (
-                  <div key={node.id} className={`p-4 rounded-[2rem] border transition-all ${node.active ? 'bg-white/10 border-white/20' : 'glass-panel border-white/5 opacity-50'} premium-card`}>
+                  <div key={node.id} className={`p-4 rounded-[2rem] transition-all glass-panel premium-card ${node.active ? 'border-white/20' : 'opacity-40 border-white/5'}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border transition-all ${node.active ? 'bg-[#5fad86] text-black shadow-[0_0_15px_#5fad86]' : 'bg-white/5 text-white/20 border-white/5'}`}>
