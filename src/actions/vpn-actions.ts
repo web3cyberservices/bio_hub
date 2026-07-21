@@ -7,28 +7,36 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key-64-chars-long-for-production-security-min-default');
+// Секрет для JWT. В продакшене ОБЯЗАТЕЛЬНО задавать в .env
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'premium-vpn-secret-key-must-be-very-long-and-secure-123456');
 
 export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
   const password = formData.get('password') as string;
 
   if (!username || !password) {
-    return { error: 'Введите данные для входа' };
+    return { error: 'Введите логин и пароль' };
   }
 
   try {
+    console.log(`Попытка входа для пользователя: ${username}`);
+    
+    // Поиск пользователя в базе
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
+      console.log(`Пользователь ${username} не найден в БД`);
       return { error: 'Пользователь не найден' };
     }
 
+    // Проверка пароля
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
+      console.log(`Неверный пароль для ${username}`);
       return { error: 'Неверный пароль' };
     }
 
+    // Создание токена
     const token = await new SignJWT({ 
       uid: user.id.toString(), 
       role: user.role,
@@ -48,10 +56,11 @@ export async function vpnLogin(formData: FormData) {
       path: '/'
     });
 
+    console.log(`Успешный вход: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('Login Error:', error);
-    return { error: 'Ошибка сервера при входе' };
+    console.error('Критическая ошибка при входе:', error);
+    return { error: 'Ошибка сервера. Проверьте логи.' };
   }
 }
 
@@ -60,7 +69,7 @@ export async function vpnRegister(formData: FormData) {
   const password = formData.get('password') as string;
 
   if (!username || password.length < 4) {
-    return { error: 'Минимум 4 символа для пароля' };
+    return { error: 'Логин обязателен, пароль минимум 4 символа' };
   }
   
   try {
@@ -68,16 +77,22 @@ export async function vpnRegister(formData: FormData) {
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
 
+    console.log(`Зарегистрирован новый пользователь: ${username}`);
+
+    // Попытка создать пользователя в Marzban (если настроен)
     try {
       await createMarzbanUser(username);
-    } catch (e) {}
+    } catch (e) {
+      console.warn(`Marzban не ответил для ${username}, но в БД пользователь создан.`);
+    }
 
     return { success: true };
   } catch (error: any) {
     if (error.message.includes('UNIQUE constraint failed')) {
-      return { error: 'Имя уже занято' };
+      return { error: 'Это имя пользователя уже занято' };
     }
-    return { error: 'Ошибка регистрации' };
+    console.error('Ошибка регистрации:', error);
+    return { error: 'Ошибка при создании аккаунта' };
   }
 }
 
