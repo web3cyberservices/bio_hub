@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -74,6 +73,15 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  const isAdmin = vpnData?.role === 'admin';
+  const isActive = vpnData?.isActive;
+
+  useEffect(() => {
+    if (isAdmin && activeTab === 'status') {
+      setActiveTab('admin');
+    }
+  }, [isAdmin, activeTab]);
+
   const handleBuy = async (months: number) => {
     setPurchasing(true);
     const result = await buySubscription(months);
@@ -100,9 +108,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const isAdmin = vpnData?.role === 'admin';
-  const isActive = vpnData?.isActive;
   
   const navItems = isAdmin ? [
     { id: 'admin', icon: Terminal, label: 'Панель' },
@@ -114,12 +119,6 @@ export default function Dashboard() {
     { id: 'nodes', icon: Globe, label: 'Узлы' },
     { id: 'settings', icon: Settings, label: 'Профиль' }
   ];
-
-  useEffect(() => {
-    if (isAdmin && activeTab === 'status') {
-      setActiveTab('admin');
-    }
-  }, [isAdmin]);
 
   return (
     <div className="min-h-screen bg-[#02040a] text-slate-100 selection:bg-cyan-500/20 pb-32">
