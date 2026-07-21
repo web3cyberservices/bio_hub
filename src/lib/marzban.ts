@@ -67,8 +67,8 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   try {
     const token = await getAdminToken();
 
-    // Удаляем конкретный инбаунд "VLESS TCP REALITY", так как он может называться иначе на сервере.
-    // Оставляем пустой объект или список, чтобы Marzban использовал дефолтные активные инбаунды.
+    // Минималистичный payload для избежания 422 Unprocessable Entity
+    // Мы не указываем конкретные inbounds, чтобы Marzban использовал дефолтные
     const response = await fetch(`${MARZBAN_API_URL}/api/user`, {
       method: 'POST',
       headers: {
@@ -77,17 +77,15 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
       },
       body: JSON.stringify({
         username: options.username,
-        data_limit: options.dataLimit,
-        proxies: { vless: {} },
-        // Передаем пустые массивы, чтобы Marzban автоматически назначил все доступные инбаунды для этих протоколов
-        inbounds: { vless: [] }
+        data_limit: Math.floor(options.dataLimit),
+        proxies: { vless: {} } // Запрашиваем VLESS без указания конкретных тегов
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       
-      // 409 Conflict = User exists, just fetch it
+      // 409 Conflict = Пользователь уже существует, просто получаем его данные
       if (response.status === 409) {
         console.log(`[MARZBAN] Пользователь ${options.username} уже существует, получаем данные...`);
         return await getMarzbanUser(options.username);

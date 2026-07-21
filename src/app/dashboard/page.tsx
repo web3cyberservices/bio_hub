@@ -15,13 +15,11 @@ import {
   Calendar,
   RefreshCw,
   Clock,
-  CheckCircle2,
   Zap,
   Navigation,
   UserX,
   Users,
-  RotateCcw,
-  ExternalLink
+  RotateCcw
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription, regenerateVpnKey } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
@@ -70,7 +68,6 @@ export default function Dashboard() {
         const users = await getAllVpnUsers();
         setAdminUsers(Array.isArray(users) ? users : []);
       } else {
-        // Redirect non-admin if they are on admin tab
         if (activeTab === 'admin') setActiveTab('status');
       }
     } catch (e) {
