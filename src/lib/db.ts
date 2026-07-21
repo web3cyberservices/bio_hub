@@ -3,9 +3,12 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 
-// Файл базы данных будет лежать в корне проекта под именем vpn.db
+// Путь к базе данных в корне проекта
 const dbPath = path.resolve(process.cwd(), 'vpn.db');
 const db = new Database(dbPath);
+
+// Настройка базы данных
+db.pragma('journal_mode = WAL');
 
 // Инициализация таблицы пользователей
 db.exec(`
@@ -18,8 +21,8 @@ db.exec(`
   )
 `);
 
-// Сидирование начальных данных (admin/user), если база пуста
-const seedUsers = () => {
+// Функция для гарантированного создания начальных данных
+function seedDatabase() {
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
   
   if (userCount.count === 0) {
@@ -28,13 +31,17 @@ const seedUsers = () => {
     const userPass = bcrypt.hashSync('user', salt);
 
     const insert = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-    insert.run('admin', adminPass, 'admin');
-    insert.run('user', userPass, 'user');
     
-    console.log('Database seeded with default accounts: admin/admin, user/user');
+    try {
+      insert.run('admin', adminPass, 'admin');
+      insert.run('user', userPass, 'user');
+      console.log('--- БАЗА ДАННЫХ ИНИЦИАЛИЗИРОВАНА: admin/admin, user/user ---');
+    } catch (e) {
+      console.error('Ошибка при сидировании БД:', e);
+    }
   }
-};
+}
 
-seedUsers();
+seedDatabase();
 
 export default db;
