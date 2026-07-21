@@ -19,6 +19,23 @@ db.exec(`
   )
 `);
 
+// Миграция: Проверяем наличие новых колонок в существующей базе
+try {
+  const columns = db.prepare("PRAGMA table_info(users)").all() as any[];
+  const columnNames = columns.map(c => c.name);
+  
+  if (!columnNames.includes('last_purchase_at')) {
+    db.exec("ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL");
+    console.log('[DB] Добавлена колонка last_purchase_at');
+  }
+  if (!columnNames.includes('created_at')) {
+    db.exec("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+    console.log('[DB] Добавлена колонка created_at');
+  }
+} catch (e) {
+  console.error('[DB] Ошибка миграции:', e);
+}
+
 function seedDatabase() {
   try {
     const row = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };

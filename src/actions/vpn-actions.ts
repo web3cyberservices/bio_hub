@@ -15,17 +15,17 @@ export async function vpnLogin(formData: FormData) {
   const password = formData.get('password') as string;
 
   try {
-    console.log(`[AUTH] Login attempt for: ${username}`);
+    console.log(`[AUTH] Попытка входа: ${username}`);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      console.log(`[AUTH] User not found: ${username}`);
+      console.log(`[AUTH] Пользователь не найден: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      console.log(`[AUTH] Invalid password for: ${username}`);
+      console.log(`[AUTH] Неверный пароль для: ${username}`);
       return { error: 'Неверный логин или пароль' };
     }
 
@@ -41,20 +41,20 @@ export async function vpnLogin(formData: FormData) {
 
     const cookieStore = await cookies();
     
-    // Настройки кук, максимально совместимые с HTTP и прямым IP доступом
+    // Настройки кук для HTTP (без SSL)
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, // ОБЯЗАТЕЛЬНО false для работы без HTTPS (по IP)
+      secure: false, // false для работы по IP без HTTPS
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 24 часа
       path: '/',
       priority: 'high'
     });
 
-    console.log(`[AUTH] Login successful: ${username}. Cookie vpn_token set.`);
+    console.log(`[AUTH] Вход успешен: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
-    console.error('[AUTH] Login Exception:', error);
+    console.error('[AUTH] Ошибка при входе:', error);
     return { error: 'Ошибка сервера при входе' };
   }
 }
@@ -91,7 +91,6 @@ export async function getVpnMe() {
     const token = tokenCookie?.value;
     
     if (!token) {
-      console.log('[AUTH] No vpn_token cookie found in request headers');
       return null;
     }
 
@@ -99,7 +98,6 @@ export async function getVpnMe() {
     const user: any = db.prepare('SELECT role, username, expires_at, created_at, last_purchase_at FROM users WHERE username = ?').get(payload.username);
     
     if (!user) {
-      console.log(`[AUTH] Token valid but user ${payload.username} missing from DB`);
       return null;
     }
 
@@ -120,7 +118,7 @@ export async function getVpnMe() {
       }
     };
   } catch (e: any) {
-    console.error('[AUTH] Session validation error:', e.message);
+    console.error('[AUTH] Ошибка валидации сессии:', e.message);
     return null;
   }
 }
@@ -147,6 +145,7 @@ export async function buySubscription(months: number) {
     revalidatePath('/dashboard');
     return { success: true, expiresAt: dbDate };
   } catch (e) {
+    console.error('[SHOP] Ошибка покупки:', e);
     return { error: 'Ошибка при покупке' };
   }
 }
@@ -162,7 +161,7 @@ export async function getAllVpnUsers() {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const createdAtDate = u.created_at ? new Date(u.created_at) : null;
       const lastPurchaseAtDate = u.last_purchase_at ? new Date(u.last_purchase_at) : null;
-      const isActive = expiresAtDate && expiresAtDate > new Date();
+      const isActive = (expiresAtDate && expiresAtDate > new Date()) || u.role === 'admin';
       
       const trafficUsed = ((u.id * 7.7) % 85).toFixed(1);
       const trafficLimit = "100.0 GB";
@@ -181,6 +180,7 @@ export async function getAllVpnUsers() {
       };
     });
   } catch (e) {
+    console.error('[ADMIN] Ошибка списка:', e);
     return { error: 'Ошибка получения списка' };
   }
 }
