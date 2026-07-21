@@ -17,20 +17,12 @@ export function TelegramInit() {
       tg.ready();
       tg.expand();
       
-      // Устанавливаем цвета темы Telegram, если они доступны
+      // Force dark mode styles
       const root = document.documentElement;
-      if (tg.themeParams?.bg_color) {
-        root.style.setProperty('--background', tg.themeParams.bg_color);
-      }
-      if (tg.themeParams?.text_color) {
-        root.style.setProperty('--foreground', tg.themeParams.text_color);
-      }
-      if (tg.themeParams?.button_color) {
-        root.style.setProperty('--primary', tg.themeParams.button_color);
-      }
+      root.classList.add('dark');
       
-      tg.setHeaderColor(tg.themeParams?.header_bg_color || '#020617');
-      tg.setBackgroundColor(tg.themeParams?.bg_color || '#020617');
+      tg.setHeaderColor('#020617');
+      tg.setBackgroundColor('#020617');
     }
   }, []);
 
