@@ -7,24 +7,24 @@
 :root {
   --background: 149 32% 52%; /* #5fad86 */
   --foreground: 213 31% 98%;
-  --card: 149 40% 8%; 
+  --card: 149 40% 6%; 
   --card-foreground: 213 31% 98%;
   --popover: 149 40% 10%;
   --popover-foreground: 213 31% 98%;
   --primary: 191 97% 50%;
   --primary-foreground: 149 40% 10%;
-  --secondary: 149 30% 15%;
+  --secondary: 149 30% 12%;
   --secondary-foreground: 213 31% 91%;
-  --muted: 149 20% 20%;
-  --muted-foreground: 149 10% 80%;
+  --muted: 149 20% 15%;
+  --muted-foreground: 149 10% 70%;
   --accent: 191 97% 50%;
   --accent-foreground: 213 31% 91%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --border: 149 20% 15%;
-  --input: 149 20% 15%;
+  --border: 149 20% 12%;
+  --input: 149 20% 12%;
   --ring: 191 97% 50%;
-  --radius: 2rem;
+  --radius: 1.5rem;
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -64,7 +64,7 @@
 .brand-title {
   font-family: var(--font-sans);
   font-weight: 900;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   font-style: normal;
   display: flex;
@@ -73,37 +73,33 @@
 }
 
 .glass-panel {
-  background: rgba(8, 15, 12, 0.85);
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 25px 80px -15px rgba(0, 0, 0, 0.6);
+  background: rgba(6, 12, 10, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
 .neon-glow {
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-}
-
-.neon-glow-strong {
-  box-shadow: 0 0 35px rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
 }
 
 .cyber-button {
   position: relative;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .cyber-button:active {
-  transform: scale(0.94);
+  transform: scale(0.96);
 }
 
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 ::-webkit-scrollbar-track {
   background: #5fad86;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 10px;
 }
