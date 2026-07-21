@@ -7,7 +7,7 @@ const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
 /**
- * Инициализация базы данных с базовой схемой
+ * Инициализация базовой структуры
  */
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -20,46 +20,51 @@ db.exec(`
 `);
 
 /**
- * Безопасная миграция для добавления отсутствующих колонок
+ * Принудительная миграция колонок
  */
 function runMigrations() {
-  console.log('[DB] Running migrations...');
+  console.log('[DB] Запуск миграций...');
   try {
     const tableInfo = db.prepare("PRAGMA table_info(users)").all() as any[];
     const columns = tableInfo.map(c => c.name.toLowerCase());
     
-    const columnsToAdd = [
-      { name: 'uid', type: 'TEXT' },
-      { name: 'vpn_link', type: 'TEXT' },
-      { name: 'expires_at', type: 'DATETIME DEFAULT NULL' },
-      { name: 'last_purchase_at', type: 'DATETIME DEFAULT NULL' }
-    ];
-
-    for (const col of columnsToAdd) {
-      if (!columns.includes(col.name.toLowerCase())) {
-        console.log(`[DB] Adding column: ${col.name}`);
-        db.exec(`ALTER TABLE users ADD COLUMN ${col.name} ${col.type}`);
-      }
+    // Добавляем колонки по одной, если их нет
+    if (!columns.includes('uid')) {
+      console.log('[DB] Добавление колонки uid');
+      db.exec('ALTER TABLE users ADD COLUMN uid TEXT');
+      db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uid ON users(uid) WHERE uid IS NOT NULL');
+    }
+    
+    if (!columns.includes('vpn_link')) {
+      console.log('[DB] Добавление колонки vpn_link');
+      db.exec('ALTER TABLE users ADD COLUMN vpn_link TEXT');
+    }
+    
+    if (!columns.includes('expires_at')) {
+      console.log('[DB] Добавление колонки expires_at');
+      db.exec('ALTER TABLE users ADD COLUMN expires_at DATETIME DEFAULT NULL');
+    }
+    
+    if (!columns.includes('last_purchase_at')) {
+      console.log('[DB] Добавление колонки last_purchase_at');
+      db.exec('ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL');
     }
 
-    // Создаем индексы отдельно (UNIQUE нельзя добавить в ALTER TABLE напрямую в SQLite)
-    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uid ON users(uid) WHERE uid IS NOT NULL");
-    
-    console.log('[DB] All migrations applied successfully');
+    console.log('[DB] Миграции завершены успешно');
   } catch (e) {
-    console.error('[DB] Migration Error:', e);
+    console.error('[DB] Ошибка миграции:', e);
   }
 }
 
 runMigrations();
 
-// Инициализация админа по умолчанию
+// Инициализация админа
 const adminRow = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
 if (adminRow.count === 0) {
   const adminPass = bcrypt.hashSync('admin', 10);
   db.prepare('INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, ?, ?)')
     .run('admin', adminPass, 'admin', '2099-01-01T00:00:00.000Z');
-  console.log('[DB] Default admin created');
+  console.log('[DB] Дефолтный админ создан');
 }
 
 export async function saveUserToDb(data: { uid: string, username: string, vpn_link: string }) {

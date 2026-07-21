@@ -7,7 +7,7 @@ import db, { saveUserToDb } from '@/lib/db';
 import { generateMarzbanUser } from '@/lib/marzban';
 import { revalidatePath } from 'next/cache';
 
-const SECRET_KEY_STR = 'cyber-armor-vpn-super-secure-permanent-secret-key-2026-stable-version';
+const SECRET_KEY_STR = 'cyber-armor-vpn-secure-key-2026-v1';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(firebaseUid: string, username: string) {
@@ -17,7 +17,7 @@ export async function registerVpnUser(firebaseUid: string, username: string) {
       dataLimit: 50 * 1024 * 1024 * 1024 
     });
     
-    await saveUserToDb({ 
+    saveUserToDb({ 
       uid: firebaseUid, 
       username: username, 
       vpn_link: vpnProfile.links[0] 
@@ -80,11 +80,11 @@ export async function vpnRegister(formData: FormData) {
 }
 
 export async function getVpnMe() {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('vpn_token')?.value;
-    if (!token) return null;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('vpn_token')?.value;
+  if (!token) return null;
 
+  try {
     const { payload }: any = await jwtVerify(token, JWT_SECRET);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(payload.username);
     
@@ -106,7 +106,8 @@ export async function getVpnMe() {
       }
     };
   } catch (e) {
-    console.error("[AUTH] Session validation failed:", e);
+    console.error("[AUTH] Session invalid, clearing cookie:", e);
+    cookieStore.delete('vpn_token');
     return null;
   }
 }
@@ -147,7 +148,7 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (!me || me.role !== 'admin') return [];
 
-    const users = db.prepare('SELECT * FROM users WHERE username != ? ORDER BY created_at DESC').all(me.username);
+    const users = db.prepare('SELECT * FROM users WHERE role != ? ORDER BY created_at DESC').all('admin');
     
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
