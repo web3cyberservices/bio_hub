@@ -34,7 +34,8 @@ async function getAdminToken(force = false): Promise<string> {
   const response = await fetch(`${MARZBAN_API_URL}/api/admin/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: formData.toString()
+    body: formData.toString(),
+    cache: 'no-store'
   });
 
   if (!response.ok) {
@@ -65,24 +66,16 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    cache: 'no-store'
   });
 
   if (!createRes.ok && createRes.status !== 409) {
     const errorText = await createRes.text();
     console.error(`[MARZBAN] Create error: ${createRes.status} ${errorText}`);
-    
-    // Если ошибка 422 или 400, пробуем создать без указания прокси (Marzban сам назначит дефолтные)
-    if (createRes.status === 422 || createRes.status === 400) {
-        await fetch(`${MARZBAN_API_URL}/api/user`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ username: options.username, data_limit: payload.data_limit })
-        });
-    }
   }
 
-  // 2. Если пользователь уже был, принудительно включаем VLESS (на случай если он был выключен)
+  // 2. Если пользователь уже был, принудительно обновляем (на случай если он был выключен)
   if (createRes.status === 409) {
     await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
       method: 'PUT',
@@ -90,25 +83,31 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ proxies: { vless: {} }, data_limit: payload.data_limit })
+      body: JSON.stringify({ proxies: { vless: {} }, data_limit: payload.data_limit, status: "active" }),
+      cache: 'no-store'
     });
   }
 
-  // 3. Всегда запрашиваем профиль через GET, так как только этот эндпоинт стабильно возвращает ссылки
+  // 3. Всегда запрашиваем профиль через GET с отключенным кэшем
   return await getMarzbanUser(options.username);
 }
 
 export async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
   const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    },
+    cache: 'no-store'
   });
   
   if (!response.ok) {
     if (response.status === 401) {
         const freshToken = await getAdminToken(true);
         const retry = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
-          headers: { 'Authorization': `Bearer ${freshToken}` }
+          headers: { 'Authorization': `Bearer ${freshToken}` },
+          cache: 'no-store'
         });
         if (!retry.ok) throw new Error(`User fetch failed: ${retry.status}`);
         return await retry.json();

@@ -24,7 +24,7 @@ export async function registerVpnUser(username: string) {
     const link = links.length > 0 ? links[0] : null;
 
     if (!link) {
-      console.error(`[VPN-ACTION] Marzban не вернул ссылок для ${username}. Ответ API:`, vpnProfile);
+      console.warn(`[VPN-ACTION] Marzban не вернул ссылок для ${username}.`);
       return { 
         success: false, 
         error: 'Сервер VPN не вернул ключ доступа. Убедитесь, что в Marzban настроены Hosts для VLESS.' 
