@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -45,7 +43,7 @@
   --border: 222 47% 12%;
   --input: 222 47% 12%;
   --ring: 191 97% 50%;
-  --radius: 1.25rem;
+  --radius: 1rem;
 }
 
 @layer base {
@@ -53,17 +51,18 @@
     @apply border-border outline-none;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    background-color: #02040a; /* Форсируем темный цвет сразу */
+    @apply bg-background text-foreground antialiased selection:bg-cyan-500/30;
   }
 }
 
-.glass-card {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.glass-panel {
+  @apply bg-slate-900/60 backdrop-blur-xl border border-white/5 shadow-2xl;
 }
 
-.neon-glow {
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+.neon-border {
+  @apply border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.1)];
+}
+
+.cyber-button {
+  @apply relative overflow-hidden transition-all duration-300 active:scale-95 disabled:opacity-50;
 }

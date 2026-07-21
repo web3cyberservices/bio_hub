@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "VPN PRO Premium",
-  description: "Secure High-End VLESS VPN Tunnel.",
+  description: "Secure High-End VLESS VPN Tunneling for Professionals.",
 };
 
 export default function RootLayout({
@@ -25,8 +25,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning className="dark">
-      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen`}>
-        <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+      <body className={`${inter.variable} font-sans bg-[#02040a] text-slate-50 antialiased min-h-screen overflow-x-hidden`}>
+        <div className="relative flex min-h-screen flex-col">
           {children}
         </div>
         <Toaster />
