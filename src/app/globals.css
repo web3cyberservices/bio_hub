@@ -7,7 +7,7 @@
 :root {
   --background: 149 32% 52%; /* #5fad86 */
   --foreground: 213 31% 98%;
-  --card: 149 40% 12%; /* Значительно темнее для контраста */
+  --card: 149 40% 12%; 
   --card-foreground: 213 31% 98%;
   --popover: 149 40% 15%;
   --popover-foreground: 213 31% 98%;
@@ -64,16 +64,16 @@
 .brand-title {
   font-family: var(--font-sans);
   font-weight: 900;
-  letter-spacing: 0.15em; /* Широкий футуристичный трекинг */
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  font-style: normal; /* Прямой шрифт без наклона */
+  font-style: normal;
   display: flex;
   align-items: center;
   line-height: 1;
 }
 
 .glass-panel {
-  background: rgba(10, 20, 15, 0.75); /* Темный фон для блоков */
+  background: rgba(10, 20, 15, 0.75);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);

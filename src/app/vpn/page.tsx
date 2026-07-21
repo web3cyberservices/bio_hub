@@ -102,11 +102,11 @@ export default function VpnAuthPage() {
             <CardFooter className="flex flex-col space-y-8 px-10 pb-16 pt-8">
               <Button 
                 type="submit" 
-                className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-2xl shadow-xl shadow-black/40 transition-all active:scale-95 text-sm tracking-widest uppercase"
+                className="w-full h-16 bg-[#5fad86] hover:bg-[#5fad86]/90 text-black font-black rounded-2xl shadow-xl shadow-black/40 transition-all active:scale-95 text-sm tracking-widest uppercase"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-3 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : isLogin ? (
                   <><LogIn className="w-5 h-5 mr-3"/> Access Terminal</>
                 ) : (
