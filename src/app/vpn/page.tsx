@@ -61,7 +61,7 @@ export default function VpnAuthPage() {
               <div className="absolute inset-0 bg-[#5fad86]/10 blur-2xl rounded-full scale-125" />
               <div className="relative w-20 h-20 bg-black/40 rounded-2xl flex items-center justify-center shadow-lg border border-white/10 neon-glow">
                 <div className="relative w-12 h-12">
-                   <Image src="/fonts/logo.png" alt="Logo" fill className="object-contain" priority />
+                   <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" priority />
                 </div>
               </div>
             </div>

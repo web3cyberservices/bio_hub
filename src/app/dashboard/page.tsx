@@ -163,7 +163,7 @@ export default function Dashboard() {
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <div className="relative w-5 h-5">
-              <Image src="/fonts/logo.png" alt="CyberArmor" fill className="object-contain opacity-80" />
+              <Image src="/fonts/logo512x512.png" alt="CyberArmor" fill className="object-contain opacity-80" />
             </div>
             <h1 className="brand-title text-[10px] tracking-[0.5em] font-black">CYBER<span className="text-black/30">ARMOR</span></h1>
           </div>
@@ -230,7 +230,7 @@ export default function Dashboard() {
                         <div className="mb-4 relative inline-block">
                           <div className="w-16 h-16 rounded-2xl border border-white/10 bg-black/40 flex items-center justify-center neon-glow">
                             <div className="relative w-10 h-10">
-                              <Image src="/fonts/logo.png" alt="Logo" fill className="object-contain" />
+                              <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
                             </div>
                           </div>
                         </div>
@@ -283,7 +283,7 @@ export default function Dashboard() {
                     <div className="space-y-4">
                       <div className="w-16 h-16 bg-black/40 rounded-2xl flex items-center justify-center mx-auto border border-white/5 shadow-2xl">
                         <div className="relative w-10 h-10 opacity-20">
-                           <Image src="/fonts/logo.png" alt="Logo" fill className="object-contain" />
+                           <Image src="/fonts/logo512x512.png" alt="Logo" fill className="object-contain" />
                         </div>
                       </div>
                       <div className="space-y-1">
