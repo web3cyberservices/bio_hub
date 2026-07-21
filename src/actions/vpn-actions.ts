@@ -14,29 +14,10 @@ export async function vpnLogin(formData: FormData) {
   const password = formData.get('password') as string;
 
   try {
-    // Поиск пользователя в локальной SQLite
+    // Поиск пользователя только в локальной SQLite
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
-      // Режим быстрой отладки для admin/admin, если база пуста
-      if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
-        const role = username === 'admin' ? 'admin' : 'user';
-        const token = await new SignJWT({ uid: 'proto-' + username, role, username })
-          .setProtectedHeader({ alg: 'HS256' })
-          .setIssuedAt()
-          .setExpirationTime('24h')
-          .sign(JWT_SECRET);
-
-        const cookieStore = await cookies();
-        cookieStore.set('vpn_token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 86400,
-          path: '/'
-        });
-        return { success: true, role };
-      }
       return { error: 'Пользователь не найден' };
     }
 
@@ -80,11 +61,11 @@ export async function vpnRegister(formData: FormData) {
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
 
-    // Интеграция с Marzban
+    // Интеграция с Marzban (опционально)
     try {
       await createMarzbanUser(username);
     } catch (e) {
-      console.warn('Marzban integration failed, user created only in local DB');
+      console.warn('Marzban integration failed');
     }
 
     return { success: true };
