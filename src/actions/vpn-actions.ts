@@ -14,7 +14,6 @@ export async function registerVpnUser(username: string) {
   try {
     const dataLimit = 50 * 1024 * 1024 * 1024; // 50GB
     
-    console.log(`[VPN-ACTION] Запрос генерации для: ${username}`);
     const vpnProfile = await generateMarzbanUser({ 
       username, 
       dataLimit 
@@ -24,10 +23,9 @@ export async function registerVpnUser(username: string) {
     const link = links.length > 0 ? links[0] : null;
 
     if (!link) {
-      console.warn(`[VPN-ACTION] Marzban не вернул ссылок для ${username}.`);
       return { 
         success: false, 
-        error: 'Сервер VPN не вернул ключ доступа. Убедитесь, что в Marzban настроены Hosts для VLESS.' 
+        error: 'Marzban не вернул ссылок. Убедитесь, что для Inbound настроен Host.' 
       };
     }
 
@@ -35,11 +33,10 @@ export async function registerVpnUser(username: string) {
     db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
       .run(link, username);
     
-    console.log(`[VPN-ACTION] Ключ успешно обновлен в БД для ${username}`);
     return { success: true, link };
   } catch (error: any) {
-    console.error("[VPN-ACTION] Critical Error:", error.message);
-    return { success: false, error: `Ошибка API Marzban: ${error.message}` };
+    console.error("[VPN-ACTION] Error:", error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -117,7 +114,6 @@ export async function getVpnMe() {
       const verified = await jwtVerify(token, JWT_SECRET);
       payload = verified.payload;
     } catch (e: any) {
-      console.error("[AUTH] JWT verify failed:", e.message);
       cookieStore.delete('vpn_token');
       return null;
     }
@@ -159,22 +155,20 @@ export async function buySubscription(months: number) {
     
     newExpire.setMonth(newExpire.getMonth() + months);
     
-    // Обновляем дату подписки
     db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
       .run(newExpire.toISOString(), me.username);
 
-    // Принудительно генерируем ключ
+    // Принудительно генерируем ключ в Marzban
     const vpnResult = await registerVpnUser(me.username);
     
     revalidatePath('/dashboard');
     
     if (!vpnResult.success) {
-      return { success: true, warning: 'Подписка продлена, но Marzban не вернул ключ: ' + vpnResult.error };
+      return { success: true, warning: 'Подписка активна, но ключ не получен: ' + vpnResult.error };
     }
     
     return { success: true };
   } catch (e: any) {
-    console.error("[BUY] Ошибка покупки:", e);
     return { error: 'Ошибка при оплате' };
   }
 }

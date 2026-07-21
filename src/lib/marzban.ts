@@ -18,6 +18,9 @@ export interface MarzbanProfile {
   proxies?: any;
 }
 
+/**
+ * Получение токена администратора (OAuth2 Password Flow)
+ */
 async function getAdminToken(force = false): Promise<string> {
   if (!force && cachedToken && Date.now() < tokenExpiration) {
     return cachedToken;
@@ -39,7 +42,9 @@ async function getAdminToken(force = false): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Auth failed: ${response.status} ${await response.text()}`);
+    const errText = await response.text();
+    console.error(`[MARZBAN AUTH ERROR] ${response.status}: ${errText}`);
+    throw new Error(`Auth failed: ${response.status}`);
   }
 
   const data = await response.json();
@@ -48,11 +53,14 @@ async function getAdminToken(force = false): Promise<string> {
   return cachedToken!;
 }
 
+/**
+ * Синхронизация пользователя с Marzban (Создание или Обновление)
+ */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
   console.log(`[MARZBAN] Синхронизация пользователя: ${options.username}`);
   const token = await getAdminToken();
 
-  // Жестко фиксируем Payload, чтобы Marzban не сбрасывал ссылки (Payload Overwrite Fix)
+  // Payload с жесткой привязкой к тегу из вашего конфига
   const payload = {
     username: options.username,
     data_limit: Math.floor(options.dataLimit),
@@ -65,6 +73,7 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     status: "active"
   };
 
+  // 1. Пытаемся создать пользователя
   const createRes = await fetch(`${MARZBAN_API_URL}/api/user`, {
     method: 'POST',
     headers: {
@@ -76,7 +85,8 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   });
 
   if (createRes.status === 409) {
-    console.log(`[MARZBAN] Пользователь существует, выполняем жесткий апдейт: ${options.username}`);
+    // 2. Если пользователь уже существует, обновляем его настройки (PUT)
+    console.log(`[MARZBAN] Пользователь существует, обновляем профиль: ${options.username}`);
     const updateRes = await fetch(`${MARZBAN_API_URL}/api/user/${options.username}`, {
       method: 'PUT',
       headers: {
@@ -96,10 +106,13 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     throw new Error(`API Create Error ${createRes.status}: ${errorText}`);
   }
 
-  // Принудительно запрашиваем профиль через GET без кэша, чтобы получить актуальные ссылки
+  // 3. Финальный GET запрос для получения актуальных ссылок (Links часто не возвращаются в POST/PUT)
   return await getMarzbanUser(options.username);
 }
 
+/**
+ * Получение данных пользователя (без кэширования Next.js)
+ */
 export async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
   const token = await getAdminToken();
   const response = await fetch(`${MARZBAN_API_URL}/api/user/${username}`, {
@@ -107,7 +120,7 @@ export async function getMarzbanUser(username: string): Promise<MarzbanProfile> 
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json'
     },
-    cache: 'no-store'
+    cache: 'no-store' // КРИТИЧЕСКИ ВАЖНО для Next.js 15
   });
   
   if (!response.ok) {

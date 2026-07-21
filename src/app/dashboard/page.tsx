@@ -87,7 +87,7 @@ export default function Dashboard() {
     const result = await buySubscription(months);
     if (result.success) {
       if (result.warning) {
-        toast({ title: "Внимание", description: result.warning, variant: "default" });
+        toast({ title: "Внимание", description: result.warning });
       } else {
         toast({ title: "Успех", description: `Подписка на ${months} мес. активна.` });
       }
@@ -105,7 +105,7 @@ export default function Dashboard() {
       toast({ title: "Успех", description: "VLESS ключ успешно получен" });
       await loadData(false);
     } else {
-      toast({ title: "Ошибка API Marzban", description: result.error, variant: "destructive" });
+      toast({ title: "Ошибка API", description: result.error, variant: "destructive" });
     }
     setRegenerating(false);
   };
