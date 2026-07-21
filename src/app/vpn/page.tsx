@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { vpnLogin, vpnRegister } from '@/actions/vpn-actions';
+import { vpnLogin } from '@/actions/vpn-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -21,24 +21,48 @@ export default function VpnAuthPage() {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    const username = (formData.get('username') as string || '').toLowerCase().trim();
+    const password = formData.get('password') as string;
 
-    const result = isLogin ? await vpnLogin(formData) : await vpnRegister(formData);
+    // Для регистрации используем новый API с поддержкой Telegram
+    if (!isLogin) {
+      const tg = (window as any).Telegram?.WebApp;
+      const initData = tg?.initData;
 
-    if (result?.error) {
-      toast({ 
-        title: "Ошибка доступа", 
-        description: result.error, 
-        variant: "destructive" 
-      });
-    } else {
-      if (isLogin) {
-        router.push('/dashboard');
-      } else {
+      if (!initData && process.env.NODE_ENV === 'production') {
         toast({ 
-          title: "Успех", 
-          description: "Аккаунт создан. Используйте свои данные для входа." 
+          title: "Доступ ограничен", 
+          description: "Регистрация доступна только через Telegram!", 
+          variant: "destructive" 
         });
-        setIsLogin(true);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, initData }),
+        });
+        const result = await res.json();
+
+        if (!res.ok) {
+          toast({ title: "Ошибка регистрации", description: result.error, variant: "destructive" });
+        } else {
+          toast({ title: "Успех", description: "Аккаунт создан. Войдите в сеть." });
+          setIsLogin(true);
+        }
+      } catch (err) {
+        toast({ title: "Ошибка сети", description: "Не удалось связаться с сервером", variant: "destructive" });
+      }
+    } else {
+      // Для логина оставляем стандартный Server Action
+      const result = await vpnLogin(formData);
+      if (result?.error) {
+        toast({ title: "Ошибка доступа", description: result.error, variant: "destructive" });
+      } else {
+        router.push('/dashboard');
       }
     }
     setLoading(false);
@@ -70,7 +94,7 @@ export default function VpnAuthPage() {
                   ]
                 }}
                 transition={{ duration: 5, repeat: Infinity }}
-                className="relative w-32 h-32"
+                className="relative w-24 h-24"
               >
                  <Image 
                    src="/fonts/logo512x512.png" 

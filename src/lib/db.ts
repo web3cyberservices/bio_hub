@@ -35,6 +35,11 @@ function runMigrations() {
       db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uid ON users(uid) WHERE uid IS NOT NULL');
     }
     
+    if (!columns.includes('tg_id')) {
+      console.log('[DB] Добавление колонки tg_id');
+      db.exec('ALTER TABLE users ADD COLUMN tg_id INTEGER UNIQUE');
+    }
+    
     if (!columns.includes('vpn_link')) {
       console.log('[DB] Добавление колонки vpn_link');
       db.exec('ALTER TABLE users ADD COLUMN vpn_link TEXT');

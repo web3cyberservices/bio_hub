@@ -3,6 +3,7 @@ import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { TelegramInit } from "@/components/telegram-init";
+import Script from 'next/script';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning className="dark">
       <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <style dangerouslySetInnerHTML={{ __html: `
           body { 
             background-color: #5fad86 !important; 
