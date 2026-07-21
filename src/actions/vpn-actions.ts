@@ -7,18 +7,17 @@ import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key-64-chars-long-for-production-security-min');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key-64-chars-long-for-production-security-min-default');
 
 export async function vpnLogin(formData: FormData) {
   const username = (formData.get('username') as string || '').toLowerCase().trim();
   const password = formData.get('password') as string;
 
   if (!username || !password) {
-    return { error: 'Введите имя пользователя и пароль' };
+    return { error: 'Введите данные для входа' };
   }
 
   try {
-    // Поиск пользователя в SQLite
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
     if (!user) {
@@ -52,7 +51,7 @@ export async function vpnLogin(formData: FormData) {
     return { success: true, role: user.role };
   } catch (error: any) {
     console.error('Login Error:', error);
-    return { error: 'Ошибка сервера: ' + error.message };
+    return { error: 'Ошибка сервера при входе' };
   }
 }
 
@@ -61,16 +60,14 @@ export async function vpnRegister(formData: FormData) {
   const password = formData.get('password') as string;
 
   if (!username || password.length < 4) {
-    return { error: 'Имя пользователя обязательно, пароль минимум 4 символа' };
+    return { error: 'Минимум 4 символа для пароля' };
   }
   
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
     stmt.run(username, hashedPassword, 'user');
 
-    // Опциональная интеграция
     try {
       await createMarzbanUser(username);
     } catch (e) {}
@@ -78,10 +75,9 @@ export async function vpnRegister(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     if (error.message.includes('UNIQUE constraint failed')) {
-      return { error: 'Это имя пользователя уже занято' };
+      return { error: 'Имя уже занято' };
     }
-    console.error('Register Error:', error);
-    return { error: 'Ошибка регистрации: ' + error.message };
+    return { error: 'Ошибка регистрации' };
   }
 }
 
@@ -101,7 +97,7 @@ export async function getVpnMe() {
     return {
       username: payload.username,
       role: payload.role,
-      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://test-link-secure-reality-node'] }
+      vpn: marzbanData || { status: 'active', expire: null, links: ['vless://premium-access-link-placeholder'] }
     };
   } catch (e) {
     return null;
