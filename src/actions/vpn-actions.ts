@@ -1,61 +1,52 @@
+
 'use server';
 
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
-import { getSafeDb } from '@/firebase';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import db from '@/lib/db';
 import { createMarzbanUser, getMarzbanUser } from '@/lib/marzban';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-min-32-chars-for-dev-only');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key-64-chars-long-for-production-security-min');
 
 export async function vpnLogin(formData: FormData) {
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
 
   try {
-    // Режим прототипа для мгновенного теста без БД
-    if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
-      const role = username === 'admin' ? 'admin' : 'user';
-      const token = await new SignJWT({ 
-        uid: 'proto-' + username, 
-        role,
-        username 
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('24h')
-        .sign(JWT_SECRET);
+    // Поиск пользователя в локальной SQLite
+    const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
-      const cookieStore = await cookies();
-      cookieStore.set('vpn_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 86400,
-        path: '/'
-      });
+    if (!user) {
+      // Режим быстрой отладки для admin/admin, если база пуста
+      if ((username === 'admin' && password === 'admin') || (username === 'user' && password === 'user')) {
+        const role = username === 'admin' ? 'admin' : 'user';
+        const token = await new SignJWT({ uid: 'proto-' + username, role, username })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setIssuedAt()
+          .setExpirationTime('24h')
+          .sign(JWT_SECRET);
 
-      return { success: true, role };
+        const cookieStore = await cookies();
+        cookieStore.set('vpn_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 86400,
+          path: '/'
+        });
+        return { success: true, role };
+      }
+      return { error: 'Пользователь не найден' };
     }
 
-    const db = getSafeDb();
-    if (!db) return { error: 'Конфигурация базы данных не найдена. Создайте .env файл на сервере.' };
-
-    const q = query(collection(db, 'vpn_users'), where('username', '==', username));
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) return { error: 'Пользователь не найден' };
-
-    const userData = snapshot.docs[0].data();
-    const isValid = await bcrypt.compare(password, userData.password);
-
+    const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) return { error: 'Неверный пароль' };
 
     const token = await new SignJWT({ 
-      uid: snapshot.docs[0].id, 
-      role: userData.role,
-      username: userData.username 
+      uid: user.id.toString(), 
+      role: user.role,
+      username: user.username 
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -71,10 +62,10 @@ export async function vpnLogin(formData: FormData) {
       path: '/'
     });
 
-    return { success: true, role: userData.role };
+    return { success: true, role: user.role };
   } catch (error: any) {
     console.error('Login Error:', error);
-    return { error: 'Ошибка входа: ' + (error.message || 'неизвестная ошибка') };
+    return { error: 'Ошибка входа: ' + error.message };
   }
 }
 
@@ -83,33 +74,26 @@ export async function vpnRegister(formData: FormData) {
   const password = formData.get('password') as string;
   
   try {
-    const db = getSafeDb();
-    if (!db) return { error: 'База данных не подключена. Добавьте ключи Firebase в .env на сервере.' };
-
-    const q = query(collection(db, 'vpn_users'), where('username', '==', username));
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) return { error: 'Это имя пользователя уже занято' };
-
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    await addDoc(collection(db, 'vpn_users'), {
-      username,
-      password: hashedPassword,
-      role: 'user',
-      createdAt: new Date().toISOString()
-    });
+    // Вставка в локальную SQLite
+    const stmt = db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+    stmt.run(username, hashedPassword, 'user');
 
-    // Интеграция с Marzban (если установлена на сервере)
+    // Интеграция с Marzban
     try {
       await createMarzbanUser(username);
     } catch (e) {
-      console.warn('Marzban не отвечает, пользователь создан только в БД');
+      console.warn('Marzban integration failed, user created only in local DB');
     }
 
     return { success: true };
   } catch (error: any) {
+    if (error.message.includes('UNIQUE constraint failed')) {
+      return { error: 'Это имя пользователя уже занято' };
+    }
     console.error('Register Error:', error);
-    return { error: 'Ошибка регистрации: проверьте настройки Firestore или .env' };
+    return { error: 'Ошибка регистрации: ' + error.message };
   }
 }
 
@@ -124,9 +108,7 @@ export async function getVpnMe() {
     let marzbanData = null;
     try {
       marzbanData = await getMarzbanUser(payload.username as string);
-    } catch (e) {
-      // Игнорируем для прототипа
-    }
+    } catch (e) {}
     
     return {
       username: payload.username,
