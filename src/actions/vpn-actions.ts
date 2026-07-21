@@ -1,4 +1,3 @@
-
 'use server';
 
 import { cookies } from 'next/headers';
@@ -11,11 +10,7 @@ import { revalidatePath } from 'next/cache';
 const SECRET_KEY_STR = 'cyber-armor-vpn-super-secure-permanent-secret-key-2026-stable-version';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
-/**
- * Регистрация VPN пользователя в Marzban (Zero-Trust)
- */
 export async function registerVpnUser(firebaseUid: string, username: string) {
-  console.log(`[CYBER-ARMOR] Starting VPN registration for: ${username}`);
   try {
     const vpnProfile = await generateMarzbanUser({ 
       username, 
@@ -28,7 +23,6 @@ export async function registerVpnUser(firebaseUid: string, username: string) {
       vpn_link: vpnProfile.links[0] 
     });
     
-    console.log(`[CYBER-ARMOR] VPN Key generated and saved for ${username}`);
     return { success: true, link: vpnProfile.links[0] };
   } catch (error: any) {
     console.error("[CYBER-ARMOR] VPN Gen Failed:", error.message);
@@ -62,7 +56,6 @@ export async function vpnLogin(formData: FormData) {
       path: '/',
     });
 
-    console.log(`[AUTH] User logged in: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
     console.error("[AUTH] Login error:", error.message);
@@ -113,7 +106,7 @@ export async function getVpnMe() {
       }
     };
   } catch (e) {
-    console.error("[AUTH] Token check failed:", e);
+    console.error("[AUTH] Session validation failed:", e);
     return null;
   }
 }
@@ -156,8 +149,6 @@ export async function getAllVpnUsers() {
 
     const users = db.prepare('SELECT * FROM users WHERE username != ? ORDER BY created_at DESC').all(me.username);
     
-    console.log(`[ADMIN] Clients found in DB: ${users.length}`);
-
     return users.map((u: any) => {
       const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
       const isActive = (expiresAtDate && expiresAtDate > new Date());
