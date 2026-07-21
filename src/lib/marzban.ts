@@ -7,7 +7,7 @@ const MARZBAN_API_URL = process.env.MARZBAN_API_URL || 'http://127.0.0.1:8000';
 const USERNAME = process.env.MARZBAN_USERNAME;
 const PASSWORD = process.env.MARZBAN_PASSWORD;
 
-// In-Memory Cache для токена (экономит ОЗУ и I/O)
+// In-Memory Cache для токена
 let cachedToken: string | null = null;
 let tokenExpiration: number = 0;
 
@@ -27,10 +27,11 @@ async function getAdminToken(): Promise<string> {
   }
 
   if (!USERNAME || !PASSWORD) {
-    console.error('[MARZBAN] Missing credentials: MARZBAN_USERNAME or MARZBAN_PASSWORD not set in environment.');
-    throw new Error('[MARZBAN] Missing credentials in .env');
+    throw new Error('MARZBAN_USERNAME or MARZBAN_PASSWORD is not set in environment variables');
   }
 
+  console.log(`[MARZBAN] Authenticating at ${MARZBAN_API_URL}...`);
+  
   const formData = new URLSearchParams();
   formData.append('username', USERNAME);
   formData.append('password', PASSWORD);
@@ -44,24 +45,24 @@ async function getAdminToken(): Promise<string> {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Auth failed: ${response.status} ${err}`);
+      throw new Error(`Authentication failed: ${response.status} ${err}`);
     }
 
     const data = await response.json();
     cachedToken = data.access_token;
-    tokenExpiration = Date.now() + 15 * 60 * 1000; // Кэшируем на 15 минут
+    tokenExpiration = Date.now() + 15 * 60 * 1000; // 15 mins
     return cachedToken!;
   } catch (error: any) {
-    console.error('[MARZBAN] Auth request failed:', error.message);
+    console.error('[MARZBAN] Auth Error:', error.message);
     throw error;
   }
 }
 
 /**
- * Генерирует пользователя в Marzban с лимитом трафика
+ * Генерирует пользователя в Marzban
  */
 export async function generateMarzbanUser(options: { username: string, dataLimit: number }): Promise<MarzbanProfile> {
-  console.log(`[MARZBAN] Попытка создания пользователя: ${options.username}`);
+  console.log(`[MARZBAN] Creating/Syncing user: ${options.username}`);
   
   try {
     const token = await getAdminToken();
@@ -83,28 +84,22 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     if (!response.ok) {
       const errorText = await response.text();
       
-      // Если юзер уже существует (409)
+      // 409 Conflict = User exists, just fetch it
       if (response.status === 409) {
-        console.log(`[MARZBAN] Пользователь ${options.username} уже существует, получаем данные...`);
+        console.log(`[MARZBAN] User ${options.username} exists, fetching data...`);
         return await getMarzbanUser(options.username);
       }
       
-      throw new Error(`API returned ${response.status}: ${errorText}`);
+      throw new Error(`Marzban API Error (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
-    console.log(`[MARZBAN] Пользователь ${options.username} успешно создан.`);
+    console.log(`[MARZBAN] User ${options.username} created successfully.`);
     return result;
   } catch (error: any) {
-    console.error('[MARZBAN] Request Failed:', error.message);
-    
-    // Fallback заглушка при отвале ядра
-    return {
-      id: `error_${Date.now()}`,
-      username: options.username,
-      status: 'offline_mode',
-      links: [`vless://${options.username}@premium.cyberarmor.pro:443?security=reality&sni=google.com&fp=chrome&type=grpc&serviceName=grpc#CyberArmor_VPN_${options.username}`]
-    };
+    console.error('[MARZBAN] User Generation Error:', error.message);
+    // Rethrow to let action handle it
+    throw error;
   }
 }
 
@@ -119,6 +114,8 @@ async function getMarzbanUser(username: string): Promise<MarzbanProfile> {
     }
   });
   
-  if (!response.ok) throw new Error('Failed to fetch existing Marzban user');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Marzban user: ${response.status}`);
+  }
   return await response.json();
 }

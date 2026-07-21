@@ -7,12 +7,12 @@ import db, { saveUserToDb } from '@/lib/db';
 import { generateMarzbanUser } from '@/lib/marzban';
 import { revalidatePath } from 'next/cache';
 
-const SECRET_KEY_STR = 'cyber-armor-vpn-secure-key-2026-v1';
+const SECRET_KEY_STR = process.env.JWT_SECRET || 'cyber-armor-vpn-secure-key-2026-v1';
 const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
-export async function registerVpnUser(firebaseUid: string, username: string) {
+export async function registerVpnUser(username: string) {
   try {
-    // 50 GB = 50 * 1024 * 1024 * 1024
+    // 50 GB Limit
     const dataLimit = 50 * 1024 * 1024 * 1024;
     
     const vpnProfile = await generateMarzbanUser({ 
@@ -20,17 +20,17 @@ export async function registerVpnUser(firebaseUid: string, username: string) {
       dataLimit 
     });
     
-    // Сохраняем в БД
-    saveUserToDb({ 
-      uid: firebaseUid, 
-      username: username, 
-      vpn_link: vpnProfile.links[0] 
-    });
+    if (!vpnProfile.links || vpnProfile.links.length === 0) {
+      throw new Error('Marzban API returned no links');
+    }
+
+    db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
+      .run(vpnProfile.links[0], username);
     
     return { success: true, link: vpnProfile.links[0] };
   } catch (error: any) {
-    console.error("[CYBER-ARMOR] VPN Gen Failed:", error.message);
-    return { success: false, error: "VPN Service Error" };
+    console.error("[VPN-ACTION] Key Gen Failed:", error.message);
+    return { success: false, error: `VPN Service Error: ${error.message}` };
   }
 }
 
@@ -39,25 +39,15 @@ export async function regenerateVpnKey() {
     const me = await getVpnMe();
     if (!me) return { error: 'Нужна авторизация' };
     
-    // Админы всегда могут, пользователи только с активной подпиской
     if (!me.isActive && me.role !== 'admin') {
-      return { error: 'Подписка неактивна. Продлите доступ для генерации ключа.' };
+      return { error: 'Подписка неактивна.' };
     }
 
-    const username = me.username;
-    console.log(`[CYBER-ARMOR] Перегенерация ключа для: ${username}`);
-
-    const vpnProfile = await generateMarzbanUser({ 
-      username, 
-      dataLimit: 50 * 1024 * 1024 * 1024 
-    });
-
-    // Обновляем ссылку в БД
-    db.prepare('UPDATE users SET vpn_link = ? WHERE username = ?')
-      .run(vpnProfile.links[0], username);
+    const result = await registerVpnUser(me.username);
+    if (!result.success) return { error: result.error };
 
     revalidatePath('/dashboard');
-    return { success: true, link: vpnProfile.links[0] };
+    return { success: true, link: result.link };
   } catch (e: any) {
     console.error("[VPN] Regeneration error:", e.message);
     return { error: 'Ошибка при перегенерации ключа' };
@@ -90,7 +80,6 @@ export async function vpnLogin(formData: FormData) {
       path: '/',
     });
 
-    console.log(`[AUTH] Вход успешен: ${username}`);
     return { success: true, role: user.role };
   } catch (error: any) {
     console.error("[AUTH] Login error:", error.message);
@@ -109,7 +98,7 @@ export async function vpnRegister(formData: FormData) {
     db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run(username, hashedPassword, 'user');
     return { success: true };
   } catch (error: any) {
-    if (error.message.includes('UNIQUE')) return { error: 'Пользователь с таким именем уже существует' };
+    if (error.message.includes('UNIQUE')) return { error: 'Пользователь уже существует' };
     return { error: 'Ошибка регистрации' };
   }
 }
@@ -135,16 +124,12 @@ export async function getVpnMe() {
       role: user.role,
       expiresAt: user.expires_at,
       isActive: !!isActive,
-      lastPurchaseAt: user.last_purchase_at,
       vpn: { 
         status: isActive ? 'active' : 'expired', 
         links: user.vpn_link ? [user.vpn_link] : [] 
       }
     };
   } catch (e: any) {
-    // В случае ошибки подписи или истечения токена - очищаем куку
-    const cookieStore = await cookies();
-    cookieStore.delete('vpn_token');
     return null;
   }
 }
@@ -157,30 +142,23 @@ export async function buySubscription(months: number) {
     const now = new Date();
     let newExpire = new Date();
     
-    // Если текущая подписка еще активна, продлеваем от даты её окончания
     if (me.expiresAt && new Date(me.expiresAt) > now) {
       newExpire = new Date(me.expiresAt);
     }
     
     newExpire.setMonth(newExpire.getMonth() + months);
     
-    const dbDate = newExpire.toISOString();
-    const nowDb = now.toISOString();
+    db.prepare('UPDATE users SET expires_at = ? WHERE username = ?')
+      .run(newExpire.toISOString(), me.username);
 
-    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
-      .run(dbDate, nowDb, me.username);
-
-    // Если у пользователя еще нет ключа, генерируем его
-    if (!me.vpn.links[0]) {
-      const firebaseUid = `local_${me.username}_${Date.now()}`;
-      await registerVpnUser(firebaseUid, me.username);
-    }
-
+    // Generate/Sync Key with Marzban
+    const vpnResult = await registerVpnUser(me.username);
+    
     revalidatePath('/dashboard');
-    return { success: true };
+    return vpnResult.success ? { success: true } : { error: vpnResult.error };
   } catch (e: any) {
     console.error("[SHOP] Buy error:", e.message);
-    return { error: 'Ошибка при обработке покупки' };
+    return { error: 'Ошибка при оплате' };
   }
 }
 
@@ -189,26 +167,23 @@ export async function getAllVpnUsers() {
     const me = await getVpnMe();
     if (!me || me.role !== 'admin') return [];
 
-    const users = db.prepare("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC").all();
+    const users = db.prepare("SELECT * FROM users WHERE role != 'admin'").all();
     
     return users.map((u: any) => {
-      const expiresAtDate = u.expires_at ? new Date(u.expires_at) : null;
-      const isActive = (expiresAtDate && expiresAtDate > new Date());
+      const exp = u.expires_at ? new Date(u.expires_at) : null;
+      const active = exp && exp > new Date();
       return {
         id: u.id,
         username: u.username,
         hasKey: !!u.vpn_link,
-        status: isActive ? 'online' : 'expired',
-        protocol: 'VLESS + Reality',
-        expireDate: expiresAtDate ? expiresAtDate.toLocaleDateString('ru-RU') : 'Нет подписки',
-        createdDate: u.created_at ? new Date(u.created_at).toLocaleDateString('ru-RU') : 'N/A',
-        lastPurchaseDate: u.last_purchase_at ? new Date(u.last_purchase_at).toLocaleString('ru-RU') : null,
-        traffic: u.vpn_link ? '12 GB / 50 GB' : '0 GB / 0 GB',
+        status: active ? 'online' : 'expired',
+        protocol: 'VLESS+REALITY',
+        expireDate: exp ? exp.toLocaleDateString('ru-RU') : 'Нет подписки',
+        traffic: u.vpn_link ? '12 GB / 50 GB' : '0 GB',
         usagePercent: u.vpn_link ? 24 : 0
       };
     });
   } catch (e: any) {
-    console.error("[ADMIN] Client list error:", e.message);
     return [];
   }
 }
