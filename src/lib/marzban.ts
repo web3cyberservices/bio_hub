@@ -65,8 +65,8 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
   try {
     const token = await getAdminToken();
 
-    // Минимальный payload. Мы НЕ указываем inbounds, чтобы не ловить 422.
-    // Marzban сам назначит доступные прокси, если они включены.
+    // Пытаемся создать пользователя с поддержкой VLESS
+    // Мы НЕ передаем поле inbounds, чтобы Marzban сам выбрал подходящие теги из конфига Xray
     const response = await fetch(`${MARZBAN_API_URL}/api/user`, {
       method: 'POST',
       headers: {
@@ -76,7 +76,7 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
       body: JSON.stringify({
         username: options.username,
         data_limit: Math.floor(options.dataLimit),
-        proxies: { vless: {} }, // Запрашиваем VLESS. Если на сервере его нет, Marzban вернет 400.
+        proxies: { vless: {} },
         status: "active"
       })
     });
@@ -84,22 +84,28 @@ export async function generateMarzbanUser(options: { username: string, dataLimit
     if (!response.ok) {
       const errorText = await response.text();
       
+      // Если юзер уже есть - просто получаем его данные
       if (response.status === 409) {
         return await getMarzbanUser(options.username);
       }
       
-      // Если VLESS выключен (400), попробуем создать без привязки к прокси, чтобы просто создать юзера
-      if (response.status === 400 && errorText.includes('disabled')) {
-        console.warn(`[MARZBAN] VLESS is disabled on server. Creating user without proxies...`);
-        const fallbackResponse = await fetch(`${MARZBAN_API_URL}/api/user`, {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-           body: JSON.stringify({ username: options.username, data_limit: Math.floor(options.dataLimit) })
-        });
-        if (fallbackResponse.ok) return await fallbackResponse.json();
+      // Если VLESS выключен в Marzban (400) или ошибка валидации (422)
+      // Пытаемся создать "пустого" юзера, Marzban сам назначит ему доступные протоколы
+      console.warn(`[MARZBAN] VLESS might be restricted. Attempting fallback creation...`);
+      const fallbackResponse = await fetch(`${MARZBAN_API_URL}/api/user`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+         body: JSON.stringify({ 
+           username: options.username, 
+           data_limit: Math.floor(options.dataLimit) 
+         })
+      });
+
+      if (fallbackResponse.ok) {
+        return await getMarzbanUser(options.username);
       }
 
-      throw new Error(`Marzban API ${response.status}: ${errorText}`);
+      throw new Error(`Marzban API Error: ${errorText}`);
     }
 
     return await response.json();

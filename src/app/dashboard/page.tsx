@@ -9,17 +9,16 @@ import {
   LogOut,
   Globe,
   Lock,
-  Terminal,
-  Database,
   Calendar,
   RefreshCw,
-  Clock,
   Zap,
   Navigation,
   UserX,
   Users,
   RotateCcw,
-  Copy
+  Copy,
+  Terminal,
+  Database
 } from 'lucide-react';
 import { getVpnMe, vpnLogout, getAllVpnUsers, buySubscription, regenerateVpnKey } from '@/actions/vpn-actions';
 import { useRouter } from 'next/navigation';
