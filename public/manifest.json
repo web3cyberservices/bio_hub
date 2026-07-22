@@ -1,0 +1,39 @@
+{
+  "name": "Cyber Armor VPN",
+  "short_name": "CyberArmor",
+  "description": "Ультраскоростной VLESS туннель нового поколения с защитой военного уровня.",
+  "start_url": "/vpn",
+  "display": "standalone",
+  "background_color": "#5fad86",
+  "theme_color": "#5fad86",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/fonts/favicon180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/fonts/logo512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/fonts/logo512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["utilities", "security"],
+  "shortcuts": [
+    {
+      "name": "Открыть Дашборд",
+      "url": "/dashboard",
+      "icons": [{ "src": "/fonts/favicon180x180.png", "sizes": "180x180" }]
+    }
+  ]
+}
