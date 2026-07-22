@@ -28,31 +28,29 @@ function runMigrations() {
     const tableInfo = db.prepare('PRAGMA table_info(users)').all() as any[];
     const columns = tableInfo.map(c => c.name.toLowerCase());
     
-    // Добавляем колонки по одной, если их нет
     if (!columns.includes('uid')) {
-      console.log('[DB] Добавление колонки uid');
       db.exec('ALTER TABLE users ADD COLUMN uid TEXT');
       db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_uid ON users(uid) WHERE uid IS NOT NULL');
     }
     
     if (!columns.includes('tg_id')) {
-      console.log('[DB] Добавление колонки tg_id');
       db.exec('ALTER TABLE users ADD COLUMN tg_id INTEGER UNIQUE');
     }
     
     if (!columns.includes('vpn_link')) {
-      console.log('[DB] Добавление колонки vpn_link');
       db.exec('ALTER TABLE users ADD COLUMN vpn_link TEXT');
     }
     
     if (!columns.includes('expires_at')) {
-      console.log('[DB] Добавление колонки expires_at');
       db.exec('ALTER TABLE users ADD COLUMN expires_at DATETIME DEFAULT NULL');
     }
     
     if (!columns.includes('last_purchase_at')) {
-      console.log('[DB] Добавление колонки last_purchase_at');
       db.exec('ALTER TABLE users ADD COLUMN last_purchase_at DATETIME DEFAULT NULL');
+    }
+
+    if (!columns.includes('limit_gb')) {
+      db.exec('ALTER TABLE users ADD COLUMN limit_gb INTEGER DEFAULT 100');
     }
 
     console.log('[DB] Миграции завершены успешно');
@@ -63,22 +61,17 @@ function runMigrations() {
 
 runMigrations();
 
-// Инициализация админа
+// Инициализация дефолтного админа
 try {
   const adminRow = db.prepare('SELECT COUNT(*) as count FROM users WHERE username = ?').get('admin') as { count: number };
   if (adminRow && adminRow.count === 0) {
     const adminPass = bcrypt.hashSync('admin', 10);
-    db.prepare("INSERT INTO users (username, password, role, expires_at) VALUES (?, ?, 'admin', '2099-01-01T00:00:00.000Z')")
+    db.prepare("INSERT INTO users (username, password, role, expires_at, limit_gb) VALUES (?, ?, 'admin', '2099-01-01T00:00:00.000Z', 9999)")
       .run('admin', adminPass);
     console.log('[DB] Дефолтный админ создан');
   }
 } catch (e) {
   console.error('[DB] Ошибка при проверке админа:', e);
-}
-
-export async function saveUserToDb(data: { uid: string, username: string, vpn_link: string }) {
-  const stmt = db.prepare('UPDATE users SET uid = ?, vpn_link = ? WHERE username = ?');
-  return stmt.run(data.uid, data.vpn_link, data.username);
 }
 
 export default db;

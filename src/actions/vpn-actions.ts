@@ -12,7 +12,10 @@ const JWT_SECRET = new TextEncoder().encode(SECRET_KEY_STR);
 
 export async function registerVpnUser(username: string) {
   try {
-    const dataLimit = 100 * 1024 * 1024 * 1024; // 100GB
+    const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    if (!user) return { success: false, error: 'Пользователь не найден' };
+
+    const dataLimit = (user.limit_gb || 100) * 1024 * 1024 * 1024;
     
     const vpnProfile = await generateMarzbanUser({ 
       username, 
@@ -86,42 +89,18 @@ export async function vpnLogin(formData: FormData) {
   }
 }
 
-export async function vpnRegister(formData: FormData) {
-  const username = (formData.get('username') as string || '').toLowerCase().trim();
-  const password = formData.get('password') as string;
-
-  if (!username || password.length < 4) return { error: 'Логин обязателен, пароль от 4 символов' };
-  
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    db.prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)').run(username, hashedPassword, 'user');
-    return { success: true };
-  } catch (error: any) {
-    if (error.message.includes('UNIQUE')) return { error: 'Пользователь уже существует' };
-    return { error: 'Ошибка регистрации' };
-  }
-}
-
 export async function getVpnMe() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('vpn_token')?.value;
     if (!token) return null;
 
-    try {
-      await jwtVerify(token, JWT_SECRET);
-    } catch (e: any) {
-      cookieStore.delete('vpn_token');
-      return null;
-    }
-
-    const payload = (await jwtVerify(token, JWT_SECRET)).payload as any;
+    const { payload } = await jwtVerify(token, JWT_SECRET);
     const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(payload.username);
     if (!user) return null;
 
     const now = new Date();
     const expiresAt = user.expires_at ? new Date(user.expires_at) : null;
-    const lastPurchaseAt = user.last_purchase_at ? new Date(user.last_purchase_at) : null;
     const isAdmin = user.role === 'admin';
     const isActive = isAdmin || (expiresAt && expiresAt > now);
 
@@ -130,6 +109,7 @@ export async function getVpnMe() {
       role: user.role,
       expiresAt: user.expires_at,
       lastPurchaseAt: user.last_purchase_at,
+      limitGb: user.limit_gb || 100,
       isActive: !!isActive,
       vpn: { 
         status: isActive ? 'active' : 'expired', 
@@ -139,6 +119,78 @@ export async function getVpnMe() {
   } catch (e: any) {
     return null;
   }
+}
+
+export async function getAllVpnUsers() {
+  try {
+    const me = await getVpnMe();
+    if (!me || me.role !== 'admin') return [];
+
+    const users = db.prepare("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC").all();
+    
+    return users.map((u: any) => {
+      const exp = u.expires_at ? new Date(u.expires_at) : null;
+      const active = exp && exp > new Date();
+      return {
+        id: u.id,
+        username: u.username,
+        hasKey: !!u.vpn_link,
+        status: active ? 'online' : 'expired',
+        protocol: 'VLESS+REALITY',
+        limitGb: u.limit_gb || 100,
+        expireDate: exp ? exp.toLocaleDateString('ru-RU') : 'Нет подписки',
+        rawExpire: u.expires_at
+      };
+    });
+  } catch (e: any) {
+    return [];
+  }
+}
+
+export async function updateUserByAdmin(username: string, months: number, limitGb: number) {
+  try {
+    const me = await getVpnMe();
+    if (!me || me.role !== 'admin') return { error: 'Доступ запрещен' };
+
+    const user: any = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    if (!user) return { error: 'Пользователь не найден' };
+
+    let newExpire = new Date();
+    if (user.expires_at && new Date(user.expires_at) > new Date()) {
+      newExpire = new Date(user.expires_at);
+    }
+    newExpire.setMonth(newExpire.getMonth() + months);
+
+    db.prepare('UPDATE users SET expires_at = ?, limit_gb = ? WHERE username = ?')
+      .run(newExpire.toISOString(), limitGb, username);
+
+    // Перегенерируем ключ в Marzban с новыми лимитами
+    await registerVpnUser(username);
+    
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (e: any) {
+    return { error: 'Ошибка при обновлении' };
+  }
+}
+
+export async function deleteUserByAdmin(username: string) {
+  try {
+    const me = await getVpnMe();
+    if (!me || me.role !== 'admin') return { error: 'Доступ запрещен' };
+
+    db.prepare('DELETE FROM users WHERE username = ?').run(username);
+    
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (e: any) {
+    return { error: 'Ошибка при удалении' };
+  }
+}
+
+export async function vpnLogout() {
+  const cookieStore = await cookies();
+  cookieStore.delete('vpn_token');
 }
 
 export async function buySubscription(months: number) {
@@ -165,35 +217,4 @@ export async function buySubscription(months: number) {
   } catch (e: any) {
     return { error: 'Ошибка при оплате' };
   }
-}
-
-export async function getAllVpnUsers() {
-  try {
-    const me = await getVpnMe();
-    if (!me || me.role !== 'admin') return [];
-
-    const users = db.prepare("SELECT * FROM users WHERE role != 'admin'").all();
-    
-    return users.map((u: any) => {
-      const exp = u.expires_at ? new Date(u.expires_at) : null;
-      const active = exp && exp > new Date();
-      return {
-        id: u.id,
-        username: u.username,
-        hasKey: !!u.vpn_link,
-        status: active ? 'online' : 'expired',
-        protocol: 'VLESS+REALITY',
-        expireDate: exp ? exp.toLocaleDateString('ru-RU') : 'Нет подписки',
-        traffic: '0 GB / 100 GB',
-        usagePercent: 0
-      };
-    });
-  } catch (e: any) {
-    return [];
-  }
-}
-
-export async function vpnLogout() {
-  const cookieStore = await cookies();
-  cookieStore.delete('vpn_token');
 }
