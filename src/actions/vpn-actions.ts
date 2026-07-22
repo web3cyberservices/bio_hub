@@ -77,7 +77,7 @@ export async function vpnLogin(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('vpn_token', token, {
       httpOnly: true,
-      secure: false, 
+      secure: process.env.NODE_ENV === 'production', 
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
       path: '/',
@@ -164,7 +164,6 @@ export async function updateUserByAdmin(username: string, months: number, limitG
     db.prepare('UPDATE users SET expires_at = ?, limit_gb = ? WHERE username = ?')
       .run(newExpire.toISOString(), limitGb, username);
 
-    // Перегенерируем ключ в Marzban с новыми лимитами
     await registerVpnUser(username);
     
     revalidatePath('/dashboard');
@@ -193,28 +192,44 @@ export async function vpnLogout() {
   cookieStore.delete('vpn_token');
 }
 
+/**
+ * Инициация покупки (создание счета Lava)
+ */
 export async function buySubscription(months: number) {
   try {
     const me = await getVpnMe();
     if (!me) return { error: 'Нужна авторизация' };
 
-    const now = new Date();
-    let newExpire = new Date();
-    
-    if (me.expiresAt && new Date(me.expiresAt) > now) {
-      newExpire = new Date(me.expiresAt);
-    }
-    
-    newExpire.setMonth(newExpire.getMonth() + months);
-    
-    db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
-      .run(newExpire.toISOString(), now.toISOString(), me.username);
+    // Цены (условно)
+    const prices: Record<number, number> = { 1: 490, 3: 1290, 6: 2290, 12: 3990 };
+    const amount = prices[months] || 490;
 
-    await registerVpnUser(me.username);
+    // В продакшене здесь должен быть вызов Lava.top API для создания счета
+    // и возврат ссылки на оплату.
+    // Для демонстрации мы просто "эмулируем" переход на оплату.
     
-    revalidatePath('/dashboard');
-    return { success: true };
+    console.log(`[PAYMENT] Creating bill for ${me.username}: ${amount} RUB`);
+    
+    // Эмуляция: если мы в разработке, просто продлеваем (для тестов)
+    if (process.env.NODE_ENV !== 'production') {
+      const now = new Date();
+      let newExpire = new Date();
+      if (me.expiresAt && new Date(me.expiresAt) > now) {
+        newExpire = new Date(me.expiresAt);
+      }
+      newExpire.setMonth(newExpire.getMonth() + months);
+      
+      db.prepare('UPDATE users SET expires_at = ?, last_purchase_at = ? WHERE username = ?')
+        .run(newExpire.toISOString(), now.toISOString(), me.username);
+
+      await registerVpnUser(me.username);
+      revalidatePath('/dashboard');
+      return { success: true, message: 'Тестовая оплата прошла успешно' };
+    }
+
+    // В продакшене возвращаем URL: return { success: true, url: 'https://lava.top/bill/...' };
+    return { error: 'Платежная система в режиме настройки' };
   } catch (e: any) {
-    return { error: 'Ошибка при оплате' };
+    return { error: 'Ошибка при создании счета' };
   }
 }
