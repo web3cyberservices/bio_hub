@@ -19,9 +19,7 @@ import {
   User,
   Trash2,
   Edit3,
-  Search,
-  CheckCircle2,
-  XCircle
+  Search
 } from 'lucide-react';
 import { 
   getVpnMe, 
@@ -127,14 +125,25 @@ export default function Dashboard() {
 
   const handleBuy = async (months: number) => {
     setPurchasing(true);
-    const result = await buySubscription(months);
-    if (result.success) {
-      toast({ title: "УСПЕХ", description: `Подписка на ${months} мес. активна.` });
-      setTimeout(() => loadData(false), 1000);
-    } else {
-      toast({ title: "ОШИБКА", description: result.error, variant: "destructive" });
+    try {
+      const result = await buySubscription(months);
+      if (result.success) {
+        if (result.url) {
+          // Если мы в продакшене, переходим на Lava.top
+          window.location.href = result.url;
+        } else {
+          // Если в разработке, просто уведомляем
+          toast({ title: "УСПЕХ", description: result.message || `Подписка на ${months} мес. активна.` });
+          setTimeout(() => loadData(false), 1000);
+        }
+      } else {
+        toast({ title: "ОШИБКА", description: result.error, variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "СИСТЕМНАЯ ОШИБКА", description: "Не удалось связаться с сервером оплат", variant: "destructive" });
+    } finally {
+      setPurchasing(false);
     }
-    setPurchasing(false);
   };
 
   const handleRegenerateKey = async () => {

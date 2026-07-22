@@ -193,24 +193,16 @@ export async function vpnLogout() {
 }
 
 /**
- * Инициация покупки (создание счета Lava)
+ * Инициация покупки (Перенаправление на Lava.top или тест)
  */
 export async function buySubscription(months: number) {
   try {
     const me = await getVpnMe();
     if (!me) return { error: 'Нужна авторизация' };
 
-    // Цены (условно)
-    const prices: Record<number, number> = { 1: 490, 3: 1290, 6: 2290, 12: 3990 };
-    const amount = prices[months] || 490;
+    const LAVA_PRODUCT_URL = 'https://app.lava.top/products/52abb33c-7a6d-4667-80df-c22730b988c6';
 
-    // В продакшене здесь должен быть вызов Lava.top API для создания счета
-    // и возврат ссылки на оплату.
-    // Для демонстрации мы просто "эмулируем" переход на оплату.
-    
-    console.log(`[PAYMENT] Creating bill for ${me.username}: ${amount} RUB`);
-    
-    // Эмуляция: если мы в разработке, просто продлеваем (для тестов)
+    // В режиме разработки просто продлеваем подписку (для тестов)
     if (process.env.NODE_ENV !== 'production') {
       const now = new Date();
       let newExpire = new Date();
@@ -224,12 +216,12 @@ export async function buySubscription(months: number) {
 
       await registerVpnUser(me.username);
       revalidatePath('/dashboard');
-      return { success: true, message: 'Тестовая оплата прошла успешно' };
+      return { success: true, message: 'Тестовая оплата прошла успешно (DEV)' };
     }
 
-    // В продакшене возвращаем URL: return { success: true, url: 'https://lava.top/bill/...' };
-    return { error: 'Платежная система в режиме настройки' };
+    // В продакшене возвращаем URL на товар в Lava.top
+    return { success: true, url: LAVA_PRODUCT_URL };
   } catch (e: any) {
-    return { error: 'Ошибка при создании счета' };
+    return { error: 'Ошибка при создании заказа' };
   }
 }
