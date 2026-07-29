@@ -30,46 +30,46 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className={`${inter.variable} dark`}>
-      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30">
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-x-hidden">
         <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
-          <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Shield className="w-5 h-5 text-white fill-white/10" />
+          <div className="container mx-auto max-w-7xl px-4 md:px-6 h-16 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
+              <div className="w-8 h-8 md:w-9 md:h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-white fill-white/10" />
               </div>
-              <span className="font-black text-xl tracking-tighter text-white">Web3CyberServices</span>
+              <span className="font-black text-lg md:text-xl tracking-tighter text-white">Web3CyberServices</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[10px] font-black uppercase tracking-[0.1em] text-neutral-500">
               <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
               <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
               <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
             </nav>
 
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-[11px] font-bold uppercase tracking-wider hover:text-white transition-colors hidden sm:block">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Link href="/dashboard" className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider hover:text-white transition-colors hidden xs:block">
                 Войти
               </Link>
-              <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest py-2 px-5 rounded-lg transition-all shadow-lg shadow-blue-600/20">
+              <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] md:text-[11px] font-black uppercase tracking-widest py-1.5 md:py-2 px-3 md:px-5 rounded-lg transition-all shadow-lg shadow-blue-600/20">
                 Доступ
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="flex-1">
+        <main className="flex-1 w-full max-w-full overflow-x-hidden">
           {children}
         </main>
 
-        <footer className="border-t border-white/5 py-12 mt-20">
-          <div className="container mx-auto px-6 max-w-7xl">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              <div className="col-span-2 md:col-span-1 space-y-4">
+        <footer className="border-t border-white/5 py-8 md:py-12 mt-10 md:mt-20">
+          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-blue-500" />
                   <span className="text-sm font-black tracking-tighter uppercase text-white">Web3CyberServices</span>
                 </div>
-                <p className="text-[11px] text-neutral-500 leading-relaxed max-w-xs font-bold uppercase tracking-wider">
+                <p className="text-[10px] text-neutral-500 leading-relaxed max-w-xs font-bold uppercase tracking-wider">
                   Платформа промышленного уровня для мониторинга инфраструктуры и анализа больших данных в реальном времени.
                 </p>
               </div>
@@ -95,7 +95,7 @@ export default function RootLayout({
                 </ul>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
+            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-neutral-500 font-bold uppercase tracking-widest text-center sm:text-left">
               <div>© 2026 Web3CyberServices. All Rights Reserved.</div>
               <div className="flex gap-6">
                 <Link href="/legal" className="hover:text-white">SLA</Link>
