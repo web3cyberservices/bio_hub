@@ -5,27 +5,27 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 md:px-6 pt-10 pb-16 md:pt-16 md:pb-28 text-center max-w-5xl">
+      <section className="container mx-auto px-4 md:px-6 pt-10 pb-16 md:pt-20 md:pb-32 text-center max-w-5xl">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-6 md:mb-8 text-white leading-[1.1] md:leading-[0.9] text-balance">
           Аналитические инструменты для вашего бизнеса
         </h1>
         
-        <p className="max-w-2xl mx-auto text-neutral-400 text-sm md:text-lg mb-8 md:mb-10 text-balance leading-relaxed font-medium">
+        <p className="max-w-2xl mx-auto text-neutral-400 text-sm md:text-lg mb-8 md:mb-12 text-balance leading-relaxed font-medium px-4">
           Индустриальный стандарт сбора телеметрии. Обработка миллионов событий в секунду для глобальной инфраструктуры корпоративного уровня на базе Web3CyberServices.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0">
-          <Link href="/dashboard" className="btn-primary w-full sm:w-auto px-6 md:px-10 flex items-center justify-center gap-2 py-3 text-sm md:text-base">
+          <Link href="/dashboard" className="btn-primary w-full sm:w-auto px-8 md:px-12 flex items-center justify-center gap-2 py-3.5 text-sm md:text-base">
             Начать работу <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/api-docs" className="btn-secondary w-full sm:w-auto px-6 md:px-10 py-3 text-sm md:text-base">
+          <Link href="/api-docs" className="btn-secondary w-full sm:w-auto px-8 md:px-12 py-3.5 text-sm md:text-base">
             Документация
           </Link>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 md:px-6 py-12 md:py-20 max-w-7xl border-t border-white/5">
+      <section className="container mx-auto px-4 md:px-6 py-12 md:py-24 max-w-7xl border-t border-white/5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {[
             {
@@ -61,8 +61,8 @@ export default function HomePage() {
       <section className="container mx-auto px-4 md:px-6 pb-16 md:pb-32 max-w-7xl">
         <div className="bg-slate-900/20 border border-white/5 rounded-2xl md:rounded-3xl p-8 md:p-20 relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
-            <h2 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 tracking-tighter text-white">Масштаб мирового уровня</h2>
-            <p className="text-neutral-400 font-medium text-xs md:text-base leading-relaxed mb-8 md:mb-10">
+            <h2 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 tracking-tighter text-white leading-tight">Масштаб мирового уровня</h2>
+            <p className="text-neutral-400 font-medium text-sm md:text-base leading-relaxed mb-8 md:mb-10">
               Web3CyberServices обеспечивает фундамент для цифровой трансформации крупнейших компаний, предоставляя инструменты мониторинга, которые работают безотказно.
             </p>
             <div className="grid grid-cols-1 xs:grid-cols-2 md:flex md:flex-wrap gap-4 md:gap-8">
@@ -70,19 +70,19 @@ export default function HomePage() {
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
                   <Cpu className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Edge Computing</span>
+                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Edge Computing</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
                   <Globe className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Global Nodes</span>
+                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Global Nodes</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
                   <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
-                <span className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">SLA 99.999%</span>
+                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">SLA 99.999%</span>
               </div>
             </div>
           </div>
