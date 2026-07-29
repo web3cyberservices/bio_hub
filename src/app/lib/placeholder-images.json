@@ -1,11 +1,11 @@
 
-{
-  "vpn_hero": {
-    "url": "https://picsum.photos/seed/vpn1/600/400",
-    "hint": "cybersecurity server"
-  },
-  "location_germany": {
-    "url": "https://picsum.photos/seed/germany/400/300",
-    "hint": "berlin city"
+[
+  {
+    "id": "hero-bg",
+    "url": "https://picsum.photos/seed/cyber/1200/800",
+    "width": 1200,
+    "height": 800,
+    "alt": "Cybersecurity and Data Background",
+    "aiHint": "cybersecurity infrastructure"
   }
-}
+]
