@@ -5,18 +5,18 @@ export default function HomePage() {
   return (
     <div className="relative overflow-hidden">
       {/* Hero Section */}
-      <section className="container mx-auto px-6 pt-16 md:pt-24 pb-20 text-center relative z-10 min-h-[80vh] flex flex-col justify-center items-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1 border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.5em] mb-8 rounded-full">
+      <section className="container mx-auto px-6 pt-12 md:pt-20 pb-16 text-center relative z-10 min-h-[75vh] flex flex-col justify-center items-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1 border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.5em] mb-6 rounded-full">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           Мониторинг кластера: Активен
         </div>
         
-        <h1 className="text-5xl md:text-[100px] font-black tracking-tighter leading-[0.9] uppercase mb-8 text-gradient">
-          Аналитика <br /> <span className="text-primary">Гипер-Масштаба</span>
+        <h1 className="text-4xl md:text-[80px] font-black tracking-tighter leading-[1] uppercase mb-6 text-gradient max-w-5xl">
+          Аналитические инструменты <br /> <span className="text-primary">для вашего бизнеса</span>
         </h1>
         
-        <p className="max-w-2xl mx-auto text-muted-foreground text-[12px] md:text-sm font-medium uppercase tracking-[0.2em] leading-relaxed mb-12 px-4">
-          CyberLog — индустриальный стандарт сбора телеметрии. Обработка логов, транзакций и кликстрима с задержкой менее 200 мс в масштабах глобальной инфраструктуры.
+        <p className="max-w-2xl mx-auto text-muted-foreground text-[11px] md:text-sm font-medium uppercase tracking-[0.2em] leading-relaxed mb-10 px-4">
+          Индустриальный стандарт сбора телеметрии. Обработка логов, транзакций и кликстрима в масштабах глобальной инфраструктуры корпоративного уровня.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-xl mx-auto px-6">
@@ -30,7 +30,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="border-y border-white/5 bg-black/40 backdrop-blur-xl py-12">
+      <section className="border-y border-white/5 bg-black/40 backdrop-blur-xl py-10">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {[
@@ -40,7 +40,7 @@ export default function HomePage() {
               { label: 'Глобальные узлы', value: '128' },
             ].map((stat) => (
               <div key={stat.label} className="text-center group">
-                <div className="text-2xl md:text-4xl font-black text-white mb-1 tracking-tighter group-hover:text-primary transition-colors">{stat.value}</div>
+                <div className="text-xl md:text-3xl font-black text-white mb-1 tracking-tighter group-hover:text-primary transition-colors">{stat.value}</div>
                 <div className="text-[8px] md:text-[9px] font-black text-primary/60 uppercase tracking-[0.4em]">{stat.label}</div>
               </div>
             ))}
@@ -49,9 +49,9 @@ export default function HomePage() {
       </section>
 
       {/* Core Capabilities */}
-      <section className="container mx-auto px-6 py-24 md:py-32">
+      <section className="container mx-auto px-6 py-20 md:py-24">
         <div className="grid md:grid-cols-3 gap-px bg-white/5 border border-white/5 overflow-hidden">
-          <div className="bg-background p-10 md:p-16 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
+          <div className="bg-background p-10 md:p-14 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 flex items-center justify-center text-primary">
               <Database className="w-6 h-6 md:w-7 md:h-7" />
             </div>
@@ -60,7 +60,7 @@ export default function HomePage() {
               Оптимизированное хранилище для мгновенной аналитики миллиардов событий кликстрима в реальном времени.
             </p>
           </div>
-          <div className="bg-background p-10 md:p-16 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
+          <div className="bg-background p-10 md:p-14 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 flex items-center justify-center text-primary">
               <Layers className="w-6 h-6 md:w-7 md:h-7" />
             </div>
@@ -69,7 +69,7 @@ export default function HomePage() {
               Гарантированная доставка событий Exactly-once для финансовых транзакций и аудита безопасности.
             </p>
           </div>
-          <div className="bg-background p-10 md:p-16 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
+          <div className="bg-background p-10 md:p-14 space-y-6 md:space-y-8 hover:bg-white/[0.02] transition-colors">
             <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 flex items-center justify-center text-primary">
               <Zap className="w-6 h-6 md:w-7 md:h-7" />
             </div>
@@ -83,7 +83,7 @@ export default function HomePage() {
 
       {/* Enterprise Section */}
       <section className="container mx-auto px-6 pb-24 md:pb-32">
-        <div className="bg-white/5 border border-white/5 p-12 md:p-32 relative overflow-hidden group">
+        <div className="bg-white/5 border border-white/5 p-12 md:p-24 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-full h-full opacity-5 pointer-events-none transition-transform duration-1000 group-hover:scale-110">
             <Globe className="w-full h-full text-primary scale-125" />
           </div>
