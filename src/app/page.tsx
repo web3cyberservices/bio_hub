@@ -1,15 +1,10 @@
-import { ArrowRight, BarChart3, Shield, Zap, Database, Cpu, Globe } from 'lucide-react';
+import { BarChart3, Shield, Zap, Database, Cpu, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      <section className="container mx-auto px-6 pt-24 pb-32 text-center max-w-5xl">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[11px] font-semibold mb-8 animate-fade-in">
-          <span>Версия 2.0 уже доступна</span>
-          <ArrowRight className="w-3 h-3" />
-        </div>
-        
+      <section className="container mx-auto px-6 pt-12 pb-32 text-center max-w-5xl">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-balance">
           Аналитические инструменты для вашего бизнеса
         </h1>
