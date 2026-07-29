@@ -1,1 +1,31 @@
-node_modules
+# Зависимости
+/node_modules
+/.pnp
+.pnp.js
+
+# Сборка Next.js
+/.next/
+/out/
+
+# Продакшн сборка
+/build
+
+# Отладочные логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Файлы окружения (секреты)
+.env*.local
+.env
+
+# Системные файлы
+.DS_Store
+*.pem
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
