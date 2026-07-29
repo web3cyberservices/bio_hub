@@ -1,17 +1,16 @@
 'use client';
 
-import { Activity, Database, Server, Terminal, Zap, Cpu, Globe, Shield, BarChart2, Search } from 'lucide-react';
+import { Activity, Database, Server, Terminal, Zap, Search, Bell, LayoutGrid, ArrowUpRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function DashboardPage() {
   const [logs, setLogs] = useState<{id: string, msg: string, time: string, type: string}[]>([]);
   const [metrics, setMetrics] = useState({ req: 842109, storage: 412.8, latency: 12, errors: 0.02 });
-  const [bars, setBars] = useState<number[]>(Array(40).fill(20));
 
   useEffect(() => {
     const interval = setInterval(() => {
       const timestamp = new Date().toLocaleTimeString('ru-RU', { hour12: false });
-      const types = ['gRPC_PAYLOAD', 'BINARY_CHUNK', 'METRIC_SYNC', 'HEARTBEAT', 'TRANSACTION_LOG', 'CLICKSTREAM_UNIT'];
+      const types = ['INFO', 'DEBUG', 'WARN', 'ERROR'];
       const type = types[Math.floor(Math.random() * types.length)];
       const id = Math.random().toString(36).substring(7).toUpperCase();
       
@@ -19,114 +18,129 @@ export default function DashboardPage() {
         id,
         time: timestamp,
         type,
-        msg: `${type}: ID_${id} | ADDR: 10.0.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)} | SZ: ${Math.floor(Math.random()*4096)}B | ACK: TRUE`
+        msg: `worker-${Math.floor(Math.random()*10)}: process_data stream_id=${id} status=${type === 'ERROR' ? 'fail' : 'success'} latency=${Math.floor(Math.random()*100)}ms`
       };
 
-      setLogs(prev => [newLog, ...prev].slice(0, 20));
+      setLogs(prev => [newLog, ...prev].slice(0, 15));
       setMetrics(prev => ({
-        req: prev.req + Math.floor(Math.random() * 2000 - 800),
+        req: prev.req + Math.floor(Math.random() * 200 - 100),
         storage: +(prev.storage + 0.0001).toFixed(4),
         latency: Math.floor(Math.random() * 5 + 8),
         errors: +(0.01 + Math.random() * 0.05).toFixed(3)
       }));
-
-      setBars(prev => {
-        const next = [...prev.slice(1), Math.random() * 80 + 20];
-        return next;
-      });
-    }, 400);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen pt-24 pb-20 container mx-auto px-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 border-b border-white/5 pb-10">
-        <div>
-          <h1 className="text-4xl font-black tracking-tighter mb-2 text-gradient">Консоль CyberLog V2</h1>
-          <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Активный поток телеметрии: gRPC/HTTP2</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="px-6 py-3 glass-card rounded-2xl border-primary/20 flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Статус системы</div>
-              <div className="text-xs font-black text-green-500">Nodes: 128 Online</div>
+    <div className="min-h-screen bg-[#020617] text-slate-200">
+      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm px-6 py-3">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 font-semibold text-white">
+              <LayoutGrid className="w-5 h-5 text-blue-500" />
+              <span>Консоль управления</span>
             </div>
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+            <nav className="hidden md:flex items-center gap-6 text-sm text-slate-400">
+              <button className="text-white hover:text-white transition-colors">Обзор</button>
+              <button className="hover:text-white transition-colors">Инфраструктура</button>
+              <button className="hover:text-white transition-colors">Аналитика</button>
+              <button className="hover:text-white transition-colors">Безопасность</button>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative hidden lg:block">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input 
+                type="text" 
+                placeholder="Поиск по метрикам..." 
+                className="bg-slate-950 border border-slate-800 rounded-md py-1.5 pl-9 pr-4 text-xs w-64 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border-2 border-slate-900" />
+            </button>
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white cursor-pointer">
+              JD
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid md:grid-cols-12 gap-6">
-        <div className="md:col-span-8 space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Throughput', val: `${metrics.req.toLocaleString()} RPS`, icon: <Activity /> },
-              { label: 'Latency', val: `${metrics.latency}ms`, icon: <Zap /> },
-              { label: 'Error Rate', val: `${metrics.errors}%`, icon: <Shield /> },
-              { label: 'Storage', val: `${metrics.storage} PB`, icon: <Database /> },
-            ].map((stat, i) => (
-              <div key={i} className="glass-card p-6 rounded-2xl border-white/5 group hover:border-primary/30 transition-all">
-                <div className="flex items-center gap-2 text-primary mb-3">
-                  <span className="w-3 h-3">{stat.icon}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest">{stat.label}</span>
-                </div>
-                <div className="text-xl font-black text-white">{stat.val}</div>
-              </div>
-            ))}
+      <main className="container mx-auto px-6 py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white tracking-tight">Состояние системы</h2>
+          <div className="text-xs text-slate-500 bg-slate-900 px-3 py-1 rounded-full border border-slate-800 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            Все системы работают нормально
           </div>
+        </div>
 
-          <div className="glass-card p-10 h-[400px] relative overflow-hidden rounded-[2.5rem]">
-            <div className="flex justify-between items-start mb-12 relative z-10">
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Глобальный поток событий (Events/Sec)</h4>
-                <div className="text-3xl font-black text-white tracking-tighter">Live ClickHouse Stream</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Запросы/сек', val: `${metrics.req.toLocaleString()}`, trend: '+12%', icon: <Activity className="w-4 h-4 text-blue-400" /> },
+            { label: 'Задержка (p95)', val: `${metrics.latency}ms`, trend: '-2ms', icon: <Zap className="w-4 h-4 text-yellow-400" /> },
+            { label: 'Ошибки', val: `${metrics.errors}%`, trend: '-0.01%', icon: <Database className="w-4 h-4 text-red-400" /> },
+            { label: 'Uptime', val: `99.999%`, trend: 'Stable', icon: <Server className="w-4 h-4 text-green-400" /> },
+          ].map((stat, i) => (
+            <div key={i} className="ui-card p-5 bg-slate-900/40 hover:bg-slate-900/60 transition-all border-slate-800">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2 bg-slate-800 rounded-md">{stat.icon}</div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-500/10 text-green-400' : stat.trend === 'Stable' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>
+                  {stat.trend}
+                </span>
               </div>
-              <BarChart2 className="w-6 h-6 text-primary" />
+              <div className="text-2xl font-bold text-white tracking-tight">{stat.val}</div>
+              <div className="text-xs text-slate-500 font-medium mt-1">{stat.label}</div>
             </div>
-            
-            <div className="absolute bottom-10 left-10 right-10 h-48 flex items-end gap-1.5">
-              {bars.map((height, i) => (
+          ))}
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 ui-card bg-slate-900/40 border-slate-800 p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-sm font-bold text-white">Пропускная способность ClickHouse</h3>
+                <p className="text-xs text-slate-500">Миллионы строк в секунду по всем кластерам</p>
+              </div>
+              <button className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                Подробный отчет <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="h-64 flex items-end gap-1.5">
+              {Array.from({ length: 40 }).map((_, i) => (
                 <div 
                   key={i} 
-                  className="flex-1 bg-primary/20 border-t border-primary/40 transition-all duration-300 rounded-t-sm" 
-                  style={{ height: `${height}%`, opacity: (i + 1) / bars.length }}
+                  className="flex-1 bg-blue-600/20 hover:bg-blue-600/40 transition-all rounded-t-sm" 
+                  style={{ height: `${30 + Math.random() * 70}%` }}
                 />
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="md:col-span-4">
-          <div className="glass-card p-8 h-full rounded-[2.5rem] flex flex-col border-white/5 bg-black/40">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-3">
-                <Terminal className="w-4 h-4 text-primary" /> Живой поток логов
-              </h4>
-              <Search className="w-4 h-4 text-white/20" />
+          <div className="lg:col-span-4 ui-card bg-slate-950 border-slate-800 flex flex-col h-[400px]">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-blue-500" /> Живой поток событий
+              </div>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
             </div>
-            <div className="flex-1 space-y-3 font-mono text-[9px] leading-relaxed overflow-hidden">
+            <div className="flex-1 p-4 font-mono text-[11px] space-y-2 overflow-hidden overflow-y-auto scrollbar-hide">
               {logs.map((log) => (
-                <div key={log.id} className="flex flex-col gap-1 border-l border-primary/20 pl-4 animate-in fade-in slide-in-from-right-2">
-                  <div className="flex justify-between text-white/30 text-[8px]">
-                    <span className="text-primary/70">{log.type}</span>
-                    <span>{log.time}</span>
-                  </div>
-                  <div className="text-white/60 break-all">{log.msg}</div>
+                <div key={log.id} className="flex gap-3 text-slate-400 border-l border-slate-800 pl-3 py-0.5">
+                  <span className="text-slate-600 shrink-0">{log.time}</span>
+                  <span className={log.type === 'ERROR' ? 'text-red-500' : log.type === 'WARN' ? 'text-yellow-500' : 'text-blue-500'}>
+                    [{log.type}]
+                  </span>
+                  <span className="truncate text-slate-300">{log.msg}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-6 pt-4 border-t border-white/5">
-              <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-2 text-center">Конфигурация инжеста: Active gRPC</div>
-              <div className="flex justify-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary" />
-                <div className="w-2 h-2 rounded-full bg-primary/40" />
-                <div className="w-2 h-2 rounded-full bg-primary/40" />
-              </div>
-            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

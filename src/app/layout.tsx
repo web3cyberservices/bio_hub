@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import Link from 'next/link';
 
 const inter = Inter({ 
@@ -9,19 +9,13 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
-const mono = JetBrains_Mono({
-  subsets: ['latin', 'cyrillic'],
-  display: 'swap',
-  variable: '--font-mono',
-});
-
 export const metadata: Metadata = {
-  title: 'CyberLog Enterprise | Платформа аналитики больших данных',
-  description: 'Высокопроизводительный сбор логов, транзакций и кликстрима для корпоративных клиентов.',
+  title: 'CyberLog Enterprise | Платформа анализа данных',
+  description: 'Высокопроизводительный сбор логов и телеметрии для бизнеса.',
 };
 
 export const viewport: Viewport = {
-  themeColor: '#050505',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -30,85 +24,78 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className={`${inter.variable} ${mono.variable} dark`}>
-      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans antialiased">
-        <div className="scanline" />
-        
-        <div className="fixed top-0 left-0 w-full z-50 px-6 pt-6 pointer-events-none">
-          <header className="container mx-auto max-w-7xl pointer-events-auto">
-            <div className="glass-card rounded-[2rem] border border-primary/30 shadow-[0_0_40px_-10px_rgba(14,165,233,0.3)] px-6 md:px-10 h-20 flex items-center justify-between relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-30" />
-              
-              <Link href="/" className="flex items-center gap-4 group/logo relative z-10">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-primary/20 rounded-xl border border-primary/40 flex items-center justify-center font-black text-primary text-sm shadow-[0_0_15px_rgba(14,165,233,0.3)] group-hover/logo:scale-110 transition-transform duration-500">
-                    <div className="absolute -inset-1 bg-primary/20 blur-md opacity-0 group-hover/logo:opacity-100 transition-opacity" />
-                    CL
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-black text-xl tracking-tighter text-white leading-none">CyberLog</span>
-                  <span className="text-[8px] font-black text-primary tracking-[0.4em] uppercase">Enterprise</span>
-                </div>
-              </Link>
-
-              <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold text-muted-foreground relative z-10">
-                <Link href="/dashboard" className="hover:text-primary transition-colors">Консоль</Link>
-                <Link href="/api-docs" className="hover:text-primary transition-colors">Протоколы</Link>
-                <Link href="/pricing" className="hover:text-primary transition-colors">Тарифы</Link>
-              </nav>
-
-              <div className="relative z-10">
-                <Link href="/dashboard" className="glass-button rounded-full px-8 py-2.5 text-[11px] font-black text-primary border-primary/30 hover:border-primary">
-                  Вход
-                </Link>
+    <html lang="ru" className={`${inter.variable} dark`}>
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans">
+        <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
+          <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center font-bold text-white text-xs">
+                CL
               </div>
-            </div>
-          </header>
-        </div>
+              <span className="font-bold text-lg tracking-tight">CyberLog</span>
+            </Link>
 
-        <main className="flex-1 relative pt-24">
+            <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+              <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
+              <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
+              <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
+            </nav>
+
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="text-sm font-medium hover:text-white transition-colors">
+                Войти
+              </Link>
+              <Link href="/dashboard" className="btn-primary py-1.5 px-4 text-xs">
+                Попробовать
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1">
           {children}
         </main>
 
-        <footer className="border-t border-white/5 py-16 bg-black/50 backdrop-blur-md">
-          <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-start gap-10">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-primary rounded-lg">CL</div>
-                <span className="text-sm font-bold tracking-tighter text-white">CyberLog Systems Inc.</span>
+        <footer className="border-t border-white/5 py-12 mt-20">
+          <div className="container mx-auto px-6 max-w-7xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="col-span-2 md:col-span-1 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-neutral-800 rounded flex items-center justify-center text-[10px] font-bold text-white">CL</div>
+                  <span className="text-sm font-bold tracking-tight">CyberLog</span>
+                </div>
+                <p className="text-xs text-neutral-500 leading-relaxed max-w-xs">
+                  Платформа для мониторинга инфраструктуры и анализа больших данных в реальном времени.
+                </p>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed max-w-xs">
-                Платформа анализа данных критической важности. Развернуто в изолированном облаке.
-              </p>
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Продукт</h4>
+                <ul className="space-y-2 text-xs text-neutral-500">
+                  <li><Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link></li>
+                  <li><Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link></li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Ресурсы</h4>
+                <ul className="space-y-2 text-xs text-neutral-500">
+                  <li><Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link></li>
+                  <li><Link href="/legal" className="hover:text-white transition-colors">Правовая информация</Link></li>
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Компания</h4>
+                <ul className="space-y-2 text-xs text-neutral-500">
+                  <li><Link href="#" className="hover:text-white transition-colors">О нас</Link></li>
+                  <li><Link href="#" className="hover:text-white transition-colors">Контакты</Link></li>
+                </ul>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Продукт</h4>
-                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
-                  <li><Link href="/pricing" className="hover:text-primary">Тарифы</Link></li>
-                  <li><Link href="/dashboard" className="hover:text-primary">Консоль</Link></li>
-                </ul>
+            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-neutral-500 font-medium">
+              <div>© 2026 CyberLog Systems Inc. Все права защищены.</div>
+              <div className="flex gap-6">
+                <Link href="/legal" className="hover:text-white">SLA</Link>
+                <Link href="/legal" className="hover:text-white">Privacy</Link>
               </div>
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Ресурсы</h4>
-                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
-                  <li><Link href="/api-docs" className="hover:text-primary">API Доки</Link></li>
-                  <li><Link href="/legal" className="hover:text-primary">SLA</Link></li>
-                </ul>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Компания</h4>
-                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
-                  <li><Link href="/legal" className="hover:text-primary">О нас</Link></li>
-                  <li><Link href="/legal" className="hover:text-primary">Контакты</Link></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="container mx-auto px-6 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between gap-4">
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-              © 2026 CyberLog Systems. Все права защищены.
             </div>
           </div>
         </footer>
