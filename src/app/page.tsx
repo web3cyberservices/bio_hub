@@ -4,8 +4,8 @@ import Link from 'next/link';
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      <section className="container mx-auto px-6 pt-12 pb-32 text-center max-w-5xl">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-balance">
+      <section className="container mx-auto px-6 pt-16 pb-20 text-center max-w-5xl">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-balance mx-auto">
           Аналитические инструменты для вашего бизнеса
         </h1>
         
@@ -25,7 +25,7 @@ export default function HomePage() {
 
       <section className="border-y border-white/5 bg-neutral-900/20 py-20">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
               { label: 'Пропускная способность', value: '1.2M req/s' },
               { label: 'Объем хранилища', value: '500+ PB' },
