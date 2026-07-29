@@ -4,26 +4,26 @@ import Link from 'next/link';
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      <section className="container mx-auto px-6 pt-16 pb-20 text-center max-w-5xl">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-balance mx-auto">
+      <section className="container mx-auto px-6 py-20 md:py-28 text-center max-w-5xl">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-balance mx-auto">
           Аналитические инструменты для вашего бизнеса
         </h1>
         
-        <p className="max-w-2xl mx-auto text-neutral-400 text-base md:text-lg mb-12 text-balance leading-relaxed">
+        <p className="max-w-2xl mx-auto text-neutral-400 text-base md:text-lg mb-10 text-balance leading-relaxed">
           Индустриальный стандарт сбора телеметрии. Обработка миллионов событий в секунду для глобальной инфраструктуры корпоративного уровня.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/dashboard" className="btn-primary w-full sm:w-auto">
+          <Link href="/dashboard" className="btn-primary w-full sm:w-auto px-10">
             Начать работу
           </Link>
-          <Link href="/api-docs" className="btn-secondary w-full sm:w-auto">
+          <Link href="/api-docs" className="btn-secondary w-full sm:w-auto px-10">
             Документация
           </Link>
         </div>
       </section>
 
-      <section className="border-y border-white/5 bg-neutral-900/20 py-20">
+      <section className="border-y border-white/5 bg-neutral-900/20 py-16">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[

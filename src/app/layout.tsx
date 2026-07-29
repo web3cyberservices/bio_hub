@@ -33,14 +33,11 @@ export default function RootLayout({
       <body className="bg-background text-foreground min-h-screen flex flex-col font-sans">
         <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
           <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
                 <Shield className="w-5 h-5 text-white fill-white/10" />
               </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-black text-lg tracking-tighter text-white">Web3Cyber</span>
-                <span className="font-bold text-[10px] tracking-[0.2em] text-blue-500 uppercase">Services</span>
-              </div>
+              <span className="font-black text-xl tracking-tighter text-white">Web3CyberServices</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-neutral-400">

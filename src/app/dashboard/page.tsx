@@ -190,11 +190,11 @@ export default function DashboardPage() {
       <header className="border-b border-white/5 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-10">
-            <div className="flex items-center gap-2 font-bold text-white cursor-pointer group" onClick={() => setActiveView('overview')}>
+            <div className="flex items-center gap-2.5 font-bold text-white cursor-pointer group" onClick={() => setActiveView('overview')}>
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/10">
                 <Shield className="w-4 h-4 text-white fill-white/10" />
               </div>
-              <span className="tracking-tighter text-sm font-black">Web3 Console</span>
+              <span className="tracking-tighter text-lg font-black">Web3CyberServices</span>
             </div>
             <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
               {(['overview', 'infrastructure', 'analytics', 'security'] as View[]).map((v) => (
