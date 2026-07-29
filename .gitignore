@@ -1,34 +1,38 @@
-# Зависимости
+
+# Dependencies
 node_modules/
-/node_modules
 .pnp
 .pnp.js
 
-# Сборка Next.js
+# Next.js
 .next/
-/out/
-build/
+out/
 
-# Логи и кэш
-*.log
+# Build outputs
+build/
+dist/
+
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.eslintcache
 
-# Окружение
-.env
+# Environment variables
+.env*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env*.local
 
-# Системные файлы
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
-Thumbs.db
 
-# Прочее
-.vercel
-.turbo
+# Monitoring & Temporary
+.idx/
+.modified
+.genkit/

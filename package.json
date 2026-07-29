@@ -1,3 +1,4 @@
+
 {
   "name": "cyberlog-enterprise",
   "version": "1.0.0",
@@ -17,7 +18,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "tailwind-merge": "latest",
-    "zod": "latest"
+    "zod": "latest",
+    "wav": "^1.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
