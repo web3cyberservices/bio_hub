@@ -7,11 +7,6 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-grid">
       {/* Основной блок */}
       <section className="container mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-16 max-w-6xl text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-white/10 bg-white/5 mb-8 mx-auto">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-          <span className="text-[9px] font-mono text-blue-400 uppercase tracking-[0.2em] font-bold">v2.4.0 ПРОМЫШЛЕННЫЙ РЕЛИЗ</span>
-        </div>
-        
         <h1 className="text-3xl md:text-6xl font-black tracking-tighter mb-6 text-white max-w-4xl mx-auto leading-[1.1] uppercase">
           ЕДИНЫЙ СЛОЙ ПРИЕМА ДЛЯ <span className="text-blue-500">КРИТИЧЕСКИ ВАЖНЫХ</span> ДАННЫХ.
         </h1>
