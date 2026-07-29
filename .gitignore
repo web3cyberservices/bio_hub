@@ -1,27 +1,29 @@
 # Зависимости
 node_modules/
+/node_modules
 .pnp
 .pnp.js
 
-# Сборка и кэш
+# Сборка Next.js
 .next/
-out/
+/out/
 build/
-dist/
-.cache/
 
-# Логи
+# Логи и кэш
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
+.eslintcache
 
-# Переменные окружения (секреты)
+# Окружение
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
 # Системные файлы
 .DS_Store
@@ -29,4 +31,4 @@ Thumbs.db
 
 # Прочее
 .vercel
-*.tsbuildinfo
+.turbo

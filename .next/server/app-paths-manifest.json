@@ -1,5 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/manifest.json/route": "app/manifest.json/route.js"
-}
