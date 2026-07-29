@@ -4,8 +4,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Отключаем лишние заголовки для статики
-  poweredByHeader: false,
+  // Отключаем лишние функции для максимальной легкости статики
+  trailingSlash: true,
 };
 
 export default nextConfig;
