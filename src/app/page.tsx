@@ -1,4 +1,3 @@
-
 import { Shield, Zap, ArrowRight, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 
