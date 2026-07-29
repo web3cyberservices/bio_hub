@@ -15,7 +15,7 @@ export default function HomePage() {
         </h1>
         
         <p className="max-w-2xl mx-auto text-muted-foreground text-[13px] md:text-base font-medium leading-relaxed mb-12 px-4">
-          Индустриальный стандарт сбора телеметрии. Обработка логов, транзакций и кликстрима в масштабах глобальной инфраструктуры корпоративного уровня.
+          Индустриальный стандарт сбора телеметрии. Обработка логов, транзакций и кликстрима в масштабах глобальной инфраструктуры корпоративного уровня. Аналог Datadog на стеке ClickHouse.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full max-w-xl mx-auto px-6">
