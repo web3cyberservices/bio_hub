@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Web3CyberServices | Ingestion & Analytics Platform',
-  description: 'Enterprise-grade telemetry ingestion for global infrastructure.',
+  title: 'Web3CyberServices | Платформа приема и анализа телеметрии',
+  description: 'Прием телеметрии промышленного уровня для глобальной инфраструктуры.',
   icons: {
     icon: 'https://picsum.photos/seed/web3-logo/32/32',
   }
@@ -34,24 +34,24 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-background/80 backdrop-blur-md">
           <div className="container mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center transition-transform">
-                <Shield className="w-3.5 h-3.5 text-black" />
+              <div className="w-5 h-5 bg-white rounded-sm flex items-center justify-center">
+                <Shield className="w-3 h-3 text-black" />
               </div>
               <span className="font-bold text-sm tracking-tight text-white uppercase">Web3CyberServices</span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <Link href="/dashboard" className="hover:text-white transition-colors">Console</Link>
-              <Link href="/api-docs" className="hover:text-white transition-colors">Documentation</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+              <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
+              <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
+              <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
             </nav>
 
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors hidden xs:block">
-                Sign In
+                Войти
               </Link>
               <Link href="/dashboard" className="btn-enterprise py-1.5 px-4 text-[10px] uppercase tracking-widest">
-                Access
+                Доступ
               </Link>
             </div>
           </div>
@@ -70,29 +70,29 @@ export default function RootLayout({
                   <span className="text-xs font-bold tracking-tight uppercase text-white">Web3CyberServices</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs font-medium uppercase tracking-wider">
-                  Industrial telemetry ingestion platform for global high-load environments.
+                  Индустриальная платформа для сбора телеметрии в высоконагруженных глобальных средах.
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="technical-label">Platform</h4>
+                <h4 className="technical-label">Платформа</h4>
                 <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                  <li><Link href="/dashboard" className="hover:text-white">Console</Link></li>
-                  <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
+                  <li><Link href="/dashboard" className="hover:text-white">Консоль</Link></li>
+                  <li><Link href="/pricing" className="hover:text-white">Тарифы</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
-                <h4 className="technical-label">Legal</h4>
+                <h4 className="technical-label">Правовая информация</h4>
                 <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                  <li><Link href="/legal" className="hover:text-white">Privacy</Link></li>
-                  <li><Link href="/legal" className="hover:text-white">Terms</Link></li>
+                  <li><Link href="/legal" className="hover:text-white">Конфиденциальность</Link></li>
+                  <li><Link href="/legal" className="hover:text-white">Условия</Link></li>
                 </ul>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-center text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-              <div>© 2026 Web3CyberServices. Build 42.0.1</div>
+            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
+              <div>© 2026 Web3CyberServices. Сборка 42.0.1</div>
               <div className="flex gap-6">
-                <Link href="#" className="hover:text-white">Status: OK</Link>
-                <Link href="#" className="hover:text-white">API: v1</Link>
+                <span className="flex items-center gap-1.5 text-green-500"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Статус: OK</span>
+                <span className="text-white/40">API: v1</span>
               </div>
             </div>
           </div>
