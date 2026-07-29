@@ -19,7 +19,8 @@
     "react-dom": "18.3.1",
     "tailwind-merge": "latest",
     "zod": "latest",
-    "wav": "^1.0.2"
+    "wav": "^1.0.2",
+    "uplot": "^1.6.30"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
