@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -14,11 +13,13 @@ export default function ApiDocsPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  const domain = 'web3cyberservices.xyz';
+
   const configs = {
     vector: `[sinks.cyberlog_enterprise]
   type = "http"
   inputs = ["log_source"]
-  uri = "https://api.cyberlog.io/api/v1/grpc"
+  uri = "https://${domain}/api/v1/grpc"
   compression = "gzip"
   method = "post"
   content_type = "application/grpc"
@@ -29,7 +30,7 @@ export default function ApiDocsPage() {
     
     otel: `exporters:
   otlp/cyberlog:
-    endpoint: "api.cyberlog.io:443"
+    endpoint: "${domain}:443"
     tls:
       insecure: false
     headers:
@@ -44,7 +45,7 @@ service:
 
     fluentd: `<match **>
   @type http
-  endpoint https://api.cyberlog.io/api/v1/logs
+  endpoint https://${domain}/api/v1/logs
   open_timeout 2
   <format>
     @type json
@@ -79,9 +80,9 @@ service:
               Автоматический установщик CyberLog Agent для Linux систем (x86_64/ARM64). Включает утилиту для тестирования пропускной способности.
             </p>
             <div className="bg-black/50 p-4 rounded-xl font-mono text-sm flex items-center justify-between border border-white/10 mb-6">
-              <code className="text-blue-400">curl -sL https://pkg.cyberlog.io/install.sh | bash</code>
+              <code className="text-blue-400">curl -sL https://pkg.${domain}/install.sh | bash</code>
               <button 
-                onClick={() => handleCopy('curl -sL https://pkg.cyberlog.io/install.sh | bash', 'cli')}
+                onClick={() => handleCopy(`curl -sL https://pkg.${domain}/install.sh | bash`, 'cli')}
                 className="text-slate-500 hover:text-white transition-colors"
               >
                 {copied === 'cli' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -146,15 +147,15 @@ service:
             <div className="space-y-6">
               <div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">gRPC (Binary Stream)</div>
-                <div className="text-sm font-mono text-white">api.cyberlog.io:443</div>
+                <div className="text-sm font-mono text-white">{domain}:443</div>
               </div>
               <div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">REST / HTTP logs</div>
-                <div className="text-sm font-mono text-white">https://api.cyberlog.io/v1/logs</div>
+                <div className="text-sm font-mono text-white">https://${domain}/v1/logs</div>
               </div>
               <div className="pt-4 border-t border-white/5">
                 <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Prometheus Metrics</div>
-                <div className="text-sm font-mono text-white">https://api.cyberlog.io/metrics</div>
+                <div className="text-sm font-mono text-white">https://${domain}/metrics</div>
               </div>
             </div>
           </div>
