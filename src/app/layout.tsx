@@ -30,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className={`${inter.variable} dark`}>
-      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans">
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30">
         <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
           <div className="container mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2.5 group">
@@ -40,14 +40,14 @@ export default function RootLayout({
               <span className="font-black text-xl tracking-tighter text-white">Web3CyberServices</span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-neutral-400">
+            <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
               <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
               <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
               <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
             </nav>
 
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-[11px] font-bold uppercase tracking-wider hover:text-white transition-colors">
+              <Link href="/dashboard" className="text-[11px] font-bold uppercase tracking-wider hover:text-white transition-colors hidden sm:block">
                 Войти
               </Link>
               <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black uppercase tracking-widest py-2 px-5 rounded-lg transition-all shadow-lg shadow-blue-600/20">
@@ -67,29 +67,29 @@ export default function RootLayout({
               <div className="col-span-2 md:col-span-1 space-y-4">
                 <div className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-blue-500" />
-                  <span className="text-sm font-black tracking-tight uppercase">Web3CyberServices</span>
+                  <span className="text-sm font-black tracking-tighter uppercase text-white">Web3CyberServices</span>
                 </div>
-                <p className="text-[11px] text-neutral-500 leading-relaxed max-w-xs font-medium">
+                <p className="text-[11px] text-neutral-500 leading-relaxed max-w-xs font-bold uppercase tracking-wider">
                   Платформа промышленного уровня для мониторинга инфраструктуры и анализа больших данных в реальном времени.
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Продукт</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold">
+                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Продукт</h4>
+                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
                   <li><Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link></li>
                   <li><Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Ресурсы</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold">
+                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Ресурсы</h4>
+                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
                   <li><Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link></li>
                   <li><Link href="/legal" className="hover:text-white transition-colors">Правовая информация</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Компания</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold">
+                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Компания</h4>
+                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
                   <li><Link href="#" className="hover:text-white transition-colors">О нас</Link></li>
                   <li><Link href="#" className="hover:text-white transition-colors">Контакты</Link></li>
                 </ul>
