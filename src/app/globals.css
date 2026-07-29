@@ -32,18 +32,25 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground font-sans;
-    letter-spacing: -0.01em;
+    @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     background-image: 
       radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 40px 40px, 40px 40px;
+      linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+    background-size: 100% 100%, 60px 60px, 60px 60px;
+  }
+  
+  code, pre {
+    font-family: var(--font-mono), monospace;
   }
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40;
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/30;
+  letter-spacing: -0.04em;
 }
 
 .glass-card {
@@ -51,17 +58,17 @@
 }
 
 .cyber-button {
-  @apply relative overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_rgba(14,165,233,0.3)];
+  @apply relative overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(14,165,233,0.25)] active:scale-95;
 }
 
 .scanline {
   width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, transparent, rgba(14, 165, 233, 0.3), transparent);
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(14, 165, 233, 0.2), transparent);
   position: absolute;
   top: 0;
   left: 0;
-  animation: scan 10s linear infinite;
+  animation: scan 12s linear infinite;
   z-index: 50;
   pointer-events: none;
 }

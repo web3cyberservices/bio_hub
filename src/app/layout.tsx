@@ -1,12 +1,22 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+const inter = Inter({ 
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const mono = JetBrains_Mono({
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-mono',
+});
 
 export const metadata: Metadata = {
-  title: 'CyberLog Enterprise | Big Data Analytics Platform',
+  title: 'CyberLog Enterprise | Платформа аналитики больших данных',
   description: 'Высокопроизводительный сбор логов, транзакций и кликстрима для корпоративных клиентов.',
 };
 
@@ -20,13 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className="dark">
-      <body className={`${inter.className} bg-background text-foreground min-h-screen flex flex-col`}>
+    <html lang="ru" className={`${inter.variable} ${mono.variable} dark`}>
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans antialiased">
         <div className="scanline" />
         <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/60 backdrop-blur-xl">
           <div className="container mx-auto px-6 h-20 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-primary flex items-center justify-center font-black text-black">CL</div>
+              <div className="w-10 h-10 bg-primary flex items-center justify-center font-black text-black text-sm">CL</div>
               <div className="flex flex-col">
                 <span className="font-black text-xl tracking-tighter uppercase text-white leading-none">CyberLog</span>
                 <span className="text-[8px] font-bold text-primary tracking-[0.4em] uppercase">Enterprise</span>
@@ -49,11 +59,11 @@ export default function RootLayout({
           <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-start gap-10">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-white/10 flex items-center justify-center text-[10px] font-bold">CL</div>
-                <span className="text-sm font-bold tracking-tighter uppercase">CyberLog Systems Inc.</span>
+                <div className="w-6 h-6 bg-white/10 flex items-center justify-center text-[10px] font-bold text-white">CL</div>
+                <span className="text-sm font-bold tracking-tighter uppercase text-white">CyberLog Systems Inc.</span>
               </div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-loose max-w-xs">
-                Платформа анализа данных критической важности.
+                Платформа анализа данных критической важности. Развернуто в изолированном облаке.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
@@ -82,7 +92,7 @@ export default function RootLayout({
           </div>
           <div className="container mx-auto px-6 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between gap-4">
             <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">
-              © 2026 CyberLog Systems. Развернуто в изолированном облаке.
+              © 2026 CyberLog Systems. Все права защищены.
             </div>
           </div>
         </footer>
