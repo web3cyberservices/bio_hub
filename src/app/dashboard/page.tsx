@@ -16,9 +16,12 @@ import {
   BarChart3,
   ShieldCheck,
   Cpu,
-  Network
+  Network,
+  LogOut,
+  ChevronRight,
+  User
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 type View = 'overview' | 'infrastructure' | 'analytics' | 'security';
 
@@ -28,7 +31,6 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState({ req: 842109, storage: 412.8, latency: 12, errors: 0.02 });
   const [throughput, setThroughput] = useState<number[]>(Array(40).fill(0));
 
-  // Имитация высокопроизводительного стриминга логов
   useEffect(() => {
     const logInterval = setInterval(() => {
       const timestamp = new Date().toLocaleTimeString('ru-RU', { hour12: false });
@@ -40,7 +42,7 @@ export default function DashboardPage() {
         id,
         time: timestamp,
         type,
-        msg: `worker-${Math.floor(Math.random()*10)}: process_stream stream_id=${id} protocol=${Math.random() > 0.5 ? 'gRPC' : 'HTTP2'} status=200 size=${Math.floor(Math.random()*1024)}KB`
+        msg: `worker-${Math.floor(Math.random()*10)}: process_stream sid=${id} proto=${Math.random() > 0.5 ? 'gRPC' : 'HTTP2'} sz=${Math.floor(Math.random()*1024)}KB`
       };
 
       setLogs(prev => [newLog, ...prev].slice(0, 15));
@@ -71,13 +73,13 @@ export default function DashboardPage() {
           { label: 'Ошибка приема', val: `${metrics.errors}%`, trend: '0.00%', icon: <ShieldAlert className="w-4 h-4 text-red-400" /> },
           { label: 'Хранилище ClickHouse', val: `${metrics.storage.toFixed(1)} TB`, trend: '+0.4%', icon: <Database className="w-4 h-4 text-indigo-400" /> },
         ].map((stat, i) => (
-          <div key={i} className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl">
+          <div key={i} className="bg-slate-900/40 border border-white/5 p-5 rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2 bg-slate-800/50 rounded-lg border border-white/5">{stat.icon}</div>
               <span className="text-[10px] font-bold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">{stat.trend}</span>
             </div>
             <div className="text-2xl font-black text-white tracking-tighter">{stat.val}</div>
-            <div className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider">{stat.label}</div>
+            <div className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">{stat.label}</div>
           </div>
         ))}
       </div>
@@ -87,9 +89,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Network className="w-4 h-4 text-blue-500" /> Пропускная способность Ingestion-слоя
+                <Network className="w-4 h-4 text-blue-500" /> Ingestion Layer Throughput
               </h3>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Миллионы событий / HTTP2 мультиплексирование</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Real-time HTTP/2 & gRPC Multiplexing</p>
             </div>
           </div>
           <div className="h-64 flex items-end gap-1 px-2">
@@ -101,17 +103,17 @@ export default function DashboardPage() {
               />
             ))}
           </div>
-          <div className="flex justify-between mt-4 px-2 text-[10px] font-bold text-slate-600 uppercase">
+          <div className="flex justify-between mt-4 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
             <span>T-60 min</span>
             <span>T-30 min</span>
-            <span>Real-time</span>
+            <span>Live stream</span>
           </div>
         </div>
 
         <div className="lg:col-span-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col h-[400px]">
           <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
             <div className="text-[10px] font-bold text-white flex items-center gap-2 uppercase tracking-widest">
-              <Terminal className="w-4 h-4 text-blue-500" /> Live Ingestion Stream
+              <Terminal className="w-4 h-4 text-blue-500" /> Ingestion Stream
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-bold text-slate-500">GRPC</span>
@@ -134,6 +136,95 @@ export default function DashboardPage() {
     </>
   );
 
+  const renderInfrastructure = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {['EU-West-1', 'US-East-1', 'ASIA-South-1'].map((region) => (
+          <div key={region} className="bg-slate-900/40 border border-white/5 p-6 rounded-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-bold text-white">{region} Cluster</h4>
+              <span className="w-2 h-2 rounded-full bg-green-500" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                <span>Nodes</span>
+                <span className="text-white">12 / 12</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                <div className="bg-blue-500 h-full w-[85%]" />
+              </div>
+              <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase">
+                <span>CPU Load</span>
+                <span className="text-white">42%</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-slate-900/40 border border-white/5 rounded-xl overflow-hidden">
+        <table className="w-full text-left text-[12px]">
+          <thead className="bg-white/5 text-slate-500 font-bold uppercase tracking-widest">
+            <tr>
+              <th className="p-4">Node ID</th>
+              <th className="p-4">Protocol</th>
+              <th className="p-4">Uptime</th>
+              <th className="p-4">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <tr key={i} className="hover:bg-white/5 transition-colors">
+                <td className="p-4 font-mono text-blue-400">cl-node-prd-{i}</td>
+                <td className="p-4">gRPC / HTTP2</td>
+                <td className="p-4 text-slate-400">142d 12h 04m</td>
+                <td className="p-4">
+                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[10px] font-bold">ONLINE</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderSecurity = () => (
+    <div className="grid md:grid-cols-2 gap-6">
+      <div className="bg-slate-900/40 border border-white/5 p-8 rounded-xl">
+        <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-blue-500" /> Compliance & Audit
+        </h3>
+        <div className="space-y-6">
+          {[
+            { label: 'Encryption', val: 'AES-256-GCM', status: 'Active' },
+            { label: 'mTLS Status', val: 'Strict (v1.3)', status: 'Active' },
+            { label: 'SOC2 Compliance', val: 'Verified', status: 'Active' },
+            { label: 'Data Sovereignty', val: 'EU/DE', status: 'Active' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.label}</div>
+                <div className="text-sm font-bold text-white mt-1">{item.val}</div>
+              </div>
+              <span className="text-[10px] font-bold text-green-500">● {item.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="bg-slate-900/40 border border-white/5 p-8 rounded-xl">
+        <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
+          <ShieldAlert className="w-5 h-5 text-red-500" /> Threat Detection
+        </h3>
+        <div className="flex items-center justify-center h-48 border border-dashed border-white/10 rounded-lg">
+          <div className="text-center">
+            <ShieldCheck className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">No anomalies detected in last 24h</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200">
       <header className="border-b border-white/5 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50 px-6 py-3">
@@ -141,13 +232,13 @@ export default function DashboardPage() {
           <div className="flex items-center gap-10">
             <div className="flex items-center gap-2 font-bold text-white cursor-pointer" onClick={() => setActiveView('overview')}>
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-xs">CL</div>
-              <span className="tracking-tight">Console</span>
+              <span className="tracking-tight text-sm">Console</span>
             </div>
-            <nav className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
-              {['overview', 'infrastructure', 'analytics', 'security'].map((v) => (
+            <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
+              {(['overview', 'infrastructure', 'analytics', 'security'] as View[]).map((v) => (
                 <button 
                   key={v}
-                  onClick={() => setActiveView(v as View)}
+                  onClick={() => setActiveView(v)}
                   className={`${activeView === v ? 'text-blue-400' : 'hover:text-white'} transition-all`}
                 >
                   {v}
@@ -156,30 +247,29 @@ export default function DashboardPage() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative hidden lg:block">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input 
-                type="text" 
-                placeholder="Поиск по метрикам..." 
-                className="bg-black/50 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-[11px] w-64 focus:outline-none focus:border-blue-500 transition-all"
-              />
-            </div>
             <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
               <Bell className="w-4 h-4" />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-500 rounded-full" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] font-black text-white cursor-pointer">
-              JD
+            <div className="flex items-center gap-3 pl-4 border-l border-white/5">
+              <div className="text-right hidden sm:block">
+                <div className="text-[10px] font-bold text-white">John Doe</div>
+                <div className="text-[9px] font-bold text-slate-500 uppercase">Admin</div>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] font-black text-white cursor-pointer hover:bg-slate-700 transition-colors">
+                <User className="w-4 h-4" />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
           <div>
-            <h2 className="text-3xl font-black text-white tracking-tight uppercase">
+            <h2 className="text-2xl font-black text-white tracking-tight uppercase flex items-center gap-3">
               {activeView === 'overview' ? 'System Health' : activeView}
+              <ChevronRight className="w-4 h-4 text-slate-700" />
             </h2>
             <div className="flex items-center gap-4 mt-2">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Region: EU-West-1</span>
@@ -193,9 +283,14 @@ export default function DashboardPage() {
         </div>
 
         {activeView === 'overview' && renderOverview()}
-        {activeView !== 'overview' && (
+        {activeView === 'infrastructure' && renderInfrastructure()}
+        {activeView === 'security' && renderSecurity()}
+        {activeView === 'analytics' && (
           <div className="flex items-center justify-center h-64 border border-dashed border-white/10 rounded-2xl bg-white/5">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Загрузка данных {activeView}...</p>
+            <div className="text-center">
+              <BarChart3 className="w-12 h-12 text-slate-800 mx-auto mb-4" />
+              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Generating ClickHouse Analytic Reports...</p>
+            </div>
           </div>
         )}
       </main>

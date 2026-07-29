@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Terminal, ShieldCheck, Zap, Code, Settings, Copy, Check, Download, Server } from 'lucide-react';
+import { Terminal, ShieldCheck, Zap, Code, Settings, Copy, Check, Download, Server, Cpu, Activity } from 'lucide-react';
 
 export default function ApiDocsPage() {
   const [apiKey, setApiKey] = useState('cl_live_xxxxxxxxxxxx');
@@ -61,7 +61,7 @@ service:
       <div className="mb-16 border-b border-white/5 pb-12">
         <div className="flex items-center gap-4 text-primary mb-6">
           <Settings className="w-10 h-10" />
-          <h1 className="text-4xl font-black tracking-tight">Интеграция Агентов</h1>
+          <h1 className="text-4xl font-black tracking-tight">Интеграция агентов</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl font-medium">
           CyberLog поддерживает все современные протоколы сбора телеметрии. Используйте наш генератор конфигураций для быстрой настройки ваших коллекторов.
@@ -70,21 +70,29 @@ service:
 
       <div className="grid lg:grid-cols-3 gap-8 mb-16">
         <div className="lg:col-span-2 space-y-12">
-          {/* Быстрая установка */}
+          {/* Быстрая установка CLI */}
           <section className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-8">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Download className="w-5 h-5 text-blue-400" /> Быстрая установка (CLI)
+              <Download className="w-5 h-5 text-blue-400" /> CyberLog CLI & Agent
             </h3>
             <p className="text-sm text-slate-400 mb-6 font-medium">
-              Автоматический установщик CyberLog Agent для Linux систем (x86_64/ARM64).
+              Автоматический установщик CyberLog Agent для Linux систем (x86_64/ARM64). Включает утилиту для тестирования пропускной способности.
             </p>
-            <div className="bg-black/50 p-4 rounded-xl font-mono text-sm flex items-center justify-between border border-white/10">
+            <div className="bg-black/50 p-4 rounded-xl font-mono text-sm flex items-center justify-between border border-white/10 mb-6">
               <code className="text-blue-400">curl -sL https://pkg.cyberlog.io/install.sh | bash</code>
               <button 
                 onClick={() => handleCopy('curl -sL https://pkg.cyberlog.io/install.sh | bash', 'cli')}
                 className="text-slate-500 hover:text-white transition-colors"
               >
                 {copied === 'cli' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+            <div className="flex gap-4">
+              <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> Скачать для Linux
+              </button>
+              <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                <Download className="w-4 h-4" /> Скачать для Windows
               </button>
             </div>
           </section>
@@ -145,20 +153,33 @@ service:
                 <div className="text-sm font-mono text-white">https://api.cyberlog.io/v1/logs</div>
               </div>
               <div className="pt-4 border-t border-white/5">
-                <p className="text-xs text-slate-500 leading-relaxed italic">
-                  * Для передачи через gRPC убедитесь, что ваш клиент поддерживает HTTP/2 трафик.
-                </p>
+                <div className="text-[10px] font-bold text-slate-500 uppercase mb-2">Prometheus Metrics</div>
+                <div className="text-sm font-mono text-white">https://api.cyberlog.io/metrics</div>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/50 border border-white/5 p-8 rounded-2xl">
+            <div className="flex items-center gap-2 text-blue-400 mb-4 font-bold uppercase tracking-widest text-[10px]">
+              <Activity className="w-4 h-4" /> Мониторинг платформы
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed font-medium mb-4">
+              Мы предоставляем эндпоинт для внешнего скрейпинга метрик (Prometheus/Grafana).
+            </p>
+            <div className="bg-black/30 p-3 rounded font-mono text-[10px] text-green-400">
+              # HELP ingested_events_total<br/>
+              # TYPE ingested_events_total counter<br/>
+              ingested_events_total 1.28e+09
             </div>
           </div>
 
           <div className="bg-blue-600/10 border border-blue-500/20 p-8 rounded-2xl">
             <div className="flex items-center gap-2 text-blue-400 mb-4 font-bold">
               <ShieldCheck className="w-5 h-5" />
-              Безопасность
+              SSO & Security
             </div>
             <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Все данные шифруются на стороне агента перед отправкой. Используйте TLS 1.3 для минимизации задержек при рукопожатии.
+              Для Enterprise-клиентов доступна интеграция с SAML 2.0 и Okta. Настройка авторизации агентов через mTLS 1.3.
             </p>
           </div>
         </div>
