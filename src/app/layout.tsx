@@ -89,11 +89,7 @@ export default function RootLayout({
               </div>
             </div>
             <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-              <div>© 2026 Web3CyberServices. Сборка 42.0.1</div>
-              <div className="flex gap-6">
-                <span className="flex items-center gap-1.5 text-green-500"><span className="w-1.5 h-1.5 rounded-full bg-green-500" /> Статус: OK</span>
-                <span className="text-white/40">API: v1</span>
-              </div>
+              <div>© 2026 Web3CyberServices. ВСЕ ПРАВА ЗАЩИЩЕНЫ.</div>
             </div>
           </div>
         </footer>
