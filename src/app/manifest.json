@@ -1,7 +1,6 @@
-
 {
-  "name": "CyberLog Enterprise",
-  "short_name": "CyberLog",
+  "name": "Web3CyberServices Enterprise",
+  "short_name": "Web3",
   "description": "High-Throughput Telemetry Platform",
   "start_url": "/",
   "display": "standalone",

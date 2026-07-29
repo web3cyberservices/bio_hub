@@ -1,4 +1,3 @@
-
 'use client';
 
 import { 
@@ -103,11 +102,6 @@ export default function DashboardPage() {
               />
             ))}
           </div>
-          <div className="flex justify-between mt-4 px-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-            <span>T-60 min</span>
-            <span>T-30 min</span>
-            <span>Live stream</span>
-          </div>
         </div>
 
         <div className="lg:col-span-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col h-[400px]">
@@ -161,30 +155,6 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
-      <div className="bg-slate-900/40 border border-white/5 rounded-xl overflow-hidden">
-        <table className="w-full text-left text-[12px]">
-          <thead className="bg-white/5 text-slate-500 font-bold uppercase tracking-widest">
-            <tr>
-              <th className="p-4">Node ID</th>
-              <th className="p-4">Protocol</th>
-              <th className="p-4">Uptime</th>
-              <th className="p-4">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <tr key={i} className="hover:bg-white/5 transition-colors">
-                <td className="p-4 font-mono text-blue-400">cl-node-prd-{i}</td>
-                <td className="p-4">gRPC / HTTP2</td>
-                <td className="p-4 text-slate-400">142d 12h 04m</td>
-                <td className="p-4">
-                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[10px] font-bold">ONLINE</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 
@@ -211,17 +181,6 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-      <div className="bg-slate-900/40 border border-white/5 p-8 rounded-xl">
-        <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-red-500" /> Threat Detection
-        </h3>
-        <div className="flex items-center justify-center h-48 border border-dashed border-white/10 rounded-lg">
-          <div className="text-center">
-            <ShieldCheck className="w-12 h-12 text-slate-800 mx-auto mb-4" />
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">No anomalies detected in last 24h</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 
@@ -231,8 +190,8 @@ export default function DashboardPage() {
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-10">
             <div className="flex items-center gap-2 font-bold text-white cursor-pointer" onClick={() => setActiveView('overview')}>
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-xs">CL</div>
-              <span className="tracking-tight text-sm">Console</span>
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-[10px]">W3</div>
+              <span className="tracking-tight text-sm">Web3 Console</span>
             </div>
             <nav className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
               {(['overview', 'infrastructure', 'analytics', 'security'] as View[]).map((v) => (
@@ -247,10 +206,6 @@ export default function DashboardPage() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-blue-500 rounded-full" />
-            </button>
             <div className="flex items-center gap-3 pl-4 border-l border-white/5">
               <div className="text-right hidden sm:block">
                 <div className="text-[10px] font-bold text-white">John Doe</div>
@@ -271,10 +226,6 @@ export default function DashboardPage() {
               {activeView === 'overview' ? 'System Health' : activeView}
               <ChevronRight className="w-4 h-4 text-slate-700" />
             </h2>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Region: EU-West-1</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cluster: CL-PRD-01</span>
-            </div>
           </div>
           <div className="text-[10px] font-bold text-green-400 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20 flex items-center gap-2 uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -289,7 +240,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-center h-64 border border-dashed border-white/10 rounded-2xl bg-white/5">
             <div className="text-center">
               <BarChart3 className="w-12 h-12 text-slate-800 mx-auto mb-4" />
-              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Generating ClickHouse Analytic Reports...</p>
+              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Generating Analytic Reports...</p>
             </div>
           </div>
         )}

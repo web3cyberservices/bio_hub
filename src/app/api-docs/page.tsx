@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Terminal, ShieldCheck, Zap, Code, Settings, Copy, Check, Download, Server, Cpu, Activity } from 'lucide-react';
 
 export default function ApiDocsPage() {
-  const [apiKey, setApiKey] = useState('cl_live_xxxxxxxxxxxx');
+  const [apiKey, setApiKey] = useState('w3_live_xxxxxxxxxxxx');
   const [copied, setCopied] = useState<string | null>(null);
 
   const handleCopy = (text: string, id: string) => {
@@ -16,7 +16,7 @@ export default function ApiDocsPage() {
   const domain = 'web3cyberservices.xyz';
 
   const configs = {
-    vector: `[sinks.cyberlog_enterprise]
+    vector: `[sinks.web3cyberservices_ingest]
   type = "http"
   inputs = ["log_source"]
   uri = "https://${domain}/api/v1/grpc"
@@ -24,12 +24,12 @@ export default function ApiDocsPage() {
   method = "post"
   content_type = "application/grpc"
   
-  [sinks.cyberlog_enterprise.auth]
+  [sinks.web3cyberservices_ingest.auth]
     type = "bearer"
     token = "${apiKey}"`,
     
     otel: `exporters:
-  otlp/cyberlog:
+  otlp/web3:
     endpoint: "${domain}:443"
     tls:
       insecure: false
@@ -41,7 +41,7 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/cyberlog]`,
+      exporters: [otlp/web3]`,
 
     fluentd: `<match **>
   @type http
@@ -65,7 +65,7 @@ service:
           <h1 className="text-4xl font-black tracking-tight">Интеграция агентов</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl font-medium">
-          CyberLog поддерживает все современные протоколы сбора телеметрии. Используйте наш генератор конфигураций для быстрой настройки ваших коллекторов.
+          Web3CyberServices поддерживает все современные протоколы сбора телеметрии. Используйте наш генератор конфигураций для быстрой настройки ваших коллекторов.
         </p>
       </div>
 
@@ -74,10 +74,10 @@ service:
           {/* Быстрая установка CLI */}
           <section className="bg-blue-600/5 border border-blue-500/20 rounded-2xl p-8">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Download className="w-5 h-5 text-blue-400" /> CyberLog CLI & Agent
+              <Download className="w-5 h-5 text-blue-400" /> Web3CyberServices CLI
             </h3>
             <p className="text-sm text-slate-400 mb-6 font-medium">
-              Автоматический установщик CyberLog Agent для Linux систем (x86_64/ARM64). Включает утилиту для тестирования пропускной способности.
+              Автоматический установщик Web3CyberServices Agent для Linux систем (x86_64/ARM64). Включает утилиту для тестирования пропускной способности.
             </p>
             <div className="bg-black/50 p-4 rounded-xl font-mono text-sm flex items-center justify-between border border-white/10 mb-6">
               <code className="text-blue-400">curl -sL https://pkg.${domain}/install.sh | bash</code>
@@ -86,14 +86,6 @@ service:
                 className="text-slate-500 hover:text-white transition-colors"
               >
                 {copied === 'cli' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
-            <div className="flex gap-4">
-              <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> Скачать для Linux
-              </button>
-              <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <Download className="w-4 h-4" /> Скачать для Windows
               </button>
             </div>
           </section>
@@ -158,30 +150,6 @@ service:
                 <div className="text-sm font-mono text-white">https://${domain}/metrics</div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-slate-900/50 border border-white/5 p-8 rounded-2xl">
-            <div className="flex items-center gap-2 text-blue-400 mb-4 font-bold uppercase tracking-widest text-[10px]">
-              <Activity className="w-4 h-4" /> Мониторинг платформы
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium mb-4">
-              Мы предоставляем эндпоинт для внешнего скрейпинга метрик (Prometheus/Grafana).
-            </p>
-            <div className="bg-black/30 p-3 rounded font-mono text-[10px] text-green-400">
-              # HELP ingested_events_total<br/>
-              # TYPE ingested_events_total counter<br/>
-              ingested_events_total 1.28e+09
-            </div>
-          </div>
-
-          <div className="bg-blue-600/10 border border-blue-500/20 p-8 rounded-2xl">
-            <div className="flex items-center gap-2 text-blue-400 mb-4 font-bold">
-              <ShieldCheck className="w-5 h-5" />
-              SSO & Security
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Для Enterprise-клиентов доступна интеграция с SAML 2.0 и Okta. Настройка авторизации агентов через mTLS 1.3.
-            </p>
           </div>
         </div>
       </div>

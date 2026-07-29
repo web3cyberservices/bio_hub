@@ -1,8 +1,7 @@
-
 'use server';
 
 /**
- * @fileOverview AI-агент для анализа аномалий в логах CyberLog.
+ * @fileOverview AI-агент для анализа аномалий в логах Web3CyberServices.
  */
 
 import { ai } from '@/ai/genkit';
@@ -28,7 +27,7 @@ const analyzeLogPrompt = ai.definePrompt({
   name: 'analyzeLogPrompt',
   input: { schema: AnalyzeLogInputSchema },
   output: { schema: AnalyzeLogOutputSchema },
-  prompt: `Вы — ведущий инженер по безопасности в CyberLog Enterprise.
+  prompt: `Вы — ведущий инженер по безопасности в Web3CyberServices Enterprise.
 Ваша задача — проанализировать предоставленные данные логов и выявить признаки взлома, сбоев или аномального поведения.
 
 Данные для анализа:
