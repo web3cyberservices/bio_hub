@@ -4,12 +4,12 @@ import Link from 'next/link';
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      <section className="container mx-auto px-6 py-20 md:py-28 text-center max-w-5xl">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-balance mx-auto">
+      <section className="container mx-auto px-6 py-20 md:py-32 text-center max-w-5xl">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-balance mx-auto">
           Аналитические инструменты для вашего бизнеса
         </h1>
         
-        <p className="max-w-2xl mx-auto text-neutral-400 text-base md:text-lg mb-10 text-balance leading-relaxed">
+        <p className="max-w-2xl mx-auto text-neutral-400 text-base md:text-lg mb-12 text-balance leading-relaxed">
           Индустриальный стандарт сбора телеметрии. Обработка миллионов событий в секунду для глобальной инфраструктуры корпоративного уровня.
         </p>
 
@@ -23,25 +23,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/5 bg-neutral-900/20 py-16">
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            {[
-              { label: 'Пропускная способность', value: '1.2M req/s' },
-              { label: 'Объем хранилища', value: '500+ PB' },
-              { label: 'Задержка', value: '< 50ms' },
-              { label: 'Edge-узлы', value: '128' },
-            ].map((stat) => (
-              <div key={stat.label} className="space-y-1">
-                <div className="text-3xl font-bold text-white tracking-tight">{stat.value}</div>
-                <div className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="container mx-auto px-6 py-32 max-w-7xl">
+      <section className="container mx-auto px-6 py-24 max-w-7xl">
         <div className="grid md:grid-cols-3 gap-8">
           {[
             {
