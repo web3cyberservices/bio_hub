@@ -1,3 +1,4 @@
+
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
@@ -11,16 +12,15 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Web3CyberServices | Enterprise Telemetry Platform',
-  description: 'Высокопроизводительный сбор логов и телеметрии для бизнеса.',
+  title: 'Web3CyberServices | Ingestion & Analytics Platform',
+  description: 'Enterprise-grade telemetry ingestion for global infrastructure.',
   icons: {
     icon: 'https://picsum.photos/seed/web3-logo/32/32',
-    apple: 'https://picsum.photos/seed/web3-logo/180/180',
   }
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#09090b',
 };
 
 export default function RootLayout({
@@ -30,28 +30,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className={`${inter.variable} dark`}>
-      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-x-hidden">
-        <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
-          <div className="container mx-auto max-w-7xl px-4 md:px-6 h-16 flex items-center justify-between">
+      <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-x-hidden antialiased">
+        <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-background/80 backdrop-blur-md">
+          <div className="container mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Shield className="w-4 h-4 md:w-5 md:h-5 text-white fill-white/10" />
+              <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center transition-transform">
+                <Shield className="w-3.5 h-3.5 text-black" />
               </div>
-              <span className="font-black text-lg md:text-xl tracking-tighter text-white">Web3CyberServices</span>
+              <span className="font-bold text-sm tracking-tight text-white uppercase">Web3CyberServices</span>
             </Link>
 
-            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[10px] font-black uppercase tracking-[0.1em] text-neutral-500">
-              <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
-              <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
+            <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              <Link href="/dashboard" className="hover:text-white transition-colors">Console</Link>
+              <Link href="/api-docs" className="hover:text-white transition-colors">Documentation</Link>
+              <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
             </nav>
 
-            <div className="flex items-center gap-2 md:gap-4">
-              <Link href="/dashboard" className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider hover:text-white transition-colors hidden xs:block">
-                Войти
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors hidden xs:block">
+                Sign In
               </Link>
-              <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] md:text-[11px] font-black uppercase tracking-widest py-1.5 md:py-2 px-3 md:px-5 rounded-lg transition-all shadow-lg shadow-blue-600/20">
-                Доступ
+              <Link href="/dashboard" className="btn-enterprise py-1.5 px-4 text-[10px] uppercase tracking-widest">
+                Access
               </Link>
             </div>
           </div>
@@ -61,45 +61,38 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="border-t border-white/5 py-8 md:py-12 mt-10 md:mt-20">
-          <div className="container mx-auto px-4 md:px-6 max-w-7xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="space-y-4">
+        <footer className="border-t border-white/[0.08] py-12 mt-20 bg-black/20">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+              <div className="col-span-2 space-y-4">
                 <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-blue-500" />
-                  <span className="text-sm font-black tracking-tighter uppercase text-white">Web3CyberServices</span>
+                  <Shield className="w-4 h-4 text-white" />
+                  <span className="text-xs font-bold tracking-tight uppercase text-white">Web3CyberServices</span>
                 </div>
-                <p className="text-[10px] text-neutral-500 leading-relaxed max-w-xs font-bold uppercase tracking-wider">
-                  Платформа промышленного уровня для мониторинга инфраструктуры и анализа больших данных в реальном времени.
+                <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs font-medium uppercase tracking-wider">
+                  Industrial telemetry ingestion platform for global high-load environments.
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Продукт</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
-                  <li><Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link></li>
-                  <li><Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link></li>
+                <h4 className="technical-label">Platform</h4>
+                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                  <li><Link href="/dashboard" className="hover:text-white">Console</Link></li>
+                  <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Ресурсы</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
-                  <li><Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link></li>
-                  <li><Link href="/legal" className="hover:text-white transition-colors">Правовая информация</Link></li>
-                </ul>
-              </div>
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Компания</h4>
-                <ul className="space-y-2 text-[11px] text-neutral-500 font-bold uppercase tracking-wider">
-                  <li><Link href="#" className="hover:text-white transition-colors">О нас</Link></li>
-                  <li><Link href="#" className="hover:text-white transition-colors">Контакты</Link></li>
+                <h4 className="technical-label">Legal</h4>
+                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                  <li><Link href="/legal" className="hover:text-white">Privacy</Link></li>
+                  <li><Link href="/legal" className="hover:text-white">Terms</Link></li>
                 </ul>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-neutral-500 font-bold uppercase tracking-widest text-center sm:text-left">
-              <div>© 2026 Web3CyberServices. All Rights Reserved.</div>
+            <div className="mt-12 pt-8 border-t border-white/5 flex justify-between items-center text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
+              <div>© 2026 Web3CyberServices. Build 42.0.1</div>
               <div className="flex gap-6">
-                <Link href="/legal" className="hover:text-white">SLA</Link>
-                <Link href="/legal" className="hover:text-white">Privacy</Link>
+                <Link href="#" className="hover:text-white">Status: OK</Link>
+                <Link href="#" className="hover:text-white">API: v1</Link>
               </div>
             </div>
           </div>

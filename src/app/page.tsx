@@ -1,55 +1,60 @@
-import { BarChart3, Shield, Zap, Database, Cpu, Globe, ArrowRight } from 'lucide-react';
+
+import { Terminal, Shield, Zap, Database, ArrowRight, Code2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col w-full overflow-x-hidden">
+    <div className="flex flex-col w-full min-h-screen bg-grid">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 md:px-6 pt-10 pb-16 md:pt-20 md:pb-32 text-center max-w-5xl">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-6 md:mb-8 text-white leading-[1.1] md:leading-[0.9] text-balance">
-          Аналитические инструменты для вашего бизнеса
+      <section className="container mx-auto px-4 md:px-6 pt-20 pb-20 max-w-6xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-8">
+          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+          <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">v2.4.0 Production Ready</span>
+        </div>
+        
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-white max-w-4xl leading-[1.1]">
+          Unified Ingestion Layer for <span className="text-blue-500">Mission-Critical</span> Telemetry.
         </h1>
         
-        <p className="max-w-2xl mx-auto text-neutral-400 text-sm md:text-lg mb-8 md:mb-12 text-balance leading-relaxed font-medium px-4">
-          Индустриальный стандарт сбора телеметрии. Обработка миллионов событий в секунду для глобальной инфраструктуры корпоративного уровня на базе Web3CyberServices.
+        <p className="max-w-2xl text-muted-foreground text-sm md:text-base mb-10 leading-relaxed font-medium">
+          Высокопроизводительная платформа для сбора логов, метрик и трассировок. 
+          Развернута на 128 edge-узлах. Поддержка gRPC, OTLP и REST с гарантированной доставкой.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4 sm:px-0">
-          <Link href="/dashboard" className="btn-primary w-full sm:w-auto px-8 md:px-12 flex items-center justify-center gap-2 py-3.5 text-sm md:text-base">
-            Начать работу <ArrowRight className="w-4 h-4" />
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href="/dashboard" className="btn-enterprise">
+            Deploy Console <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/api-docs" className="btn-secondary w-full sm:w-auto px-8 md:px-12 py-3.5 text-sm md:text-base">
-            Документация
+          <Link href="/api-docs" className="btn-outline flex items-center gap-2">
+            <Code2 className="w-4 h-4" /> Documentation
           </Link>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="container mx-auto px-4 md:px-6 py-12 md:py-24 max-w-7xl border-t border-white/5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      {/* Technical Features Grid */}
+      <section className="container mx-auto px-4 md:px-6 py-10 border-t border-white/5 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-1px bg-white/5 border border-white/5">
           {[
             {
-              icon: <Database className="w-5 h-5 md:w-6 md:h-6" />,
-              title: "ClickHouse Engine",
-              desc: "Высокопроизводительное хранилище для мгновенной аналитики миллиардов записей в реальном времени."
+              icon: <Database className="w-4 h-4" />,
+              title: "Columnar Storage",
+              desc: "Native ClickHouse integration for sub-second analytical queries over billions of rows."
             },
             {
-              icon: <Shield className="w-5 h-5 md:w-6 md:h-6" />,
-              title: "Безопасность данных",
-              desc: "Соответствие стандартам SOC2 и GDPR. Шифрование на уровне приложения и аппаратная изоляция."
+              icon: <Shield className="w-4 h-4" />,
+              title: "Zero-Trust Architecture",
+              desc: "End-to-end TLS 1.3 encryption with hardware-backed key isolation (HSM)."
             },
             {
-              icon: <Zap className="w-5 h-5 md:w-6 md:h-6" />,
-              title: "gRPC Инжекция",
-              desc: "Минимальный оверхед благодаря бинарным протоколам. Гарантированная доставка событий Exactly-once."
+              icon: <Zap className="w-4 h-4" />,
+              title: "gRPC Native",
+              desc: "Binary protocol support for minimal CPU overhead and multiplexed streams."
             }
           ].map((feature, i) => (
-            <div key={i} className="ui-card p-6 md:p-8 space-y-4 md:space-y-6 bg-slate-900/40 border border-white/5 rounded-2xl">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600/10 rounded-xl flex items-center justify-center text-blue-500 border border-blue-500/20">
-                {feature.icon}
-              </div>
-              <h3 className="text-lg md:text-xl font-bold text-white">{feature.title}</h3>
-              <p className="text-xs md:text-sm text-neutral-500 leading-relaxed font-medium">
+            <div key={i} className="bg-background p-8 space-y-4">
+              <div className="text-blue-500 mb-4">{feature.icon}</div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-tight">{feature.title}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                 {feature.desc}
               </p>
             </div>
@@ -57,37 +62,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="container mx-auto px-4 md:px-6 pb-16 md:pb-32 max-w-7xl">
-        <div className="bg-slate-900/20 border border-white/5 rounded-2xl md:rounded-3xl p-8 md:p-20 relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <h2 className="text-2xl md:text-5xl font-black mb-4 md:mb-6 tracking-tighter text-white leading-tight">Масштаб мирового уровня</h2>
-            <p className="text-neutral-400 font-medium text-sm md:text-base leading-relaxed mb-8 md:mb-10">
-              Web3CyberServices обеспечивает фундамент для цифровой трансформации крупнейших компаний, предоставляя инструменты мониторинга, которые работают безотказно.
+      {/* CLI Section - Добавляет "человечности" и тех. веса */}
+      <section className="container mx-auto px-4 md:px-6 py-20 max-w-6xl">
+        <div className="bg-[#0c0c0e] border border-white/5 p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="max-w-md">
+            <h2 className="text-xl font-bold mb-4">Start collecting in seconds.</h2>
+            <p className="text-xs text-muted-foreground mb-6 font-medium">
+              Install the Web3CyberServices agent on any Linux x86_64 or ARM64 instance using our one-line installer.
             </p>
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:flex md:flex-wrap gap-4 md:gap-8">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                  <Cpu className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Edge Computing</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                  <Globe className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">Global Nodes</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-300">SLA 99.999%</span>
-              </div>
+            <div className="bg-black p-3 rounded border border-white/10 flex items-center justify-between group">
+              <code className="text-[11px] font-mono text-blue-400">curl -sL https://pkg.web3cyberservices.xyz/install.sh | bash</code>
+              <Terminal className="w-4 h-4 text-white/20 group-hover:text-white transition-colors cursor-pointer" />
             </div>
           </div>
-          <div className="absolute top-1/2 right-0 -translate-y-1/2 opacity-[0.02] pointer-events-none hidden lg:block">
-            <Globe className="w-[600px] h-[600px]" />
+          <div className="w-full md:w-auto grid grid-cols-2 gap-4">
+            <div className="p-4 border border-white/5 rounded bg-white/5">
+              <div className="technical-label">Binary Size</div>
+              <div className="data-value mt-1">12.4 MB</div>
+            </div>
+            <div className="p-4 border border-white/5 rounded bg-white/5">
+              <div className="technical-label">Memory Footprint</div>
+              <div className="data-value mt-1">&lt; 28 MB</div>
+            </div>
           </div>
         </div>
       </section>
