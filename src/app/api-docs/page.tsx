@@ -7,7 +7,7 @@ export default function ApiDocsPage() {
         <div className="flex items-center gap-6 text-white">
           <Terminal className="w-16 h-16 text-primary" />
           <div>
-            <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter leading-none">Техническое API</h1>
+            <h1 className="text-5xl md:text-6xl font-black tracking-tighter leading-none">Техническое API</h1>
             <p className="text-primary text-[10px] uppercase tracking-[0.4em] mt-4 font-black">Протокол приема больших данных V2.0</p>
           </div>
         </div>
@@ -23,7 +23,7 @@ export default function ApiDocsPage() {
         <div className="md:col-span-4 space-y-8 sticky top-32 h-fit">
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Протоколы</h4>
-            <nav className="flex flex-col gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <nav className="flex flex-col gap-4 text-[11px] font-bold text-muted-foreground">
               <a href="#clickstream" className="hover:text-primary border-l-2 border-transparent hover:border-primary pl-4 transition-all">Кликстрим (Events)</a>
               <a href="#transactions" className="hover:text-primary border-l-2 border-transparent hover:border-primary pl-4 transition-all">Транзакции (Atomic)</a>
               <a href="#logs" className="hover:text-primary border-l-2 border-transparent hover:border-primary pl-4 transition-all">Логи приложений</a>
@@ -33,7 +33,7 @@ export default function ApiDocsPage() {
             <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] tracking-widest">
               <Layers className="w-4 h-4" /> Бинарный поток
             </div>
-            <p className="text-[9px] text-muted-foreground font-bold leading-relaxed uppercase tracking-widest">
+            <p className="text-[11px] text-muted-foreground font-bold leading-relaxed">
               Все данные должны передаваться через gRPC для обеспечения максимальной плотности упаковки.
             </p>
           </div>
@@ -41,10 +41,10 @@ export default function ApiDocsPage() {
 
         <div className="md:col-span-8 space-y-24">
           <section id="clickstream">
-            <h2 className="text-3xl font-black mb-8 text-white flex items-center gap-4 uppercase tracking-tighter">
+            <h2 className="text-3xl font-black mb-8 text-white flex items-center gap-4 tracking-tighter">
               <Zap className="w-8 h-8 text-primary" /> 1.0 Кликстрим
             </h2>
-            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest leading-loose mb-8">
+            <p className="text-muted-foreground text-sm font-medium leading-loose mb-8">
               Для анализа поведения пользователей в реальном времени используйте сервис <code className="text-primary tracking-normal font-mono bg-white/5 px-2">ClickstreamService</code>.
             </p>
             <div className="bg-black border border-white/10 p-8 font-mono text-xs text-white overflow-x-auto">
@@ -60,10 +60,10 @@ export default function ApiDocsPage() {
           </section>
 
           <section id="transactions">
-            <h2 className="text-3xl font-black mb-8 text-white flex items-center gap-4 uppercase tracking-tighter">
+            <h2 className="text-3xl font-black mb-8 text-white flex items-center gap-4 tracking-tighter">
               <Database className="w-8 h-8 text-primary" /> 2.0 Транзакции
             </h2>
-            <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest leading-loose mb-8">
+            <p className="text-muted-foreground text-sm font-medium leading-loose mb-8">
               Запись финансовых событий с гарантией доставки Exactly-once.
             </p>
             <div className="bg-black border border-white/10 p-8 font-mono text-xs text-white overflow-x-auto">

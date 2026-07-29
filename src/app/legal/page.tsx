@@ -1,12 +1,11 @@
-
 export default function LegalPage() {
   return (
     <div className="py-24 container mx-auto px-4 max-w-3xl">
-      <h1 className="text-4xl font-black uppercase tracking-tighter mb-12">Legal Information</h1>
+      <h1 className="text-4xl font-black tracking-tighter mb-12">Юридическая информация</h1>
       
       <div className="space-y-16">
         <section>
-          <h2 className="text-xl font-bold mb-6 text-primary uppercase tracking-wider">1. Terms of Service</h2>
+          <h2 className="text-xl font-bold mb-6 text-primary tracking-wider">1. Условия использования</h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-4 font-medium">
             <p>
               Используя платформу CyberLog, вы соглашаетесь с тем, что сервис предоставляется по модели "as is". CyberLog не несет ответственности за любую потерю данных, вызванную некорректной конфигурацией клиентских gRPC-агентов или SDK.
@@ -18,7 +17,7 @@ export default function LegalPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-bold mb-6 text-primary uppercase tracking-wider">2. Data Privacy Policy</h2>
+          <h2 className="text-xl font-bold mb-6 text-primary tracking-wider">2. Политика конфиденциальности</h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-4 font-medium">
             <p>
               CyberLog придерживается строгой политики Zero-Knowledge: мы не дешифруем payload ваших логов, если это не предусмотрено конфигурацией ваших ключей для парсинга на лету.

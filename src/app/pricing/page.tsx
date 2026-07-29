@@ -59,8 +59,8 @@ export default function PricingPage() {
         <div className="text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4" /> Прозрачное ценообразование
         </div>
-        <h1 className="text-5xl md:text-7xl font-black uppercase mb-8 tracking-tighter leading-none">Масштабируйте сбор данных</h1>
-        <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest leading-loose">
+        <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-none">Масштабируйте сбор данных</h1>
+        <p className="text-muted-foreground text-sm font-medium leading-loose">
           Платите только за объем обрабатываемых данных. Никаких скрытых платежей или ограничений по количеству серверов в вашей сети.
         </p>
       </div>
@@ -72,17 +72,17 @@ export default function PricingPage() {
               <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
             )}
             <div className="mb-12">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-6">{tier.name}</h3>
+              <h3 className="text-[12px] font-black text-primary mb-6">{tier.name}</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-black tracking-tighter">{tier.price}</span>
                 <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest">{tier.period}</span>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-6 leading-loose font-bold uppercase tracking-wider">{tier.desc}</p>
+              <p className="text-[12px] text-muted-foreground mt-6 leading-relaxed font-bold">{tier.desc}</p>
             </div>
             
             <ul className="space-y-5 mb-16 flex-1">
               {tier.features.map((f) => (
-                <li key={f} className="text-[10px] font-black flex items-start gap-4 uppercase tracking-widest leading-tight">
+                <li key={f} className="text-[12px] font-black flex items-start gap-4 leading-tight">
                   <Check className="w-3.5 h-3.5 text-primary shrink-0" /> 
                   <span className="text-white/80">{f}</span>
                 </li>
@@ -92,7 +92,7 @@ export default function PricingPage() {
             <Link 
               href={tier.link}
               target={tier.link.startsWith('http') ? '_blank' : '_self'}
-              className={`w-full py-5 text-[10px] text-center font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 ${tier.highlighted ? 'bg-primary text-primary-foreground hover:bg-white hover:text-black' : 'bg-white/5 hover:bg-white/10 border border-white/10 text-white'}`}
+              className={`w-full py-5 text-[12px] text-center font-black transition-all flex items-center justify-center gap-3 ${tier.highlighted ? 'bg-primary text-primary-foreground hover:bg-white hover:text-black' : 'bg-white/5 hover:bg-white/10 border border-white/10 text-white'}`}
             >
               {tier.cta} <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -101,7 +101,7 @@ export default function PricingPage() {
       </div>
       
       <div className="mt-20 text-center">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em]">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
           Нужно индивидуальное решение? <Link href="#" className="text-primary border-b border-primary/30 hover:border-primary transition-colors">Обсудить с архитектором</Link>
         </p>
       </div>

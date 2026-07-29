@@ -1337,6 +1337,12 @@ video {
   font-size: 0.75rem;
   line-height: 1rem;
 }
+.text-\[12px\] {
+  font-size: 12px;
+}
+.text-\[13px\] {
+  font-size: 13px;
+}
 .font-black {
   font-weight: 900;
 }
@@ -1363,6 +1369,9 @@ video {
 }
 .leading-tight {
   line-height: 1.25;
+}
+.leading-\[1\.1\] {
+  line-height: 1.1;
 }
 .tracking-\[0\.25em\] {
   letter-spacing: 0.25em;
@@ -1809,6 +1818,23 @@ video {
   .md\:text-sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
+  }
+
+  .md\:text-\[14px\] {
+    font-size: 14px;
+  }
+
+  .md\:text-\[15px\] {
+    font-size: 15px;
+  }
+
+  .md\:text-\[72px\] {
+    font-size: 72px;
+  }
+
+  .md\:text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
   }
 }
 

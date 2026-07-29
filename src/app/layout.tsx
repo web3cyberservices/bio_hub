@@ -47,19 +47,19 @@ export default function RootLayout({
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-xl tracking-tighter uppercase text-white leading-none">CyberLog</span>
+                  <span className="font-black text-xl tracking-tighter text-white leading-none">CyberLog</span>
                   <span className="text-[8px] font-black text-primary tracking-[0.4em] uppercase">Enterprise</span>
                 </div>
               </Link>
 
-              <nav className="hidden md:flex items-center gap-10 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground relative z-10">
+              <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold text-muted-foreground relative z-10">
                 <Link href="/dashboard" className="hover:text-primary transition-colors">Консоль</Link>
                 <Link href="/api-docs" className="hover:text-primary transition-colors">Протоколы</Link>
                 <Link href="/pricing" className="hover:text-primary transition-colors">Тарифы</Link>
               </nav>
 
               <div className="relative z-10">
-                <Link href="/dashboard" className="glass-button rounded-full px-8 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary border-primary/30 hover:border-primary">
+                <Link href="/dashboard" className="glass-button rounded-full px-8 py-2.5 text-[11px] font-black text-primary border-primary/30 hover:border-primary">
                   Вход
                 </Link>
               </div>
@@ -76,30 +76,30 @@ export default function RootLayout({
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-bold text-primary rounded-lg">CL</div>
-                <span className="text-sm font-bold tracking-tighter uppercase text-white">CyberLog Systems Inc.</span>
+                <span className="text-sm font-bold tracking-tighter text-white">CyberLog Systems Inc.</span>
               </div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-loose max-w-xs">
+              <p className="text-[11px] text-muted-foreground leading-relaxed max-w-xs">
                 Платформа анализа данных критической важности. Развернуто в изолированном облаке.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Продукт</h4>
-                <ul className="space-y-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
                   <li><Link href="/pricing" className="hover:text-primary">Тарифы</Link></li>
                   <li><Link href="/dashboard" className="hover:text-primary">Консоль</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Ресурсы</h4>
-                <ul className="space-y-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
                   <li><Link href="/api-docs" className="hover:text-primary">API Доки</Link></li>
                   <li><Link href="/legal" className="hover:text-primary">SLA</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Компания</h4>
-                <ul className="space-y-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <ul className="space-y-2 text-[11px] font-bold text-muted-foreground">
                   <li><Link href="/legal" className="hover:text-primary">О нас</Link></li>
                   <li><Link href="/legal" className="hover:text-primary">Контакты</Link></li>
                 </ul>
@@ -107,7 +107,7 @@ export default function RootLayout({
             </div>
           </div>
           <div className="container mx-auto px-6 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between gap-4">
-            <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
               © 2026 CyberLog Systems. Все права защищены.
             </div>
           </div>

@@ -5,7 +5,7 @@ export default function DashboardPage() {
     <div className="min-h-screen pt-24 pb-20 container mx-auto px-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-white/5 pb-16">
         <div>
-          <h1 className="text-5xl font-black uppercase tracking-tighter mb-4 text-gradient">Data Console</h1>
+          <h1 className="text-5xl font-black tracking-tighter mb-4 text-gradient">Data Console</h1>
           <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Real-time Cluster Monitoring V3.0</p>
         </div>
         <div className="flex gap-4">
@@ -15,7 +15,7 @@ export default function DashboardPage() {
           </div>
           <div className="px-6 py-4 glass-card border-green-500/20">
             <div className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Статус сети</div>
-            <div className="text-sm font-black text-green-500 uppercase tracking-widest">Connected</div>
+            <div className="text-sm font-black text-green-500 tracking-widest">Connected</div>
           </div>
         </div>
       </div>

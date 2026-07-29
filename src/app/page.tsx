@@ -10,19 +10,19 @@ export default function HomePage() {
           Мониторинг кластера: Активен
         </div>
         
-        <h1 className="text-5xl md:text-[80px] font-black tracking-tighter leading-[1] uppercase mb-8 text-gradient max-w-5xl">
+        <h1 className="text-5xl md:text-[72px] font-black tracking-tighter leading-[1.1] mb-8 text-gradient max-w-5xl px-4">
           Аналитические инструменты <br /> <span className="text-primary drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">для вашего бизнеса</span>
         </h1>
         
-        <p className="max-w-2xl mx-auto text-muted-foreground text-[11px] md:text-sm font-medium uppercase tracking-[0.2em] leading-relaxed mb-12 px-4">
+        <p className="max-w-2xl mx-auto text-muted-foreground text-[13px] md:text-base font-medium leading-relaxed mb-12 px-4">
           Индустриальный стандарт сбора телеметрии. Обработка логов, транзакций и кликстрима в масштабах глобальной инфраструктуры корпоративного уровня.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full max-w-xl mx-auto px-6">
-          <Link href="/dashboard" className="glass-button-primary rounded-full w-full sm:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3">
+          <Link href="/dashboard" className="glass-button-primary rounded-full w-full sm:w-auto px-10 py-5 font-black text-[13px] flex items-center justify-center gap-3">
             Запустить консоль <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/api-docs" className="glass-button rounded-full w-full sm:w-auto px-10 py-5 font-black uppercase tracking-[0.2em] text-[11px] text-white flex items-center justify-center">
+          <Link href="/api-docs" className="glass-button rounded-full w-full sm:w-auto px-10 py-5 font-black text-[13px] text-white flex items-center justify-center">
             Документация
           </Link>
         </div>
@@ -39,7 +39,7 @@ export default function HomePage() {
             ].map((stat) => (
               <div key={stat.label} className="text-center group">
                 <div className="text-2xl md:text-3xl font-black text-white mb-1 tracking-tighter group-hover:text-primary transition-colors">{stat.value}</div>
-                <div className="text-[8px] md:text-[9px] font-black text-primary/60 uppercase tracking-[0.4em]">{stat.label}</div>
+                <div className="text-[9px] font-black text-primary/60 uppercase tracking-[0.4em]">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -56,12 +56,12 @@ export default function HomePage() {
             },
             {
               icon: <Layers className="w-7 h-7" />,
-              title: "Транзакционный Лог",
+              title: "Транзакционный лог",
               desc: "Гарантированная доставка событий Exactly-once для финансовых транзакций и аудита безопасности."
             },
             {
               icon: <Zap className="w-7 h-7" />,
-              title: "gRPC Инжекция",
+              title: "gRPC инжекция",
               desc: "Бинарные протоколы обеспечивают минимальный оверхед и максимальную плотность данных в вашем канале."
             }
           ].map((cap, i) => (
@@ -69,8 +69,8 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/10 border border-primary/20 flex items-center justify-center text-primary rounded-2xl shadow-[inset_0_0_20px_rgba(14,165,233,0.1)]">
                 {cap.icon}
               </div>
-              <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">{cap.title}</h3>
-              <p className="text-[10px] md:text-[11px] text-muted-foreground leading-loose font-medium uppercase tracking-widest">
+              <h3 className="text-xl md:text-2xl font-black tracking-tighter text-white">{cap.title}</h3>
+              <p className="text-[12px] md:text-[14px] text-muted-foreground leading-relaxed font-medium">
                 {cap.desc}
               </p>
             </div>
@@ -84,8 +84,8 @@ export default function HomePage() {
             <Globe className="w-full h-full text-primary scale-125" />
           </div>
           <div className="max-w-2xl relative z-10">
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-8 md:mb-12 leading-none text-white">Масштаб <br /> мирового класса</h2>
-            <p className="text-muted-foreground font-bold uppercase text-[10px] md:text-[11px] tracking-[0.25em] leading-loose mb-12 md:mb-16">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 md:mb-12 leading-none text-white">Масштаб мирового класса</h2>
+            <p className="text-muted-foreground font-bold text-[13px] md:text-[15px] leading-relaxed mb-12 md:mb-16">
               Мы предоставляем не просто инструменты, а фундамент цифровой трансформации с аппаратной изоляцией данных и экспертной поддержкой 24/7.
             </p>
             <div className="grid grid-cols-3 gap-6 md:gap-12">
@@ -93,19 +93,19 @@ export default function HomePage() {
                 <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 w-fit">
                   <Shield className="text-primary w-8 h-8 md:w-10 md:h-10" />
                 </div>
-                <div className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white">SOC2 & GDPR</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white">SOC2 & GDPR</div>
               </div>
               <div className="space-y-4">
                 <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 w-fit">
                   <Cpu className="text-primary w-8 h-8 md:w-10 md:h-10" />
                 </div>
-                <div className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white">Edge Computing</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Edge Computing</div>
               </div>
               <div className="space-y-4">
                 <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 w-fit">
                   <Activity className="text-primary w-8 h-8 md:w-10 md:h-10" />
                 </div>
-                <div className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white">SLA 99.999%</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white">SLA 99.999%</div>
               </div>
             </div>
           </div>
