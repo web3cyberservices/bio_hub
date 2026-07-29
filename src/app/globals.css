@@ -23,7 +23,7 @@
     --border: 240 4% 15%;
     --input: 240 4% 15%;
     --ring: 199 89% 48%;
-    --radius: 0rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -37,14 +37,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
       linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
     background-size: 100% 100%, 60px 60px, 60px 60px;
-  }
-  
-  code, pre {
-    font-family: var(--font-mono), monospace;
   }
 }
 
@@ -54,17 +50,21 @@
 }
 
 .glass-card {
-  @apply bg-white/[0.02] border border-white/5 backdrop-blur-md;
+  @apply bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
 }
 
-.cyber-button {
-  @apply relative overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(14,165,233,0.25)] active:scale-95;
+.glass-button {
+  @apply relative overflow-hidden bg-white/[0.05] border border-white/10 backdrop-blur-md transition-all duration-300 hover:bg-white/[0.1] hover:border-primary/50 hover:shadow-[0_0_20px_rgba(14,165,233,0.2)] active:scale-95 disabled:opacity-50;
+}
+
+.glass-button-primary {
+  @apply relative overflow-hidden bg-primary/20 border border-primary/30 backdrop-blur-md text-primary transition-all duration-300 hover:bg-primary/30 hover:shadow-[0_0_30px_rgba(14,165,233,0.3)] active:scale-95;
 }
 
 .scanline {
   width: 100%;
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(14, 165, 233, 0.2), transparent);
+  background: linear-gradient(to right, transparent, rgba(14, 165, 233, 0.3), transparent);
   position: absolute;
   top: 0;
   left: 0;
