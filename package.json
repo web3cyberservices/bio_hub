@@ -7,26 +7,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "latest",
+    "better-sqlite3": "^11.3.0",
+    "bcryptjs": "^2.4.3",
     "clsx": "latest",
+    "drizzle-orm": "^0.33.0",
     "genkit": "latest",
     "lucide-react": "latest",
     "next": "14.2.16",
+    "next-auth": "5.0.0-beta.25",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "tailwind-merge": "latest",
-    "zod": "latest",
-    "wav": "^1.0.2",
-    "uplot": "^1.6.30"
+    "zod": "latest"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "latest",
+    "drizzle-kit": "^0.24.2",
     "postcss": "latest",
     "tailwindcss": "latest",
     "typescript": "latest"
