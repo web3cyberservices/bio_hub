@@ -6,21 +6,7 @@ export default function HomePage() {
     <div className="flex flex-col w-full min-h-screen bg-black">
       <section className="container mx-auto px-4 md:px-6 pt-24 pb-16 font-sans text-gray-200 max-w-6xl">
         
-        {/* Статус-бар в стиле терминала */}
-        <div className="flex items-center justify-start mb-12 border-b border-white/5 pb-6">
-          <div className="flex items-center gap-4 font-mono text-[10px] text-gray-500 uppercase tracking-[0.3em]">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-              <span>BGP Peering: Active (AS16509)</span>
-            </div>
-            <span className="text-white/10">|</span>
-            <span>Network Load: 24.8%</span>
-            <span className="text-white/10">|</span>
-            <span>Uptime: 99.9992%</span>
-          </div>
-        </div>
-
-        {/* Сухой заголовок */}
+        {/* Заголовок */}
         <h1 className="text-4xl md:text-7xl font-bold tracking-tighter text-white mb-8 leading-[1.05]">
           Bare-metal инфраструктура <br className="hidden md:block" />
           для HFT и алгоритмической торговли.
@@ -157,7 +143,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Инфраструктурный футер с дополнительными деталями */}
+      {/* Инфраструктурный футер */}
       <section className="container mx-auto px-4 md:px-6 py-20 max-w-6xl border-t border-white/5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           <div className="space-y-4">
@@ -179,4 +165,3 @@ export default function HomePage() {
     </div>
   );
 }
-
