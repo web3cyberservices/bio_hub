@@ -32,7 +32,7 @@ export default function PortalPage() {
       });
 
       if (result?.error) {
-        setError('ОТКАЗ В ДОСТУПЕ: НЕВЕРНЫЕ УЧЕТНЫЕ ДАННЫЕ УЗЛА');
+        setError('ОШИБКА: НЕВЕРНЫЙ EMAIL ИЛИ ПАРОЛЬ');
         setLoading(false);
       } else {
         router.push('/dashboard');
@@ -44,7 +44,7 @@ export default function PortalPage() {
         setError(result.error);
         setLoading(false);
       } else {
-        setSuccess('ТЕНАНТ УСПЕШНО СОЗДАН. ВЫПОЛНИТЕ ВХОД.');
+        setSuccess('АККАУНТ СОЗДАН. ТЕПЕРЬ ВЫ МОЖЕТЕ ВОЙТИ.');
         setMode('auth');
         setLoading(false);
       }
@@ -60,12 +60,12 @@ export default function PortalPage() {
         </div>
 
         <div className="technical-label mb-8 text-center text-blue-500">
-          {mode === 'auth' ? '> АВТОРИЗАЦИЯ УЗЛА' : '> СОЗДАНИЕ ТЕНАНТА'}
+          {mode === 'auth' ? '> ВХОД В СИСТЕМУ' : '> РЕГИСТРАЦИЯ АККАУНТА'}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">ID_EMAIL</label>
+            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">EMAIL АДРЕС</label>
             <input
               name="email"
               type="email"
@@ -75,7 +75,7 @@ export default function PortalPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">ACCESS_KEY</label>
+            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">ПАРОЛЬ ДОСТУПА</label>
             <input
               name="password"
               type="password"
@@ -102,16 +102,24 @@ export default function PortalPage() {
             disabled={loading}
             className="w-full btn-enterprise py-4 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : (mode === 'auth' ? 'УСТАНОВИТЬ СОЕДИНЕНИЕ' : 'ИНСТАЛЛИРОВАТЬ ТЕНАНТ')}
+            {loading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              mode === 'auth' ? 'ВОЙТИ' : 'ЗАРЕГИСТРИРОВАТЬСЯ'
+            )}
           </button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-white/5 text-center">
           <button
-            onClick={() => setMode(mode === 'auth' ? 'provision' : 'auth')}
+            onClick={() => {
+              setMode(mode === 'auth' ? 'provision' : 'auth');
+              setError('');
+              setSuccess('');
+            }}
             className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-colors"
           >
-            {mode === 'auth' ? '[ НОВЫЙ ТЕНАНТ ]' : '[ ВЕРНУТЬСЯ К ВХОДУ ]'}
+            {mode === 'auth' ? '[ НЕТ АККАУНТА? РЕГИСТРАЦИЯ ]' : '[ УЖЕ ЕСТЬ АККАУНТ? ВХОД ]'}
           </button>
         </div>
       </div>
