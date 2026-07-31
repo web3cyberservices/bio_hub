@@ -1,9 +1,8 @@
-
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
-import { Shield } from 'lucide-react';
+import Image from 'next/image';
 
 const inter = Inter({ 
   subsets: ['latin', 'cyrillic'],
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
   title: 'Web3CyberServices | Платформа приема и анализа телеметрии',
   description: 'Прием телеметрии промышленного уровня для глобальной инфраструктуры.',
   icons: {
-    icon: 'https://picsum.photos/seed/web3-logo/32/32',
+    icon: '/128favicon.jpg',
   }
 };
 
@@ -33,10 +32,14 @@ export default function RootLayout({
       <body className="bg-background text-foreground min-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-x-hidden antialiased">
         <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-background/80 backdrop-blur-md">
           <div className="container mx-auto max-w-7xl px-4 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-5 h-5 bg-white rounded-sm flex items-center justify-center">
-                <Shield className="w-3 h-3 text-black" />
-              </div>
+            <Link href="/" className="flex items-center gap-3 group shrink-0">
+              <Image 
+                src="/512logo.png" 
+                alt="Web3CyberServices Logo" 
+                width={24} 
+                height={24} 
+                className="rounded-sm"
+              />
               <span className="font-bold text-sm tracking-tight text-white uppercase">Web3CyberServices</span>
             </Link>
 
@@ -65,8 +68,14 @@ export default function RootLayout({
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
               <div className="col-span-2 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-3">
+                  <Image 
+                    src="/512logo.png" 
+                    alt="Logo" 
+                    width={20} 
+                    height={20} 
+                    className="opacity-80"
+                  />
                   <span className="text-xs font-bold tracking-tight uppercase text-white">Web3CyberServices</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs font-medium uppercase tracking-wider">

@@ -1,11 +1,11 @@
-
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { registerTenant } from '@/lib/actions/auth';
-import { Shield, Terminal, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Terminal, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function PortalPage() {
   const [mode, setMode] = useState<'auth' | 'provision'>('auth');
@@ -54,8 +54,14 @@ export default function PortalPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 bg-grid">
       <div className="w-full max-w-sm border border-white/10 bg-black p-8 rounded-sm">
-        <div className="flex items-center gap-3 mb-8 justify-center">
-          <Shield className="w-5 h-5 text-white" />
+        <div className="flex flex-col items-center gap-4 mb-8">
+          <Image 
+            src="/512logo.png" 
+            alt="Web3CyberServices Logo" 
+            width={48} 
+            height={48} 
+            className="rounded-sm"
+          />
           <h1 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Web3CyberServices</h1>
         </div>
 
