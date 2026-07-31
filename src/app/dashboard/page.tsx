@@ -14,6 +14,8 @@ import {
   Clock
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const session = await auth();
 
@@ -23,18 +25,18 @@ export default async function DashboardPage() {
 
   const user = session.user as any;
 
-  // Dummy telemetry data
+  // Данные телеметрии для визуализации
   const recentPings = [
-    { ts: '2026-07-29T14:28:45.001Z', latency: '0.42ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: '2026-07-29T14:28:44.892Z', latency: '0.38ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: '2026-07-29T14:28:44.750Z', latency: '1.12ms', protocol: 'JSON-RPC', status: 'OK', origin: 'ASIA-SOUTH' },
-    { ts: '2026-07-29T14:28:44.612Z', latency: '0.45ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: '2026-07-29T14:28:44.501Z', latency: '0.41ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
+    { ts: new Date().toISOString(), latency: '0.42ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
+    { ts: new Date(Date.now() - 1000).toISOString(), latency: '0.38ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
+    { ts: new Date(Date.now() - 5000).toISOString(), latency: '1.12ms', protocol: 'JSON-RPC', status: 'OK', origin: 'ASIA-SOUTH' },
+    { ts: new Date(Date.now() - 10000).toISOString(), latency: '0.45ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
+    { ts: new Date(Date.now() - 15000).toISOString(), latency: '0.41ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
   ];
 
   return (
     <div className="min-h-screen bg-black text-white font-mono selection:bg-blue-500/30">
-      {/* Sub-Header */}
+      {/* Техническая панель управления */}
       <div className="border-b border-white/10 bg-white/[0.02] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 text-[9px] text-blue-500 font-black uppercase tracking-widest">
@@ -42,7 +44,7 @@ export default async function DashboardPage() {
           </div>
           <div className="h-4 w-px bg-white/10" />
           <div className="text-[9px] text-muted-foreground uppercase tracking-widest">
-            NODE_INSTANCE: {user.id.split('-')[0]}
+            NODE_INSTANCE: {user.id ? user.id.split('-')[0] : 'UNKNOWN'}
           </div>
         </div>
         
@@ -59,7 +61,7 @@ export default async function DashboardPage() {
       <main className="container mx-auto max-w-7xl px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Tenant Configuration */}
+          {/* Конфигурация клиента */}
           <div className="lg:col-span-4 space-y-8">
             <div className="border border-white/10 p-8 space-y-8 bg-white/[0.01]">
               <div className="flex items-center gap-2 text-white/40 text-[9px] font-black uppercase tracking-[0.3em]">
@@ -77,7 +79,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-3">
                   <span className="text-muted-foreground uppercase tracking-widest">gRPC_QUOTA:</span>
-                  <span className="text-green-500 font-bold">{user.grpcQuota.toLocaleString()} REQ/MO</span>
+                  <span className="text-green-500 font-bold">{user.grpcQuota?.toLocaleString()} REQ/MO</span>
                 </div>
               </div>
 
@@ -110,7 +112,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Infrastructure Metrics & Telemetry */}
+          {/* Метрики инфраструктуры */}
           <div className="lg:col-span-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
@@ -128,7 +130,7 @@ export default async function DashboardPage() {
               ))}
             </div>
 
-            {/* Live Telemetry Table */}
+            {/* Таблица телеметрии */}
             <div className="border border-white/10 bg-white/[0.01] overflow-hidden rounded-sm">
               <div className="bg-white/5 px-8 py-4 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white">

@@ -26,9 +26,8 @@ export async function registerTenant(formData: FormData) {
   }
 
   try {
-    const existingUser = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    // Проверка существования пользователя
+    const existingUser = await db.select().from(users).where(eq(users.email, email)).get();
 
     if (existingUser) {
       return { error: 'ТЕНАНТ УЖЕ ЗАРЕГИСТРИРОВАН' };
@@ -41,11 +40,11 @@ export async function registerTenant(formData: FormData) {
       passwordHash,
       role: 'enterprise_client',
       grpcQuota: 1000000,
-    });
+    }).run();
 
     return { success: true };
-  } catch (e) {
-    console.error(e);
-    return { error: 'ОШИБКА ИНИЦИАЛИЗАЦИИ БД' };
+  } catch (e: any) {
+    console.error('Database error during registration:', e);
+    return { error: `ОШИБКА ИНИЦИАЛИЗАЦИИ БД: ${e.message || 'НЕИЗВЕСТНАЯ ОШИБКА'}` };
   }
 }
