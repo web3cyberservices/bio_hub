@@ -86,9 +86,78 @@ export default function HomePage() {
           </div>
 
         </div>
+
+        {/* Развернутое техническое описание экосистемы */}
+        <div className="mt-32 grid grid-cols-1 lg:grid-cols-2 gap-24 border-t border-white/10 pt-24">
+          
+          <div className="space-y-12">
+            <div>
+              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-6">Сетевая топология</h4>
+              <p className="text-[13px] text-gray-400 leading-relaxed font-medium uppercase tracking-wider">
+                Web3CyberServices оперирует сетью выделенных узлов в ключевых дата-центрах (Equinix LD4, NY4, TY3). 
+                Использование AWS PrivateLink и выделенных BGP-сессий позволяет исключить публичный интернет при передаче транзакций 
+                непосредственно к билдерам блоков (Flashbots, bloXroute, Jito). Это гарантирует минимально возможную задержку 
+                распространения данных (Ingestion Latency) и исключает риск фронтраннинга на уровне P2P-сети.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-6">Безопасность и комплаенс</h4>
+              <p className="text-[13px] text-gray-400 leading-relaxed font-medium uppercase tracking-wider">
+                Каждый клиентский узел изолирован на аппаратном уровне. Мы используем модули HSM (Hardware Security Modules) 
+                для защиты ключей авторизации. Все телеметрические данные передаются через шифрованные бинарные туннели TLS 1.3. 
+                В соответствии с корпоративными стандартами, все логи телеметрии хранятся в зашифрованной памяти не более 7 суток, 
+                после чего подвергаются криптографическому уничтожению.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/[0.02] border border-white/5 p-12 space-y-10">
+            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">Экосистема и интеграции</h4>
+            
+            <div className="space-y-8">
+              <div className="flex items-start gap-4">
+                <div className="w-1 h-6 bg-blue-500 shrink-0"></div>
+                <div>
+                  <div className="text-[11px] font-bold text-white uppercase tracking-widest mb-2">Мониторинг и аналитика</div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                    Нативный экспорт метрик в Prometheus и Grafana. Поддержка кастомных дашбордов Datadog для отслеживания здоровья ботов.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-1 h-6 bg-blue-500 shrink-0"></div>
+                <div>
+                  <div className="text-[11px] font-bold text-white uppercase tracking-widest mb-2">Библиотеки разработки</div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                    Готовые SDK для Rust (Tonic), Go (gRPC-Go) и C++. Прямая поддержка Protocol Buffers для минимальной нагрузки на CPU.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-1 h-6 bg-blue-500 shrink-0"></div>
+                <div>
+                  <div className="text-[11px] font-bold text-white uppercase tracking-widest mb-2">Облачная связность</div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                    Прямая интеграция с инфраструктурой Google Cloud Interconnect и Azure ExpressRoute для институциональных клиентов.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-white/5">
+              <div className="text-[9px] font-mono text-gray-600 uppercase tracking-[0.3em]">
+                Supported protocols: gRPC (HTTP/2), WebSocket Secure (WSS), JSON-RPC over TLS.
+              </div>
+            </div>
+          </div>
+
+        </div>
       </section>
 
-      {/* Инфраструктурный футер */}
+      {/* Инфраструктурный футер с дополнительными деталями */}
       <section className="container mx-auto px-4 md:px-6 py-20 max-w-6xl border-t border-white/5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           <div className="space-y-4">
@@ -110,3 +179,4 @@ export default function HomePage() {
     </div>
   );
 }
+
