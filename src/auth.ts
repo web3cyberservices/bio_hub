@@ -8,17 +8,22 @@ import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
+/**
+ * Конфигурация Auth.js v5 для высоконагруженной среды.
+ * Использует JWT для минимизации обращений к SQLite.
+ */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
+          .object({ email: z.string().email(), password: z.string().min(8) })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
+          
           const user = await db.query.users.findFirst({
             where: eq(users.email, email),
           });

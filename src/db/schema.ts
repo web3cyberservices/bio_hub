@@ -1,13 +1,17 @@
 
-import { sqliteTable, text, integer } from 'drizzle-pro-sqlite';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
+/**
+ * Схема базы данных Web3CyberServices.
+ * Оптимизирована для SQLite (локальный файл).
+ */
 export const users = sqliteTable('users', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
-  role: text('role', { enum: ['enterprise_client', 'admin'] }).default('enterprise_client'),
-  grpcQuota: integer('grpc_quota').default(1000000),
+  role: text('role').default('enterprise_client'), // enterprise_client | admin
+  grpcQuota: integer('grpc_quota').default(1000000), // Лимит запросов в месяц
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
