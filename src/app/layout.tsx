@@ -46,12 +46,12 @@ export default function RootLayout({
               <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
             </nav>
 
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors hidden xs:block">
-                Войти
+            <div className="flex items-center gap-3">
+              <Link href="/portal" className="btn-outline py-1.5 px-4 text-[10px] uppercase tracking-widest shrink-0">
+                Вход
               </Link>
-              <Link href="/dashboard" className="btn-enterprise py-1.5 px-4 text-[10px] uppercase tracking-widest">
-                Доступ
+              <Link href="/portal" className="btn-enterprise py-1.5 px-4 text-[10px] uppercase tracking-widest shrink-0">
+                Регистрация
               </Link>
             </div>
           </div>
