@@ -1,5 +1,4 @@
-
-import { Check, ArrowRight, ShieldCheck, Info } from 'lucide-react';
+import { Check, ArrowRight, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PricingPage() {
@@ -8,14 +7,13 @@ export default function PricingPage() {
       name: 'Algorithmic Trader',
       price: '$850',
       period: '/мес',
-      desc: 'Базовый набор для индивидуальных алгоритмических трейдеров и MEV-поисковиков.',
+      desc: 'Базовый набор для индивидуальных трейдеров и MEV-поисковиков.',
       features: [
         '5 WSS эндпоинтов (Mainnet/L2)',
         'Shared Mempool Stream',
         'Лимит: 2,500 RPS',
         'Поддержка gRPC Telemetry',
-        'Доступ к публичным релеям',
-        'Стандартная документация API'
+        'Доступ к публичным релеям'
       ],
       cta: 'Начать работу',
       link: '/portal'
@@ -24,13 +22,12 @@ export default function PricingPage() {
       name: 'Institutional MEV',
       price: '$3,200',
       period: '/мес',
-      desc: 'Выделенная инфраструктура для фондов, требующая защиты от front-running.',
+      desc: 'Выделенная инфраструктура для фондов с защитой от front-running.',
       features: [
         'Dedicated Bare-Metal Node',
         'Zero-Latency Fiber Links',
         'gRPC Telemetry Bypass',
         'Dark Pool Routing (Private)',
-        'Приоритетный Mempool поток',
         'SLA: 99.99%',
         'Персональный Slack-канал'
       ],
@@ -42,15 +39,14 @@ export default function PricingPage() {
       name: 'Custom Backbone',
       price: 'Индив.',
       period: '',
-      desc: 'Индивидуальные решения для провайдеров ликвидности и крупных HFT-хабов.',
+      desc: 'Индивидуальные решения для провайдеров ликвидности и HFT-хабов.',
       features: [
         'Cross-Region Load Balancing',
         'Выделенный BGP пиринг',
         'SLA: 99.999% (Юридический)',
         'Whitelist портов 10001-10007',
         'Аппаратная изоляция (HSM)',
-        '24/7 Инженерная поддержка',
-        'Custom Compression Algorithms'
+        '24/7 Инженерная поддержка'
       ],
       cta: 'Связаться с Sales',
       link: '/portal'
@@ -61,7 +57,7 @@ export default function PricingPage() {
     <div className="py-20 md:py-32 container mx-auto px-4 md:px-6 bg-grid">
       <div className="max-w-4xl mb-24">
         <h1 className="text-3xl md:text-6xl font-black mb-10 tracking-tighter uppercase leading-[1.05]">
-          МАСШТАБИРУЕМАЯ <span className="text-blue-500">ИНФРАСТРУКТУРА</span> ДЛЯ КВАНТОВЫХ СТРАТЕГИЙ.
+          Масштабируемая <span className="text-blue-500">инфраструктура</span>.
         </h1>
         <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-[0.2em] leading-relaxed max-w-3xl">
           ПРЯМОЙ ДОСТУП К BARE-METAL УЗЛАМ БЕЗ ОГРАНИЧЕНИЙ ТРАФИКА. ВСЕ ЦЕНЫ УКАЗАНЫ ЗА ЧИСТУЮ ПРОПУСКНУЮ СПОСОБНОСТЬ И ВЫДЕЛЕННЫЕ РЕСУРСЫ.
@@ -107,10 +103,9 @@ export default function PricingPage() {
       <div className="bg-blue-500/5 border border-blue-500/20 p-8 rounded-sm flex items-start gap-6 max-w-4xl mx-auto">
         <Info className="w-6 h-6 text-blue-500 shrink-0 mt-1" />
         <div className="space-y-2">
-          <h4 className="text-[11px] font-black text-white uppercase tracking-widest">ВАЖНОЕ УВЕДОМЛЕНИЕ О КОМПЛАЕНСЕ</h4>
+          <h4 className="text-[11px] font-black text-white uppercase tracking-widest">УВЕДОМЛЕНИЕ О КОМПЛАЕНСЕ</h4>
           <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-relaxed">
             В СВЯЗИ СО СТРОГОЙ ПОЛИТИКОЙ AML/KYC, ВСЕ НОВЫЕ ТЕНАНТЫ ДОЛЖНЫ ПРОЙТИ ВЕРИФИКАЦИЮ СООТВЕТСТВИЯ ПЕРЕД ВЫПУСКОМ API-КЛЮЧЕЙ. 
-            ДОСТУП К ВЫДЕЛЕННЫМ ПОРТАМ ПРЕДОСТАВЛЯЕТСЯ ТОЛЬКО ПОСЛЕ ПОДПИСАНИЯ СООТВЕТСТВУЮЩЕГО СОГЛАШЕНИЯ (MSA).
           </p>
         </div>
       </div>
