@@ -2,25 +2,34 @@
 import { NextResponse } from 'next/server';
 
 /**
- * @fileOverview Эндпоинт приема телеметрии.
- * В промышленной эксплуатации этот эндпоинт может перехватываться Nginx (gRPC pass-through).
- * Данная реализация служит заглушкой для корректной обработки неавторизованных HTTP-запросов.
+ * @fileOverview Имитация gRPC Ingress шлюза для маскировки трафика.
+ * Возвращает типичные ошибки авторизации промышленного API.
  */
 
 export async function POST(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  // Имитируем задержку проверки сертификата/токена
+  await new Promise(r => setTimeout(r, 150));
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json(
-      { error: 'AUTH_FAILED', message: 'Missing or malformed Bearer token.' },
-      { status: 401 }
-    );
-  }
-
-  // В этой реализации предполагается, что gRPC трафик идет через отдельный порт/прокси.
-  return new Response('API available via gRPC tunnel only', { status: 405 });
+  return NextResponse.json(
+    { 
+      code: 16, // Unauthenticated в gRPC
+      message: "Security handshake failed: Invalid Bearer token or expired session.",
+      details: [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "AUTH_CREDENTIALS_INVALID",
+          "domain": "api.web3cyberservices.xyz",
+          "metadata": {
+            "service": "telemetry-ingestion-v1",
+            "method": "StreamCollect"
+          }
+        }
+      ]
+    }, 
+    { status: 401 }
+  );
 }
 
 export async function GET() {
-  return new Response('Method Not Allowed', { status: 405 });
+  return new Response('gRPC service requires POST with application/grpc', { status: 405 });
 }

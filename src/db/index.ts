@@ -5,16 +5,15 @@ import * as schema from './schema';
 import path from 'path';
 
 /**
- * Инициализация SQLite базы данных.
- * Используется абсолютный путь для предотвращения ошибок при работе через PM2/Nginx.
+ * Инициализация SQLite. 
+ * Файл базы данных вынесен за пределы прямой видимости веб-сервера.
  */
 const dbPath = path.resolve(process.cwd(), 'sqlite.db');
 const sqlite = new Database(dbPath);
 
-// Настройка режима WAL для производительности
 sqlite.pragma('journal_mode = WAL');
 
-// Гарантируем наличие таблицы пользователей с правильными именами колонок
+// Автоматическая инициализация схемы
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,

@@ -8,16 +8,10 @@ import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
-/**
- * Конфигурация Auth.js v5.
- * Включен debug для логирования ошибок на сервере.
- * trustHost: true необходим для работы за Nginx.
- */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   trustHost: true,
-  secret: process.env.AUTH_SECRET || 'secret-at-least-32-chars-long-for-production',
-  debug: process.env.NODE_ENV === 'development',
+  secret: process.env.AUTH_SECRET || 'default-secret-change-me-in-production-env',
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -33,10 +27,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
               where: eq(users.email, email),
             });
             
-            if (!user) {
-              console.log('[AUTH] Пользователь не найден:', email);
-              return null;
-            }
+            if (!user) return null;
             
             const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
             
@@ -47,15 +38,12 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                 role: user.role,
                 grpcQuota: user.grpcQuota,
               };
-            } else {
-              console.log('[AUTH] Неверный пароль для:', email);
             }
           } catch (error) {
-            console.error('[AUTH] Ошибка при проверке в БД:', error);
+            console.error('[AUTH_INTERNAL_ERROR]:', error);
             return null;
           }
         }
-
         return null;
       },
     }),

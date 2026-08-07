@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { registerTenant } from '@/lib/actions/auth';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -34,16 +34,16 @@ export default function PortalPage() {
         });
 
         if (result?.error) {
-          setError('ОШИБКА: НЕВЕРНЫЙ EMAIL ИЛИ ПАРОЛЬ');
+          setError('ОШИБКА АВТОРИЗАЦИИ: НЕВЕРНЫЕ УЧЕТНЫЕ ДАННЫЕ');
           setLoading(false);
         } else {
-          // Успешный вход
           router.push('/dashboard');
-          router.refresh();
+          setTimeout(() => {
+            router.refresh();
+          }, 500);
         }
       } catch (err) {
-        console.error('Login error:', err);
-        setError('КРИТИЧЕСКАЯ ОШИБКА СЕРВЕРА АВТОРИЗАЦИИ');
+        setError('ОШИБКА СЕТЕВОГО ШЛЮЗА (ERROR_CODE: 502)');
         setLoading(false);
       }
     } else {
@@ -53,12 +53,12 @@ export default function PortalPage() {
           setError(result.error);
           setLoading(false);
         } else {
-          setSuccess('АККАУНТ СОЗДАН. ТЕПЕРЬ ВЫ МОЖЕТЕ ВОЙТИ.');
+          setSuccess('ПРОФИЛЬ ТЕНАНТА СОЗДАН. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.');
           setMode('auth');
           setLoading(false);
         }
       } catch (err) {
-        setError('ОШИБКА ПРИ РЕГИСТРАЦИИ');
+        setError('ОШИБКА РЕГИСТРАЦИИ В СИСТЕМЕ');
         setLoading(false);
       }
     }
@@ -73,28 +73,28 @@ export default function PortalPage() {
             alt="Web3CyberServices Logo" 
             width={48} 
             height={48} 
-            className="rounded-sm"
+            className="rounded-sm opacity-90"
           />
-          <h1 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Web3CyberServices</h1>
+          <h1 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Provision Portal</h1>
         </div>
 
-        <div className="technical-label mb-8 text-center text-blue-500">
-          {mode === 'auth' ? '> ВХОД В СИСТЕМУ' : '> РЕГИСТРАЦИЯ АККАУНТА'}
+        <div className="text-[9px] font-mono text-blue-500 mb-8 text-center uppercase tracking-widest flex items-center justify-center gap-2">
+          <Lock className="w-3 h-3" /> {mode === 'auth' ? 'SYSTEM_AUTH_REQUIRED' : 'NEW_TENANT_PROVISIONING'}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">EMAIL АДРЕС</label>
+            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Email Identifier</label>
             <input
               name="email"
               type="email"
               required
               className="w-full bg-white/5 border border-white/10 p-3 text-[11px] font-mono text-white focus:border-blue-500 outline-none transition-all"
-              placeholder="admin@enterprise.local"
+              placeholder="admin@corp.internal"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">ПАРОЛЬ ДОСТУПА</label>
+            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Access Credentials</label>
             <input
               name="password"
               type="password"
@@ -124,7 +124,7 @@ export default function PortalPage() {
             {loading ? (
               <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
-              mode === 'auth' ? 'ВОЙТИ' : 'ЗАРЕГИСТРИРОВАТЬСЯ'
+              mode === 'auth' ? 'АВТОРИЗОВАТЬСЯ' : 'ЗАРЕГИСТРИРОВАТЬСЯ'
             )}
           </button>
         </form>
@@ -138,7 +138,7 @@ export default function PortalPage() {
             }}
             className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-colors"
           >
-            {mode === 'auth' ? '[ НЕТ АККАУНТА? РЕГИСТРАЦИЯ ]' : '[ УЖЕ ЕСТЬ АККАУНТ? ВХОД ]'}
+            {mode === 'auth' ? '[ NEW ENROLLMENT ]' : '[ RETURN TO LOGIN ]'}
           </button>
         </div>
       </div>
