@@ -9,11 +9,13 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 /**
- * Конфигурация Auth.js v5 для высоконагруженной среды.
- * Использует JWT для минимизации обращений к SQLite.
+ * Конфигурация Auth.js v5.
+ * Добавлен trustHost для корректной работы через Nginx/Reverse Proxy.
  */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || 'fallback-secret-for-dev-only',
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -24,14 +26,30 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
           
-          const user = await db.query.users.findFirst({
-            where: eq(users.email, email),
-          });
-          
-          if (!user) return null;
-          
-          const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-          if (passwordsMatch) return user;
+          try {
+            const user = await db.query.users.findFirst({
+              where: eq(users.email, email),
+            });
+            
+            if (!user) {
+              console.log('User not found:', email);
+              return null;
+            }
+            
+            const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+            
+            if (passwordsMatch) {
+              return {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                grpcQuota: user.grpcQuota,
+              };
+            }
+          } catch (error) {
+            console.error('Auth error:', error);
+            return null;
+          }
         }
 
         return null;

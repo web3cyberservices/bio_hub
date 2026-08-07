@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { registerTenant } from '@/lib/actions/auth';
-import { Terminal, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -25,18 +26,23 @@ export default function PortalPage() {
     const password = formData.get('password') as string;
 
     if (mode === 'auth') {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      try {
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        });
 
-      if (result?.error) {
-        setError('ОШИБКА: НЕВЕРНЫЙ EMAIL ИЛИ ПАРОЛЬ');
+        if (result?.error) {
+          setError('ОШИБКА: НЕВЕРНЫЙ EMAIL ИЛИ ПАРОЛЬ');
+          setLoading(false);
+        } else {
+          router.push('/dashboard');
+          router.refresh();
+        }
+      } catch (err) {
+        setError('КРИТИЧЕСКАЯ ОШИБКА АВТОРИЗАЦИИ');
         setLoading(false);
-      } else {
-        router.push('/dashboard');
-        router.refresh();
       }
     } else {
       const result = await registerTenant(formData);

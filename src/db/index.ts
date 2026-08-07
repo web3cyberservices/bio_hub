@@ -1,13 +1,17 @@
+
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
+import path from 'path';
 
 /**
- * Инициализация SQLite базы данных с автоматическим созданием схем.
+ * Инициализация SQLite базы данных.
+ * Используется абсолютный путь для стабильности на сервере.
  */
-const sqlite = new Database('sqlite.db');
+const dbPath = path.join(process.cwd(), 'sqlite.db');
+const sqlite = new Database(dbPath);
 
-// Автоматическая инициализация таблиц для предотвращения ошибок "no such table"
+// Принудительное создание таблицы при запуске, если она отсутствует
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
