@@ -60,9 +60,6 @@ export default function PricingPage() {
   return (
     <div className="py-20 md:py-32 container mx-auto px-4 md:px-6 bg-grid">
       <div className="max-w-4xl mb-24">
-        <div className="text-blue-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5" /> ИНСТИТУЦИОНАЛЬНЫЕ ТАРИФНЫЕ ПЛАНЫ
-        </div>
         <h1 className="text-3xl md:text-6xl font-black mb-10 tracking-tighter uppercase leading-[1.05]">
           МАСШТАБИРУЕМАЯ <span className="text-blue-500">ИНФРАСТРУКТУРА</span> ДЛЯ КВАНТОВЫХ СТРАТЕГИЙ.
         </h1>
