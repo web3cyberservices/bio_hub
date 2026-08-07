@@ -1,4 +1,3 @@
-
 'use client';
 
 import { 
@@ -12,19 +11,22 @@ import {
   Database,
   Globe,
   AlertCircle,
-  FileText
+  FileText,
+  Cpu,
+  Zap,
+  Layers
 } from 'lucide-react';
 
 export default function ApiDocsPage() {
   return (
     <div className="py-20 md:py-32 container mx-auto px-4 md:px-6 max-w-6xl bg-grid">
       <div className="mb-20 border-b border-white/10 pb-16">
-        <h1 className="text-3xl md:text-6xl font-black tracking-tighter uppercase mb-6">ТЕХНИЧЕСКАЯ СПЕЦИФИКАЦИЯ</h1>
-        <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-[0.3em]">ОФИЦИАЛЬНОЕ РУКОВОДСТВО ПО ИНТЕГРАЦИИ gRPC ТУННЕЛЕЙ И RPC-ЭНДПОИНТОВ.</p>
+        <h1 className="text-3xl md:text-6xl font-black tracking-tighter uppercase mb-6">ТЕХНИЧЕСКАЯ СПЕЦИФИКАЦИЯ v2.4</h1>
+        <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-[0.3em]">ПОЛНОЕ РУКОВОДСТВО ПО ИНТЕГРАЦИИ ВЫСОКОНАГРУЖЕННЫХ GRPC-КАНАЛОВ И ТЕЛЕМЕТРИИ.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-        <div className="lg:col-span-8 space-y-24">
+        <div className="lg:col-span-8 space-y-32">
           
           {/* Architecture Overview */}
           <section id="architecture" className="space-y-8">
@@ -38,15 +40,19 @@ export default function ApiDocsPage() {
                 ВСЕ ПРЕМИУМ-КЛИЕНТЫ ПОЛУЧАЮТ ИЗОЛИРОВАННЫЕ GRPC-ПОТОКИ, ЧТО ИСКЛЮЧАЕТ ВЛИЯНИЕ ШУМНЫХ СОСЕДЕЙ (NOISY NEIGHBORS) НА ЗАДЕРЖКУ.
               </p>
               <div className="bg-white/[0.02] border border-white/10 p-8 space-y-6 font-mono">
-                <div className="text-blue-500 mb-2">// Рекомендуемые библиотеки для подключения</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-blue-500 mb-2">// Поддерживаемые стеки</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 border border-white/5">
                     <div className="text-white mb-1">Golang</div>
-                    <code className="text-[10px] text-white/40">google.golang.org/grpc</code>
+                    <code className="text-[9px] text-white/40">grpc-go v1.50+</code>
                   </div>
                   <div className="p-4 border border-white/5">
                     <div className="text-white mb-1">Rust</div>
-                    <code className="text-[10px] text-white/40">tonic = "0.10"</code>
+                    <code className="text-[9px] text-white/40">tonic 0.10</code>
+                  </div>
+                  <div className="p-4 border border-white/5">
+                    <div className="text-white mb-1">C++</div>
+                    <code className="text-[9px] text-white/40">gRPC Core v1.48</code>
                   </div>
                 </div>
               </div>
@@ -86,12 +92,12 @@ export default function ApiDocsPage() {
                   </tr>
                   <tr>
                     <td className="px-6 py-4 text-white">10001-10007</td>
-                    <td className="px-6 py-4">DIRECT gRPC SOCKETS</td>
+                    <td className="px-6 py-4">DIRECT gRPC TUNNELS</td>
                     <td className="px-6 py-4 text-red-500">VIP / BYPASS LB</td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 text-white">9090</td>
-                    <td className="px-6 py-4">HARDWARE TELEMETRY</td>
+                    <td className="px-6 py-4">HARDWARE METRICS</td>
                     <td className="px-6 py-4 text-white/20">INTERNAL ONLY</td>
                   </tr>
                 </tbody>
@@ -99,44 +105,76 @@ export default function ApiDocsPage() {
             </div>
           </section>
 
-          {/* Telemetry Ingestion */}
-          <section id="telemetry" className="space-y-8">
+          {/* Protobuf Definition */}
+          <section id="protobuf" className="space-y-8">
             <div className="flex items-center gap-3 text-white">
-              <FileCode className="w-6 h-6 text-blue-500" />
-              <h2 className="text-sm font-black uppercase tracking-[0.3em]">3. API ТЕЛЕМЕТРИИ: СТРУКТУРА ДАННЫХ</h2>
+              <Zap className="w-6 h-6 text-blue-500" />
+              <h2 className="text-sm font-black uppercase tracking-[0.3em]">3. SCHEMA: PROTOBUF DEFINITION</h2>
             </div>
-            <div className="space-y-8">
-              <div className="bg-black border border-white/10 rounded-sm overflow-hidden">
-                <div className="bg-white/5 px-6 py-3 flex items-center justify-between border-b border-white/10">
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Ingestion Endpoint</span>
-                  <span className="text-[10px] font-mono text-blue-400">POST /api/v1/collect</span>
-                </div>
-                <div className="p-8 space-y-8 font-mono text-[11px]">
-                  <div className="space-y-4">
-                    <div className="text-white/60 uppercase text-[9px] tracking-widest">Необходимые заголовки:</div>
-                    <pre className="bg-white/5 p-6 border border-white/5 text-slate-300">
-                      Content-Type: application/grpc{"\n"}
-                      Authorization: Bearer &lt;tenant_token&gt;
-                    </pre>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <div className="text-red-400 uppercase text-[9px] tracking-widest flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" /> ОБРАБОТКА ОШИБОК АВТОРИЗАЦИИ
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed font-bold uppercase tracking-widest">
-                      СТРОГАЯ ПРОВЕРКА ТОКЕНОВ ВЫПОЛНЯЕТСЯ НА УРОВНЕ NGINX EDGE. В СЛУЧАЕ ОТСУТСТВИЯ BEARER-ТОКЕНА, 
-                      СЕРВЕР НЕМЕДЛЕННО ОБРЫВАЕТ СОЕДИНЕНИЕ С КОДОМ HTTP 401.
-                    </p>
-                    <pre className="bg-red-500/5 p-6 border border-red-500/10 text-red-400">
-{`{
-  "error": "AUTH_FAILED",
-  "message": "Missing or malformed Bearer token."
+            <div className="bg-black border border-white/10 p-8 font-mono text-[10px] space-y-4">
+              <div className="text-blue-500">// telemetry.v1.proto</div>
+              <pre className="text-slate-300 leading-relaxed">
+{`syntax = "proto3";
+package cyber.telemetry.v1;
+
+service TelemetryIngestion {
+  rpc StreamCollect (stream TelemetryBatch) returns (IngestionResponse);
+}
+
+message TelemetryBatch {
+  string tenant_id = 1;
+  uint64 timestamp = 2;
+  repeated MetricData metrics = 3;
+}
+
+message MetricData {
+  string key = 1;
+  bytes payload = 2; // Encrypted blob
+  double latency_ns = 3;
 }`}
-                    </pre>
-                  </div>
+              </pre>
+            </div>
+          </section>
+
+          {/* Hardware Acceleration */}
+          <section id="hardware" className="space-y-8">
+            <div className="flex items-center gap-3 text-white">
+              <Cpu className="w-6 h-6 text-blue-500" />
+              <h2 className="text-sm font-black uppercase tracking-[0.3em]">4. АППАРАТНОЕ УСКОРЕНИЕ (ASIC/FPGA)</h2>
+            </div>
+            <div className="text-[11px] text-muted-foreground leading-relaxed space-y-6 font-bold uppercase tracking-widest">
+              <p>
+                ДАННЫЕ ПРОХОДЯТ ЧЕРЕЗ ВЫДЕЛЕННЫЕ КАРТЫ СЕТЕВОГО УСКОРЕНИЯ (SMARTNIC), ЧТО ПОЗВОЛЯЕТ ВЫПОЛНЯТЬ ДЕКАПСУЛЯЦИЮ ПАКЕТОВ НА УРОВНЕ ЖЕЛЕЗА.
+                ЭТО МИНИМИЗИРУЕТ ДРОЖАНИЕ (JITTER) И ОБЕСПЕЧИВАЕТ СТАБИЛЬНЫЙ P99 LATENCY ДАЖЕ ПРИ ПИКОВЫХ НАГРУЗКАХ В 10+ ГБИТ/С.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 border border-white/10 bg-white/[0.02]">
+                  <div className="technical-label mb-2">Технология</div>
+                  <div className="text-white">FPGA Offloading</div>
+                </div>
+                <div className="p-6 border border-white/10 bg-white/[0.02]">
+                  <div className="technical-label mb-2">Обработка</div>
+                  <div className="text-white">Zero-Copy Memory</div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Security Protocols */}
+          <section id="security" className="space-y-8">
+            <div className="flex items-center gap-3 text-white">
+              <Lock className="w-6 h-6 text-blue-500" />
+              <h2 className="text-sm font-black uppercase tracking-[0.3em]">5. БЕЗОПАСНОСТЬ И ШИФРОВАНИЕ</h2>
+            </div>
+            <div className="space-y-6 text-[11px] text-muted-foreground font-bold uppercase tracking-widest leading-relaxed">
+              <p>
+                ВСЕ СОЕДИНЕНИЯ В ПРЕДЕЛАХ КОРПОРАТИВНОЙ СЕТИ ТРЕБУЮТ TLS 1.3 С ПРОВЕРКОЙ ВЗАИМНЫХ СЕРТИФИКАТОВ (mTLS).
+              </p>
+              <ul className="list-disc pl-5 space-y-3">
+                <li>ШИФРОВАНИЕ: AES-256-GCM / CHACHA20-POLY1305</li>
+                <li>РОТАЦИЯ КЛЮЧЕЙ: КАЖДЫЕ 24 ЧАСА</li>
+                <li>ИЗОЛЯЦИЯ: ПОЛНЫЙ AIR-GAP ДЛЯ КЛЮЧЕВЫХ УЗЛОВ</li>
+              </ul>
             </div>
           </section>
 
@@ -145,12 +183,14 @@ export default function ApiDocsPage() {
         <aside className="lg:col-span-4">
           <div className="bg-white/[0.02] border border-white/10 p-10 sticky top-28 space-y-12">
             <div>
-              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-10">ДОКУМЕНТАЦИЯ</h4>
+              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-10">НАВИГАЦИЯ</h4>
               <nav className="space-y-6">
                 {[
                   { label: 'Архитектура', id: 'architecture' },
-                  { label: 'Спецификация портов', id: 'ports' },
-                  { label: 'Telemetry Ingestion', id: 'telemetry' }
+                  { label: 'Сетевые порты', id: 'ports' },
+                  { label: 'Protobuf Schema', id: 'protobuf' },
+                  { label: 'Hardware Acceleration', id: 'hardware' },
+                  { label: 'Безопасность', id: 'security' }
                 ].map((item) => (
                   <a 
                     key={item.id}
@@ -164,21 +204,27 @@ export default function ApiDocsPage() {
             </div>
             
             <div className="pt-10 border-t border-white/10">
-              <div className="technical-label mb-6">Сетевой статус</div>
+              <div className="technical-label mb-6">Статус интеграции</div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-white/40 uppercase">Ingress</span>
-                  <span className="text-[9px] text-green-500 font-mono">OK</span>
+                  <span className="text-[9px] text-white/40 uppercase">gRPC Core</span>
+                  <span className="text-[9px] text-green-500 font-mono">STABLE</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-white/40 uppercase">Mempool Stream</span>
-                  <span className="text-[9px] text-green-500 font-mono">ACTIVE</span>
+                  <span className="text-[9px] text-white/40 uppercase">mTLS Auth</span>
+                  <span className="text-[9px] text-green-500 font-mono">ENABLED</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-white/40 uppercase">BGP Peer</span>
-                  <span className="text-[9px] text-blue-500 font-mono">ESTABLISHED</span>
+                  <span className="text-[9px] text-white/40 uppercase">TLS 1.3 Handshake</span>
+                  <span className="text-[9px] text-blue-500 font-mono">0.12ms</span>
                 </div>
               </div>
+            </div>
+
+            <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-sm">
+              <p className="text-[9px] text-blue-400 font-bold uppercase leading-relaxed">
+                ДЛЯ ПОЛУЧЕНИЯ PRIVATE .PROTO ФАЙЛОВ ОБРАТИТЕСЬ К ВАШЕМУ ТЕХНИЧЕСКОМУ АККАУНТ-МЕНЕДЖЕРУ.
+              </p>
             </div>
           </div>
         </aside>
