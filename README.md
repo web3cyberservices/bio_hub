@@ -1,43 +1,33 @@
-# Web3CyberServices Enterprise Portal
 
-Инфраструктурная платформа для HFT и алгоритмической торговли.
+# Инфраструктурный портал Web3CyberServices
 
-## Требования
-- Node.js 18.17 или выше
-- NPM / Yarn
-
-## Быстрый старт на сервере
-
-1. **Установка зависимостей**
+## Настройка окружения (.env)
+Для корректной работы авторизации в продакшн-режиме, создайте файл `.env` в корне проекта:
 ```bash
-npm install
+AUTH_SECRET="ваш_очень_длинный_секретный_ключ"
+AUTH_URL="https://web3cyberservices.xyz/api/auth"
+AUTH_TRUST_HOST=true
 ```
 
-2. **Настройка базы данных**
-Приложение использует SQLite. Для создания структуры таблиц выполните:
-```bash
-npm run db:push
+## Настройка Nginx (Reverse Proxy)
+Добавьте эти заголовки в блок `location /` вашего конфига Nginx:
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
 ```
 
-3. **Сборка проекта**
+## Запуск в условиях ограниченной памяти
+Используйте лимиты V8 при запуске через PM2:
 ```bash
-npm run build
+NODE_OPTIONS="--max-old-space-size=256" pm2 start npm --name "web3-cyber" -- start
 ```
-
-4. **Запуск в продакшн-режиме**
-```bash
-npm run start
-```
-
-## Развертывание через PM2 (рекомендуется)
-```bash
-npm install -g pm2
-pm2 start npm --name "web3-cyber" -- start
-```
-
-## Технический стек
-- **Framework**: Next.js 14 (App Router)
-- **Database**: SQLite + Drizzle ORM
-- **Auth**: NextAuth.js v5
-- **UI**: Tailwind CSS + Lucide Icons
-- **AI**: Genkit (для анализа логов)

@@ -11,7 +11,9 @@ import bcrypt from 'bcryptjs';
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   trustHost: true,
-  secret: process.env.AUTH_SECRET || 'default-secret-change-me-in-production-env',
+  secret: process.env.AUTH_SECRET,
+  // В Auth.js v5 для корректной работы за прокси через Nginx
+  // важно явно разрешить доверие к заголовкам X-Forwarded-*
   providers: [
     Credentials({
       async authorize(credentials) {

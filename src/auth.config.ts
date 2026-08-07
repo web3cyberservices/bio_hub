@@ -9,9 +9,11 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isDashboard = nextUrl.pathname.startsWith('/dashboard');
+      
       if (isDashboard) {
         if (isLoggedIn) return true;
-        return false;
+        // Используем относительный URL для редиректа, чтобы избежать localhost
+        return false; 
       }
       return true;
     },
