@@ -22,7 +22,7 @@ export async function registerTenant(formData: FormData) {
 
   const result = RegisterSchema.safeParse({ email, password });
   if (!result.success) {
-    return { error: 'ОШИБКА ВАЛИДАЦИИ: МИНИМУМ 8 СИМВОЛОВ' };
+    return { error: 'Ошибка валидации: минимум 8 символов' };
   }
 
   try {
@@ -30,7 +30,7 @@ export async function registerTenant(formData: FormData) {
     const existingUser = await db.select().from(users).where(eq(users.email, email)).get();
 
     if (existingUser) {
-      return { error: 'ТЕНАНТ УЖЕ ЗАРЕГИСТРИРОВАН' };
+      return { error: 'Тенант уже зарегистрирован' };
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -45,6 +45,6 @@ export async function registerTenant(formData: FormData) {
     return { success: true };
   } catch (e: any) {
     console.error('Database error during registration:', e);
-    return { error: `ОШИБКА ИНИЦИАЛИЗАЦИИ БД: ${e.message || 'НЕИЗВЕСТНАЯ ОШИБКА'}` };
+    return { error: `Ошибка инициализации БД: ${e.message || 'неизвестная ошибка'}` };
   }
 }

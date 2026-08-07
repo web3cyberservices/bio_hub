@@ -39,11 +39,11 @@ export default async function DashboardPage() {
       {/* Техническая панель управления */}
       <div className="border-b border-white/10 bg-white/[0.02] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-[9px] text-blue-500 font-black uppercase tracking-widest">
-            <Activity className="w-3.5 h-3.5" /> СИСТЕМА: АКТИВНА
+          <div className="flex items-center gap-2 text-[9px] text-blue-500 font-black tracking-widest">
+            <Activity className="w-3.5 h-3.5" /> Система: Активна
           </div>
           <div className="h-4 w-px bg-white/10" />
-          <div className="text-[9px] text-muted-foreground uppercase tracking-widest">
+          <div className="text-[9px] text-muted-foreground tracking-widest">
             NODE_INSTANCE: {user.id ? user.id.split('-')[0] : 'UNKNOWN'}
           </div>
         </div>
@@ -52,8 +52,8 @@ export default async function DashboardPage() {
           'use server';
           await signOut();
         }}>
-          <button className="flex items-center gap-2 text-[9px] font-black uppercase text-red-500 hover:text-white transition-colors">
-            <LogOut className="w-3.5 h-3.5" /> ОТКЛЮЧИТЬ УЗЕЛ
+          <button className="flex items-center gap-2 text-[9px] font-black text-red-500 hover:text-white transition-colors">
+            <LogOut className="w-3.5 h-3.5" /> Отключить узел
           </button>
         </form>
       </div>
@@ -64,44 +64,44 @@ export default async function DashboardPage() {
           {/* Конфигурация клиента */}
           <div className="lg:col-span-4 space-y-8">
             <div className="border border-white/10 p-8 space-y-8 bg-white/[0.01]">
-              <div className="flex items-center gap-2 text-white/40 text-[9px] font-black uppercase tracking-[0.3em]">
-                <Shield className="w-4 h-4" /> КОНФИГУРАЦИЯ ТЕНАНТА
+              <div className="flex items-center gap-2 text-white/40 text-[9px] font-black tracking-[0.3em]">
+                <Shield className="w-4 h-4" /> Конфигурация тенанта
               </div>
               
               <div className="space-y-6 text-[10px]">
                 <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground uppercase tracking-widest">EMAIL:</span>
+                  <span className="text-muted-foreground tracking-widest">Email:</span>
                   <span className="text-white">{user.email}</span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground uppercase tracking-widest">ROLE_LEVEL:</span>
+                  <span className="text-muted-foreground tracking-widest">Role level:</span>
                   <span className="text-blue-500 font-bold uppercase">{user.role}</span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground uppercase tracking-widest">gRPC_QUOTA:</span>
-                  <span className="text-green-500 font-bold">{user.grpcQuota?.toLocaleString()} REQ/MO</span>
+                  <span className="text-muted-foreground tracking-widest">gRPC quota:</span>
+                  <span className="text-green-500 font-bold">{user.grpcQuota?.toLocaleString()} req/mo</span>
                 </div>
               </div>
 
               <div className="bg-blue-500/5 border border-blue-500/10 p-5 rounded-sm">
-                <div className="text-[9px] font-black text-blue-500 uppercase mb-3 flex items-center gap-2 tracking-widest">
-                  <Lock className="w-3.5 h-3.5" /> ТИП ДОСТУПА
+                <div className="text-[9px] font-black text-blue-500 mb-3 flex items-center gap-2 tracking-widest">
+                  <Lock className="w-3.5 h-3.5" /> Тип доступа
                 </div>
-                <p className="text-[10px] text-white/60 leading-relaxed uppercase font-bold">
-                  DEDICATED_BARE_METAL_INFRASTRUCTURE
+                <p className="text-[10px] text-white/60 leading-relaxed font-bold">
+                  Dedicated bare-metal infrastructure
                 </p>
               </div>
             </div>
 
             <div className="border border-white/10 p-8 space-y-6 bg-white/[0.01]">
-               <div className="flex items-center gap-2 text-white/40 text-[9px] font-black uppercase tracking-[0.3em]">
-                <Network className="w-4 h-4" /> АКТИВНЫЕ ЭНДПОИНТЫ
+               <div className="flex items-center gap-2 text-white/40 text-[9px] font-black tracking-[0.3em]">
+                <Network className="w-4 h-4" /> Активные эндпоинты
               </div>
               <div className="space-y-3 text-[10px]">
                 {[
-                  { name: 'eu-telemetry.xyz', status: 'ACTIVE' },
-                  { name: 'eth-rpc.xyz', status: 'ACTIVE' },
-                  { name: 'mempool-b2b.xyz', status: 'ACTIVE' }
+                  { name: 'eu-telemetry.xyz', status: 'Active' },
+                  { name: 'eth-rpc.xyz', status: 'Active' },
+                  { name: 'mempool-b2b.xyz', status: 'Active' }
                 ].map((ep) => (
                   <div key={ep.name} className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="text-muted-foreground">{ep.name}</span>
@@ -116,14 +116,14 @@ export default async function DashboardPage() {
           <div className="lg:col-span-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: 'LATENCY_P99', val: '0.82ms', icon: <Cpu className="w-4 h-4 text-blue-500" /> },
-                { label: 'THROUGHPUT', val: '14.2 GB/s', icon: <Database className="w-4 h-4 text-blue-500" /> },
-                { label: 'UPTIME_SLA', val: '99.999%', icon: <Activity className="w-4 h-4 text-blue-500" /> },
+                { label: 'Latency p99', val: '0.82ms', icon: <Cpu className="w-4 h-4 text-blue-500" /> },
+                { label: 'Throughput', val: '14.2 GB/s', icon: <Database className="w-4 h-4 text-blue-500" /> },
+                { label: 'Uptime SLA', val: '99.999%', icon: <Activity className="w-4 h-4 text-blue-500" /> },
               ].map((item, i) => (
                 <div key={i} className="border border-white/10 p-6 bg-white/[0.02]">
                   <div className="flex items-center gap-2 mb-4">
                     {item.icon}
-                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">{item.label}</span>
+                    <span className="text-[9px] font-black text-muted-foreground tracking-[0.2em]">{item.label}</span>
                   </div>
                   <div className="text-2xl font-black tracking-tighter text-white">{item.val}</div>
                 </div>
@@ -133,20 +133,20 @@ export default async function DashboardPage() {
             {/* Таблица телеметрии */}
             <div className="border border-white/10 bg-white/[0.01] overflow-hidden rounded-sm">
               <div className="bg-white/5 px-8 py-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white">
-                  <Clock className="w-3.5 h-3.5 text-blue-500" /> LIVE_TELEMETRY_STREAM
+                <div className="flex items-center gap-2 text-[9px] font-black tracking-[0.3em] text-white">
+                  <Clock className="w-3.5 h-3.5 text-blue-500" /> Live Telemetry Stream
                 </div>
-                <div className="text-[9px] text-green-500 font-black animate-pulse uppercase">LISTENING...</div>
+                <div className="text-[9px] text-green-500 font-black animate-pulse uppercase">Listening...</div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-[9px] border-collapse">
                   <thead>
                     <tr className="text-muted-foreground border-b border-white/10">
-                      <th className="px-8 py-4 font-black uppercase tracking-widest">TIMESTAMP</th>
-                      <th className="px-8 py-4 font-black uppercase tracking-widest">LATENCY</th>
-                      <th className="px-8 py-4 font-black uppercase tracking-widest">PROTOCOL</th>
-                      <th className="px-8 py-4 font-black uppercase tracking-widest">STATUS</th>
-                      <th className="px-8 py-4 font-black uppercase tracking-widest">ORIGIN</th>
+                      <th className="px-8 py-4 font-black tracking-widest">Timestamp</th>
+                      <th className="px-8 py-4 font-black tracking-widest">Latency</th>
+                      <th className="px-8 py-4 font-black tracking-widest">Protocol</th>
+                      <th className="px-8 py-4 font-black tracking-widest">Status</th>
+                      <th className="px-8 py-4 font-black tracking-widest">Origin</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -167,8 +167,8 @@ export default async function DashboardPage() {
                 </table>
               </div>
               <div className="p-8 border-t border-white/10 flex justify-center">
-                <button className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-500 hover:text-white transition-colors flex items-center gap-2">
-                  ПОСМОТРЕТЬ ВСЕ ЛОГИ <ArrowUpRight className="w-3 h-3" />
+                <button className="text-[9px] font-black tracking-[0.3em] text-blue-500 hover:text-white transition-colors flex items-center gap-2">
+                  Посмотреть все логи <ArrowUpRight className="w-3 h-3" />
                 </button>
               </div>
             </div>

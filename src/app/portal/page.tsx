@@ -34,7 +34,7 @@ export default function PortalPage() {
         });
 
         if (result?.error) {
-          setError('ОШИБКА АВТОРИЗАЦИИ: НЕВЕРНЫЕ УЧЕТНЫЕ ДАННЫЕ');
+          setError('Ошибка авторизации: неверные учетные данные');
           setLoading(false);
         } else {
           router.push('/dashboard');
@@ -43,7 +43,7 @@ export default function PortalPage() {
           }, 500);
         }
       } catch (err) {
-        setError('ОШИБКА СЕТЕВОГО ШЛЮЗА (ERROR_CODE: 502)');
+        setError('Ошибка сетевого шлюза (Error code: 502)');
         setLoading(false);
       }
     } else {
@@ -53,12 +53,12 @@ export default function PortalPage() {
           setError(result.error);
           setLoading(false);
         } else {
-          setSuccess('ПРОФИЛЬ ТЕНАНТА СОЗДАН. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.');
+          setSuccess('Профиль тенанта создан. Требуется авторизация.');
           setMode('auth');
           setLoading(false);
         }
       } catch (err) {
-        setError('ОШИБКА РЕГИСТРАЦИИ В СИСТЕМЕ');
+        setError('Ошибка регистрации в системе');
         setLoading(false);
       }
     }
@@ -66,7 +66,7 @@ export default function PortalPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4 bg-grid">
-      <div className="w-full max-w-sm border border-white/10 bg-black p-8 rounded-sm">
+      <div className="w-full max-sm border border-white/10 bg-black p-8 rounded-sm">
         <div className="flex flex-col items-center gap-4 mb-8">
           <Image 
             src="/512logo.png" 
@@ -78,13 +78,13 @@ export default function PortalPage() {
           <h1 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">Provision Portal</h1>
         </div>
 
-        <div className="text-[9px] font-mono text-blue-500 mb-8 text-center uppercase tracking-widest flex items-center justify-center gap-2">
-          <Lock className="w-3 h-3" /> {mode === 'auth' ? 'SYSTEM_AUTH_REQUIRED' : 'NEW_TENANT_PROVISIONING'}
+        <div className="text-[9px] font-mono text-blue-500 mb-8 text-center tracking-widest flex items-center justify-center gap-2">
+          <Lock className="w-3 h-3" /> {mode === 'auth' ? 'System Auth Required' : 'New Tenant Provisioning'}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Email Identifier</label>
+            <label className="text-[9px] font-mono text-muted-foreground tracking-widest">Email Identifier</label>
             <input
               name="email"
               type="email"
@@ -94,7 +94,7 @@ export default function PortalPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">Access Credentials</label>
+            <label className="text-[9px] font-mono text-muted-foreground tracking-widest">Access Credentials</label>
             <input
               name="password"
               type="password"
@@ -124,7 +124,7 @@ export default function PortalPage() {
             {loading ? (
               <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
-              mode === 'auth' ? 'АВТОРИЗОВАТЬСЯ' : 'ЗАРЕГИСТРИРОВАТЬСЯ'
+              mode === 'auth' ? 'Авторизоваться' : 'Зарегистрироваться'
             )}
           </button>
         </form>
@@ -136,9 +136,9 @@ export default function PortalPage() {
               setError('');
               setSuccess('');
             }}
-            className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-colors"
+            className="text-[9px] font-black tracking-[0.2em] text-muted-foreground hover:text-white transition-colors"
           >
-            {mode === 'auth' ? '[ NEW ENROLLMENT ]' : '[ RETURN TO LOGIN ]'}
+            {mode === 'auth' ? '[ New Enrollment ]' : '[ Return to Login ]'}
           </button>
         </div>
       </div>

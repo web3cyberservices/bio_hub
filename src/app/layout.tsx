@@ -41,20 +41,20 @@ export default function RootLayout({
                 height={24} 
                 className="rounded-sm"
               />
-              <span className="font-bold text-sm tracking-tight text-white uppercase">Web3CyberServices</span>
+              <span className="font-bold text-sm tracking-tight text-white">Web3CyberServices</span>
             </Link>
 
-            <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold tracking-widest text-muted-foreground">
               <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
               <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
               <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
             </nav>
 
             <div className="flex items-center gap-3">
-              <Link href="/portal" className="btn-outline py-1.5 px-4 text-[10px] uppercase tracking-widest shrink-0">
+              <Link href="/portal" className="btn-outline py-1.5 px-4 text-[10px] tracking-widest shrink-0">
                 Вход
               </Link>
-              <Link href="/portal" className="btn-enterprise py-1.5 px-4 text-[10px] uppercase tracking-widest shrink-0">
+              <Link href="/portal" className="btn-enterprise py-1.5 px-4 text-[10px] tracking-widest shrink-0">
                 Регистрация
               </Link>
             </div>
@@ -77,29 +77,29 @@ export default function RootLayout({
                     height={20} 
                     className="opacity-80"
                   />
-                  <span className="text-xs font-bold tracking-tight uppercase text-white">Web3CyberServices</span>
+                  <span className="text-xs font-bold tracking-tight text-white">Web3CyberServices</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs font-medium uppercase tracking-wider">
+                <p className="text-[10px] text-muted-foreground leading-relaxed max-w-xs font-medium tracking-wider">
                   Индустриальная платформа для сбора телеметрии в высоконагруженных глобальных средах.
                 </p>
               </div>
               <div className="space-y-4">
                 <h4 className="technical-label">Платформа</h4>
-                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold tracking-wider">
                   <li><Link href="/dashboard" className="hover:text-white">Консоль</Link></li>
                   <li><Link href="/pricing" className="hover:text-white">Тарифы</Link></li>
                 </ul>
               </div>
               <div className="space-y-4">
                 <h4 className="technical-label">Правовая информация</h4>
-                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                <ul className="space-y-2 text-[10px] text-muted-foreground font-bold tracking-wider">
                   <li><Link href="/legal" className="hover:text-white">Конфиденциальность</Link></li>
                   <li><Link href="/legal" className="hover:text-white">Условия</Link></li>
                 </ul>
               </div>
             </div>
-            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
-              <div>© 2026 Web3CyberServices. ВСЕ ПРАВА ЗАЩИЩЕНЫ.</div>
+            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-muted-foreground font-mono tracking-widest">
+              <div>© 2026 Web3CyberServices. Все права защищены.</div>
             </div>
           </div>
         </footer>
