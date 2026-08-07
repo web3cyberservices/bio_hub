@@ -37,21 +37,28 @@ export default function PortalPage() {
           setError('ОШИБКА: НЕВЕРНЫЙ EMAIL ИЛИ ПАРОЛЬ');
           setLoading(false);
         } else {
+          // Успешный вход
           router.push('/dashboard');
           router.refresh();
         }
       } catch (err) {
-        setError('КРИТИЧЕСКАЯ ОШИБКА АВТОРИЗАЦИИ');
+        console.error('Login error:', err);
+        setError('КРИТИЧЕСКАЯ ОШИБКА СЕРВЕРА АВТОРИЗАЦИИ');
         setLoading(false);
       }
     } else {
-      const result = await registerTenant(formData);
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-      } else {
-        setSuccess('АККАУНТ СОЗДАН. ТЕПЕРЬ ВЫ МОЖЕТЕ ВОЙТИ.');
-        setMode('auth');
+      try {
+        const result = await registerTenant(formData);
+        if (result.error) {
+          setError(result.error);
+          setLoading(false);
+        } else {
+          setSuccess('АККАУНТ СОЗДАН. ТЕПЕРЬ ВЫ МОЖЕТЕ ВОЙТИ.');
+          setMode('auth');
+          setLoading(false);
+        }
+      } catch (err) {
+        setError('ОШИБКА ПРИ РЕГИСТРАЦИИ');
         setLoading(false);
       }
     }

@@ -6,12 +6,15 @@ import path from 'path';
 
 /**
  * Инициализация SQLite базы данных.
- * Используется абсолютный путь для стабильности на сервере.
+ * Используется абсолютный путь для предотвращения ошибок при работе через PM2/Nginx.
  */
-const dbPath = path.join(process.cwd(), 'sqlite.db');
+const dbPath = path.resolve(process.cwd(), 'sqlite.db');
 const sqlite = new Database(dbPath);
 
-// Принудительное создание таблицы при запуске, если она отсутствует
+// Настройка режима WAL для производительности
+sqlite.pragma('journal_mode = WAL');
+
+// Гарантируем наличие таблицы пользователей с правильными именами колонок
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,

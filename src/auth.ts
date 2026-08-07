@@ -10,12 +10,14 @@ import bcrypt from 'bcryptjs';
 
 /**
  * Конфигурация Auth.js v5.
- * Добавлен trustHost для корректной работы через Nginx/Reverse Proxy.
+ * Включен debug для логирования ошибок на сервере.
+ * trustHost: true необходим для работы за Nginx.
  */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   trustHost: true,
-  secret: process.env.AUTH_SECRET || 'fallback-secret-for-dev-only',
+  secret: process.env.AUTH_SECRET || 'secret-at-least-32-chars-long-for-production',
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -32,7 +34,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             });
             
             if (!user) {
-              console.log('User not found:', email);
+              console.log('[AUTH] Пользователь не найден:', email);
               return null;
             }
             
@@ -45,9 +47,11 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                 role: user.role,
                 grpcQuota: user.grpcQuota,
               };
+            } else {
+              console.log('[AUTH] Неверный пароль для:', email);
             }
           } catch (error) {
-            console.error('Auth error:', error);
+            console.error('[AUTH] Ошибка при проверке в БД:', error);
             return null;
           }
         }
