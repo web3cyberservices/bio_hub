@@ -1,3 +1,4 @@
+
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
@@ -7,10 +8,12 @@ import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
+/**
+ * Полная конфигурация NextAuth для Node.js среды.
+ * Здесь подключается SQLite адаптер и тяжелые библиотеки (bcrypt).
+ */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
-  trustHost: true,
-  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -20,27 +23,20 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
+          const user = await db.query.users.findFirst({
+            where: eq(users.email, email),
+          });
           
-          try {
-            const user = await db.query.users.findFirst({
-              where: eq(users.email, email),
-            });
-            
-            if (!user) return null;
-            
-            const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
-            
-            if (passwordsMatch) {
-              return {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                grpcQuota: user.grpcQuota,
-              };
-            }
-          } catch (error) {
-            console.error('[AUTH_INTERNAL_ERROR]:', error);
-            return null;
+          if (!user) return null;
+          const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+          
+          if (passwordsMatch) {
+            return {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              grpcQuota: user.grpcQuota,
+            };
           }
         }
         return null;

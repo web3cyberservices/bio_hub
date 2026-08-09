@@ -1,19 +1,26 @@
 
 import type { NextAuthConfig } from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import { z } from 'zod';
 
+/**
+ * Edge-compatible конфигурация NextAuth.
+ * Не содержит зависимостей от БД (SQLite), что позволяет использовать её в Middleware.
+ */
 export const authConfig = {
   pages: {
     signIn: '/portal',
+  },
+  session: {
+    strategy: 'jwt',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isDashboard = nextUrl.pathname.startsWith('/dashboard');
-      
       if (isDashboard) {
         if (isLoggedIn) return true;
-        // Используем относительный URL для редиректа, чтобы избежать localhost
-        return false; 
+        return false;
       }
       return true;
     },
@@ -34,5 +41,12 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [],
+  providers: [
+    Credentials({
+      async authorize(credentials) {
+        // Логика авторизации будет расширена в auth.ts, где доступна БД
+        return null;
+      },
+    }),
+  ],
 } satisfies NextAuthConfig;

@@ -4,14 +4,13 @@ import Database from 'better-sqlite3';
 import * as schema from './schema';
 import path from 'path';
 
-const dbPath = path.resolve(process.cwd(), 'sqlite.db');
+// OPSEC: Использование внешнего или временного пути для БД, чтобы избежать записи в корень проекта
+const dbPath = process.env.DATABASE_URL || '/tmp/sqlite.db';
 const sqlite = new Database(dbPath);
 
-// Устанавливаем WAL режим для производительности
 sqlite.pragma('journal_mode = WAL');
 
-// Ручное создание таблицы пользователей при инициализации.
-// Используем .run() для инструкций, не возвращающих данные.
+// Инициализация базовых таблиц
 sqlite.prepare(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -19,7 +18,9 @@ sqlite.prepare(`
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'enterprise_client',
     grpc_quota INTEGER DEFAULT 1000000,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    status TEXT DEFAULT 'active',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )
 `).run();
 
