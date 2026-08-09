@@ -4,13 +4,10 @@ import { authConfig } from './auth.config';
 import { z } from 'zod';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { eq } from 'eq';
+import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 
-/**
- * Полная конфигурация для Node.js среды.
- */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   adapter: DrizzleAdapter(db),
