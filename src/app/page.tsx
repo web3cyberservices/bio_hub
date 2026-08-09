@@ -27,9 +27,6 @@ export default function HeroSection() {
           </div>
 
           <div className="flex flex-wrap items-center gap-4 mb-24">
-            <a href="/portal" className="btn-enterprise py-4 px-8 text-[11px]">
-              Личный кабинет тенанта
-            </a>
             <a href="/api-docs" className="btn-outline py-4 px-8 text-[11px]">
               Техническая спецификация (gRPC)
             </a>
