@@ -1,11 +1,10 @@
 
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
-import { crypto } from '@/lib/crypto-compat';
 
 /**
  * Оптимизированная схема БД Web3CyberServices для SQLite.
- * Использует нативные типы для максимальной производительности.
+ * Использует нативные UUID и временные метки.
  */
 export const users = sqliteTable('users', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
