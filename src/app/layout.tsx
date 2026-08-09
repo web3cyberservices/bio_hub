@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChevronDown } from 'lucide-react';
 
 const inter = Inter({ 
   subsets: ['latin', 'cyrillic'],
@@ -45,16 +46,44 @@ export default function RootLayout({
             </Link>
 
             <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold tracking-widest text-muted-foreground">
-              <Link href="/dashboard" className="hover:text-white transition-colors">Консоль</Link>
-              <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
-              <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
+              {/* Dropdown Services */}
+              <div className="relative group py-4">
+                <button className="flex items-center gap-1.5 hover:text-white transition-colors uppercase">
+                  Услуги <ChevronDown className="w-3 h-3 transition-transform group-hover:rotate-180" />
+                </button>
+                
+                <div className="absolute top-full left-0 w-64 pt-2 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 ease-out">
+                  <div className="bg-black border border-white/[0.08] rounded-sm shadow-2xl overflow-hidden backdrop-blur-xl">
+                    <div className="flex flex-col py-2">
+                      <Link href="/services/osint" className="px-4 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0">
+                        Агрегация данных и OSINT
+                      </Link>
+                      <Link href="/services/data-streaming" className="px-4 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0">
+                        Провайдер потоковых данных
+                      </Link>
+                      <Link href="/services/pentest" className="px-4 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0">
+                        Аудит информационной безопасности
+                      </Link>
+                      <Link href="/services/telemetry" className="px-4 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0">
+                        B2B Телеметрия и мониторинг
+                      </Link>
+                      <Link href="/services/devsecops" className="px-4 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0">
+                        DevSecOps Консалтинг
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Link href="/api-docs" className="hover:text-white transition-colors uppercase">Документация</Link>
+              <Link href="/pricing" className="hover:text-white transition-colors uppercase">Тарифы</Link>
             </nav>
 
             <div className="flex items-center gap-3">
-              <Link href="/portal" className="btn-outline py-1.5 px-4 text-[10px] tracking-widest shrink-0">
+              <Link href="/portal" className="btn-outline py-1.5 px-4 text-[10px] tracking-widest shrink-0 uppercase">
                 Вход
               </Link>
-              <Link href="/portal" className="btn-enterprise py-1.5 px-4 text-[10px] tracking-widest shrink-0">
+              <Link href="/portal" className="btn-enterprise py-1.5 px-4 text-[10px] tracking-widest shrink-0 uppercase">
                 Регистрация
               </Link>
             </div>
@@ -86,7 +115,7 @@ export default function RootLayout({
               <div className="space-y-4">
                 <h4 className="technical-label">Платформа</h4>
                 <ul className="space-y-2 text-[10px] text-muted-foreground font-bold tracking-wider">
-                  <li><Link href="/dashboard" className="hover:text-white">Консоль</Link></li>
+                  <li><Link href="/portal" className="hover:text-white">Консоль</Link></li>
                   <li><Link href="/pricing" className="hover:text-white">Тарифы</Link></li>
                 </ul>
               </div>
