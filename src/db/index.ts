@@ -1,3 +1,4 @@
+
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
@@ -6,11 +7,11 @@ import path from 'path';
 const dbPath = path.resolve(process.cwd(), 'sqlite.db');
 const sqlite = new Database(dbPath);
 
-// Устанавливаем WAL режим для производительности в конкурентной среде
+// Устанавливаем WAL режим для производительности
 sqlite.pragma('journal_mode = WAL');
 
-// Ручное создание таблицы пользователей при инициализации, 
-// если она еще не создана механизмом миграций.
+// Ручное создание таблицы пользователей при инициализации.
+// Используем .run() для инструкций, не возвращающих данные.
 sqlite.prepare(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,

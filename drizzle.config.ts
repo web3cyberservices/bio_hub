@@ -1,8 +1,9 @@
+
 import { defineConfig } from 'drizzle-kit';
 
 /**
  * Конфигурация Drizzle Kit для SQLite.
- * Исправлена для совместимости с последними версиями drizzle-kit.
+ * Совместима с последними версиями drizzle-kit (август 2026).
  */
 export default defineConfig({
   schema: './src/db/schema.ts',
