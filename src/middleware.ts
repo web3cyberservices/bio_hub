@@ -1,10 +1,8 @@
-
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 
 /**
- * Middleware импортирует только легкую версию конфига,
- * так как Edge Runtime не поддерживает SQLite.
+ * Используем только легкий конфиг для Edge Runtime.
  */
 export default NextAuth(authConfig).auth;
 

@@ -1,10 +1,9 @@
-
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 /**
- * Конфигурация, совместимая с Edge Runtime.
- * Не содержит адаптеров базы данных.
+ * Конфигурация для Edge Runtime.
+ * Не импортирует базу данных или адаптеры.
  */
 export const authConfig = {
   pages: {

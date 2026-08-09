@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
@@ -6,7 +5,7 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL || '/tmp/sqlite.db',
+    url: process.env.DATABASE_URL || '/tmp/cyber_services.sqlite',
   },
   verbose: true,
   strict: true,

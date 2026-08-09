@@ -1,17 +1,15 @@
-
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 import { z } from 'zod';
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq } from 'eq';
 import bcrypt from 'bcryptjs';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 
 /**
  * Полная конфигурация для Node.js среды.
- * Использует Drizzle Adapter и bcrypt.
  */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
@@ -26,7 +24,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
           const user = await db.query.users.findFirst({
-            where: eq(users.email, email),
+            where: (users, { eq }) => eq(users.email, email),
           });
           
           if (!user) return null;
