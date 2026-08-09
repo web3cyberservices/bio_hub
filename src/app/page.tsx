@@ -1,4 +1,3 @@
-
 export default function HeroSection() {
   return (
     <div className="min-h-screen bg-grid">
@@ -10,12 +9,22 @@ export default function HeroSection() {
             высоконагруженных систем
           </h1>
 
-          <p className="text-lg text-gray-400 max-w-4xl leading-relaxed mb-12 font-medium tracking-wide text-[14px]">
-            ООО «Веб3 Сайбер Сервисес» — ведущий российский провайдер изолированных вычислительных мощностей и систем 
-            анализа данных промышленного уровня. Мы обеспечиваем физическую безопасность ресурсов и гарантированную 
-            пропускную способность для финансовых институтов, аналитических агентств и корпоративных HFT-хабов, 
-            работая в строгом соответствии с требованиями регуляторов РФ (152-ФЗ, 115-ФЗ).
-          </p>
+          <div className="space-y-6 max-w-4xl mb-12">
+            <p className="text-lg text-gray-400 leading-relaxed font-medium tracking-wide text-[14px]">
+              ООО «Веб3 Сайбер Сервисес» — ведущий российский провайдер изолированных вычислительных мощностей и систем 
+              анализа данных промышленного уровня. Мы специализируемся на предоставлении отказоустойчивых bare-metal 
+              конфигураций, высокоскоростных gRPC-каналов передачи данных и систем глубокого анализа сетевой активности 
+              через eBPF-инструментарий.
+            </p>
+            <p className="text-lg text-gray-400 leading-relaxed font-medium tracking-wide text-[14px]">
+              Наша экспертиза охватывает полный цикл обеспечения киберустойчивости: от OSINT-разведки цифровых рисков 
+              и мониторинга утечек в Dark Web до внедрения предиктивной телеметрии и проведения комплексных аудитов 
+              информационной безопасности по методологиям NIST SP 800-115 и OWASP Top 10. Мы обеспечиваем 
+              физическую безопасность ресурсов и гарантированную пропускную способность для финансовых институтов, 
+              аналитических агентств и корпоративных HFT-хабов, работая в строгом соответствии с требованиями 
+              регуляторов РФ (152-ФЗ «О персональных данных», 115-ФЗ «О противодействии легализации доходов»).
+            </p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-4 mb-24">
             <a href="/portal" className="btn-enterprise py-4 px-8 text-[11px]">
@@ -33,9 +42,9 @@ export default function HeroSection() {
             <div className="technical-label mb-6 text-blue-500 text-[10px]">01 // Вычислительные узлы</div>
             <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Bare-metal архитектура</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Предоставление выделенных физических серверов без гипервизоров. Исключение влияния «соседних» процессов 
-              гарантирует стабильный p99 latency в микросекундном диапазоне. Мы используем eBPF-мониторинг для 
-              полной прозрачности процессов на уровне ядра ОС.
+              Исключение гипервизорного оверхеда через прямой доступ к железу. Использование eBPF-мониторинга на уровне 
+              ядра гарантирует прозрачность процессов без деградации производительности. Идеально для высокочастотных 
+              вычислений и распределенных реестров.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
               Stack: Dual Intel Xeon Gold / 512GB ECC RAM / eBPF
@@ -46,8 +55,8 @@ export default function HeroSection() {
             <div className="technical-label mb-6 text-blue-500 text-[10px]">02 // Каналы передачи данных</div>
             <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Low-latency связность</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Прямое подключение к MSK-IX через выделенные L1/L2 каналы. Аппаратная обработка пакетов на базе SmartNIC (FPGA) 
-              обеспечивает пропускную способность до 100 Гбит/с с минимальным джиттером для gRPC и WSS потоков.
+              Магистральная доставка gRPC-потоков через выделенные L1/L2 каналы с FPGA-ускорением на базе SmartNIC. 
+              Средняя задержка на внутреннем бэкбоне составляет менее 0.12 мс при пропускной способности до 100 Гбит/с.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
               Backbone: 100 Gbps Dark Fiber / FPGA / SmartNIC
@@ -58,8 +67,8 @@ export default function HeroSection() {
             <div className="technical-label mb-6 text-blue-500 text-[10px]">03 // Информационная безопасность</div>
             <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Сетевая изоляция и аудит</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Организация закрытых VPC с mTLS-авторизацией. Регулярный внутренний аудит по стандартам NIST SP 800-115 
-              и OWASP Top 10 гарантирует устойчивость инфраструктуры к целенаправленным APT-атакам.
+              Двусторонняя mTLS-авторизация и закрытые VPC. Регулярные пентесты методами Black/Grey Box и автоматизация 
+              комплаенса (Compliance as Code) обеспечивают устойчивость к сложным таргетированным угрозам.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
               Compliance: 152-FZ / NIST / SOC 2 / mTLS
@@ -82,8 +91,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Агрегация данных и OSINT</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Глубокий мониторинг цифровых рисков и выявление утечек в Dark Web. Мы проводим проверку контрагентов 
-                в рамках 115-ФЗ, выявляя конечных бенефициаров и скрытые связи для департаментов безопасности и комплаенса.
+                Глубокий мониторинг цифровых рисков, выявление утечек в Dark Web и проверка контрагентов по 115-ФЗ. 
+                Анализ скрытых связей и бенефициаров через автоматизированные разведсистемы.
               </p>
               <a href="/services/osint" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Подробнее о методологии →
@@ -93,8 +102,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Провайдер потоковых данных</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Магистральная доставка рыночной телеметрии через изолированные gRPC-туннели. Использование бинарного 
-                протокола Protobuf минимизирует оверхед, обеспечивая доставку событий с задержкой менее 0.12 мс.
+                Доставка рыночной телеметрии через gRPC-туннели. Использование бинарного Protobuf минимизирует оверхед, 
+                обеспечивая доставку событий мемпула и биржевых стаканов с микросекундной точностью.
               </p>
               <a href="/services/data-streaming" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Технический регламент →
@@ -104,8 +113,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Аудит ИБ (Pentest)</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Имитация целенаправленных атак методами Black/Grey/White Box. Полный цикл тестирования периметра, 
-                API и микросервисов с предоставлением детального отчета с вектором атаки и CVSS-оценкой.
+                Имитация целенаправленных атак по стандартам NIST и OWASP. Аудит API и микросервисов с предоставлением 
+                детального отчета, CVSS-оценки уязвимостей и верификацией исправлений (Re-test).
               </p>
               <a href="/services/pentest" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Спецификация аудита →
@@ -115,8 +124,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">B2B Телеметрия и DevSecOps</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Внедрение Secure SDLC и предиктивного мониторинга. Автоматизация комплаенса (Compliance as Code) 
-                и интеграция SAST/DAST сканеров в CI/CD пайплайны для непрерывной защиты кода.
+                Внедрение Secure SDLC (SAST/DAST) и предиктивного мониторинга на базе eBPF. Автоматизация комплаенса 
+                и контроль рантайма контейнеров в CI/CD пайплайнах.
               </p>
               <div className="flex gap-4">
                 <a href="/services/telemetry" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
