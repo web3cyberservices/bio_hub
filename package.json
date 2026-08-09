@@ -1,4 +1,3 @@
-
 {
   "name": "cyberlog-enterprise",
   "version": "1.4.0",
@@ -11,7 +10,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "next": "^15.0.0",
+    "next": "latest",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.1.0",
