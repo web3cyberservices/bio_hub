@@ -8,6 +8,10 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 
+/**
+ * Основная конфигурация Auth.js для Node.js Runtime.
+ * Здесь подключается адаптер базы данных SQLite.
+ */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   adapter: DrizzleAdapter(db),
