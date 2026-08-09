@@ -1,31 +1,38 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.15rem;
-  }
+@theme {
+  --color-background: hsl(240 10% 3.9%);
+  --color-foreground: hsl(0 0% 98%);
+  
+  --color-card: hsl(240 10% 3.9%);
+  --color-card-foreground: hsl(0 0% 98%);
+  
+  --color-popover: hsl(240 10% 3.9%);
+  --color-popover-foreground: hsl(0 0% 98%);
+  
+  --color-primary: hsl(217.2 91.2% 59.8%);
+  --color-primary-foreground: hsl(222.2 47.4% 11.2%);
+  
+  --color-secondary: hsl(240 3.7% 15.9%);
+  --color-secondary-foreground: hsl(0 0% 98%);
+  
+  --color-muted: hsl(240 3.7% 15.9%);
+  --color-muted-foreground: hsl(240 5% 64.9%);
+  
+  --color-accent: hsl(240 3.7% 15.9%);
+  --color-accent-foreground: hsl(0 0% 98%);
+  
+  --color-destructive: hsl(0 62.8% 30.6%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  
+  --color-border: hsl(240 3.7% 15.9%);
+  --color-input: hsl(240 3.7% 15.9%);
+  --color-ring: hsl(240 4.9% 83.9%);
+  
+  --radius-lg: 0.15rem;
+  --radius-md: calc(0.15rem - 2px);
+  --radius-sm: calc(0.15rem - 4px);
 }
 
 @layer base {
@@ -38,7 +45,6 @@
   }
 }
 
-/* Строгий UI без теней и градиентов */
 .ui-card {
   @apply bg-card border border-white/[0.08] rounded-sm transition-all;
 }
@@ -47,19 +53,14 @@
   @apply text-[9px] font-black tracking-[0.2em] text-muted-foreground font-sans;
 }
 
-.data-value {
-  @apply font-mono tracking-tight text-foreground;
-}
-
 .btn-enterprise {
-  @apply bg-white text-black font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-neutral-200 transition-all flex items-center justify-center;
+  @apply bg-white text-black font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-neutral-200 transition-all flex items-center justify-center cursor-pointer;
 }
 
 .btn-outline {
-  @apply border border-white/10 bg-transparent text-white font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-white/5 transition-all flex items-center justify-center;
+  @apply border border-white/10 bg-transparent text-white font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-white/5 transition-all flex items-center justify-center cursor-pointer;
 }
 
-/* Утилиты для фоновой сетки */
 .bg-grid {
   background-size: 32px 32px;
   background-image: 
@@ -67,7 +68,6 @@
     linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px);
 }
 
-/* Прячем скроллбар, сохраняя функционал */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

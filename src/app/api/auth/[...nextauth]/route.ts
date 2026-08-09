@@ -2,8 +2,7 @@
 import { handlers } from "@/auth";
 
 /**
- * В Auth.js v5 (NextAuth) роуты GET и POST экспортируются из объекта handlers.
- * Исправлена деструктуризация для устранения ошибки 'export not found'.
+ * Стандартный экспорт обработчиков для NextAuth v5 (Beta 25+).
+ * Использование деструктуризации напрямую из handlers.
  */
-export const GET = handlers.GET;
-export const POST = handlers.POST;
+export const { GET, POST } = handlers;
