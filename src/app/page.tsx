@@ -14,7 +14,7 @@ export default function HeroSection() {
             ООО «Веб3 Сайбер Сервисес» — ведущий российский провайдер изолированных вычислительных мощностей и систем 
             анализа данных промышленного уровня. Мы обеспечиваем физическую безопасность ресурсов и гарантированную 
             пропускную способность для финансовых институтов, аналитических агентств и корпоративных HFT-хабов, 
-            работая в строгом соответствии с требованиями регуляторов РФ.
+            работая в строгом соответствии с требованиями регуляторов РФ (152-ФЗ, 115-ФЗ).
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mb-24">
@@ -31,13 +31,14 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10 mb-32">
           <div className="p-10 bg-black hover:bg-white/[0.01] transition-colors">
             <div className="technical-label mb-6 text-blue-500 text-[10px]">01 // Вычислительные узлы</div>
-            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Bare-metal инфраструктура</h3>
+            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Bare-metal архитектура</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
               Предоставление выделенных физических серверов без гипервизоров. Исключение влияния «соседних» процессов 
-              гарантирует стабильный p99 latency в микросекундном диапазоне для критических вычислений.
+              гарантирует стабильный p99 latency в микросекундном диапазоне. Мы используем eBPF-мониторинг для 
+              полной прозрачности процессов на уровне ядра ОС.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Stack: Dual Intel Xeon Gold / 512GB ECC RAM
+              Stack: Dual Intel Xeon Gold / 512GB ECC RAM / eBPF
             </div>
           </div>
 
@@ -45,23 +46,23 @@ export default function HeroSection() {
             <div className="technical-label mb-6 text-blue-500 text-[10px]">02 // Каналы передачи данных</div>
             <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Low-latency связность</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Прямое подключение к MSK-IX и глобальным точкам обмена трафиком через выделенные L1/L2 каналы. 
-              Отсутствие промежуточной буферизации и аппаратная обработка пакетов на базе SmartNIC.
+              Прямое подключение к MSK-IX через выделенные L1/L2 каналы. Аппаратная обработка пакетов на базе SmartNIC (FPGA) 
+              обеспечивает пропускную способность до 100 Гбит/с с минимальным джиттером для gRPC и WSS потоков.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Backbone: 100 Gbps Dark Fiber / DWDM
+              Backbone: 100 Gbps Dark Fiber / FPGA / SmartNIC
             </div>
           </div>
 
           <div className="p-10 bg-black hover:bg-white/[0.01] transition-colors">
             <div className="technical-label mb-6 text-blue-500 text-[10px]">03 // Информационная безопасность</div>
-            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Сетевая изоляция</h3>
+            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Сетевая изоляция и аудит</h3>
             <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Организация закрытых виртуальных облаков (VPC) с аппаратным шифрованием трафика (AES-256-GCM). 
-              Полное соответствие требованиям ФСТЭК и ФСБ в области защиты корпоративных данных.
+              Организация закрытых VPC с mTLS-авторизацией. Регулярный внутренний аудит по стандартам NIST SP 800-115 
+              и OWASP Top 10 гарантирует устойчивость инфраструктуры к целенаправленным APT-атакам.
             </p>
             <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Compliance: 152-FZ / ISO 27001 / SOC 2
+              Compliance: 152-FZ / NIST / SOC 2 / mTLS
             </div>
           </div>
         </div>
@@ -72,7 +73,7 @@ export default function HeroSection() {
             <h2 className="technical-label mb-8 text-blue-500 text-[10px]">Направления деятельности</h2>
             <h3 className="text-3xl font-black text-white mb-6 tracking-tight">Экосистема технологических сервисов</h3>
             <p className="text-gray-400 text-[12px] leading-relaxed font-bold tracking-widest">
-              Мы объединяем передовые разработки в области кибербезопасности и обработки больших данных для создания 
+              Мы объединяем передовые разработки в области кибербезопасности, DevSecOps и обработки больших данных для создания 
               безопасной среды исполнения ваших бизнес-алгоритмов.
             </p>
           </div>
@@ -81,8 +82,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Агрегация данных и OSINT</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Глубокий мониторинг цифровых рисков, выявление утечек в Dark Web и проверка контрагентов по 115-ФЗ. 
-                Мы предоставляем юридически значимые отчеты для департаментов безопасности.
+                Глубокий мониторинг цифровых рисков и выявление утечек в Dark Web. Мы проводим проверку контрагентов 
+                в рамках 115-ФЗ, выявляя конечных бенефициаров и скрытые связи для департаментов безопасности и комплаенса.
               </p>
               <a href="/services/osint" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Подробнее о методологии →
@@ -92,8 +93,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Провайдер потоковых данных</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Магистральная доставка рыночной телеметрии через изолированные gRPC-туннели. 
-                Минимальный jitter и гарантированный доступ к глобальным мемпулам блокчейн-сетей.
+                Магистральная доставка рыночной телеметрии через изолированные gRPC-туннели. Использование бинарного 
+                протокола Protobuf минимизирует оверхед, обеспечивая доставку событий с задержкой менее 0.12 мс.
               </p>
               <a href="/services/data-streaming" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Технический регламент →
@@ -103,8 +104,8 @@ export default function HeroSection() {
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
               <h4 className="text-white font-black text-lg tracking-tight">Аудит ИБ (Pentest)</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Имитация целенаправленных атак (APT) по стандартам NIST и OWASP. 
-                Профессиональное тестирование периметра и микросервисной архитектуры с верификацией исправлений.
+                Имитация целенаправленных атак методами Black/Grey/White Box. Полный цикл тестирования периметра, 
+                API и микросервисов с предоставлением детального отчета с вектором атаки и CVSS-оценкой.
               </p>
               <a href="/services/pentest" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                 Спецификация аудита →
@@ -112,14 +113,19 @@ export default function HeroSection() {
             </div>
 
             <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
-              <h4 className="text-white font-black text-lg tracking-tight">B2B Телеметрия</h4>
+              <h4 className="text-white font-black text-lg tracking-tight">B2B Телеметрия и DevSecOps</h4>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
-                Предиктивный мониторинг инфраструктуры на базе eBPF-агентов. 
-                Полная видимость сетевых потоков без нагрузки на производительность бизнес-приложений.
+                Внедрение Secure SDLC и предиктивного мониторинга. Автоматизация комплаенса (Compliance as Code) 
+                и интеграция SAST/DAST сканеров в CI/CD пайплайны для непрерывной защиты кода.
               </p>
-              <a href="/services/telemetry" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
-                Схема интеграции →
-              </a>
+              <div className="flex gap-4">
+                <a href="/services/telemetry" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                  Мониторинг →
+                </a>
+                <a href="/services/devsecops" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                  Консалтинг →
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -129,8 +135,8 @@ export default function HeroSection() {
           <div className="max-w-3xl">
             <h2 className="technical-label mb-8 text-blue-500 text-[10px]">Глобальное присутствие</h2>
             <p className="text-gray-400 text-[12px] leading-relaxed font-bold tracking-widest">
-              Инфраструктура компании развернута в стратегически важных дата-центрах уровня Tier III+ в РФ и дружественных 
-              юрисдикциях, обеспечивая географическую избыточность и соблюдение законов о локализации данных.
+              Инфраструктура компании развернута в дата-центрах уровня Tier III+ в РФ (MSK-IX / NORD) и дружественных 
+              юрисдикциях, обеспечивая соблюдение законов о локализации данных и географическую избыточность.
             </p>
           </div>
           
@@ -157,14 +163,13 @@ export default function HeroSection() {
               <h2 className="text-2xl font-black tracking-tighter text-white">Соответствие регуляторным нормам</h2>
               <p className="text-[11px] text-muted-foreground tracking-widest max-w-3xl font-bold leading-relaxed">
                 Мы придерживаемся строгих протоколов безопасности и юридической чистоты. Все услуги предоставляются 
-                в рамках правового поля Российской Федерации, включая 152-ФЗ («О персональных данных») и 115-ФЗ 
-                («О противодействии легализации доходов»). Регулярный внутренний аудит и сертификация ISO 27001 
-                обеспечивают непрерывность бизнес-процессов наших клиентов.
+                в рамках правового поля РФ, включая 152-ФЗ («О персональных данных») и 115-ФЗ. Регулярный внутренний 
+                аудит по методологии NIST и сертификация ISO 27001 обеспечивают непрерывность ваших процессов.
               </p>
             </div>
             <div className="flex gap-4 shrink-0">
               <div className="px-4 py-2 border border-white/10 text-[9px] font-black tracking-widest text-white/60 uppercase">ISO 27001 Certified</div>
-              <div className="px-4 py-2 border border-white/10 text-[9px] font-black tracking-widest text-white/60 uppercase">PCI DSS Compliant</div>
+              <div className="px-4 py-2 border border-white/10 text-[9px] font-black tracking-widest text-white/60 uppercase">NIST Compliant</div>
             </div>
           </div>
         </section>
