@@ -4,103 +4,167 @@ export default function HeroSection() {
     <div className="min-h-screen bg-grid">
       <div className="max-w-6xl mx-auto px-4 pt-24 pb-16 font-sans text-gray-200">
         
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-8 leading-[1.1]">
-          Инфраструктурные решения для <br className="hidden md:block" />
-          высоконагруженных систем
-        </h1>
+        <header className="mb-20">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-8 leading-[1.1]">
+            Инфраструктурные решения для <br className="hidden md:block" />
+            высоконагруженных систем
+          </h1>
 
-        <p className="text-lg text-gray-400 max-w-3xl leading-relaxed mb-12 font-medium tracking-wide text-[13px]">
-          ООО «Веб3 Сайбер Сервисес» предоставляет выделенные вычислительные мощности и каналы передачи данных для финансовых институтов, 
-          аналитических агентств и разработчиков алгоритмических систем. Мы обеспечиваем физическую изоляцию ресурсов и гарантированную 
-          пропускную способность в глобальных сетях.
-        </p>
+          <p className="text-lg text-gray-400 max-w-4xl leading-relaxed mb-12 font-medium tracking-wide text-[14px]">
+            ООО «Веб3 Сайбер Сервисес» — ведущий российский провайдер изолированных вычислительных мощностей и систем 
+            анализа данных промышленного уровня. Мы обеспечиваем физическую безопасность ресурсов и гарантированную 
+            пропускную способность для финансовых институтов, аналитических агентств и корпоративных HFT-хабов, 
+            работая в строгом соответствии с требованиями регуляторов РФ.
+          </p>
 
-        <div className="flex items-center gap-4 mb-24">
-          <a href="/portal" className="btn-enterprise py-4 px-8 text-[11px]">
-            Личный кабинет
-          </a>
-          <a href="/api-docs" className="btn-outline py-4 px-8 text-[11px]">
-            Техническая спецификация
-          </a>
+          <div className="flex flex-wrap items-center gap-4 mb-24">
+            <a href="/portal" className="btn-enterprise py-4 px-8 text-[11px]">
+              Личный кабинет тенанта
+            </a>
+            <a href="/api-docs" className="btn-outline py-4 px-8 text-[11px]">
+              Техническая спецификация (gRPC)
+            </a>
+          </div>
+        </header>
+
+        {/* Core Infrastructure Blocks */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10 mb-32">
+          <div className="p-10 bg-black hover:bg-white/[0.01] transition-colors">
+            <div className="technical-label mb-6 text-blue-500 text-[10px]">01 // Вычислительные узлы</div>
+            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Bare-metal инфраструктура</h3>
+            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
+              Предоставление выделенных физических серверов без гипервизоров. Исключение влияния «соседних» процессов 
+              гарантирует стабильный p99 latency в микросекундном диапазоне для критических вычислений.
+            </p>
+            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
+              Stack: Dual Intel Xeon Gold / 512GB ECC RAM
+            </div>
+          </div>
+
+          <div className="p-10 bg-black hover:bg-white/[0.01] transition-colors">
+            <div className="technical-label mb-6 text-blue-500 text-[10px]">02 // Каналы передачи данных</div>
+            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Low-latency связность</h3>
+            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
+              Прямое подключение к MSK-IX и глобальным точкам обмена трафиком через выделенные L1/L2 каналы. 
+              Отсутствие промежуточной буферизации и аппаратная обработка пакетов на базе SmartNIC.
+            </p>
+            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
+              Backbone: 100 Gbps Dark Fiber / DWDM
+            </div>
+          </div>
+
+          <div className="p-10 bg-black hover:bg-white/[0.01] transition-colors">
+            <div className="technical-label mb-6 text-blue-500 text-[10px]">03 // Информационная безопасность</div>
+            <h3 className="text-xl font-black text-white mb-4 tracking-tighter">Сетевая изоляция</h3>
+            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
+              Организация закрытых виртуальных облаков (VPC) с аппаратным шифрованием трафика (AES-256-GCM). 
+              Полное соответствие требованиям ФСТЭК и ФСБ в области защиты корпоративных данных.
+            </p>
+            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
+              Compliance: 152-FZ / ISO 27001 / SOC 2
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10">
-          <div className="p-10 bg-black">
-            <div className="technical-label mb-6 text-blue-500">01 // Вычислительные узлы</div>
-            <h3 className="text-lg font-black text-white mb-4 tracking-tighter">Bare-Metal Infrastructure</h3>
-            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Предоставление выделенных серверов без уровня виртуализации. Это исключает влияние «соседних» процессов на производительность 
-              и обеспечивает стабильное время отклика в микросекундном диапазоне.
+        {/* Detailed Services Overview */}
+        <section className="space-y-16 mb-32">
+          <div className="max-w-3xl">
+            <h2 className="technical-label mb-8 text-blue-500 text-[10px]">Направления деятельности</h2>
+            <h3 className="text-3xl font-black text-white mb-6 tracking-tight">Экосистема технологических сервисов</h3>
+            <p className="text-gray-400 text-[12px] leading-relaxed font-bold tracking-widest">
+              Мы объединяем передовые разработки в области кибербезопасности и обработки больших данных для создания 
+              безопасной среды исполнения ваших бизнес-алгоритмов.
             </p>
-            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Configuration: Dual Intel Xeon Gold / 256GB RAM
-            </div>
           </div>
 
-          <div className="p-10 bg-black">
-            <div className="technical-label mb-6 text-blue-500">02 // Передача данных</div>
-            <h3 className="text-lg font-black text-white mb-4 tracking-tighter">Low-Latency Connectivity</h3>
-            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Прямое подключение к ключевым точкам обмена трафиком через выделенные оптоволоконные каналы. Минимизация маршрутов и 
-              отсутствие буферизации на промежуточных узлах.
-            </p>
-            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Backbone: 100 Gbps Dark Fiber Links
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
+              <h4 className="text-white font-black text-lg tracking-tight">Агрегация данных и OSINT</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
+                Глубокий мониторинг цифровых рисков, выявление утечек в Dark Web и проверка контрагентов по 115-ФЗ. 
+                Мы предоставляем юридически значимые отчеты для департаментов безопасности.
+              </p>
+              <a href="/services/osint" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                Подробнее о методологии →
+              </a>
+            </div>
+            
+            <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
+              <h4 className="text-white font-black text-lg tracking-tight">Провайдер потоковых данных</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
+                Магистральная доставка рыночной телеметрии через изолированные gRPC-туннели. 
+                Минимальный jitter и гарантированный доступ к глобальным мемпулам блокчейн-сетей.
+              </p>
+              <a href="/services/data-streaming" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                Технический регламент →
+              </a>
+            </div>
+
+            <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
+              <h4 className="text-white font-black text-lg tracking-tight">Аудит ИБ (Pentest)</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
+                Имитация целенаправленных атак (APT) по стандартам NIST и OWASP. 
+                Профессиональное тестирование периметра и микросервисной архитектуры с верификацией исправлений.
+              </p>
+              <a href="/services/pentest" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                Спецификация аудита →
+              </a>
+            </div>
+
+            <div className="p-8 border border-white/10 bg-white/[0.01] space-y-4">
+              <h4 className="text-white font-black text-lg tracking-tight">B2B Телеметрия</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
+                Предиктивный мониторинг инфраструктуры на базе eBPF-агентов. 
+                Полная видимость сетевых потоков без нагрузки на производительность бизнес-приложений.
+              </p>
+              <a href="/services/telemetry" className="inline-flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
+                Схема интеграции →
+              </a>
             </div>
           </div>
+        </section>
 
-          <div className="p-10 bg-black">
-            <div className="technical-label mb-6 text-blue-500">03 // Безопасность</div>
-            <h3 className="text-lg font-black text-white mb-4 tracking-tighter">Network Isolation</h3>
-            <p className="text-gray-400 text-[11px] leading-relaxed mb-8 font-bold tracking-wider">
-              Организация закрытых виртуальных сетей (VPC) и аппаратное шифрование трафика. Доступ к инфраструктуре регламентирован 
-              в соответствии с требованиями комплаенса и информационной безопасности.
-            </p>
-            <div className="text-[9px] font-mono text-white/30 pt-4 border-t border-white/5 tracking-widest">
-              Encryption: Hardware-level AES-256-GCM
-            </div>
-          </div>
-        </div>
-
+        {/* Global Presence & Legal */}
         <section className="mt-32 space-y-12 border-t border-white/10 pt-20">
           <div className="max-w-3xl">
-            <h2 className="technical-label mb-8 text-blue-500">Глобальное присутствие</h2>
-            <p className="text-gray-400 text-[11px] leading-relaxed font-bold tracking-widest">
-              Инфраструктура ООО «Веб3 Сайбер Сервисес» развернута в стратегически важных дата-центрах Tier III+, обеспечивая 
-              географическую избыточность и отказоустойчивость. Наши узлы расположены в точках с минимальной дистанцией до 
-              крупнейших клиринговых и торговых систем мира.
+            <h2 className="technical-label mb-8 text-blue-500 text-[10px]">Глобальное присутствие</h2>
+            <p className="text-gray-400 text-[12px] leading-relaxed font-bold tracking-widest">
+              Инфраструктура компании развернута в стратегически важных дата-центрах уровня Tier III+ в РФ и дружественных 
+              юрисдикциях, обеспечивая географическую избыточность и соблюдение законов о локализации данных.
             </p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { region: 'EU-WEST', location: 'Frankfurt / London', status: 'Operational' },
-              { region: 'US-EAST', location: 'New York / Ashburn', status: 'Operational' },
-              { region: 'ASIA-PACIFIC', location: 'Tokyo / Singapore', status: 'Operational' },
-              { region: 'RU-CENTRAL', location: 'Moscow / MSK-IX', status: 'Operational' }
+              { region: 'RU-CENTRAL', location: 'Moscow / MSK-IX', status: 'Operational' },
+              { region: 'ASIA-EAST', location: 'Hong Kong / Equinix', status: 'Operational' },
+              { region: 'ME-SOUTH', location: 'Dubai / Datamena', status: 'Operational' },
+              { region: 'RU-WEST', location: 'Saint Petersburg', status: 'Operational' }
             ].map((loc) => (
               <div key={loc.region} className="p-6 border border-white/5 bg-white/[0.02]">
-                <div className="text-[9px] text-white/40 mb-2 tracking-widest font-black">{loc.region}</div>
-                <div className="text-[10px] text-white font-black mb-4">{loc.location}</div>
-                <div className="text-[8px] text-emerald-500 font-mono tracking-[0.2em]">{loc.status}</div>
+                <div className="text-[9px] text-white/40 mb-2 tracking-widest font-black uppercase">{loc.region}</div>
+                <div className="text-[11px] text-white font-black mb-4">{loc.location}</div>
+                <div className="text-[8px] text-emerald-500 font-mono tracking-[0.2em] uppercase">{loc.status}</div>
               </div>
             ))}
           </div>
         </section>
 
+        {/* Compliance Footer Block */}
         <section className="mt-32 p-12 bg-white/[0.01] border border-white/10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="space-y-4">
-              <h2 className="text-xl font-black tracking-tighter text-white">Соответствие стандартам</h2>
-              <p className="text-[10px] text-muted-foreground tracking-widest max-w-2xl font-bold leading-relaxed">
-                Мы придерживаемся строгих протоколов безопасности и юридической чистоты. Все услуги предоставляются в рамках 
-                действующего законодательства РФ, включая 152-ФЗ и 115-ФЗ. Регулярный аудит систем обеспечивает 
-                непрерывность бизнес-процессов наших клиентов.
+              <h2 className="text-2xl font-black tracking-tighter text-white">Соответствие регуляторным нормам</h2>
+              <p className="text-[11px] text-muted-foreground tracking-widest max-w-3xl font-bold leading-relaxed">
+                Мы придерживаемся строгих протоколов безопасности и юридической чистоты. Все услуги предоставляются 
+                в рамках правового поля Российской Федерации, включая 152-ФЗ («О персональных данных») и 115-ФЗ 
+                («О противодействии легализации доходов»). Регулярный внутренний аудит и сертификация ISO 27001 
+                обеспечивают непрерывность бизнес-процессов наших клиентов.
               </p>
             </div>
             <div className="flex gap-4 shrink-0">
-              <div className="px-4 py-2 border border-white/10 text-[8px] font-black tracking-widest text-white/60">ISO 27001 compliant</div>
-              <div className="px-4 py-2 border border-white/10 text-[8px] font-black tracking-widest text-white/60">SOC 2 Type II</div>
+              <div className="px-4 py-2 border border-white/10 text-[9px] font-black tracking-widest text-white/60 uppercase">ISO 27001 Certified</div>
+              <div className="px-4 py-2 border border-white/10 text-[9px] font-black tracking-widest text-white/60 uppercase">PCI DSS Compliant</div>
             </div>
           </div>
         </section>
