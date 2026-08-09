@@ -1,11 +1,10 @@
 
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { z } from 'zod';
 
 /**
- * Edge-compatible конфигурация NextAuth.
- * Не содержит зависимостей от БД (SQLite), что позволяет использовать её в Middleware.
+ * Конфигурация, совместимая с Edge Runtime.
+ * Не содержит адаптеров базы данных.
  */
 export const authConfig = {
   pages: {
@@ -43,8 +42,7 @@ export const authConfig = {
   },
   providers: [
     Credentials({
-      async authorize(credentials) {
-        // Логика авторизации будет расширена в auth.ts, где доступна БД
+      async authorize() {
         return null;
       },
     }),

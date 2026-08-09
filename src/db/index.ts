@@ -2,15 +2,14 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
-import path from 'path';
 
-// OPSEC: Использование внешнего или временного пути для БД, чтобы избежать записи в корень проекта
-const dbPath = process.env.DATABASE_URL || '/tmp/sqlite.db';
+// OPSEC: Использование безопасного пути вне корня проекта
+const dbPath = process.env.DATABASE_URL || '/tmp/cyber_vault.sqlite';
 const sqlite = new Database(dbPath);
 
 sqlite.pragma('journal_mode = WAL');
 
-// Инициализация базовых таблиц
+// Инициализация схем
 sqlite.prepare(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,

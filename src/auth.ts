@@ -7,13 +7,15 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
 
 /**
- * Полная конфигурация NextAuth для Node.js среды.
- * Здесь подключается SQLite адаптер и тяжелые библиотеки (bcrypt).
+ * Полная конфигурация для Node.js среды.
+ * Использует Drizzle Adapter и bcrypt.
  */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
+  adapter: DrizzleAdapter(db),
   providers: [
     Credentials({
       async authorize(credentials) {

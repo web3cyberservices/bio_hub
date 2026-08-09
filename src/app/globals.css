@@ -2,7 +2,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Базовая палитра корпоративного портала */
   --color-background: hsl(240 10% 3.9%);
   --color-foreground: hsl(0 0% 98%);
   
@@ -20,7 +19,6 @@
   --radius-md: calc(0.2rem - 2px);
   --radius-sm: calc(0.2rem - 4px);
 
-  /* Кастомные шрифты и анимации */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
