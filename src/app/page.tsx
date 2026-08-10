@@ -5,9 +5,6 @@ export default function HeroSection() {
       <div className="flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full">
         <header className="space-y-6 md:space-y-8">
           <div className="space-y-3">
-            <div className="inline-block px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] rounded-sm mb-2">
-              Infrastructure Platform v2.0
-            </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1] max-w-4xl">
               Инфраструктурные решения для <br className="hidden md:block" />
               высоконагруженных систем
