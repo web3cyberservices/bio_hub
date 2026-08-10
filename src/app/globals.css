@@ -45,7 +45,7 @@
 }
 
 .btn-outline {
-  @apply border border-white/10 bg-transparent text-white font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-white/5 transition-all flex items-center justify-center cursor-pointer;
+  @apply border border-white/10 bg-transparent text-white font-black text-[10px] tracking-widest px-6 py-2.5 rounded-sm hover:bg-white/5 transition-all flex items-center justify-center cursor-pointer active:scale-[0.98];
 }
 
 .technical-label {
