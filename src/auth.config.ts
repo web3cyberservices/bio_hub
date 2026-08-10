@@ -1,10 +1,7 @@
+
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
-/**
- * Базовая конфигурация NextAuth для Edge Runtime (Middleware).
- * Не содержит адаптера базы данных, так как Edge не поддерживает Node-библиотеки SQLite.
- */
 export const authConfig = {
   pages: {
     signIn: '/portal',

@@ -1,6 +1,7 @@
+
 {
   "name": "cyberlog-enterprise",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
@@ -23,7 +24,8 @@
     "clsx": "latest",
     "tailwind-merge": "latest",
     "zod": "latest",
-    "bcryptjs": "latest"
+    "bcryptjs": "latest",
+    "wav": "^1.0.2"
   },
   "devDependencies": {
     "@types/node": "latest",

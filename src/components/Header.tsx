@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,7 +34,6 @@ export function Header() {
           <span className="font-bold text-sm tracking-tight text-white">Web3CyberServices</span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
           <div className="relative group py-4">
             <button className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
@@ -78,28 +78,17 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay - Fullscreen and High Z-Index */}
       <div className={`fixed inset-0 bg-black z-[200] lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-full pointer-events-none'}`}>
         <div className="container mx-auto px-6 py-24 h-full overflow-y-auto space-y-12 bg-black flex flex-col">
-          
-          {/* Main Quick Links */}
           <div className="grid grid-cols-1 gap-4">
-            <Link 
-              href="/api-docs" 
-              onClick={closeMenu}
-              className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm"
-            >
+            <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <FileText className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-black tracking-widest text-white uppercase">Техническая документация</span>
                 <span className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Спецификации и API</span>
               </div>
             </Link>
-            <Link 
-              href="/pricing" 
-              onClick={closeMenu}
-              className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm"
-            >
+            <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <CreditCard className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-black tracking-widest text-white uppercase">Тарифные планы</span>
@@ -108,7 +97,6 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Detailed Services List */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 px-2">
               <Zap className="w-4 h-4 text-blue-500" />
@@ -122,12 +110,7 @@ export function Header() {
                 { name: 'B2B Телеметрия', href: '/services/telemetry', icon: <Database className="w-4 h-4" /> },
                 { name: 'DevSecOps Консалтинг', href: '/services/devsecops', icon: <Zap className="w-4 h-4" /> }
               ].map((service) => (
-                <Link 
-                  key={service.href}
-                  href={service.href}
-                  onClick={closeMenu}
-                  className="flex items-center gap-4 p-5 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors"
-                >
+                <Link key={service.href} href={service.href} onClick={closeMenu} className="flex items-center gap-4 p-5 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
                   <span className="text-muted-foreground">{service.icon}</span>
                   {service.name}
                 </Link>
@@ -135,7 +118,6 @@ export function Header() {
             </div>
           </div>
 
-          {/* Mobile Auth Buttons */}
           <div className="mt-auto pt-8 border-t border-white/10 flex flex-col gap-4">
             <Link href="/portal" onClick={closeMenu} className="btn-enterprise py-5 text-[11px] text-center uppercase font-black tracking-[0.3em]">
               Вход в личный кабинет
