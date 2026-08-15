@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Search, Shield, Database, Globe, AlertTriangle, FileCheck, Target, Zap, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICES } from '@/lib/registry';
@@ -24,8 +26,7 @@ export default function OsintPage() {
             {service.name}
           </h1>
           <p className="text-[13px] md:text-[15px] text-muted-foreground font-medium tracking-wide max-w-3xl leading-relaxed mb-10">
-            {service.desc} Профессиональная разведка на основе открытых и специализированных источников. Мы предоставляем 
-            комплексный анализ цифрового следа организации и мониторинг утечек.
+            {service.desc}
           </p>
           
           <div className="flex flex-wrap gap-4">
