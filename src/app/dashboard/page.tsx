@@ -1,18 +1,18 @@
 
-import { auth, signOut } from '@/auth';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { 
+  Zap, 
+  ShieldCheck, 
+  Terminal, 
   Activity, 
-  Shield, 
-  Cpu, 
-  Network, 
+  Search,
   LogOut,
-  Terminal,
-  Database,
-  Lock,
-  ArrowUpRight,
-  Clock
+  ChevronRight,
+  Database
 } from 'lucide-react';
+import { handleSignOut } from '@/lib/actions/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,155 +25,112 @@ export default async function DashboardPage() {
 
   const user = session.user as any;
 
-  // Данные телеметрии для визуализации
-  const recentPings = [
-    { ts: new Date().toISOString(), latency: '0.42ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: new Date(Date.now() - 1000).toISOString(), latency: '0.38ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: new Date(Date.now() - 5000).toISOString(), latency: '1.12ms', protocol: 'JSON-RPC', status: 'OK', origin: 'ASIA-SOUTH' },
-    { ts: new Date(Date.now() - 10000).toISOString(), latency: '0.45ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
-    { ts: new Date(Date.now() - 15000).toISOString(), latency: '0.41ms', protocol: 'gRPC', status: 'OK', origin: 'EU-WEST-1' },
+  const cards = [
+    {
+      title: 'gRPC Data Streaming',
+      desc: 'Магистральные каналы доставки рыночных данных с ультра-низкой задержкой.',
+      href: '/services/data-streaming',
+      icon: <Zap className="w-5 h-5 text-blue-500" />,
+      color: 'blue'
+    },
+    {
+      title: 'DevSecOps Automation',
+      desc: 'Трансформация цикла разработки в безопасную экосистему через автоматизацию.',
+      href: '/services/devsecops',
+      icon: <Terminal className="w-5 h-5 text-green-500" />,
+      color: 'green'
+    },
+    {
+      title: 'OSINT & Intelligence',
+      desc: 'Профессиональная разведка на основе открытых и специализированных источников.',
+      href: '/services/osint',
+      icon: <Search className="w-5 h-5 text-purple-500" />,
+      color: 'purple'
+    },
+    {
+      title: 'Pentest & Audit',
+      desc: 'Комплексный аудит безопасности и имитация APT атак для выявления уязвимостей.',
+      href: '/services/pentest',
+      icon: <ShieldCheck className="w-5 h-5 text-red-500" />,
+      color: 'red'
+    },
+    {
+      title: 'Infrastructure Telemetry',
+      desc: 'Предиктивный мониторинг на базе eBPF для обеспечения максимальной видимости.',
+      href: '/services/telemetry',
+      icon: <Activity className="w-5 h-5 text-orange-500" />,
+      color: 'orange'
+    }
   ];
 
   return (
     <div className="min-h-screen bg-black text-white font-mono selection:bg-blue-500/30">
-      {/* Техническая панель управления */}
-      <div className="border-b border-white/10 bg-white/[0.02] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-[9px] text-blue-500 font-black tracking-widest">
-            <Activity className="w-3.5 h-3.5" /> Система: Активна
+      {/* Header Bar */}
+      <div className="border-b border-white/10 bg-white/[0.02] px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 text-[10px] text-blue-500 font-black tracking-widest uppercase">
+            <Database className="w-4 h-4" /> Node: Active
           </div>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="text-[9px] text-muted-foreground tracking-widest">
-            NODE_INSTANCE: {user.id ? user.id.split('-')[0] : 'UNKNOWN'}
+          <div className="h-4 w-px bg-white/10 hidden sm:block" />
+          <div className="hidden sm:block text-[9px] text-muted-foreground tracking-widest uppercase">
+            Tenant: {user.email}
           </div>
         </div>
         
-        <form action={async () => {
-          'use server';
-          await signOut();
-        }}>
-          <button className="flex items-center gap-2 text-[9px] font-black text-red-500 hover:text-white transition-colors">
-            <LogOut className="w-3.5 h-3.5" /> Отключить узел
+        <form action={handleSignOut}>
+          <button className="flex items-center gap-2 text-[10px] font-black text-red-500 hover:text-white transition-colors uppercase tracking-widest group">
+            <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Отключить узел
           </button>
         </form>
       </div>
 
-      <main className="container mx-auto max-w-7xl px-6 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Конфигурация клиента */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="border border-white/10 p-8 space-y-8 bg-white/[0.01]">
-              <div className="flex items-center gap-2 text-white/40 text-[9px] font-black tracking-[0.3em]">
-                <Shield className="w-4 h-4" /> Конфигурация тенанта
-              </div>
-              
-              <div className="space-y-6 text-[10px]">
-                <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground tracking-widest">Email:</span>
-                  <span className="text-white">{user.email}</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground tracking-widest">Role level:</span>
-                  <span className="text-blue-500 font-bold uppercase">{user.role}</span>
-                </div>
-                <div className="flex justify-between border-b border-white/5 pb-3">
-                  <span className="text-muted-foreground tracking-widest">gRPC quota:</span>
-                  <span className="text-green-500 font-bold">{user.grpcQuota?.toLocaleString()} req/mo</span>
-                </div>
-              </div>
+      <main className="container mx-auto max-w-7xl px-6 py-16">
+        <div className="mb-16">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-4">Панель управления узлом</h1>
+          <p className="text-[11px] text-muted-foreground font-black tracking-[0.3em] uppercase">Конфигурация активных gRPC-туннелей и систем телеметрии</p>
+        </div>
 
-              <div className="bg-blue-500/5 border border-blue-500/10 p-5 rounded-sm">
-                <div className="text-[9px] font-black text-blue-500 mb-3 flex items-center gap-2 tracking-widest">
-                  <Lock className="w-3.5 h-3.5" /> Тип доступа
-                </div>
-                <p className="text-[10px] text-white/60 leading-relaxed font-bold">
-                  Dedicated bare-metal infrastructure
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {cards.map((card) => (
+            <Link 
+              key={card.href} 
+              href={card.href}
+              className="group border border-white/10 p-8 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/20 transition-all flex flex-col justify-between min-h-[240px]"
+            >
+              <div>
+                <div className="mb-6">{card.icon}</div>
+                <h3 className="text-lg font-black tracking-tight text-white mb-3 group-hover:text-blue-500 transition-colors uppercase">{card.title}</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed font-bold tracking-wider">
+                  {card.desc}
                 </p>
               </div>
-            </div>
+              
+              <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
+                <span className="text-[9px] font-black tracking-[0.3em] text-white/40 uppercase group-hover:text-white transition-colors">Перейти к сервису</span>
+                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+              </div>
+            </Link>
+          ))}
 
-            <div className="border border-white/10 p-8 space-y-6 bg-white/[0.01]">
-               <div className="flex items-center gap-2 text-white/40 text-[9px] font-black tracking-[0.3em]">
-                <Network className="w-4 h-4" /> Активные эндпоинты
+          {/* User Stats Card */}
+          <div className="border border-blue-500/20 p-8 bg-blue-500/5 flex flex-col justify-between min-h-[240px]">
+            <div>
+              <h4 className="text-[10px] font-black text-blue-500 tracking-[0.3em] uppercase mb-6">Статус аккаунта</h4>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Уровень:</span>
+                  <span className="text-[10px] text-white font-black uppercase tracking-widest">{user.role}</span>
+                </div>
+                <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Квота RPS:</span>
+                  <span className="text-[10px] text-green-500 font-black uppercase tracking-widest">{user.grpcQuota?.toLocaleString()}</span>
+                </div>
               </div>
-              <div className="space-y-3 text-[10px]">
-                {[
-                  { name: 'eu-telemetry.xyz', status: 'Active' },
-                  { name: 'eth-rpc.xyz', status: 'Active' },
-                  { name: 'mempool-b2b.xyz', status: 'Active' }
-                ].map((ep) => (
-                  <div key={ep.name} className="flex items-center justify-between border-b border-white/5 pb-2">
-                    <span className="text-muted-foreground">{ep.name}</span>
-                    <span className="text-green-500 font-bold text-[9px]">[{ep.status}]</span>
-                  </div>
-                ))}
-              </div>
+            </div>
+            <div className="p-4 bg-white/5 border border-white/5 text-[9px] text-white/60 leading-relaxed font-bold tracking-wider">
+              Выделенная bare-metal инфраструктура MSK-IX / ЦОД NORD.
             </div>
           </div>
-
-          {/* Метрики инфраструктуры */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { label: 'Latency p99', val: '0.82ms', icon: <Cpu className="w-4 h-4 text-blue-500" /> },
-                { label: 'Throughput', val: '14.2 GB/s', icon: <Database className="w-4 h-4 text-blue-500" /> },
-                { label: 'Uptime SLA', val: '99.999%', icon: <Activity className="w-4 h-4 text-blue-500" /> },
-              ].map((item, i) => (
-                <div key={i} className="border border-white/10 p-6 bg-white/[0.02]">
-                  <div className="flex items-center gap-2 mb-4">
-                    {item.icon}
-                    <span className="text-[9px] font-black text-muted-foreground tracking-[0.2em]">{item.label}</span>
-                  </div>
-                  <div className="text-2xl font-black tracking-tighter text-white">{item.val}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Таблица телеметрии */}
-            <div className="border border-white/10 bg-white/[0.01] overflow-hidden rounded-sm">
-              <div className="bg-white/5 px-8 py-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[9px] font-black tracking-[0.3em] text-white">
-                  <Clock className="w-3.5 h-3.5 text-blue-500" /> Live Telemetry Stream
-                </div>
-                <div className="text-[9px] text-green-500 font-black animate-pulse uppercase">Listening...</div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-[9px] border-collapse">
-                  <thead>
-                    <tr className="text-muted-foreground border-b border-white/10">
-                      <th className="px-8 py-4 font-black tracking-widest">Timestamp</th>
-                      <th className="px-8 py-4 font-black tracking-widest">Latency</th>
-                      <th className="px-8 py-4 font-black tracking-widest">Protocol</th>
-                      <th className="px-8 py-4 font-black tracking-widest">Status</th>
-                      <th className="px-8 py-4 font-black tracking-widest">Origin</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {recentPings.map((ping, i) => (
-                      <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-8 py-4 text-white/60">{ping.ts}</td>
-                        <td className="px-8 py-4 text-blue-400 font-bold">{ping.latency}</td>
-                        <td className="px-8 py-4 text-white/80">{ping.protocol}</td>
-                        <td className="px-8 py-4 text-green-500">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-green-500" /> {ping.status}
-                          </span>
-                        </td>
-                        <td className="px-8 py-4 text-white/40">{ping.origin}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="p-8 border-t border-white/10 flex justify-center">
-                <button className="text-[9px] font-black tracking-[0.3em] text-blue-500 hover:text-white transition-colors flex items-center gap-2">
-                  Посмотреть все логи <ArrowUpRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-
         </div>
       </main>
     </div>

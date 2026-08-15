@@ -1,6 +1,5 @@
 
 import type { NextAuthConfig } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
 
 export const authConfig = {
   pages: {
@@ -36,11 +35,5 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [
-    Credentials({
-      async authorize() {
-        return null;
-      },
-    }),
-  ],
+  providers: [], // Провайдеры добавляются в auth.ts
 } satisfies NextAuthConfig;
