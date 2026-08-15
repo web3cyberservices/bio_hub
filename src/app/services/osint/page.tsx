@@ -1,7 +1,6 @@
-
 'use client';
 
-import { Search, Shield, Database, Globe, AlertTriangle, FileCheck, Target, Zap, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { SERVICES } from '@/lib/registry';
 
@@ -13,15 +12,6 @@ export default function OsintPage() {
       <div className="container mx-auto px-4 max-w-6xl">
         
         <div className="mb-24 border-b border-white/10 pb-16">
-          <div className="flex flex-wrap gap-3 mb-8">
-            <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest rounded-full">
-              SLA 99.9% Data Freshness
-            </span>
-            <span className="px-3 py-1 bg-white/5 border border-white/10 text-white/60 text-[9px] font-black uppercase tracking-widest rounded-full">
-              Compliance: 152-ФЗ / 115-ФЗ
-            </span>
-          </div>
-          
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-8 leading-[1.05]">
             {service.name}
           </h1>
@@ -39,7 +29,7 @@ export default function OsintPage() {
           </div>
         </div>
 
-        {/* Text-based capabilities list */}
+        {/* Чистый текстовый список возможностей */}
         <div className="space-y-16 mb-32 max-w-4xl">
           <h2 className="technical-label text-blue-500">Технические возможности платформы</h2>
           <div className="space-y-12">
