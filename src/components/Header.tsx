@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronDown, Menu, X, FileText, CreditCard, Shield, Zap, Activity, Globe, Database, LogIn } from 'lucide-react';
+import { ChevronDown, Menu, X, FileText, CreditCard, Shield, Zap, LogIn } from 'lucide-react';
 import { SERVICES } from '@/lib/registry';
 
 export function Header() {
@@ -76,35 +76,33 @@ export function Header() {
 
       {/* Fullscreen Mobile Menu */}
       <div className={`fixed inset-0 bg-black z-[200] lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}`}>
-        <div className="flex flex-col h-full container mx-auto px-6 py-20 overflow-y-auto space-y-10">
+        <div className="flex flex-col h-full container mx-auto px-6 py-24 overflow-y-auto space-y-12">
           
-          {/* Main Links */}
-          <div className="grid grid-cols-1 gap-3">
-            <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-5 bg-white/[0.05] border border-white/10 rounded-sm">
+          <div className="grid grid-cols-1 gap-4">
+            <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <FileText className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-black tracking-widest text-white uppercase">Документация</span>
-                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Техническая спецификация</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Спецификация</span>
               </div>
             </Link>
-            <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-5 bg-white/[0.05] border border-white/10 rounded-sm">
+            <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <CreditCard className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-black tracking-widest text-white uppercase">Тарифные планы</span>
-                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Цены и квоты</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Цены</span>
               </div>
             </Link>
           </div>
 
-          {/* Services List */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 px-2">
               <Zap className="w-3.5 h-3.5 text-blue-500" />
-              <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Инфраструктурные услуги</h3>
+              <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Услуги</h3>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {SERVICES.map((service) => (
-                <Link key={service.href} href={service.href} onClick={closeMenu} className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
+                <Link key={service.href} href={service.href} onClick={closeMenu} className="flex items-center gap-4 p-5 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
                   {service.name}
                 </Link>
@@ -112,14 +110,10 @@ export function Header() {
             </div>
           </div>
 
-          {/* Footer Action */}
-          <div className="mt-auto pt-8 border-t border-white/10 flex flex-col gap-4">
+          <div className="mt-auto pt-8 border-t border-white/10">
             <Link href="/portal" onClick={closeMenu} className="btn-enterprise py-5 text-[11px] text-center uppercase font-black tracking-[0.3em] flex items-center justify-center gap-2">
-              <LogIn className="w-4 h-4" /> Авторизация тенанта
+              <LogIn className="w-4 h-4" /> Авторизация
             </Link>
-            <p className="text-[8px] text-center text-muted-foreground uppercase tracking-widest font-mono">
-              © 2026 Web3CyberServices Infrastructure
-            </p>
           </div>
         </div>
       </div>
