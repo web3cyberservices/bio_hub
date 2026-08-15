@@ -1,8 +1,8 @@
 
 export default function HeroSection() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col bg-grid px-4 overflow-hidden relative">
-      <div className="flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full py-12">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-grid px-4 overflow-hidden relative">
+      <div className="flex-1 flex flex-col justify-center max-w-6xl mx-auto w-full py-6">
         <header className="space-y-6 md:space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.1] max-w-4xl">
@@ -19,7 +19,7 @@ export default function HeroSection() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 pt-6">
+          <div className="flex flex-wrap items-center gap-4 pt-4">
             <a href="/api-docs" className="btn-outline py-4 px-8 text-[10px] md:text-[11px]">
               Техническая спецификация
             </a>

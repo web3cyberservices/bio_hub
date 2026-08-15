@@ -1,59 +1,9 @@
 
 import { Check, ArrowRight, Info } from 'lucide-react';
 import Link from 'next/link';
+import { PLANS } from '@/lib/registry';
 
 export default function PricingPage() {
-  const tiers = [
-    {
-      name: 'Algorithmic Trader',
-      price: '$850',
-      period: '/мес',
-      desc: 'Базовый набор для индивидуальных трейдеров и MEV-поисковиков.',
-      features: [
-        '5 WSS эндпоинтов (Mainnet/L2)',
-        'Shared Mempool Stream',
-        'Лимит: 2,500 RPS',
-        'Поддержка gRPC Telemetry',
-        'Доступ к публичным релеям'
-      ],
-      cta: 'Начать работу',
-      link: '/portal'
-    },
-    {
-      name: 'Institutional MEV',
-      price: '$3,200',
-      period: '/мес',
-      desc: 'Выделенная инфраструктура для фондов с защитой от front-running.',
-      features: [
-        'Dedicated Bare-Metal Node',
-        'Zero-Latency Fiber Links',
-        'gRPC Telemetry Bypass',
-        'Dark Pool Routing (Private)',
-        'SLA: 99.99%',
-        'Персональный Slack-канал'
-      ],
-      cta: 'Выбрать Institutional',
-      highlighted: true,
-      link: '/portal'
-    },
-    {
-      name: 'Custom Backbone',
-      price: 'Индив.',
-      period: '',
-      desc: 'Индивидуальные решения для провайдеров ликвидности и HFT-хабов.',
-      features: [
-        'Cross-Region Load Balancing',
-        'Выделенный BGP пиринг',
-        'SLA: 99.999% (Юридический)',
-        'Whitelist портов 10001-10007',
-        'Аппаратная изоляция (HSM)',
-        '24/7 Инженерная поддержка'
-      ],
-      cta: 'Связаться с Sales',
-      link: '/portal'
-    }
-  ];
-
   return (
     <div className="py-20 md:py-32 container mx-auto px-4 md:px-6 bg-grid min-h-screen">
       <div className="max-w-4xl mb-24">
@@ -66,7 +16,7 @@ export default function PricingPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-white/5 border border-white/5 rounded-sm overflow-hidden mb-16">
-        {tiers.map((tier) => (
+        {PLANS.map((tier) => (
           <div key={tier.name} className={`flex flex-col p-10 md:p-12 bg-black relative transition-colors hover:bg-white/[0.01] ${tier.highlighted ? 'border-y lg:border-y-0 lg:border-x border-blue-500/50' : ''}`}>
             {tier.highlighted && (
               <div className="absolute top-0 right-0 bg-blue-500 text-black text-[9px] font-black px-4 py-1.5 tracking-widest">

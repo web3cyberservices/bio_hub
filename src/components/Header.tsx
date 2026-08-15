@@ -1,9 +1,11 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronDown, Menu, X, FileText, CreditCard, Shield, Zap, Activity, Globe, Database, LogIn } from 'lucide-react';
+import { SERVICES } from '@/lib/registry';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,13 +45,7 @@ export function Header() {
             <div className="absolute top-full left-0 w-72 pt-2 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
               <div className="bg-black border border-white/10 rounded-sm shadow-2xl overflow-hidden">
                 <div className="flex flex-col py-2">
-                  {[
-                    { name: 'OSINT и Агрегация данных', href: '/services/osint' },
-                    { name: 'Потоковые данные (gRPC)', href: '/services/data-streaming' },
-                    { name: 'Pentest и Аудит ИБ', href: '/services/pentest' },
-                    { name: 'B2B Телеметрия', href: '/services/telemetry' },
-                    { name: 'DevSecOps Консалтинг', href: '/services/devsecops' }
-                  ].map((s) => (
+                  {SERVICES.map((s) => (
                     <Link key={s.href} href={s.href} className="px-5 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0 text-[9px] tracking-widest">
                       {s.name}
                     </Link>
@@ -80,42 +76,36 @@ export function Header() {
 
       {/* Fullscreen Mobile Menu */}
       <div className={`fixed inset-0 bg-black z-[200] lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}`}>
-        <div className="flex flex-col h-full container mx-auto px-6 py-24 overflow-y-auto space-y-12">
+        <div className="flex flex-col h-full container mx-auto px-6 py-20 overflow-y-auto space-y-10">
           
           {/* Main Links */}
-          <div className="grid grid-cols-1 gap-4">
-            <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
+          <div className="grid grid-cols-1 gap-3">
+            <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-5 bg-white/[0.05] border border-white/10 rounded-sm">
               <FileText className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
-                <span className="text-[12px] font-black tracking-widest text-white uppercase">Техническая документация</span>
-                <span className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1">API и Спецификации</span>
+                <span className="text-[12px] font-black tracking-widest text-white uppercase">Документация</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Техническая спецификация</span>
               </div>
             </Link>
-            <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
+            <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-5 bg-white/[0.05] border border-white/10 rounded-sm">
               <CreditCard className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
                 <span className="text-[12px] font-black tracking-widest text-white uppercase">Тарифные планы</span>
-                <span className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Цены и квоты</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Цены и квоты</span>
               </div>
             </Link>
           </div>
 
           {/* Services List */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center gap-3 px-2">
-              <Zap className="w-4 h-4 text-blue-500" />
+              <Zap className="w-3.5 h-3.5 text-blue-500" />
               <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">Инфраструктурные услуги</h3>
             </div>
             <div className="grid grid-cols-1 gap-2">
-              {[
-                { name: 'OSINT и Агрегация данных', href: '/services/osint', icon: <Globe className="w-4 h-4" /> },
-                { name: 'Потоковые данные (gRPC)', href: '/services/data-streaming', icon: <Activity className="w-4 h-4" /> },
-                { name: 'Pentest и Аудит ИБ', href: '/services/pentest', icon: <Shield className="w-4 h-4" /> },
-                { name: 'B2B Телеметрия', href: '/services/telemetry', icon: <Database className="w-4 h-4" /> },
-                { name: 'DevSecOps Консалтинг', href: '/services/devsecops', icon: <Zap className="w-4 h-4" /> }
-              ].map((service) => (
-                <Link key={service.href} href={service.href} onClick={closeMenu} className="flex items-center gap-4 p-5 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
-                  <span className="text-muted-foreground">{service.icon}</span>
+              {SERVICES.map((service) => (
+                <Link key={service.href} href={service.href} onClick={closeMenu} className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/5 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-white/5 transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
                   {service.name}
                 </Link>
               ))}
@@ -125,7 +115,7 @@ export function Header() {
           {/* Footer Action */}
           <div className="mt-auto pt-8 border-t border-white/10 flex flex-col gap-4">
             <Link href="/portal" onClick={closeMenu} className="btn-enterprise py-5 text-[11px] text-center uppercase font-black tracking-[0.3em] flex items-center justify-center gap-2">
-              <LogIn className="w-4 h-4" /> Вход в личный кабинет
+              <LogIn className="w-4 h-4" /> Авторизация тенанта
             </Link>
             <p className="text-[8px] text-center text-muted-foreground uppercase tracking-widest font-mono">
               © 2026 Web3CyberServices Infrastructure
