@@ -8,6 +8,10 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { signOut as nextSignOut } from '@/auth';
 
+/**
+ * Серверные экшены для управления сессиями и регистрацией.
+ */
+
 const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -23,12 +27,15 @@ export async function registerTenant(formData: FormData) {
   }
 
   try {
+    // Проверка существования пользователя через get() для производительности SQLite
     const existingUser = await db.select().from(users).where(eq(users.email, email)).get();
+    
     if (existingUser) {
-      return { error: 'Тенант уже зарегистрирован' };
+      return { error: 'Тенант уже зарегистрирован в системе' };
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    
     await db.insert(users).values({
       email,
       passwordHash,
@@ -38,11 +45,19 @@ export async function registerTenant(formData: FormData) {
 
     return { success: true };
   } catch (e: any) {
-    console.error('Database error during registration:', e);
-    return { error: `Ошибка БД: ${e.message}` };
+    console.error('Registration failed:', e);
+    return { error: 'Системная ошибка при создании тенанта' };
   }
 }
 
 export async function handleSignOut() {
-  await nextSignOut({ redirectTo: '/' });
+  try {
+    await nextSignOut({ redirectTo: '/' });
+  } catch (error) {
+    // В Next.js 15 signOut может бросать ошибку редиректа, это нормально
+    if ((error as any).digest?.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+    console.error('Sign out error:', error);
+  }
 }

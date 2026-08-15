@@ -3,6 +3,11 @@ import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm';
 import type { AdapterAccount } from 'next-auth/adapters';
 
+/**
+ * Схема таблиц для Auth.js и бизнес-логики.
+ * Оптимизирована под DrizzleAdapter для SQLite.
+ */
+
 export const users = sqliteTable('user', {
   id: text('id').notNull().primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text('name'),
