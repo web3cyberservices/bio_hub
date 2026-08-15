@@ -7,17 +7,16 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import bcrypt from 'bcryptjs';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
-import { eq } from 'drizzle-orm';
 
 /**
  * Основной файл конфигурации NextAuth.
- * Включает адаптер Drizzle для работы с SQLite и провайдер учетных данных.
+ * Добавлены параметры secret и trustHost для работы за Nginx прокси.
  */
 export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   adapter: DrizzleAdapter(db),
   secret: process.env.AUTH_SECRET,
-  trustHost: true,
+  trustHost: true, // Критично для работы с Nginx/Reverse Proxy
   providers: [
     Credentials({
       async authorize(credentials) {

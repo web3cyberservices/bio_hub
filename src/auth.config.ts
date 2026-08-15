@@ -1,6 +1,9 @@
 
 import type { NextAuthConfig } from 'next-auth';
 
+/**
+ * Конфигурация, совместимая с Edge Runtime (для Middleware).
+ */
 export const authConfig = {
   pages: {
     signIn: '/portal',
@@ -8,6 +11,8 @@ export const authConfig = {
   session: {
     strategy: 'jwt',
   },
+  trustHost: true, // Включаем доверие хосту на уровне конфига
+  secret: process.env.AUTH_SECRET,
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
@@ -35,5 +40,5 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [], // Провайдеры добавляются в auth.ts
+  providers: [],
 } satisfies NextAuthConfig;
