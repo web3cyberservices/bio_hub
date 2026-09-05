@@ -22,7 +22,8 @@ import {
   Network,
   Lock,
   History,
-  Scan
+  Scan,
+  Loader2
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -48,7 +49,7 @@ export default function SecurityDashboard() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 3000);
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -61,12 +62,14 @@ export default function SecurityDashboard() {
   }
 
   const calculateHealthScore = () => {
-    const completed = history.filter(s => s.status === 'completed');
-    if (completed.length === 0) return 'WAITING';
+    if (!history || history.length === 0) return 'WAITING';
     
-    // Динамический расчет: штраф за провалы и средний "здоровье"
+    const completed = history.filter(s => s.status === 'completed');
+    if (completed.length === 0 && history.some(s => s.status === 'failed')) return 0;
+    if (completed.length === 0) return 'NO DATA';
+
     const failed = history.filter(s => s.status === 'failed').length;
-    const score = Math.max(0, 100 - (failed * 12));
+    const score = Math.max(0, 100 - (failed * 15));
     return Math.min(100, score);
   };
 
@@ -141,7 +144,7 @@ export default function SecurityDashboard() {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Tabs */}
         <div className="flex border-b border-white/5 gap-8 overflow-x-auto scrollbar-hide">
           {[
             { id: 'pentest', label: 'ПЕНТЕСТ & УЯЗВИМОСТИ', icon: <Terminal className="w-4 h-4" /> },
@@ -166,15 +169,17 @@ export default function SecurityDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           <div className="lg:col-span-8 space-y-8">
-            {/* Input & Tools */}
+            {/* Input & Dynamic Tools */}
             <div className="p-8 border border-white/10 bg-white/[0.02]">
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Цель анализа (Domain / IP / User)</label>
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    {activeTab === 'osint' ? 'Target Identifier (Username/Domain)' : 'Network Target (IP/Domain)'}
+                  </label>
                   <input 
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
-                    placeholder={activeTab === 'osint' ? "Enter username or domain" : "example.com"}
+                    placeholder={activeTab === 'osint' ? "e.g. administrator" : "example.com"}
                     className="w-full bg-black border border-white/10 p-4 text-[12px] focus:border-blue-500 outline-none font-mono text-white transition-all"
                   />
                 </div>
@@ -193,9 +198,9 @@ export default function SecurityDashboard() {
                       
                       {showConfirm === tool.id && (
                         <div className="absolute inset-0 bg-blue-600 flex flex-col items-center justify-center p-4 z-20 animate-in fade-in zoom-in-95">
-                          <span className="text-[9px] font-black text-white uppercase mb-4 tracking-widest">Execute {tool.label}?</span>
+                          <span className="text-[9px] font-black text-white uppercase mb-4 tracking-widest">Confirm {tool.id}?</span>
                           <div className="flex gap-2 w-full">
-                            <button className="flex-1 bg-white text-black text-[9px] font-black py-2" onClick={(e) => { e.stopPropagation(); handleAction(tool.id); }}>RUN</button>
+                            <button className="flex-1 bg-white text-black text-[9px] font-black py-2" onClick={(e) => { e.stopPropagation(); handleAction(tool.id); }}>EXECUTE</button>
                             <button className="flex-1 bg-black/20 text-white text-[9px] font-black py-2 border border-white/20" onClick={(e) => { e.stopPropagation(); setShowConfirm(null); }}>CANCEL</button>
                           </div>
                         </div>
@@ -206,10 +211,10 @@ export default function SecurityDashboard() {
               </div>
             </div>
 
-            {/* Task Table */}
+            {/* Queue & History Table */}
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Queue & History</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Live Queue & History</h3>
                 <div className="flex gap-2">
                   {['all', 'in_progress', 'completed', 'failed'].map((s) => (
                     <button
@@ -230,15 +235,22 @@ export default function SecurityDashboard() {
                 <table className="w-full text-left text-[9px] font-mono border-collapse">
                   <thead>
                     <tr className="bg-white/[0.01] text-muted-foreground uppercase">
-                      <th className="px-6 py-4 border-b border-white/5">Task</th>
+                      <th className="px-6 py-4 border-b border-white/5">Sequence</th>
                       <th className="px-6 py-4 border-b border-white/5">Target</th>
                       <th className="px-6 py-4 border-b border-white/5">Status</th>
-                      <th className="px-6 py-4 border-b border-white/5 text-right">Report</th>
+                      <th className="px-6 py-4 border-b border-white/5 text-right">Artifacts</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {filteredHistory.map((scan: any) => (
-                      <tr key={scan.id} onClick={() => setSelectedScan(scan)} className="group hover:bg-white/[0.02] cursor-pointer">
+                      <tr 
+                        key={scan.id} 
+                        onClick={() => setSelectedScan(scan)} 
+                        className={clsx(
+                          "group hover:bg-white/[0.02] cursor-pointer transition-colors",
+                          selectedScan?.id === scan.id && "bg-blue-500/[0.03]"
+                        )}
+                      >
                         <td className="px-6 py-5">
                           <span className="text-blue-500 uppercase font-black">{scan.method}</span>
                         </td>
@@ -248,25 +260,31 @@ export default function SecurityDashboard() {
                             "flex items-center gap-1.5 font-black uppercase",
                             scan.status === 'in_progress' ? "text-orange-500" : scan.status === 'completed' ? "text-green-500" : "text-red-500"
                           )}>
-                            {scan.status === 'in_progress' && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />}
+                            {scan.status === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
                             {scan.status}
                           </div>
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
-                          {scan.status === 'completed' ? (
-                            <a href="#" className="text-blue-500 hover:text-white transition-colors flex items-center justify-end gap-1 font-black">
-                              JSON <ChevronRight className="w-3 h-3" />
-                            </a>
-                          ) : scan.status === 'in_progress' ? (
-                            <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500"><Square className="w-3 h-3" /></button>
-                          ) : (
-                            <button onClick={() => deleteSecurityAction(scan.id)} className="text-white/20 hover:text-red-500"><Trash2 className="w-3 h-3" /></button>
-                          )}
+                          <div className="flex items-center justify-end gap-3">
+                            {scan.status === 'completed' && (
+                              <a href={`/reports/${scan.id}.json`} className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1">
+                                JSON <ChevronRight className="w-3 h-3" />
+                              </a>
+                            )}
+                            {scan.status === 'in_progress' && (
+                              <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500 p-1">
+                                <Square className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button onClick={() => deleteSecurityAction(scan.id)} className="text-white/10 hover:text-red-500 p-1">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                     {filteredHistory.length === 0 && (
-                      <tr><td colSpan={4} className="px-6 py-20 text-center text-white/10 uppercase tracking-widest">Queue empty</td></tr>
+                      <tr><td colSpan={4} className="px-6 py-20 text-center text-white/10 uppercase tracking-widest">History Buffer Empty</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -275,14 +293,19 @@ export default function SecurityDashboard() {
           </div>
 
           <aside className="lg:col-span-4 space-y-8">
-            {/* Dynamic Score */}
+            {/* Dynamic Infrastructure Health Score */}
             <div className="bg-[#0A0C14] border border-white/10 p-10">
               <div className="space-y-8">
                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
                   <Activity className="w-4 h-4 text-blue-500" /> INFRASTRUCTURE HEALTH
                 </h4>
                 <div className="flex items-end gap-4">
-                  <span className="text-7xl font-black text-white tracking-tighter">{healthScore}</span>
+                  <span className={clsx(
+                    "text-6xl font-black tracking-tighter",
+                    typeof healthScore === 'number' ? 'text-white' : 'text-blue-500/40 text-4xl'
+                  )}>
+                    {healthScore}
+                  </span>
                   {typeof healthScore === 'number' && <span className="text-muted-foreground text-xl font-black mb-1">/ 100</span>}
                 </div>
                 <div className="w-full bg-white/5 h-1">
@@ -291,37 +314,50 @@ export default function SecurityDashboard() {
                     style={{ width: `${typeof healthScore === 'number' ? healthScore : 0}%` }} 
                   />
                 </div>
+                <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed">
+                  {typeof healthScore === 'number' 
+                    ? `Based on ${history.length} recent audit sequences. Failed tests reduce score by 15pts.` 
+                    : 'Awaiting primary infrastructure audit sequence...'}
+                </p>
               </div>
             </div>
             
-            {/* Logs Window */}
+            {/* Contextual Logs Window */}
             <div className="p-8 border border-white/10 bg-black flex flex-col h-[500px]">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white mb-8">
-                {selectedScan ? 'ANALYSIS DETAILS' : 'LIVE LOGS'}
+                {selectedScan ? 'ANALYSIS DETAILS' : 'GLOBAL TELEMETRY'}
               </h4>
               <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide text-[10px]">
                 {selectedScan ? (
                   <div className="space-y-6 animate-in fade-in">
                     <div className="bg-white/5 p-4 border border-white/5 space-y-2">
-                      <div className="flex justify-between"><span className="text-white/40">ID:</span> <span>{selectedScan.id.slice(0, 8)}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Status:</span> <span className="text-blue-500 font-black">{selectedScan.status.toUpperCase()}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Target:</span> <span>{selectedScan.target}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id.slice(0, 12)}...</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Engine:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Timestamp:</span> <span>{new Date(selectedScan.timestamp).toLocaleString()}</span></div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-blue-500 font-black uppercase tracking-widest">Execution Summary</div>
-                      <div className="bg-black border border-white/10 p-4 text-white/70 italic leading-relaxed whitespace-pre-wrap">
-                        {selectedScan.resultSummary || 'Task execution in progress... Output will appear here.'}
+                      <div className="text-blue-500 font-black uppercase tracking-widest">Execution Stream</div>
+                      <div className="bg-black border border-white/10 p-4 text-white/70 italic leading-relaxed whitespace-pre-wrap font-mono text-[9px]">
+                        {selectedScan.resultSummary || 'Waiting for stdout buffer... Initializing scanner environment.'}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  history.slice(0, 20).map((scan, i) => (
+                  history.slice(0, 15).map((scan, i) => (
                     <div key={i} className="flex flex-col gap-1 border-l border-blue-500/30 pl-4 py-1">
                       <span className="text-[8px] text-blue-500">{new Date(scan.timestamp).toLocaleTimeString()}</span>
-                      <span className="text-white/80 uppercase font-black">{scan.method} sequence for {scan.target}</span>
-                      <span className="text-[7px] text-white/20">{scan.status}</span>
+                      <span className="text-white/80 uppercase font-black">{scan.method} initiated for {scan.target}</span>
+                      <span className={clsx(
+                        "text-[7px] uppercase",
+                        scan.status === 'completed' ? 'text-green-500' : scan.status === 'failed' ? 'text-red-500' : 'text-orange-500'
+                      )}>
+                        {scan.status}
+                      </span>
                     </div>
                   ))
+                )}
+                {history.length === 0 && !selectedScan && (
+                  <div className="text-white/10 uppercase tracking-widest text-center pt-20">No telemetry found</div>
                 )}
               </div>
             </div>
@@ -332,3 +368,4 @@ export default function SecurityDashboard() {
     </div>
   );
 }
+

@@ -14,6 +14,7 @@ export async function runSecurityAction(type: string, method: string, target: st
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
+    // 1. Create local record first
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -23,24 +24,28 @@ export async function runSecurityAction(type: string, method: string, target: st
       timestamp: new Date().toISOString()
     }).returning();
 
-    const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target, scan_id: scan.id })
-    });
+    // 2. Trigger remote worker
+    try {
+      const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target, scan_id: scan.id }),
+        cache: 'no-store'
+      });
 
-    if (!response.ok) {
+      if (!response.ok) throw new Error('Engine not responding');
+    } catch (fetchErr) {
+      // Update status if remote trigger fails
       await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'Failed to reach Engine API' })
+        .set({ status: 'failed', resultSummary: 'ENGINE_CONNECTION_FAILED: Remote endpoint unreachable.' })
         .where(eq(securityScans.id, scan.id));
-      throw new Error(`Engine API error: ${response.status}`);
     }
 
     revalidatePath('/dashboard/security');
     return { success: true, scanId: scan.id };
   } catch (err) {
     console.error('Security Action Error:', err);
-    return { error: 'Engine Connection Failed' };
+    return { error: 'Internal System Error' };
   }
 }
 
@@ -52,15 +57,13 @@ export async function stopSecurityAction(scanId: string) {
     const response = await fetch(`${ENGINE_API_URL}/api/stop`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scan_id: scanId })
+      body: JSON.stringify({ scan_id: scanId }),
+      cache: 'no-store'
     });
 
     if (response.ok) {
       await db.update(securityScans)
-        .set({ 
-          status: 'failed', 
-          resultSummary: 'Stopped by user' 
-        })
+        .set({ status: 'failed', resultSummary: 'Sequence terminated by operator.' })
         .where(eq(securityScans.id, scanId));
       revalidatePath('/dashboard/security');
       return { success: true };
@@ -99,16 +102,12 @@ export async function getScanHistory() {
 
 export async function getEngineStatus() {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
     const start = Date.now();
-
     const response = await fetch(`${ENGINE_API_URL}/health`, { 
       cache: 'no-store',
-      signal: controller.signal 
+      next: { revalidate: 0 }
     });
     
-    clearTimeout(timeoutId);
     if (!response.ok) throw new Error();
     
     const latency = Date.now() - start;
