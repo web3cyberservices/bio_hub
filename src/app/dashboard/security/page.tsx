@@ -41,7 +41,7 @@ export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState<'pentest' | 'osint' | 'siem' | 'config'>('pentest');
   const [target, setTarget] = useState('');
   const [history, setHistory] = useState<any[]>([]);
-  const [engineStatus, setEngineStatus] = useState<any>(null);
+  const [engineStatus, setEngineStatus] = useState<any>({ online: false, latency: 'N/A' });
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
@@ -57,10 +57,26 @@ export default function SecurityDashboard() {
   }, []);
 
   async function loadData() {
-    const [h, s] = await Promise.all([getScanHistory(), getEngineStatus()]);
-    setHistory(h);
-    setEngineStatus(s);
+    try {
+      const [h, s] = await Promise.all([getScanHistory(), getEngineStatus()]);
+      setHistory(h || []);
+      setEngineStatus(s);
+    } catch (err) {
+      console.error('Failed to load dashboard data', err);
+    }
   }
+
+  // Динамический расчет оценки безопасности
+  const calculateHealthScore = () => {
+    if (history.length === 0) return 'N/A';
+    const completed = history.filter(s => s.status === 'completed').length;
+    const failed = history.filter(s => s.status === 'failed').length;
+    if (completed === 0 && failed === 0) return 'WAITING';
+    
+    // Базовая логика: 100 - (10 за каждый провал), минимум 40 если есть успешные
+    const score = Math.max(40, 100 - (failed * 15));
+    return score > 100 ? 100 : score;
+  };
 
   async function handleAction(type: 'pentest' | 'osint', method: string) {
     if (!target) return;
@@ -81,6 +97,7 @@ export default function SecurityDashboard() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Удалить запись о сканировании?')) return;
     setActionLoading(id);
     await deleteSecurityAction(id);
     await loadData();
@@ -91,6 +108,8 @@ export default function SecurityDashboard() {
   const filteredHistory = history.filter(scan => 
     statusFilter === 'all' ? true : scan.status === statusFilter
   );
+
+  const healthScore = calculateHealthScore();
 
   return (
     <div className="min-h-screen bg-black text-white font-mono selection:bg-blue-500/30">
@@ -108,17 +127,17 @@ export default function SecurityDashboard() {
           <div className="flex items-center gap-4">
             <div className={clsx(
               "flex items-center gap-2 px-3 py-1.5 border rounded-sm transition-all",
-              engineStatus?.online ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"
+              engineStatus.online ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"
             )}>
               <div className={clsx(
                 "w-2 h-2 rounded-full",
-                engineStatus?.online ? "bg-green-500 animate-pulse" : "bg-red-500"
+                engineStatus.online ? "bg-green-500 animate-pulse" : "bg-red-500"
               )} />
               <span className={clsx(
                 "text-[9px] font-black uppercase tracking-widest",
-                engineStatus?.online ? "text-green-500" : "text-red-500"
+                engineStatus.online ? "text-green-500" : "text-red-500"
               )}>
-                Engine API: {engineStatus?.online ? 'Online' : 'Offline'} ({engineStatus?.latency || 'N/A'})
+                ENGINE API: {engineStatus.online ? 'ONLINE' : 'OFFLINE'} ({engineStatus.latency || 'N/A'})
               </span>
             </div>
           </div>
@@ -175,7 +194,7 @@ export default function SecurityDashboard() {
                   {[
                     { id: 'nuclei', label: 'NUCLEI AUDIT', icon: <Zap />, sub: 'Template-based vulnerability scan', color: 'text-blue-500' },
                     { id: 'full-recon', label: 'DEEP RECON', icon: <Globe />, sub: 'Subfinder + Naabu + Httpx', color: 'text-emerald-500' },
-                    { id: 'fuzzing', label: 'SQLi / FUZZ', icon: <Cpu />, sub: 'Advanced payload injection', color: 'text-amber-500' }
+                    { id: 'fuzzing', label: 'SQLI / FUZZ', icon: <Cpu />, sub: 'Advanced payload injection', color: 'text-amber-500' }
                   ].map(tool => (
                     <button 
                       key={tool.id}
@@ -250,7 +269,7 @@ export default function SecurityDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {filteredHistory.map((scan: any) => (
+                    {filteredHistory.length > 0 ? filteredHistory.map((scan: any) => (
                       <tr 
                         key={scan.id} 
                         onClick={() => setSelectedScan(scan)}
@@ -283,13 +302,21 @@ export default function SecurityDashboard() {
                         </td>
                         <td className="px-6 py-5">
                           {scan.status === 'completed' ? (
-                            <div className="flex gap-2">
-                              <button className="flex items-center gap-1 px-2 py-1 bg-white/5 border border-white/10 text-white/60 hover:text-blue-500 hover:border-blue-500/30 transition-all rounded-sm">
+                            <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                              <a 
+                                href={`http://31.76.34.252:4000/reports/${scan.id}.json`} 
+                                target="_blank"
+                                className="flex items-center gap-1 px-2 py-1 bg-white/5 border border-white/10 text-white/60 hover:text-blue-500 hover:border-blue-500/30 transition-all rounded-sm"
+                              >
                                 <FileJson className="w-3 h-3" /> JSON
-                              </button>
-                              <button className="flex items-center gap-1 px-2 py-1 bg-white/5 border border-white/10 text-white/60 hover:text-emerald-500 hover:border-emerald-500/30 transition-all rounded-sm">
+                              </a>
+                              <a 
+                                href={`http://31.76.34.252:4000/reports/${scan.id}.txt`} 
+                                target="_blank"
+                                className="flex items-center gap-1 px-2 py-1 bg-white/5 border border-white/10 text-white/60 hover:text-emerald-500 hover:border-emerald-500/30 transition-all rounded-sm"
+                              >
                                 <FileText className="w-3 h-3" /> TXT
-                              </button>
+                              </a>
                             </div>
                           ) : (
                             <span className="text-white/10 italic text-[8px]">Available on completion</span>
@@ -316,8 +343,7 @@ export default function SecurityDashboard() {
                           </div>
                         </td>
                       </tr>
-                    ))}
-                    {filteredHistory.length === 0 && (
+                    )) : (
                       <tr>
                         <td colSpan={5} className="px-6 py-20 text-center">
                           <div className="flex flex-col items-center gap-4 opacity-20">
@@ -343,19 +369,26 @@ export default function SecurityDashboard() {
                   <Activity className="w-4 h-4 text-blue-500" /> INFRASTRUCTURE HEALTH
                 </h4>
                 <div className="flex items-end gap-4">
-                  <span className="text-7xl font-black text-white leading-none tracking-tighter">84</span>
+                  <span className="text-7xl font-black text-white leading-none tracking-tighter">{healthScore}</span>
                   <div className="flex flex-col mb-1">
-                    <span className="text-blue-500 text-[10px] font-black">NORMAL</span>
+                    <span className={clsx("text-[10px] font-black", typeof healthScore === 'number' && healthScore > 70 ? "text-blue-500" : "text-amber-500")}>
+                      {typeof healthScore === 'number' ? (healthScore > 70 ? 'NORMAL' : 'RISKY') : 'N/A'}
+                    </span>
                     <span className="text-muted-foreground text-xl font-black">/ 100</span>
                   </div>
                 </div>
                 <div className="pt-6 border-t border-white/10 space-y-4">
                   <div className="flex justify-between text-[9px] font-black">
                     <span className="text-white/40 uppercase tracking-widest">Active Alerts</span>
-                    <span className="text-amber-500">2 LOW RISK</span>
+                    <span className="text-amber-500">
+                      {history.filter(s => s.status === 'failed').length} ALERT(S)
+                    </span>
                   </div>
                   <div className="w-full bg-white/5 h-1">
-                    <div className="bg-blue-500 h-full w-[84%]" />
+                    <div 
+                      className="bg-blue-500 h-full transition-all duration-1000" 
+                      style={{ width: `${typeof healthScore === 'number' ? healthScore : 0}%` }} 
+                    />
                   </div>
                 </div>
               </div>
@@ -396,9 +429,13 @@ export default function SecurityDashboard() {
                       </div>
                     </div>
 
-                    <button className="w-full btn-enterprise py-3 flex items-center justify-center gap-2">
+                    <a 
+                      href={`http://31.76.34.252:4000/reports/${selectedScan.id}.json`}
+                      target="_blank"
+                      className="w-full btn-enterprise py-3 flex items-center justify-center gap-2"
+                    >
                       <Download className="w-3.5 h-3.5" /> DOWNLOAD FULL REPORT
-                    </button>
+                    </a>
                   </div>
                 ) : (
                   history.slice(0, 10).map((scan, i) => (
@@ -435,4 +472,3 @@ export default function SecurityDashboard() {
     </div>
   );
 }
-

@@ -26,7 +26,7 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
       status: 'in_progress'
     }).returning();
 
-    const endpoint = type === 'pentest' ? `/api/run/${method}` : `/api/osint/${method}`;
+    const endpoint = `/api/run/${method}`;
     
     // 2. Отправляем запрос на Engine Worker
     // Используем non-blocking fetch для асинхронного запуска на воркере
@@ -135,4 +135,3 @@ export async function getEngineStatus() {
     return { online: false, latency: 'N/A', version: 'Unknown' };
   }
 }
-
