@@ -18,7 +18,8 @@ import {
   CreditCard,
   Settings,
   Plus,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert
 } from 'lucide-react';
 import { handleSignOut } from '@/lib/actions/auth';
 import { SERVICES } from '@/lib/registry';
@@ -57,6 +58,9 @@ export default async function DashboardPage() {
           <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] px-4 py-3">Управление</div>
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 bg-white/5 text-blue-500 text-[10px] font-black uppercase tracking-widest border border-blue-500/20 rounded-sm">
             <LayoutDashboard className="w-4 h-4" /> Обзор узла
+          </Link>
+          <Link href="/dashboard/security" className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-blue-500 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest transition-all">
+            <ShieldAlert className="w-4 h-4" /> Security Hub
           </Link>
           <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-muted-foreground hover:text-white hover:bg-white/5 text-[10px] font-black uppercase tracking-widest transition-all">
             <Key className="w-4 h-4" /> API Ключи
@@ -121,10 +125,10 @@ export default async function DashboardPage() {
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full md:w-auto">
               {[
-                { label: 'Uptime', val: '99.99%', color: 'text-green-500' },
-                { label: 'Latency', val: '0.12ms', color: 'text-blue-500' },
-                { label: 'Ingress', val: '2.4 Gbps', color: 'text-white' },
-                { label: 'Active Tunnels', val: activeServices.length.toString(), color: 'text-white' }
+                { label: 'Security Score', val: '84/100', color: 'text-blue-500' },
+                { label: 'Active Tunnels', val: activeServices.length.toString(), color: 'text-white' },
+                { label: 'Latency', val: '0.12ms', color: 'text-green-500' },
+                { label: 'Ingress', val: '2.4 Gbps', color: 'text-white' }
               ].map(stat => (
                 <div key={stat.label} className="p-4 border border-white/10 bg-white/[0.02]">
                   <div className="text-[8px] text-muted-foreground font-black uppercase tracking-widest mb-1">{stat.label}</div>
@@ -133,6 +137,27 @@ export default async function DashboardPage() {
               ))}
             </div>
           </div>
+
+          {/* CyberSecurity Hub Quick Link */}
+          <Link href="/dashboard/security" className="block group">
+            <div className="p-8 border border-blue-500/30 bg-blue-500/[0.03] group-hover:bg-blue-500/[0.06] transition-all relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl -mr-32 -mt-32" />
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-6">
+                  <div className="p-4 bg-blue-500/10 rounded-sm">
+                    <ShieldAlert className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight mb-2">Security Operations Center</h3>
+                    <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Запуск пентестов, OSINT-разведка и мониторинг угроз в реальном времени</p>
+                  </div>
+                </div>
+                <div className="hidden md:flex items-center gap-2 text-blue-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                  Открыть консоль ИБ <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+          </Link>
 
           {/* Active Services Section */}
           <section className="space-y-6">
@@ -145,10 +170,9 @@ export default async function DashboardPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeServices.map(service => (
-                <div key={service.id} className="border border-blue-500/30 bg-blue-500/[0.03] p-6 relative group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors" />
+                <div key={service.id} className="border border-white/10 bg-white/[0.01] hover:border-blue-500/20 p-6 relative group overflow-hidden transition-all">
                   <div className="flex justify-between items-start mb-6">
-                    <div className="p-2 bg-blue-500/10 rounded-sm">
+                    <div className="p-2 bg-white/5 rounded-sm">
                       {service.id === 'streaming' ? <Zap className="w-5 h-5 text-blue-500" /> : <Activity className="w-5 h-5 text-blue-500" />}
                     </div>
                     <div className="px-2 py-0.5 border border-green-500/20 bg-green-500/5 text-[8px] font-black text-green-500 tracking-widest uppercase">
@@ -167,18 +191,10 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               ))}
-
-              {activeServices.length === 0 && (
-                <div className="col-span-full py-12 border border-dashed border-white/10 flex flex-col items-center justify-center text-center">
-                  <AlertCircle className="w-8 h-8 text-white/10 mb-4" />
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Нет активных туннелей</p>
-                  <a href="#catalog" className="mt-4 text-[9px] text-blue-500 font-black uppercase tracking-widest hover:underline">Просмотреть каталог</a>
-                </div>
-              )}
             </div>
           </section>
 
-          {/* Service Catalog (Connect New) */}
+          {/* Service Catalog */}
           <section id="catalog" className="space-y-6 pt-8">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="text-[11px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
@@ -194,7 +210,6 @@ export default async function DashboardPage() {
                       {service.id === 'osint' && <Search className="w-5 h-5 text-purple-500" />}
                       {service.id === 'pentest' && <ShieldCheck className="w-5 h-5 text-red-500" />}
                       {service.id === 'devsecops' && <Terminal className="w-5 h-5 text-green-500" />}
-                      {!['osint', 'pentest', 'devsecops'].includes(service.id) && <Activity className="w-5 h-5 text-orange-500" />}
                     </div>
                     <h3 className="text-[12px] font-black tracking-tight text-white mb-3 uppercase group-hover:text-blue-500 transition-colors">{service.name}</h3>
                     <p className="text-[9px] text-muted-foreground leading-relaxed font-bold tracking-wider mb-8">
@@ -212,33 +227,6 @@ export default async function DashboardPage() {
               ))}
             </div>
           </section>
-
-          {/* Quick Support & Documentation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-12">
-            <div className="p-8 border border-white/5 bg-gradient-to-br from-blue-500/5 to-transparent flex flex-col justify-between min-h-[160px]">
-              <div>
-                <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4">Техническая поддержка</h4>
-                <p className="text-[9px] text-muted-foreground font-bold tracking-widest leading-relaxed">
-                  Персональный инженер доступен 24/7 для настройки gRPC-маршрутизации и оптимизации задержек.
-                </p>
-              </div>
-              <a href="#" className="text-[9px] font-black text-white hover:text-blue-500 transition-colors uppercase tracking-widest mt-6 flex items-center gap-2">
-                Открыть тикет <ChevronRight className="w-3 h-3" />
-              </a>
-            </div>
-            
-            <div className="p-8 border border-white/5 bg-white/[0.01] flex flex-col justify-between min-h-[160px]">
-              <div>
-                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">База знаний</h4>
-                <p className="text-[9px] text-muted-foreground font-bold tracking-widest leading-relaxed">
-                  Изучите спецификации Protobuf и методы интеграции наших систем в ваш технологический стек.
-                </p>
-              </div>
-              <Link href="/api-docs" className="text-[9px] font-black text-white hover:text-blue-500 transition-colors uppercase tracking-widest mt-6 flex items-center gap-2">
-                Документация API <ChevronRight className="w-3 h-3" />
-              </Link>
-            </div>
-          </div>
 
         </div>
       </main>

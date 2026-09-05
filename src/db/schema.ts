@@ -4,8 +4,7 @@ import { sql } from 'drizzle-orm';
 import type { AdapterAccount } from 'next-auth/adapters';
 
 /**
- * Схема таблиц для Auth.js и бизнес-логики.
- * Оптимизирована под DrizzleAdapter для SQLite.
+ * Расширенная схема БД для поддержки модулей ИБ.
  */
 
 export const users = sqliteTable('user', {
@@ -51,6 +50,19 @@ export const verificationTokens = sqliteTable('verificationToken', {
 }, (vt) => ({
   compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
 }));
+
+// Новая таблица для истории сканирований
+export const securityScans = sqliteTable('security_scans', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  target: text('target').notNull(),
+  type: text('type').notNull(), // 'pentest', 'osint', etc.
+  method: text('method').notNull(), // 'nuclei', 'spiderfoot', etc.
+  status: text('status').default('in_progress'), // 'in_progress', 'completed', 'failed'
+  resultSummary: text('result_summary'),
+  reportPath: text('report_path'),
+  timestamp: text('timestamp').default(sql`(CURRENT_TIMESTAMP)`),
+});
 
 export const telemetryLogs = sqliteTable('telemetry_logs', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
