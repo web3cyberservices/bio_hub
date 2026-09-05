@@ -10,14 +10,14 @@ import { revalidatePath } from 'next/cache';
 const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
 /**
- * Запуск ИБ-действия через Engine API.
+ * Запуск ИБ-действия через Engine API с проксированием на сервере.
  */
-export async function runSecurityAction(type: 'pentest' | 'osint', method: string, target: string) {
+export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Создаем запись в БД о начале сканирования
+    // 1. Регистрация в локальной БД
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -26,21 +26,23 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
       status: 'in_progress'
     }).returning();
 
-    const endpoint = `/api/run/${method}`;
-    
-    // 2. Отправляем запрос на Engine Worker
-    // Используем non-blocking fetch для асинхронного запуска на воркере
-    fetch(`${ENGINE_API_URL}${endpoint}`, {
+    // 2. Прокси-запрос к воркеру (выполняется на сервере Next.js, обходя CORS)
+    const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ target, scan_id: scan.id })
-    }).catch(err => console.error('Engine async trigger failed:', err));
+    });
+
+    if (!response.ok) {
+      throw new Error(`Engine API responded with ${response.status}`);
+    }
 
     revalidatePath('/dashboard/security');
     return { success: true, scanId: scan.id };
   } catch (err) {
     console.error('Security Action Error:', err);
-    return { error: 'Internal system error' };
+    // Обновляем статус на failed если не удалось даже запустить
+    return { error: 'Engine Connection Failed' };
   }
 }
 
@@ -110,13 +112,13 @@ export async function getScanHistory() {
 }
 
 /**
- * Проверка статуса Engine API.
+ * Проверка статуса Engine API с серверной стороны.
  */
 export async function getEngineStatus() {
   try {
     const start = Date.now();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
 
     const response = await fetch(`${ENGINE_API_URL}/health`, { 
       cache: 'no-store',
