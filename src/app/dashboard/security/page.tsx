@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,9 +15,18 @@ import {
   FileJson,
   Cpu,
   RefreshCw,
-  Database
+  Database,
+  Square,
+  Trash2,
+  Loader2
 } from 'lucide-react';
-import { runSecurityAction, getScanHistory, getEngineStatus } from '@/lib/actions/security';
+import { 
+  runSecurityAction, 
+  getScanHistory, 
+  getEngineStatus,
+  stopSecurityAction,
+  deleteSecurityAction
+} from '@/lib/actions/security';
 
 export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState<'pentest' | 'osint' | 'siem' | 'config'>('pentest');
@@ -24,10 +34,11 @@ export default function SecurityDashboard() {
   const [history, setHistory] = useState<any[]>([]);
   const [engineStatus, setEngineStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 10000);
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -37,7 +48,7 @@ export default function SecurityDashboard() {
     setEngineStatus(s);
   }
 
-  async function handleAction(type: any, method: string) {
+  async function handleAction(type: 'pentest' | 'osint', method: string) {
     if (!target) return;
     setLoading(true);
     const result = await runSecurityAction(type, method, target);
@@ -45,6 +56,20 @@ export default function SecurityDashboard() {
     if (result.success) {
       loadData();
     }
+  }
+
+  async function handleStop(id: string) {
+    setActionLoading(id);
+    await stopSecurityAction(id);
+    await loadData();
+    setActionLoading(null);
+  }
+
+  async function handleDelete(id: string) {
+    setActionLoading(id);
+    await deleteSecurityAction(id);
+    await loadData();
+    setActionLoading(null);
   }
 
   return (
@@ -100,14 +125,14 @@ export default function SecurityDashboard() {
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="p-8 border border-white/10 bg-white/[0.02]">
                   <div className="bg-black border border-white/10 p-4 mb-8 text-[11px] text-white/80 font-mono">
-                    {target || 'booardly.ru'}
+                    {target || 'Target domain not specified'}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button 
                       onClick={() => handleAction('pentest', 'nuclei')}
-                      disabled={loading}
-                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                      disabled={loading || !target}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group disabled:opacity-50"
                     >
                       <Zap className="w-6 h-6 text-blue-500 mb-4" />
                       <div className="text-[11px] font-black uppercase tracking-widest text-white">NUCLEI AUDIT</div>
@@ -115,8 +140,8 @@ export default function SecurityDashboard() {
                     </button>
                     <button 
                       onClick={() => handleAction('pentest', 'full-recon')}
-                      disabled={loading}
-                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                      disabled={loading || !target}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group disabled:opacity-50"
                     >
                       <Globe className="w-6 h-6 text-blue-500 mb-4" />
                       <div className="text-[11px] font-black uppercase tracking-widest text-white">DEEP RECON</div>
@@ -124,8 +149,8 @@ export default function SecurityDashboard() {
                     </button>
                     <button 
                       onClick={() => handleAction('pentest', 'fuzzing')}
-                      disabled={loading}
-                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                      disabled={loading || !target}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group disabled:opacity-50"
                     >
                       <Cpu className="w-6 h-6 text-blue-500 mb-4" />
                       <div className="text-[11px] font-black uppercase tracking-widest text-white">SQLi / FUZZ</div>
@@ -134,38 +159,33 @@ export default function SecurityDashboard() {
                   </div>
 
                   <div className="mt-8 space-y-2">
-                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Изменить цель сканирования</label>
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Цель сканирования</label>
                     <input 
                       value={target}
                       onChange={(e) => setTarget(e.target.value)}
                       placeholder="example.com"
-                      className="w-full bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono"
+                      className="w-full bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono text-white"
                     />
                   </div>
                 </div>
 
                 <div className="border border-white/10 bg-[#050505]">
                   <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest">СТАТУС ПОСЛЕДНИХ ЗАДАЧ</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest">СТАТУС ЗАДАЧ</h3>
                     <RefreshCw className={`w-3.5 h-3.5 text-blue-500 cursor-pointer ${loading ? 'animate-spin' : ''}`} onClick={loadData} />
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-[9px] font-mono border-collapse">
                       <thead>
                         <tr className="bg-white/[0.02] text-muted-foreground">
-                          <th className="px-6 py-4 font-black uppercase border-b border-white/5">ID / МЕТОД</th>
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5">МЕТОД / ID</th>
                           <th className="px-6 py-4 font-black uppercase border-b border-white/5">TARGET</th>
                           <th className="px-6 py-4 font-black uppercase border-b border-white/5 text-center">STATUS</th>
-                          <th className="px-6 py-4 font-black uppercase border-b border-white/5 text-center">REPORT</th>
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5 text-right">УПРАВЛЕНИЕ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {(history.length > 0 ? history : [
-                          { id: '32158c87', method: 'nuclei', target: 'booardly.ru', status: 'failed' },
-                          { id: '7c283bb5', method: 'full-recon', target: 'booardly.ru', status: 'failed' },
-                          { id: '132d9fbc', method: 'fuzzing', target: 'booardly.ru', status: 'failed' },
-                          { id: '854b6c6e', method: 'nuclei', target: 'booardly.ru', status: 'failed' },
-                        ]).map((scan: any) => (
+                        {history.map((scan: any) => (
                           <tr key={scan.id} className="hover:bg-white/[0.01]">
                             <td className="px-6 py-5">
                               <span className="text-blue-500 uppercase font-black">{scan.method}</span>
@@ -184,20 +204,47 @@ export default function SecurityDashboard() {
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-1.5 text-red-500">
-                                    <AlertCircle className="w-3.5 h-3.5" /> <span className="uppercase font-black">Failed</span>
+                                    <AlertCircle className="w-3.5 h-3.5" /> FAILED
                                   </div>
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-5 text-center">
-                              {scan.status === 'completed' ? (
-                                <button className="flex items-center justify-center gap-1.5 text-blue-500 hover:underline mx-auto">
-                                  <FileJson className="w-3 h-3" /> JSON
+                            <td className="px-6 py-5 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                {scan.status === 'in_progress' && (
+                                  <button 
+                                    onClick={() => handleStop(scan.id)}
+                                    disabled={actionLoading === scan.id}
+                                    className="p-2 border border-orange-500/20 hover:bg-orange-500/10 text-orange-500 transition-colors rounded-sm"
+                                    title="Stop Scan"
+                                  >
+                                    {actionLoading === scan.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3 fill-current" />}
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDelete(scan.id)}
+                                  disabled={actionLoading === scan.id}
+                                  className="p-2 border border-red-500/20 hover:bg-red-500/10 text-red-500 transition-colors rounded-sm"
+                                  title="Delete Record"
+                                >
+                                  {actionLoading === scan.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                                 </button>
-                              ) : '-'}
+                                {scan.status === 'completed' && (
+                                  <button className="p-2 border border-blue-500/20 hover:bg-blue-500/10 text-blue-500 transition-colors rounded-sm">
+                                    <FileJson className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
+                        {history.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-10 text-center text-white/20 uppercase tracking-widest text-[8px]">
+                              История сканирований пуста
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -205,65 +252,32 @@ export default function SecurityDashboard() {
               </div>
             )}
 
-            {/* Other tabs remain similar but styled with the same logic if needed */}
+            {/* Other tabs components... */}
             {activeTab === 'osint' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="p-8 border border-white/10 bg-white/[0.02]">
-                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4 block">Объект разведки (User / Brand / Domain)</label>
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4 block">Объект разведки</label>
                   <input 
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
-                    placeholder="company_name"
-                    className="w-full bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono"
+                    placeholder="company_name / domain"
+                    className="w-full bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono text-white"
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                    <button onClick={() => handleAction('osint', 'spiderfoot')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                    <button onClick={() => handleAction('osint', 'spiderfoot')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group">
                       <Database className="w-6 h-6 text-blue-500 mb-4" />
-                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SPIDERFOOT TRAIL</div>
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SPIDERFOOT</div>
                     </button>
-                    <button onClick={() => handleAction('osint', 'sherlock')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                    <button onClick={() => handleAction('osint', 'sherlock')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group">
                       <Search className="w-6 h-6 text-purple-500 mb-4" />
-                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SHERLOCK SEARCH</div>
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SHERLOCK</div>
                     </button>
-                    <button onClick={() => handleAction('osint', 'harvester')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                    <button onClick={() => handleAction('osint', 'harvester')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group">
                       <Globe className="w-6 h-6 text-green-500 mb-4" />
-                      <div className="text-[11px] font-black uppercase tracking-widest text-white">E-MAIL DISCOVERY</div>
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">HARVESTER</div>
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-            
-            {activeTab === 'siem' && (
-               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[
-                    { label: 'CRITICAL', val: '2', color: 'text-red-500' },
-                    { label: 'HIGH', val: '14', color: 'text-orange-500' },
-                    { label: 'MEDIUM', val: '45', color: 'text-blue-500' },
-                    { label: 'LOW', val: '128', color: 'text-white/40' }
-                  ].map(stat => (
-                    <div key={stat.label} className="p-6 border border-white/10 bg-[#050505]">
-                      <div className="text-[8px] font-black uppercase text-muted-foreground mb-2 tracking-widest">{stat.label}</div>
-                      <div className={`text-2xl font-black ${stat.color}`}>{stat.val}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'config' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                <div className="p-8 border border-white/10 bg-[#050505] space-y-6">
-                  <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-500">ENGINE API CONFIGURATION</h3>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Core Engine URL</label>
-                      <input readOnly value="http://31.76.34.252:4000" className="w-full bg-white/5 border border-white/10 p-3 text-[10px] text-white/40 font-mono" />
-                    </div>
-                  </div>
-                  <button className="btn-enterprise w-full py-4 uppercase">Обновить конфигурацию</button>
                 </div>
               </div>
             )}
@@ -279,22 +293,18 @@ export default function SecurityDashboard() {
                 <span className="text-muted-foreground text-xl font-black mb-1">/ 100</span>
               </div>
               <p className="text-[10px] text-muted-foreground font-bold tracking-widest leading-relaxed border-t border-white/10 pt-6">
-                Состояние безопасности оценивается как "Stable". Обнаружены некритичные аномалии в сетевом потоке gRPC.
+                Система стабильна. Обнаружены некритичные аномалии. Рекомендуется плановый аудит Nuclei.
               </p>
             </div>
             
             <div className="p-8 border border-white/10 bg-[#050505] space-y-8">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-white">LIVE EVENTS FLOW</h4>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-white">LIVE LOGS FLOW</h4>
               <div className="space-y-6 font-mono">
-                {[
-                  { time: '14:22:01', event: 'NUCLEI ENGINE STARTED', target: 'API-NODE-01' },
-                  { time: '14:15:33', event: 'PORT SCAN DETECTED', target: 'TUNNEL-TX-25' },
-                  { time: '14:02:12', event: 'USER ROOT LOGGED IN', target: 'CONSOLE-V1.8' }
-                ].map((ev, i) => (
-                  <div key={i} className="flex flex-col gap-1 border-l-2 border-white/10 pl-6 py-1">
-                    <span className="text-[8px] text-blue-500 font-black">{ev.time}</span>
-                    <span className="text-[10px] text-white/80 font-black uppercase">{ev.event}</span>
-                    <span className="text-[7px] text-white/20 uppercase tracking-widest">Src: {ev.target}</span>
+                {history.slice(0, 3).map((scan, i) => (
+                  <div key={i} className="flex flex-col gap-1 border-l-2 border-blue-500/20 pl-6 py-1">
+                    <span className="text-[8px] text-blue-500 font-black">{new Date(scan.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-[10px] text-white/80 font-black uppercase">{scan.method} TASK {scan.status}</span>
+                    <span className="text-[7px] text-white/20 uppercase tracking-widest">Target: {scan.target}</span>
                   </div>
                 ))}
               </div>

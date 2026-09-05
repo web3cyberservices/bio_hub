@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { securityScans } from '@/db/schema';
 import { auth } from '@/auth';
 import { eq, desc } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 
 const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
@@ -13,7 +14,6 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Создаем запись в локальной БД
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -22,10 +22,8 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
       status: 'in_progress'
     }).returning();
 
-    // 2. Отправляем запрос на Engine API
     const endpoint = type === 'pentest' ? `/api/run/${method}` : `/api/osint/${method}`;
     
-    // В реальном сценарии здесь может быть асинхронный запуск, мы имитируем вызов
     const response = await fetch(`${ENGINE_API_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,10 +37,48 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
       return { error: 'Engine reported an error' };
     }
 
+    revalidatePath('/dashboard/security');
     return { success: true, scanId: scan.id };
   } catch (err) {
     console.error('Security Action Error:', err);
     return { error: 'Internal system error' };
+  }
+}
+
+export async function stopSecurityAction(scanId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  try {
+    const response = await fetch(`${ENGINE_API_URL}/api/stop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scan_id: scanId })
+    });
+
+    if (response.ok) {
+      await db.update(securityScans)
+        .set({ status: 'failed', resultSummary: 'Stopped by user' })
+        .where(eq(securityScans.id, scanId));
+      revalidatePath('/dashboard/security');
+      return { success: true };
+    }
+    return { error: 'Failed to stop scan' };
+  } catch (err) {
+    return { error: 'Connection error' };
+  }
+}
+
+export async function deleteSecurityAction(scanId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  try {
+    await db.delete(securityScans).where(eq(securityScans.id, scanId));
+    revalidatePath('/dashboard/security');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Failed to delete record' };
   }
 }
 
