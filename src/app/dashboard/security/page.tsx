@@ -23,7 +23,8 @@ import {
   Lock,
   History,
   Scan,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -37,6 +38,8 @@ import { clsx } from 'clsx';
 type TabType = 'pentest' | 'osint' | 'siem' | 'config';
 type ScanStatus = 'all' | 'in_progress' | 'completed' | 'failed';
 
+const WORKER_URL = 'http://31.76.34.252:4000';
+
 export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('pentest');
   const [target, setTarget] = useState('');
@@ -49,6 +52,7 @@ export default function SecurityDashboard() {
 
   useEffect(() => {
     loadData();
+    // Поллинг данных каждые 5 секунд
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -58,13 +62,18 @@ export default function SecurityDashboard() {
       const [h, s] = await Promise.all([getScanHistory(), getEngineStatus()]);
       setHistory(h || []);
       setEngineStatus(s);
+      
+      // Обновляем детали выбранного скана, если он в процессе
+      if (selectedScan && selectedScan.status === 'in_progress') {
+        const updated = (h || []).find(s => s.id === selectedScan.id);
+        if (updated) setSelectedScan(updated);
+      }
     } catch (err) {}
   }
 
   const calculateHealthScore = () => {
-    if (!history || history.length === 0) return 'WAITING';
-    
     const completed = history.filter(s => s.status === 'completed');
+    if (history.length === 0) return 'WAITING';
     if (completed.length === 0 && history.some(s => s.status === 'failed')) return 0;
     if (completed.length === 0) return 'NO DATA';
 
@@ -122,7 +131,7 @@ export default function SecurityDashboard() {
             <h1 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-white">
               <ShieldAlert className="text-blue-500" /> Security Operations Center
             </h1>
-            <p className="technical-label">ENGINE API v2.4.0 • Infrastructure Defense</p>
+            <p className="technical-label">ENGINE API v2.5.1 • Node Status Monitoring</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -214,7 +223,7 @@ export default function SecurityDashboard() {
             {/* Queue & History Table */}
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Live Queue & History</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Security Queue & Artifacts</h3>
                 <div className="flex gap-2">
                   {['all', 'in_progress', 'completed', 'failed'].map((s) => (
                     <button
@@ -235,10 +244,10 @@ export default function SecurityDashboard() {
                 <table className="w-full text-left text-[9px] font-mono border-collapse">
                   <thead>
                     <tr className="bg-white/[0.01] text-muted-foreground uppercase">
-                      <th className="px-6 py-4 border-b border-white/5">Sequence</th>
+                      <th className="px-6 py-4 border-b border-white/5">Method</th>
                       <th className="px-6 py-4 border-b border-white/5">Target</th>
                       <th className="px-6 py-4 border-b border-white/5">Status</th>
-                      <th className="px-6 py-4 border-b border-white/5 text-right">Artifacts</th>
+                      <th className="px-6 py-4 border-b border-white/5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -266,9 +275,13 @@ export default function SecurityDashboard() {
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-3">
-                            {scan.status === 'completed' && (
-                              <a href={`/reports/${scan.id}.json`} className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1">
-                                JSON <ChevronRight className="w-3 h-3" />
+                            {scan.status === 'completed' && scan.reportPath && (
+                              <a 
+                                href={`${WORKER_URL}${scan.reportPath}`} 
+                                target="_blank"
+                                className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
+                              >
+                                <Download className="w-3 h-3" /> JSON
                               </a>
                             )}
                             {scan.status === 'in_progress' && (
@@ -284,7 +297,7 @@ export default function SecurityDashboard() {
                       </tr>
                     ))}
                     {filteredHistory.length === 0 && (
-                      <tr><td colSpan={4} className="px-6 py-20 text-center text-white/10 uppercase tracking-widest">History Buffer Empty</td></tr>
+                      <tr><td colSpan={4} className="px-6 py-20 text-center text-white/10 uppercase tracking-widest">No audit history found</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -316,29 +329,29 @@ export default function SecurityDashboard() {
                 </div>
                 <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed">
                   {typeof healthScore === 'number' 
-                    ? `Based on ${history.length} recent audit sequences. Failed tests reduce score by 15pts.` 
-                    : 'Awaiting primary infrastructure audit sequence...'}
+                    ? `Dynamic score based on ${history.length} audit sequences. Failed tests deduct 15 points.` 
+                    : 'Awaiting primary audit telemetry...'}
                 </p>
               </div>
             </div>
             
-            {/* Contextual Logs Window */}
+            {/* Contextual Logs & Result Viewer */}
             <div className="p-8 border border-white/10 bg-black flex flex-col h-[500px]">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white mb-8">
-                {selectedScan ? 'ANALYSIS DETAILS' : 'GLOBAL TELEMETRY'}
+                {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
               </h4>
               <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide text-[10px]">
                 {selectedScan ? (
                   <div className="space-y-6 animate-in fade-in">
                     <div className="bg-white/5 p-4 border border-white/5 space-y-2">
                       <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id.slice(0, 12)}...</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Engine:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Timestamp:</span> <span>{new Date(selectedScan.timestamp).toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Method:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Target:</span> <span>{selectedScan.target}</span></div>
                     </div>
                     <div className="space-y-2">
-                      <div className="text-blue-500 font-black uppercase tracking-widest">Execution Stream</div>
+                      <div className="text-blue-500 font-black uppercase tracking-widest">Findings Summary</div>
                       <div className="bg-black border border-white/10 p-4 text-white/70 italic leading-relaxed whitespace-pre-wrap font-mono text-[9px]">
-                        {selectedScan.resultSummary || 'Waiting for stdout buffer... Initializing scanner environment.'}
+                        {selectedScan.resultSummary || 'Awaiting stdout buffer from remote worker...'}
                       </div>
                     </div>
                   </div>
@@ -346,7 +359,7 @@ export default function SecurityDashboard() {
                   history.slice(0, 15).map((scan, i) => (
                     <div key={i} className="flex flex-col gap-1 border-l border-blue-500/30 pl-4 py-1">
                       <span className="text-[8px] text-blue-500">{new Date(scan.timestamp).toLocaleTimeString()}</span>
-                      <span className="text-white/80 uppercase font-black">{scan.method} initiated for {scan.target}</span>
+                      <span className="text-white/80 uppercase font-black">{scan.method} initiated: {scan.target}</span>
                       <span className={clsx(
                         "text-[7px] uppercase",
                         scan.status === 'completed' ? 'text-green-500' : scan.status === 'failed' ? 'text-red-500' : 'text-orange-500'
@@ -357,7 +370,7 @@ export default function SecurityDashboard() {
                   ))
                 )}
                 {history.length === 0 && !selectedScan && (
-                  <div className="text-white/10 uppercase tracking-widest text-center pt-20">No telemetry found</div>
+                  <div className="text-white/10 uppercase tracking-widest text-center pt-20">Waiting for audit stream</div>
                 )}
               </div>
             </div>
@@ -368,4 +381,3 @@ export default function SecurityDashboard() {
     </div>
   );
 }
-

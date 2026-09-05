@@ -8,15 +8,24 @@ const fs = require('fs');
 const app = express();
 app.use(express.json());
 
-// Конфигурация CORS
+// Конфигурация CORS (разрешаем запросы от прокси-сервера фронтенда)
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   next();
 });
 
-// Конфигурация БД (путь должен быть согласован с основным приложением)
+// Путь к БД и статике отчетов
 const dbPath = path.resolve(__dirname, 'sqlite.db');
+const resultsPath = '/opt/cyber-engines/scanners/results';
+if (!fs.existsSync(resultsPath)) {
+  fs.mkdirSync(resultsPath, { recursive: true });
+}
+
+// Статика для отчетов
+app.use('/reports', express.static(resultsPath));
+
 let db;
 try {
   db = new Database(dbPath);
@@ -39,26 +48,29 @@ app.post('/api/run/:method', (req, res) => {
     return res.status(400).json({ error: 'Missing target or scan_id' });
   }
 
-  // Генерация команды в зависимости от метода
+  // Генерация команды и пути отчета
+  const reportFile = `${method}_${scan_id}.json`;
+  const reportPath = path.join(resultsPath, reportFile);
+  
   let command = "";
   switch(method) {
     case 'nuclei':
-      command = `echo "Starting Nuclei for ${target}" && sleep 10 && echo '{"vulnerabilities": 2, "severity": "medium"}'`;
+      command = `nuclei -u ${target} -o ${reportPath} -j`;
       break;
     case 'full-recon':
-      command = `echo "Starting Deep Recon (Subfinder/Naabu) for ${target}" && sleep 15 && echo "Subdomains: 12, Open Ports: 80, 443"`;
+      command = `subfinder -d ${target} | naabu -silent | httpx -json -o ${reportPath}`;
       break;
     case 'fuzzing':
-      command = `echo "Starting Ffuf Fuzzing for ${target}" && sleep 12 && echo "Directories found: /admin, /config"`;
+      command = `ffuf -u ${target}/FUZZ -w /opt/dicts/common.txt -o ${reportPath} -of json`;
       break;
     case 'sqlmap':
-      command = `echo "Starting SQLMap Injection for ${target}" && sleep 20 && echo "No clear SQLi found"`;
+      command = `sqlmap -u "${target}" --batch --random-agent --output-dir=${resultsPath}`;
       break;
     case 'nmap':
-      command = `echo "Starting Nmap Port Scan for ${target}" && sleep 8 && echo "PORT STATE SERVICE: 22/tcp open ssh, 80/tcp open http"`;
+      command = `nmap -sV -sC -oX ${reportPath}.xml ${target}`;
       break;
     default:
-      command = `sleep 5 && echo "Generic scan finished for ${target}"`;
+      command = `echo "Scan started for ${target}" > ${reportPath}`;
   }
 
   console.log(`[ENGINE] Executing ${method} on ${target} [ID: ${scan_id}]`);
@@ -67,7 +79,7 @@ app.post('/api/run/:method', (req, res) => {
     activeProcesses.delete(scan_id);
     
     let status = 'completed';
-    let summary = stdout || 'Task finished successfully';
+    let summary = stdout || 'Scan finished successfully';
 
     if (error) {
       console.error(`[ENGINE] Task ${scan_id} failed:`, error);
@@ -75,11 +87,11 @@ app.post('/api/run/:method', (req, res) => {
       summary = stderr || error.message;
     }
 
-    // Обновляем статус в БД если она доступна
+    // Обновляем статус в БД напрямую
     if (db) {
       try {
-        const stmt = db.prepare('UPDATE security_scans SET status = ?, resultSummary = ? WHERE id = ?');
-        stmt.run(status, summary, scan_id);
+        const stmt = db.prepare('UPDATE security_scans SET status = ?, resultSummary = ?, reportPath = ? WHERE id = ?');
+        stmt.run(status, summary, `/reports/${reportFile}`, scan_id);
         console.log(`[ENGINE] Task ${scan_id} updated to ${status}`);
       } catch (dbErr) {
         console.error(`[ENGINE] DB Update failed:`, dbErr.message);
@@ -88,17 +100,17 @@ app.post('/api/run/:method', (req, res) => {
   });
 
   activeProcesses.set(scan_id, child);
-  res.json({ message: 'Task started', scan_id, method });
+  res.json({ message: 'Task initiated', scan_id, method, report_expected: reportFile });
 });
 
 /**
- * Проверка статуса конкретной задачи
+ * Проверка статуса задачи
  */
 app.get('/api/status/:id', (req, res) => {
   const { id } = req.params;
   if (db) {
     try {
-      const scan = db.prepare('SELECT status, resultSummary FROM security_scans WHERE id = ?').get(id);
+      const scan = db.prepare('SELECT status, resultSummary, reportPath FROM security_scans WHERE id = ?').get(id);
       if (scan) return res.json(scan);
     } catch (e) {}
   }
@@ -116,7 +128,7 @@ app.post('/api/stop', (req, res) => {
     activeProcesses.delete(scan_id);
     if (db) {
       const stmt = db.prepare('UPDATE security_scans SET status = ?, resultSummary = ? WHERE id = ?');
-      stmt.run('failed', 'Terminated by user', scan_id);
+      stmt.run('failed', 'Terminated by operator', scan_id);
     }
     return res.json({ success: true });
   }
@@ -127,7 +139,13 @@ app.post('/api/stop', (req, res) => {
  * Healthcheck
  */
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', engine: 'v2.4.0-stable', uptime: process.uptime(), db_connected: !!db });
+  res.json({ 
+    status: 'ok', 
+    engine: 'v2.5.1-stable', 
+    uptime: process.uptime(), 
+    active_tasks: activeProcesses.size,
+    db_connected: !!db 
+  });
 });
 
 const PORT = 4000;
