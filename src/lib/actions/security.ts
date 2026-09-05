@@ -9,11 +9,15 @@ import { revalidatePath } from 'next/cache';
 
 const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
+/**
+ * Запуск ИБ-действия через Engine API.
+ */
 export async function runSecurityAction(type: 'pentest' | 'osint', method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
+    // 1. Создаем запись в БД о начале сканирования
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -24,18 +28,13 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
 
     const endpoint = type === 'pentest' ? `/api/run/${method}` : `/api/osint/${method}`;
     
-    const response = await fetch(`${ENGINE_API_URL}${endpoint}`, {
+    // 2. Отправляем запрос на Engine Worker
+    // Используем non-blocking fetch для асинхронного запуска на воркере
+    fetch(`${ENGINE_API_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ target, scan_id: scan.id })
-    });
-
-    if (!response.ok) {
-      await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'Engine API connection error' })
-        .where(eq(securityScans.id, scan.id));
-      return { error: 'Engine reported an error' };
-    }
+    }).catch(err => console.error('Engine async trigger failed:', err));
 
     revalidatePath('/dashboard/security');
     return { success: true, scanId: scan.id };
@@ -45,6 +44,9 @@ export async function runSecurityAction(type: 'pentest' | 'osint', method: strin
   }
 }
 
+/**
+ * Остановка активного сканирования.
+ */
 export async function stopSecurityAction(scanId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
@@ -58,7 +60,10 @@ export async function stopSecurityAction(scanId: string) {
 
     if (response.ok) {
       await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'Stopped by user' })
+        .set({ 
+          status: 'failed', 
+          resultSummary: 'Terminated by user signal at ' + new Date().toISOString() 
+        })
         .where(eq(securityScans.id, scanId));
       revalidatePath('/dashboard/security');
       return { success: true };
@@ -69,6 +74,9 @@ export async function stopSecurityAction(scanId: string) {
   }
 }
 
+/**
+ * Удаление записи о сканировании.
+ */
 export async function deleteSecurityAction(scanId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
@@ -82,21 +90,40 @@ export async function deleteSecurityAction(scanId: string) {
   }
 }
 
+/**
+ * Получение истории сканирований пользователя.
+ */
 export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  return db.select()
-    .from(securityScans)
-    .where(eq(securityScans.userId, session.user.id))
-    .orderBy(desc(securityScans.timestamp))
-    .limit(20);
+  try {
+    return db.select()
+      .from(securityScans)
+      .where(eq(securityScans.userId, session.user.id))
+      .orderBy(desc(securityScans.timestamp))
+      .limit(50);
+  } catch (err) {
+    console.error('DB Fetch Error:', err);
+    return [];
+  }
 }
 
+/**
+ * Проверка статуса Engine API.
+ */
 export async function getEngineStatus() {
   try {
     const start = Date.now();
-    const response = await fetch(`${ENGINE_API_URL}/health`, { cache: 'no-store' });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${ENGINE_API_URL}/health`, { 
+      cache: 'no-store',
+      signal: controller.signal 
+    });
+    
+    clearTimeout(timeoutId);
     const latency = Date.now() - start;
     
     return {
@@ -108,3 +135,4 @@ export async function getEngineStatus() {
     return { online: false, latency: 'N/A', version: 'Unknown' };
   }
 }
+
