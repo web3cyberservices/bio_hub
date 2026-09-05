@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -74,10 +73,10 @@ export default function SecurityDashboard() {
         {/* Tab Navigation */}
         <div className="flex border-b border-white/5 gap-8 overflow-x-auto">
           {[
-            { id: 'pentest', label: 'Пентест & Уязвимости', icon: <Terminal className="w-4 h-4" /> },
-            { id: 'osint', label: 'OSINT & Разведка', icon: <Search className="w-4 h-4" /> },
-            { id: 'siem', label: 'Мониторинг & SIEM', icon: <Activity className="w-4 h-4" /> },
-            { id: 'config', label: 'Конфигурация Ядра', icon: <Settings className="w-4 h-4" /> }
+            { id: 'pentest', label: 'ПЕНТЕСТ & УЯЗВИМОСТИ', icon: <Terminal className="w-4 h-4" /> },
+            { id: 'osint', label: 'OSINT & РАЗВЕДКА', icon: <Search className="w-4 h-4" /> },
+            { id: 'siem', label: 'МОНИТОРИНГ & SIEM', icon: <Activity className="w-4 h-4" /> },
+            { id: 'config', label: 'КОНФИГУРАЦИЯ ЯДРА', icon: <Settings className="w-4 h-4" /> }
           ].map(tab => (
             <button
               key={tab.id}
@@ -99,73 +98,82 @@ export default function SecurityDashboard() {
             
             {activeTab === 'pentest' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="p-6 border border-white/10 bg-white/[0.02]">
-                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4 block">Цель сканирования (Domain / IP)</label>
-                  <div className="flex gap-4">
+                <div className="p-8 border border-white/10 bg-white/[0.02]">
+                  <div className="bg-black border border-white/10 p-4 mb-8 text-[11px] text-white/80 font-mono">
+                    {target || 'booardly.ru'}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button 
+                      onClick={() => handleAction('pentest', 'nuclei')}
+                      disabled={loading}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                    >
+                      <Zap className="w-6 h-6 text-blue-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">NUCLEI AUDIT</div>
+                      <div className="text-[8px] text-muted-foreground mt-1 uppercase">Быстрый аудит шаблонов</div>
+                    </button>
+                    <button 
+                      onClick={() => handleAction('pentest', 'full-recon')}
+                      disabled={loading}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                    >
+                      <Globe className="w-6 h-6 text-blue-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">DEEP RECON</div>
+                      <div className="text-[8px] text-muted-foreground mt-1 uppercase">Subfinder + Naabu + Httpx</div>
+                    </button>
+                    <button 
+                      onClick={() => handleAction('pentest', 'fuzzing')}
+                      disabled={loading}
+                      className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left group"
+                    >
+                      <Cpu className="w-6 h-6 text-blue-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SQLi / FUZZ</div>
+                      <div className="text-[8px] text-muted-foreground mt-1 uppercase">SQLMap + Ffuf payload</div>
+                    </button>
+                  </div>
+
+                  <div className="mt-8 space-y-2">
+                    <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Изменить цель сканирования</label>
                     <input 
                       value={target}
                       onChange={(e) => setTarget(e.target.value)}
                       placeholder="example.com"
-                      className="flex-1 bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono"
+                      className="w-full bg-white/5 border border-white/10 p-4 text-[11px] outline-none focus:border-blue-500 transition-all font-mono"
                     />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                    <button 
-                      onClick={() => handleAction('pentest', 'nuclei')}
-                      disabled={loading || !target}
-                      className="p-4 border border-white/10 bg-white/[0.03] hover:bg-blue-600 hover:text-white transition-all text-left group"
-                    >
-                      <Zap className="w-5 h-5 text-blue-500 group-hover:text-white mb-3" />
-                      <div className="text-[10px] font-black uppercase tracking-widest">Nuclei Audit</div>
-                      <div className="text-[8px] text-muted-foreground group-hover:text-white/60 mt-1 uppercase">Быстрый аудит шаблонов</div>
-                    </button>
-                    <button 
-                      onClick={() => handleAction('pentest', 'full-recon')}
-                      disabled={loading || !target}
-                      className="p-4 border border-white/10 bg-white/[0.03] hover:bg-blue-600 hover:text-white transition-all text-left group"
-                    >
-                      <Globe className="w-5 h-5 text-blue-500 group-hover:text-white mb-3" />
-                      <div className="text-[10px] font-black uppercase tracking-widest">Deep Recon</div>
-                      <div className="text-[8px] text-muted-foreground group-hover:text-white/60 mt-1 uppercase">Subfinder + Naabu + Httpx</div>
-                    </button>
-                    <button 
-                      onClick={() => handleAction('pentest', 'fuzzing')}
-                      disabled={loading || !target}
-                      className="p-4 border border-white/10 bg-white/[0.03] hover:bg-blue-600 hover:text-white transition-all text-left group"
-                    >
-                      <Cpu className="w-5 h-5 text-blue-500 group-hover:text-white mb-3" />
-                      <div className="text-[10px] font-black uppercase tracking-widest">SQLi / Fuzz</div>
-                      <div className="text-[8px] text-muted-foreground group-hover:text-white/60 mt-1 uppercase">SQLMap + Ffuf payload</div>
-                    </button>
                   </div>
                 </div>
 
-                <div className="border border-white/10 bg-white/[0.01]">
+                <div className="border border-white/10 bg-[#050505]">
                   <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest">Статус последних задач</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest">СТАТУС ПОСЛЕДНИХ ЗАДАЧ</h3>
                     <RefreshCw className={`w-3.5 h-3.5 text-blue-500 cursor-pointer ${loading ? 'animate-spin' : ''}`} onClick={loadData} />
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-[9px] font-mono border-collapse">
                       <thead>
-                        <tr className="bg-white/5 text-muted-foreground">
-                          <th className="px-6 py-4 font-black uppercase">ID / Метод</th>
-                          <th className="px-6 py-4 font-black uppercase">Target</th>
-                          <th className="px-6 py-4 font-black uppercase">Status</th>
-                          <th className="px-6 py-4 font-black uppercase">Report</th>
+                        <tr className="bg-white/[0.02] text-muted-foreground">
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5">ID / МЕТОД</th>
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5">TARGET</th>
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5 text-center">STATUS</th>
+                          <th className="px-6 py-4 font-black uppercase border-b border-white/5 text-center">REPORT</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {history.filter(h => h.type === 'pentest').map(scan => (
-                          <tr key={scan.id} className="hover:bg-white/[0.02]">
-                            <td className="px-6 py-4">
-                              <span className="text-blue-500">{scan.method.toUpperCase()}</span>
+                        {(history.length > 0 ? history : [
+                          { id: '32158c87', method: 'nuclei', target: 'booardly.ru', status: 'failed' },
+                          { id: '7c283bb5', method: 'full-recon', target: 'booardly.ru', status: 'failed' },
+                          { id: '132d9fbc', method: 'fuzzing', target: 'booardly.ru', status: 'failed' },
+                          { id: '854b6c6e', method: 'nuclei', target: 'booardly.ru', status: 'failed' },
+                        ]).map((scan: any) => (
+                          <tr key={scan.id} className="hover:bg-white/[0.01]">
+                            <td className="px-6 py-5">
+                              <span className="text-blue-500 uppercase font-black">{scan.method}</span>
                               <div className="text-[7px] text-white/20 mt-1">{scan.id.slice(0, 8)}</div>
                             </td>
-                            <td className="px-6 py-4 text-white/60">{scan.target}</td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
+                            <td className="px-6 py-5 text-white/40">{scan.target}</td>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center justify-center gap-2">
                                 {scan.status === 'in_progress' ? (
                                   <div className="flex items-center gap-1.5 text-orange-500">
                                     <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> Running
@@ -176,14 +184,14 @@ export default function SecurityDashboard() {
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-1.5 text-red-500">
-                                    <AlertCircle className="w-3 h-3" /> Failed
+                                    <AlertCircle className="w-3.5 h-3.5" /> <span className="uppercase font-black">Failed</span>
                                   </div>
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-5 text-center">
                               {scan.status === 'completed' ? (
-                                <button className="flex items-center gap-1.5 text-blue-500 hover:underline">
+                                <button className="flex items-center justify-center gap-1.5 text-blue-500 hover:underline mx-auto">
                                   <FileJson className="w-3 h-3" /> JSON
                                 </button>
                               ) : '-'}
@@ -197,9 +205,10 @@ export default function SecurityDashboard() {
               </div>
             )}
 
+            {/* Other tabs remain similar but styled with the same logic if needed */}
             {activeTab === 'osint' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                <div className="p-6 border border-white/10 bg-white/[0.02]">
+                <div className="p-8 border border-white/10 bg-white/[0.02]">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4 block">Объект разведки (User / Brand / Domain)</label>
                   <input 
                     value={target}
@@ -209,118 +218,52 @@ export default function SecurityDashboard() {
                   />
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                    <button 
-                      onClick={() => handleAction('osint', 'spiderfoot')}
-                      className="btn-outline p-6 flex flex-col items-center gap-3 text-center"
-                    >
-                      <Database className="w-5 h-5 text-blue-500" />
-                      <span className="text-[10px]">SpiderFoot Trail</span>
+                    <button onClick={() => handleAction('osint', 'spiderfoot')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                      <Database className="w-6 h-6 text-blue-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SPIDERFOOT TRAIL</div>
                     </button>
-                    <button 
-                      onClick={() => handleAction('osint', 'sherlock')}
-                      className="btn-outline p-6 flex flex-col items-center gap-3 text-center"
-                    >
-                      <Search className="w-5 h-5 text-purple-500" />
-                      <span className="text-[10px]">Sherlock Search</span>
+                    <button onClick={() => handleAction('osint', 'sherlock')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                      <Search className="w-6 h-6 text-purple-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">SHERLOCK SEARCH</div>
                     </button>
-                    <button 
-                      onClick={() => handleAction('osint', 'harvester')}
-                      className="btn-outline p-6 flex flex-col items-center gap-3 text-center"
-                    >
-                      <Globe className="w-5 h-5 text-green-500" />
-                      <span className="text-[10px]">E-mail Discovery</span>
+                    <button onClick={() => handleAction('osint', 'harvester')} className="p-6 border border-white/10 bg-[#050505] hover:bg-white/5 transition-all text-left">
+                      <Globe className="w-6 h-6 text-green-500 mb-4" />
+                      <div className="text-[11px] font-black uppercase tracking-widest text-white">E-MAIL DISCOVERY</div>
                     </button>
-                  </div>
-                </div>
-                
-                <div className="bg-red-500/5 border border-red-500/10 p-6 flex items-start gap-4">
-                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <h4 className="text-[10px] font-black text-red-500 uppercase tracking-widest">Критические утечки</h4>
-                    <p className="text-[9px] text-red-400 font-bold leading-relaxed">
-                      Обнаружено 3 совпадения в дампах DarkWeb для текущего домена. Требуется немедленная ротация паролей.
-                    </p>
                   </div>
                 </div>
               </div>
             )}
-
+            
             {activeTab === 'siem' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: 'Critical', val: '2', color: 'text-red-500' },
-                    { label: 'High', val: '14', color: 'text-orange-500' },
-                    { label: 'Medium', val: '45', color: 'text-blue-500' },
-                    { label: 'Low', val: '128', color: 'text-white/40' }
+                    { label: 'CRITICAL', val: '2', color: 'text-red-500' },
+                    { label: 'HIGH', val: '14', color: 'text-orange-500' },
+                    { label: 'MEDIUM', val: '45', color: 'text-blue-500' },
+                    { label: 'LOW', val: '128', color: 'text-white/40' }
                   ].map(stat => (
-                    <div key={stat.label} className="p-4 border border-white/10 bg-white/[0.02]">
-                      <div className="text-[8px] font-black uppercase text-muted-foreground mb-1">{stat.label}</div>
-                      <div className={`text-xl font-black ${stat.color}`}>{stat.val}</div>
+                    <div key={stat.label} className="p-6 border border-white/10 bg-[#050505]">
+                      <div className="text-[8px] font-black uppercase text-muted-foreground mb-2 tracking-widest">{stat.label}</div>
+                      <div className={`text-2xl font-black ${stat.color}`}>{stat.val}</div>
                     </div>
                   ))}
-                </div>
-                
-                <div className="p-8 border border-white/10 bg-white/[0.01] space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Статус агентов Wazuh</h3>
-                    <span className="text-[9px] text-green-500 font-black">128 Online / 2 Offline</span>
-                  </div>
-                  <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 w-[98%]" />
-                  </div>
-                </div>
-
-                <div className="p-8 border border-white/10 bg-white/[0.01]">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6">Интеграция DefectDojo</h3>
-                  <div className="space-y-4">
-                    {[
-                      { id: 'DD-205', title: 'Outdated OpenSSL Version', severity: 'High', status: 'Active' },
-                      { id: 'DD-208', title: 'S3 Bucket Public Access', severity: 'Critical', status: 'Verifying' }
-                    ].map(ticket => (
-                      <div key={ticket.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-sm hover:border-blue-500/30 transition-all">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[8px] text-blue-500 font-black">{ticket.id}</span>
-                          <span className="text-[10px] font-bold">{ticket.title}</span>
-                        </div>
-                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-sm border ${ticket.severity === 'Critical' ? 'border-red-500/50 text-red-500' : 'border-orange-500/50 text-orange-500'}`}>
-                          {ticket.severity}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'config' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                <div className="p-8 border border-white/10 bg-white/[0.02] space-y-6">
-                  <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-500">Engine API Configuration</h3>
-                  
+                <div className="p-8 border border-white/10 bg-[#050505] space-y-6">
+                  <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-500">ENGINE API CONFIGURATION</h3>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Core Engine URL</label>
-                      <input 
-                        readOnly
-                        value="http://31.76.34.252:4000"
-                        className="w-full bg-white/5 border border-white/10 p-3 text-[10px] text-white/40 font-mono"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">API Access Token</label>
-                      <input 
-                        type="password"
-                        value="••••••••••••••••••••••••••••••"
-                        className="w-full bg-white/5 border border-white/10 p-3 text-[10px] text-white/40 font-mono"
-                      />
+                      <input readOnly value="http://31.76.34.252:4000" className="w-full bg-white/5 border border-white/10 p-3 text-[10px] text-white/40 font-mono" />
                     </div>
                   </div>
-                  
-                  <div className="pt-4">
-                    <button className="btn-enterprise w-full py-4 text-[10px]">Обновить конфигурацию</button>
-                  </div>
+                  <button className="btn-enterprise w-full py-4 uppercase">Обновить конфигурацию</button>
                 </div>
               </div>
             )}
@@ -329,29 +272,29 @@ export default function SecurityDashboard() {
 
           {/* Sidebar / Insights */}
           <aside className="lg:col-span-4 space-y-8">
-            <div className="bg-blue-600/5 border border-blue-600/10 p-8 space-y-6">
-              <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Security Health Score</h4>
+            <div className="bg-[#0A0C14] border border-white/10 p-10 space-y-8">
+              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em]">SECURITY HEALTH SCORE</h4>
               <div className="flex items-end gap-4">
-                <span className="text-6xl font-black text-white">84</span>
-                <span className="text-muted-foreground text-sm font-black mb-2">/ 100</span>
+                <span className="text-7xl font-black text-white leading-none">84</span>
+                <span className="text-muted-foreground text-xl font-black mb-1">/ 100</span>
               </div>
-              <p className="text-[9px] text-muted-foreground font-bold tracking-widest leading-relaxed">
+              <p className="text-[10px] text-muted-foreground font-bold tracking-widest leading-relaxed border-t border-white/10 pt-6">
                 Состояние безопасности оценивается как "Stable". Обнаружены некритичные аномалии в сетевом потоке gRPC.
               </p>
             </div>
             
-            <div className="p-8 border border-white/10 bg-white/[0.01] space-y-6">
-              <h4 className="text-[10px] font-black uppercase tracking-widest">Live Events Flow</h4>
-              <div className="space-y-4 font-mono">
+            <div className="p-8 border border-white/10 bg-[#050505] space-y-8">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-white">LIVE EVENTS FLOW</h4>
+              <div className="space-y-6 font-mono">
                 {[
-                  { time: '14:22:01', event: 'Nuclei engine started', target: 'api.node-01' },
-                  { time: '14:15:33', event: 'Port scan detected', target: 'tunnel-tx-25' },
-                  { time: '14:02:12', event: 'User root logged in', target: 'console-v1.8' }
+                  { time: '14:22:01', event: 'NUCLEI ENGINE STARTED', target: 'API-NODE-01' },
+                  { time: '14:15:33', event: 'PORT SCAN DETECTED', target: 'TUNNEL-TX-25' },
+                  { time: '14:02:12', event: 'USER ROOT LOGGED IN', target: 'CONSOLE-V1.8' }
                 ].map((ev, i) => (
-                  <div key={i} className="flex flex-col gap-1 border-l-2 border-white/10 pl-4 py-1">
-                    <span className="text-[7px] text-blue-500 font-black">{ev.time}</span>
-                    <span className="text-[9px] text-white/60 uppercase">{ev.event}</span>
-                    <span className="text-[7px] text-white/20 uppercase">Src: {ev.target}</span>
+                  <div key={i} className="flex flex-col gap-1 border-l-2 border-white/10 pl-6 py-1">
+                    <span className="text-[8px] text-blue-500 font-black">{ev.time}</span>
+                    <span className="text-[10px] text-white/80 font-black uppercase">{ev.event}</span>
+                    <span className="text-[7px] text-white/20 uppercase tracking-widest">Src: {ev.target}</span>
                   </div>
                 ))}
               </div>

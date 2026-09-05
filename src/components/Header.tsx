@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -38,7 +37,7 @@ export function Header() {
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-8 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
           <div className="relative group py-4">
-            <button className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
+            <button className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer uppercase">
               Услуги <ChevronDown className="w-3 h-3 transition-transform group-hover:rotate-180" />
             </button>
             
@@ -46,7 +45,7 @@ export function Header() {
               <div className="bg-black border border-white/10 rounded-sm shadow-2xl overflow-hidden">
                 <div className="flex flex-col py-2">
                   {SERVICES.map((s) => (
-                    <Link key={s.href} href={s.href} className="px-5 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0 text-[9px] tracking-widest">
+                    <Link key={s.href} href={s.href} className="px-5 py-3 hover:bg-white/5 hover:text-white transition-colors border-b border-white/5 last:border-0 text-[9px] tracking-widest uppercase">
                       {s.name}
                     </Link>
                   ))}
@@ -55,12 +54,12 @@ export function Header() {
             </div>
           </div>
 
-          <Link href="/api-docs" className="hover:text-white transition-colors">Документация</Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link>
+          <Link href="/api-docs" className="hover:text-white transition-colors uppercase">ДОКУМЕНТАЦИЯ</Link>
+          <Link href="/pricing" className="hover:text-white transition-colors uppercase">ТАРИФЫ</Link>
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/portal" className="hidden sm:flex btn-outline py-2 px-5 text-[9px] font-black tracking-widest">
+          <Link href="/portal" className="hidden sm:flex bg-black border border-white/10 py-2 px-8 text-[10px] font-black tracking-[0.2em] text-white hover:bg-white/5 transition-all uppercase rounded-sm">
             Вход
           </Link>
           
@@ -82,14 +81,14 @@ export function Header() {
             <Link href="/api-docs" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <FileText className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
-                <span className="text-[12px] font-black tracking-widest text-white uppercase">Документация</span>
+                <span className="text-[12px] font-black tracking-widest text-white uppercase">ДОКУМЕНТАЦИЯ</span>
                 <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Спецификация</span>
               </div>
             </Link>
             <Link href="/pricing" onClick={closeMenu} className="flex items-center gap-5 p-6 bg-white/[0.05] border border-white/10 rounded-sm">
               <CreditCard className="w-6 h-6 text-blue-500" />
               <div className="flex flex-col">
-                <span className="text-[12px] font-black tracking-widest text-white uppercase">Тарифные планы</span>
+                <span className="text-[12px] font-black tracking-widest text-white uppercase">ТАРИФНЫЕ ПЛАНЫ</span>
                 <span className="text-[8px] text-muted-foreground uppercase tracking-[0.2em] mt-1">Цены</span>
               </div>
             </Link>
