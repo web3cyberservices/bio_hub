@@ -1,22 +1,16 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Исправлено: ignoreDuringBuildErrors заменен на корректный ignoreDuringBuilds
+    // Игнорируем ошибки линтера при сборке, так как мы используем строгий CI
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Игнорируем ошибки типизации при сборке для обеспечения деплоя
+    // Игнорируем ошибки типизации при сборке для ускорения процесса на сервере
     ignoreBuildErrors: true,
   },
-  // Разрешаем использование внешних изображений (picsum для плейсхолдеров)
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-    ],
-  },
+  // Настройка для работы за Nginx прокси
+  poweredByHeader: false,
 };
 
 export default nextConfig;

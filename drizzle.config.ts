@@ -2,14 +2,14 @@
 import { defineConfig } from 'drizzle-kit';
 
 /**
- * Конфигурация Drizzle Kit.
- * Путь к БД изменен на абсолютный для исключения ошибок в PM2/Nginx.
+ * Конфигурация Drizzle Kit для SQLite.
  */
 export default defineConfig({
   schema: './src/db/schema.ts',
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
+    // Drizzle Kit корректно понимает префикс file:
     url: process.env.DATABASE_URL || 'sqlite.db',
   },
   verbose: true,
