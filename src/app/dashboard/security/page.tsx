@@ -43,17 +43,12 @@ export default function SecurityDashboard() {
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
 
-  // Используем обычный fetch через наш Proxy для поллинга, чтобы избежать UnrecognizedActionError
-  const loadData = useCallback(async () => {
+  // Опрос здоровья воркера через прокси
+  const checkHealth = useCallback(async () => {
     try {
-      // 1. Получаем историю через Server Action (только при инициализации или изменении)
-      const h = await getScanHistory();
-      setHistory(h || []);
-
-      // 2. Проверяем здоровье через Proxy
       const start = Date.now();
-      const healthRes = await fetch('/api/worker/health');
-      if (healthRes.ok) {
+      const res = await fetch('/api/worker?endpoint=/health');
+      if (res.ok) {
         setEngineStatus({ online: true, latency: `${Date.now() - start}ms` });
       } else {
         setEngineStatus({ online: false, latency: 'N/A' });
@@ -63,11 +58,50 @@ export default function SecurityDashboard() {
     }
   }, []);
 
+  // Загрузка истории
+  const loadHistory = useCallback(async () => {
+    try {
+      const h = await getScanHistory();
+      setHistory(h || []);
+    } catch (err) {
+      console.error('Failed to load history');
+    }
+  }, []);
+
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 10000); // Увеличиваем интервал до 10 сек для стабильности
-    return () => clearInterval(interval);
-  }, [loadData]);
+    checkHealth();
+    loadHistory();
+    const hInterval = setInterval(checkHealth, 10000);
+    const histInterval = setInterval(loadHistory, 15000);
+    return () => {
+      clearInterval(hInterval);
+      clearInterval(histInterval);
+    };
+  }, [checkHealth, loadHistory]);
+
+  // Функция поллинга конкретной задачи
+  const pollTaskStatus = async (scanId: string) => {
+    const maxAttempts = 60; // 5 минут при интервале 5с
+    let attempts = 0;
+
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/worker?endpoint=/api/status/${scanId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'completed' || data.status === 'failed') {
+            clearInterval(interval);
+            loadHistory(); // Обновляем список
+          }
+        }
+      } catch (e) {
+        console.error('Polling error', e);
+      }
+
+      if (attempts >= maxAttempts) clearInterval(interval);
+    }, 5000);
+  };
 
   const calculateHealthScore = () => {
     const completed = history.filter(s => s.status === 'completed');
@@ -82,8 +116,13 @@ export default function SecurityDashboard() {
     setLoading(true);
     try {
       const result = await runSecurityAction(activeTab, method, target);
-      if (result.success) await loadData();
-    } catch (e) {}
+      if (result.success && result.scanId) {
+        await loadHistory();
+        pollTaskStatus(result.scanId); // Запускаем поллинг после старта
+      }
+    } catch (e) {
+      console.error('Action failed', e);
+    }
     setLoading(false);
     setShowConfirm(null);
   }
@@ -128,7 +167,7 @@ export default function SecurityDashboard() {
             <h1 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-white">
               <ShieldAlert className="text-blue-500" /> Security Operations Center
             </h1>
-            <p className="technical-label">ENGINE API v2.5.1 • Node Status Monitoring</p>
+            <p className="technical-label">ENGINE API v2.5.1 • Proxy Secure Bridge</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -271,7 +310,7 @@ export default function SecurityDashboard() {
                           <div className="flex items-center justify-end gap-3">
                             {scan.status === 'completed' && scan.reportPath && (
                               <a 
-                                href={`https://31.76.34.252:4000${scan.reportPath}`} 
+                                href={`https://web3cyberservices.xyz/api/worker?endpoint=${scan.reportPath}`} 
                                 target="_blank"
                                 className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
                               >
