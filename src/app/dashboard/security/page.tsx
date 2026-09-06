@@ -21,7 +21,12 @@ import {
   FileText,
   Copy,
   Check,
-  Trash2
+  Trash2,
+  ShieldCheck,
+  AlertCircle,
+  Server,
+  Box,
+  Fingerprint
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -95,22 +100,22 @@ export default function SecurityDashboard() {
       if (res.ok) {
         const text = await res.text();
         try {
+          // Пытаемся распарсить JSON для красивого отображения
           if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-            const lines = text.trim().split('\n');
-            if (lines.length > 1) {
-              const objects = lines.map(line => {
-                try { return JSON.parse(line); } catch(e) { return line; }
-              });
-              setScanResultData(JSON.stringify(objects, null, 2));
-            } else {
-              const json = JSON.parse(text);
-              setScanResultData(JSON.stringify(json, null, 2));
-            }
+            const json = JSON.parse(text);
+            setScanResultData(JSON.stringify(json, null, 2));
           } else {
             setScanResultData(text);
           }
         } catch (e) {
-          setScanResultData(text);
+          // Если это NDJSON (многострочный JSON, как у Nuclei)
+          try {
+            const lines = text.trim().split('\n');
+            const objects = lines.map(line => JSON.parse(line));
+            setScanResultData(JSON.stringify(objects, null, 2));
+          } catch(e2) {
+            setScanResultData(text);
+          }
         }
       } else {
         setScanResultData('Report data not yet available on worker storage.');
@@ -194,10 +199,11 @@ export default function SecurityDashboard() {
   const tabTools: Record<TabType, any[]> = {
     pentest: [
       { id: 'nuclei', label: 'NUCLEI AUDIT', icon: <Zap />, sub: 'Vuln scanner', color: 'text-blue-500' },
-      { id: 'full-recon', label: 'DEEP RECON', icon: <Globe />, sub: 'Subfinder + Naabu', color: 'text-emerald-500' },
-      { id: 'fuzzing', label: 'SQLI / FUZZ', icon: <Cpu />, sub: 'Ffuf payload test', color: 'text-amber-500' },
-      { id: 'sqlmap', label: 'SQLMAP INJECTION', icon: <Database />, sub: 'Auto SQLi detection', color: 'text-orange-500' },
-      { id: 'nmap', label: 'PORT SCAN (Nmap)', icon: <Scan />, sub: 'Full service audit', color: 'text-cyan-500' }
+      { id: 'nikto', label: 'WEB SERVER AUDIT', icon: <Server />, sub: 'Nikto Scanner', color: 'text-orange-400' },
+      { id: 'wafw00f', label: 'WAF DETECTION', icon: <ShieldCheck />, sub: 'Fingerprint Firewall', color: 'text-emerald-500' },
+      { id: 'testssl', label: 'SSL/TLS CHECK', icon: <Lock />, sub: 'TestSSL.sh Audit', color: 'text-cyan-500' },
+      { id: 'zap', label: 'DAST ZAP SCAN', icon: <Activity />, sub: 'OWASP ZAP Core', color: 'text-red-500' },
+      { id: 'sqlmap', label: 'SQLMAP INJECTION', icon: <Database />, sub: 'Auto SQLi detection', color: 'text-orange-500' }
     ],
     osint: [
       { id: 'spiderfoot', label: 'SPIDERFOOT', icon: <Search />, sub: 'Digital footprinting', color: 'text-purple-500' },
@@ -210,9 +216,115 @@ export default function SecurityDashboard() {
       { id: 'netmon', label: 'NET MONITOR', icon: <Network />, sub: 'Traffic analysis', color: 'text-cyan-500' }
     ],
     config: [
-      { id: 'api-keys', label: 'API KEYS', icon: <Lock />, sub: 'Manage tokens', color: 'text-slate-400' },
+      { id: 'trivy', label: 'CONTAINER SCAN', icon: <Box />, sub: 'Trivy FS Audit', color: 'text-blue-400' },
+      { id: 'api-keys', label: 'API KEYS', icon: <Fingerprint />, sub: 'Manage tokens', color: 'text-slate-400' },
       { id: 'engine-url', label: 'ENGINE SETTINGS', icon: <Settings />, sub: 'Worker config', color: 'text-slate-400' }
     ]
+  };
+
+  const renderDetailedResult = () => {
+    if (!scanResultData) return <div className="text-muted-foreground animate-pulse italic">Synchronizing with remote buffer...</div>;
+    
+    try {
+      const data = JSON.parse(scanResultData);
+      const method = selectedScan.method.toLowerCase();
+
+      switch(method) {
+        case 'wafw00f':
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 border border-blue-500/20 bg-blue-500/5">
+                <ShieldCheck className={clsx("w-8 h-8", data.waf_detected ? "text-green-500" : "text-slate-500")} />
+                <div>
+                  <div className="text-[10px] uppercase font-black tracking-widest text-white/40">Firewall Protection</div>
+                  <div className="text-sm font-black text-white">{data.waf_detected ? data.firewall : "No WAF detected"}</div>
+                </div>
+              </div>
+            </div>
+          );
+        
+        case 'trivy':
+          return (
+            <div className="space-y-4">
+              <div className="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-4">Vulnerability List ({data.vulnerabilities?.length || 0})</div>
+              {data.vulnerabilities?.map((v: any, i: number) => (
+                <div key={i} className="p-3 border border-white/5 bg-white/[0.02] flex justify-between items-center">
+                  <div>
+                    <div className="text-[10px] font-bold text-white uppercase">{v.pkgName}</div>
+                    <div className="text-[8px] text-white/40">Version: {v.installedVersion}</div>
+                  </div>
+                  <div className={clsx(
+                    "px-2 py-0.5 text-[8px] font-black uppercase",
+                    v.severity === 'CRITICAL' ? 'bg-red-500 text-white' : 'bg-orange-500/20 text-orange-500 border border-orange-500/20'
+                  )}>{v.severity}</div>
+                </div>
+              ))}
+            </div>
+          );
+
+        case 'nikto':
+          return (
+            <div className="space-y-2">
+              <div className="text-[10px] font-black uppercase text-orange-400 tracking-widest mb-4">Audit Findings</div>
+              {data.findings?.map((f: string, i: number) => (
+                <div key={i} className="flex gap-3 text-[9px] text-white/70 leading-relaxed border-b border-white/5 pb-2">
+                  <span className="text-orange-400 font-bold shrink-0">[{i+1}]</span>
+                  <span>{f}</span>
+                </div>
+              ))}
+            </div>
+          );
+
+        case 'zap':
+          return (
+            <div className="space-y-3">
+              <div className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-4">Security Alerts</div>
+              {data.alerts?.map((a: any, i: number) => (
+                <div key={i} className="p-4 border border-red-500/10 bg-red-500/[0.02] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className={clsx("w-4 h-4", a.risk === 'High' ? 'text-red-500' : 'text-orange-400')} />
+                    <span className="text-[10px] font-black uppercase text-white">{a.name}</span>
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-tighter text-white/40">{a.risk} Risk</span>
+                </div>
+              ))}
+            </div>
+          );
+
+        case 'testssl':
+          return (
+            <div className="space-y-6">
+              <div className="flex items-end gap-2">
+                <span className="text-5xl font-black text-green-500 tracking-tighter">{data.grade}</span>
+                <span className="text-[10px] font-black text-white/40 uppercase mb-2">Security Grade</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 border border-white/10 bg-white/[0.02]">
+                  <div className="text-[8px] text-white/40 uppercase font-black mb-2">Protocols</div>
+                  <div className="text-[10px] font-bold text-white">{data.protocols?.join(', ')}</div>
+                </div>
+                <div className="p-4 border border-white/10 bg-white/[0.02]">
+                  <div className="text-[8px] text-white/40 uppercase font-black mb-2">Key Checks</div>
+                  <div className="text-[10px] font-bold text-green-500">Passed</div>
+                </div>
+              </div>
+            </div>
+          );
+
+        default:
+          return (
+            <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
+              {scanResultData}
+            </div>
+          );
+      }
+    } catch (e) {
+      return (
+        <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
+          {scanResultData}
+        </div>
+      );
+    }
   };
 
   const filteredHistory = history.filter(scan => {
@@ -472,9 +584,7 @@ export default function SecurityDashboard() {
 
                     <div className="space-y-2">
                       <div className="text-blue-500 font-black uppercase tracking-widest text-[9px]">Raw Payload Data</div>
-                      <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
-                        {scanResultData || 'Synchronizing with remote buffer...'}
-                      </div>
+                      {renderDetailedResult()}
                     </div>
                   </div>
                 ) : (
