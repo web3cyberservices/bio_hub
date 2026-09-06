@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -80,25 +81,38 @@ export default function SecurityDashboard() {
   }, []);
 
   const fetchReportContent = async (scan: any) => {
-    if (!scan.reportPath) return;
+    if (!scan.reportPath) {
+      setScanResultData(null);
+      return;
+    }
+    
     try {
+      setScanResultData(null); // Clear previous
       const res = await fetch(`/api/worker?endpoint=${scan.reportPath}`);
       if (res.ok) {
         const text = await res.text();
-        setScanResultData(text);
+        // Если ответ — JSON, форматируем его для красоты
+        try {
+          const json = JSON.parse(text);
+          setScanResultData(JSON.stringify(json, null, 2));
+        } catch (e) {
+          setScanResultData(text);
+        }
       } else {
-        setScanResultData('Failed to load report content from worker.');
+        setScanResultData('Report file is being generated or not available yet.');
       }
     } catch (e) {
-      setScanResultData('Network error while fetching report.');
+      setScanResultData('Error fetching remote report.');
     }
   };
 
   useEffect(() => {
-    if (selectedScan && selectedScan.status?.toLowerCase() === 'completed') {
-      fetchReportContent(selectedScan);
-    } else {
-      setScanResultData(null);
+    if (selectedScan) {
+      if (selectedScan.status?.toLowerCase() === 'completed') {
+        fetchReportContent(selectedScan);
+      } else {
+        setScanResultData(null);
+      }
     }
   }, [selectedScan]);
 
@@ -115,6 +129,10 @@ export default function SecurityDashboard() {
             clearInterval(interval);
             delete pollingIntervals.current[scanId];
             loadHistory();
+            // Если эта задача сейчас выбрана, обновляем её данные
+            if (selectedScan?.id === scanId) {
+              setSelectedScan((prev: any) => ({ ...prev, ...data }));
+            }
           }
         }
       } catch (e) {
@@ -197,14 +215,16 @@ export default function SecurityDashboard() {
   const healthScore = calculateHealthScore();
 
   const copyToClipboard = () => {
-    if (scanResultData) {
-      navigator.clipboard.writeText(scanResultData);
+    const textToCopy = scanResultData || selectedScan?.resultSummary || '';
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
     }
   };
 
   const downloadReport = () => {
-    if (scanResultData && selectedScan) {
-      const blob = new Blob([scanResultData], { type: 'application/json' });
+    const textToSave = scanResultData || selectedScan?.resultSummary || '';
+    if (textToSave && selectedScan) {
+      const blob = new Blob([textToSave], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -366,13 +386,12 @@ export default function SecurityDashboard() {
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-3">
                             {scan.status?.toLowerCase() === 'completed' && scan.reportPath && (
-                              <a 
-                                href={`/api/worker?endpoint=${scan.reportPath}`} 
-                                target="_blank"
+                              <button 
+                                onClick={() => setSelectedScan(scan)}
                                 className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
                               >
                                 <Download className="w-3 h-3" /> REPORT
-                              </a>
+                              </button>
                             )}
                             {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running' || scan.status?.toLowerCase() === 'scan started') && (
                               <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500 p-1">
@@ -426,7 +445,7 @@ export default function SecurityDashboard() {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
                   {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
                 </h4>
-                {selectedScan && selectedScan.status?.toLowerCase() === 'completed' && scanResultData && (
+                {selectedScan && (selectedScan.status?.toLowerCase() === 'completed') && (
                   <div className="flex gap-2">
                     <button 
                       onClick={copyToClipboard}

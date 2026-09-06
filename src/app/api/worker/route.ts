@@ -1,11 +1,10 @@
+
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 /**
  * API Proxy Route.
- * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint,
- * предотвращая ошибки Mixed Content и CORS. 
- * Поддерживает передачу JSON и бинарных данных (отчетов).
+ * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint.
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
 
@@ -22,7 +21,6 @@ export async function GET(request: Request) {
     const response = await fetch(targetUrl, {
       method: 'GET',
       headers: { 
-        'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
         'Pragma': 'no-cache'
       },
@@ -35,18 +33,17 @@ export async function GET(request: Request) {
 
     const contentType = response.headers.get('content-type');
     
-    // Если это JSON (статус), возвращаем как JSON
+    // Если это JSON, пытаемся вернуть как JSON для удобства UI
     if (contentType?.includes('application/json')) {
       const data = await response.json();
       return NextResponse.json(data);
     } 
     
-    // Если это файл отчета или другой контент, возвращаем как Blob
-    const blob = await response.blob();
-    return new NextResponse(blob, {
+    // Для всех остальных типов (включая логи/текст) возвращаем как текст
+    const text = await response.text();
+    return new NextResponse(text, {
       headers: {
-        'Content-Type': contentType || 'application/octet-stream',
-        'Content-Disposition': response.headers.get('content-disposition') || 'attachment',
+        'Content-Type': contentType || 'text/plain',
         'Cache-Control': 'no-store'
       },
     });

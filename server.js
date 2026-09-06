@@ -32,12 +32,13 @@ try {
   db = new Database(dbPath);
   console.log(`[ENGINE] Connected to database at ${dbPath}`);
   
+  // Приводим схему к соответствию с Drizzle (snake_case для колонок)
   db.exec(`
     CREATE TABLE IF NOT EXISTS security_scans (
       id TEXT PRIMARY KEY,
       status TEXT,
-      resultSummary TEXT,
-      reportPath TEXT,
+      result_summary TEXT,
+      report_path TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -49,7 +50,6 @@ const activeProcesses = new Map();
 
 /**
  * Эндпоинт запуска сканирования.
- * Теперь генерирует числовой ID и возвращает его фронтенду.
  */
 app.post('/api/run/:method', (req, res) => {
   const { target } = req.body;
@@ -59,7 +59,6 @@ app.post('/api/run/:method', (req, res) => {
     return res.status(400).json({ error: 'Missing target' });
   }
 
-  // Генерация уникального числового ID (используем timestamp)
   const scan_id = String(Date.now());
   const reportFile = `${method}_${scan_id}.json`;
   const reportPath = path.join(resultsPath, reportFile);
@@ -100,7 +99,7 @@ app.post('/api/run/:method', (req, res) => {
     activeProcesses.delete(scan_id);
     
     let status = 'completed';
-    let summary = stdout || 'Scan finished successfully';
+    let summary = stdout || stderr || 'Scan finished successfully';
 
     if (error) {
       console.error(`[ENGINE] Task ${scan_id} failed:`, error);
@@ -110,7 +109,7 @@ app.post('/api/run/:method', (req, res) => {
 
     if (db) {
       try {
-        const stmt = db.prepare('UPDATE security_scans SET status = ?, resultSummary = ?, reportPath = ? WHERE id = ?');
+        const stmt = db.prepare('UPDATE security_scans SET status = ?, result_summary = ?, report_path = ? WHERE id = ?');
         stmt.run(status, summary, `/reports/${reportFile}`, scan_id);
       } catch (dbErr) {
         console.error(`[ENGINE] DB Update failed:`, dbErr.message);
@@ -126,7 +125,7 @@ app.get('/api/status/:id', (req, res) => {
   const { id } = req.params;
   if (db) {
     try {
-      const scan = db.prepare('SELECT status, resultSummary, reportPath FROM security_scans WHERE id = ?').get(String(id));
+      const scan = db.prepare('SELECT status, result_summary as resultSummary, report_path as reportPath FROM security_scans WHERE id = ?').get(String(id));
       if (scan) return res.json(scan);
     } catch (e) {
       return res.status(500).json({ error: 'DB Error' });
@@ -142,7 +141,7 @@ app.post('/api/stop', (req, res) => {
     child.kill('SIGTERM');
     activeProcesses.delete(String(scan_id));
     if (db) {
-      const stmt = db.prepare('UPDATE security_scans SET status = ?, resultSummary = ? WHERE id = ?');
+      const stmt = db.prepare('UPDATE security_scans SET status = ?, result_summary = ? WHERE id = ?');
       stmt.run('failed', 'Terminated by operator', String(scan_id));
     }
     return res.json({ success: true });
