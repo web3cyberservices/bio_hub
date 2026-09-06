@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,8 +12,6 @@ import {
   Zap, 
   Cpu,
   Database,
-  Square,
-  Trash2,
   Scan,
   Loader2,
   Download,
@@ -21,12 +20,12 @@ import {
   Lock,
   FileText,
   Copy,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import { 
   runSecurityAction, 
   getScanHistory, 
-  stopSecurityAction,
   deleteSecurityAction
 } from '@/lib/actions/security';
 import { clsx } from 'clsx';
@@ -91,25 +90,27 @@ export default function SecurityDashboard() {
       const res = await fetch(`/api/worker?endpoint=${scan.reportPath}`);
       if (res.ok) {
         const text = await res.text();
-        // Попытка форматирования (обрабатываем и обычный JSON, и NDJSON)
         try {
-          if (text.includes('\n')) {
-            // Вероятно NDJSON
+          if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
             const lines = text.trim().split('\n');
-            const objects = lines.map(line => JSON.parse(line));
-            setScanResultData(JSON.stringify(objects, null, 2));
+            if (lines.length > 1) {
+              const objects = lines.map(line => JSON.parse(line));
+              setScanResultData(JSON.stringify(objects, null, 2));
+            } else {
+              const json = JSON.parse(text);
+              setScanResultData(JSON.stringify(json, null, 2));
+            }
           } else {
-            const json = JSON.parse(text);
-            setScanResultData(JSON.stringify(json, null, 2));
+            setScanResultData(text);
           }
         } catch (e) {
           setScanResultData(text);
         }
       } else {
-        setScanResultData('Report file is being generated or not available yet.');
+        setScanResultData('Report data not yet available on worker storage.');
       }
     } catch (e) {
-      setScanResultData('Error fetching remote report content.');
+      setScanResultData('Critical error fetching report content.');
     }
   };
 
@@ -221,7 +222,7 @@ export default function SecurityDashboard() {
   const healthScore = calculateHealthScore();
 
   const copyToClipboard = () => {
-    const textToCopy = scanResultData || selectedScan?.resultSummary || '';
+    const textToCopy = scanResultData || selectedScan?.result_summary || '';
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy);
       setCopying(true);
@@ -230,7 +231,7 @@ export default function SecurityDashboard() {
   };
 
   const downloadReport = () => {
-    const textToSave = scanResultData || selectedScan?.resultSummary || '';
+    const textToSave = scanResultData || selectedScan?.result_summary || '';
     if (textToSave && selectedScan) {
       const blob = new Blob([textToSave], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -304,7 +305,7 @@ export default function SecurityDashboard() {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                    {activeTab === 'osint' ? 'Target Identifier' : 'Network Target'}
+                    {activeTab === 'osint' ? 'Target Username / Domain' : 'Network Target (IP/FQDN)'}
                   </label>
                   <input 
                     value={target}
@@ -328,7 +329,7 @@ export default function SecurityDashboard() {
                       
                       {showConfirm === tool.id && (
                         <div className="absolute inset-0 bg-blue-600 flex flex-col items-center justify-center p-4 z-20 animate-in fade-in zoom-in-95">
-                          <span className="text-[9px] font-black text-white uppercase mb-4 tracking-widest">Confirm {tool.id}?</span>
+                          <span className="text-[9px] font-black text-white uppercase mb-4 tracking-widest">Confirm Execution?</span>
                           <div className="flex gap-2 w-full">
                             <button className="flex-1 bg-white text-black text-[9px] font-black py-2" onClick={(e) => { e.stopPropagation(); handleAction(tool.id); }}>EXECUTE</button>
                             <button className="flex-1 bg-black/20 text-white text-[9px] font-black py-2 border border-white/20" onClick={(e) => { e.stopPropagation(); setShowConfirm(null); }}>CANCEL</button>
@@ -343,7 +344,7 @@ export default function SecurityDashboard() {
 
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Security Queue & History</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Live Task Queue</h3>
                 <div className="flex gap-2">
                   {['all', 'in_progress', 'completed', 'failed'].map((s) => (
                     <button
@@ -364,10 +365,10 @@ export default function SecurityDashboard() {
                 <table className="w-full text-left text-[9px] font-mono border-collapse">
                   <thead>
                     <tr className="bg-white/[0.01] text-muted-foreground uppercase">
-                      <th className="px-6 py-4 border-b border-white/5">Method</th>
+                      <th className="px-6 py-4 border-b border-white/5">Tool</th>
                       <th className="px-6 py-4 border-b border-white/5">Target</th>
                       <th className="px-6 py-4 border-b border-white/5">Status</th>
-                      <th className="px-6 py-4 border-b border-white/5 text-right">Action</th>
+                      <th className="px-6 py-4 border-b border-white/5 text-right">Delete</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -394,11 +395,9 @@ export default function SecurityDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-3">
-                            <button onClick={() => deleteSecurityAction(scan.id)} className="text-white/10 hover:text-red-500 p-1">
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
+                          <button onClick={() => deleteSecurityAction(scan.id)} className="text-white/10 hover:text-red-500 p-1">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -412,7 +411,7 @@ export default function SecurityDashboard() {
             <div className="bg-[#0A0C14] border border-white/10 p-10">
               <div className="space-y-8">
                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-blue-500" /> INFRASTRUCTURE HEALTH
+                  <Activity className="w-4 h-4 text-blue-500" /> SYSTEM HEALTH
                 </h4>
                 <div className="flex items-end gap-4">
                   <span className={clsx(
@@ -429,10 +428,8 @@ export default function SecurityDashboard() {
                     style={{ width: `${typeof healthScore === 'number' ? healthScore : 0}%` }} 
                   />
                 </div>
-                <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed">
-                  {typeof healthScore === 'number' 
-                    ? `Dynamic score based on ${history.length} audit sequences.` 
-                    : 'NO DATA: Awaiting primary audit telemetry...'}
+                <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest">
+                  {typeof healthScore === 'number' ? 'DYNAMIC INFRASTRUCTURE SCORE' : 'PENDING TELEMETRY DATA'}
                 </p>
               </div>
             </div>
@@ -440,21 +437,21 @@ export default function SecurityDashboard() {
             <div className="p-8 border border-white/10 bg-black flex flex-col h-[600px]">
               <div className="flex justify-between items-center mb-8">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
-                  {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
+                  {selectedScan ? 'DATA ANALYSIS' : 'ENGINE LOGS'}
                 </h4>
                 {selectedScan && (selectedScan.status?.toLowerCase() === 'completed') && (
                   <div className="flex gap-2">
                     <button 
                       onClick={copyToClipboard}
-                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all rounded-sm flex items-center justify-center"
-                      title="Copy JSON"
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-blue-500/20 rounded-sm"
+                      title="Copy"
                     >
                       {copying ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-blue-500" />}
                     </button>
                     <button 
                       onClick={downloadReport}
-                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-green-500/20 hover:border-green-500/40 transition-all rounded-sm flex items-center justify-center"
-                      title="Download Report"
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-green-500/20 rounded-sm"
+                      title="Download"
                     >
                       <Download className="w-3 h-3 text-green-500" />
                     </button>
@@ -466,32 +463,22 @@ export default function SecurityDashboard() {
                 {selectedScan ? (
                   <div className="space-y-6 animate-in fade-in">
                     <div className="bg-white/5 p-4 border border-white/5 space-y-2">
-                      <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Method:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Target:</span> <span>{selectedScan.target}</span></div>
-                      <div className="flex justify-between"><span className="text-white/40">Status:</span> <span className="uppercase font-black">{selectedScan.status}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40 uppercase">Task ID:</span> <span>{selectedScan.id}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40 uppercase">Tool:</span> <span className="text-blue-500 font-black">{selectedScan.method?.toUpperCase()}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40 uppercase">Status:</span> <span className="uppercase font-black text-green-500">{selectedScan.status}</span></div>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="text-blue-500 font-black uppercase tracking-widest">Findings Summary</div>
+                      <div className="text-blue-500 font-black uppercase tracking-widest text-[9px]">Raw Payload Data</div>
                       <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
-                        {scanResultData || selectedScan.resultSummary || 'Awaiting stdout buffer from remote worker...'}
+                        {scanResultData || selectedScan.result_summary || 'Synchronizing with remote buffer...'}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  history.slice(0, 15).map((scan, i) => (
-                    <div key={i} className="flex flex-col gap-1 border-l border-blue-500/30 pl-4 py-1 cursor-pointer hover:bg-white/5" onClick={() => setSelectedScan(scan)}>
-                      <span className="text-[8px] text-blue-500">{new Date(scan.timestamp).toLocaleTimeString()}</span>
-                      <span className="text-white/80 uppercase font-black">{scan.method} initiated: {scan.target}</span>
-                      <span className={clsx(
-                        "text-[7px] uppercase",
-                        scan.status?.toLowerCase() === 'completed' ? 'text-green-500' : scan.status?.toLowerCase() === 'failed' ? 'text-red-500' : 'text-orange-500'
-                      )}>
-                        {scan.status}
-                      </span>
-                    </div>
-                  ))
+                  <div className="text-muted-foreground italic text-center py-20 uppercase tracking-widest opacity-20">
+                    Select a task to view telemetry
+                  </div>
                 )}
               </div>
             </div>
