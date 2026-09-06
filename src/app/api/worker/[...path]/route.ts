@@ -20,12 +20,19 @@ export async function GET(
   try {
     const response = await fetch(targetUrl, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      },
       cache: 'no-store',
     });
 
+    if (!response.ok) {
+      return NextResponse.json({ error: 'Worker error' }, { status: response.status });
+    }
+
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+    return NextResponse.json(data);
   } catch (error) {
     console.error(`Proxy GET Error [${targetUrl}]:`, error);
     return NextResponse.json({ error: 'Worker unreachable' }, { status: 502 });
@@ -38,9 +45,9 @@ export async function POST(
 ) {
   const path = params.path.join('/');
   const targetUrl = `${WORKER_URL}/${path}`;
-  const body = await request.json();
-
+  
   try {
+    const body = await request.json();
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

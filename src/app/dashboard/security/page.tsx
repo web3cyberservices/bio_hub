@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldAlert, 
   Search, 
@@ -10,26 +10,21 @@ import {
   Terminal, 
   Globe, 
   Zap, 
-  AlertCircle, 
-  CheckCircle2, 
   Cpu,
   Database,
   Square,
   Trash2,
-  FileText,
-  ChevronRight,
+  Scan,
+  Loader2,
+  Download,
   Eye,
   Network,
   Lock,
-  History,
-  Scan,
-  Loader2,
-  Download
+  FileText
 } from 'lucide-react';
 import { 
   runSecurityAction, 
   getScanHistory, 
-  getEngineStatus,
   stopSecurityAction,
   deleteSecurityAction
 } from '@/lib/actions/security';
@@ -37,8 +32,6 @@ import { clsx } from 'clsx';
 
 type TabType = 'pentest' | 'osint' | 'siem' | 'config';
 type ScanStatus = 'all' | 'in_progress' | 'completed' | 'failed';
-
-const WORKER_URL = 'http://31.76.34.252:4000';
 
 export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('pentest');
@@ -50,33 +43,35 @@ export default function SecurityDashboard() {
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-    // Поллинг данных каждые 5 секунд
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
+  // Используем обычный fetch через наш Proxy для поллинга, чтобы избежать UnrecognizedActionError
+  const loadData = useCallback(async () => {
+    try {
+      // 1. Получаем историю через Server Action (только при инициализации или изменении)
+      const h = await getScanHistory();
+      setHistory(h || []);
+
+      // 2. Проверяем здоровье через Proxy
+      const start = Date.now();
+      const healthRes = await fetch('/api/worker/health');
+      if (healthRes.ok) {
+        setEngineStatus({ online: true, latency: `${Date.now() - start}ms` });
+      } else {
+        setEngineStatus({ online: false, latency: 'N/A' });
+      }
+    } catch (err) {
+      setEngineStatus({ online: false, latency: 'N/A' });
+    }
   }, []);
 
-  async function loadData() {
-    try {
-      const [h, s] = await Promise.all([getScanHistory(), getEngineStatus()]);
-      setHistory(h || []);
-      setEngineStatus(s);
-      
-      // Обновляем детали выбранного скана, если он в процессе
-      if (selectedScan && selectedScan.status === 'in_progress') {
-        const updated = (h || []).find(s => s.id === selectedScan.id);
-        if (updated) setSelectedScan(updated);
-      }
-    } catch (err) {}
-  }
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 10000); // Увеличиваем интервал до 10 сек для стабильности
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const calculateHealthScore = () => {
     const completed = history.filter(s => s.status === 'completed');
     if (history.length === 0) return 'WAITING';
-    if (completed.length === 0 && history.some(s => s.status === 'failed')) return 0;
-    if (completed.length === 0) return 'NO DATA';
-
     const failed = history.filter(s => s.status === 'failed').length;
     const score = Math.max(0, 100 - (failed * 15));
     return Math.min(100, score);
@@ -85,10 +80,12 @@ export default function SecurityDashboard() {
   async function handleAction(method: string) {
     if (!target) return;
     setLoading(true);
-    const result = await runSecurityAction(activeTab, method, target);
+    try {
+      const result = await runSecurityAction(activeTab, method, target);
+      if (result.success) await loadData();
+    } catch (e) {}
     setLoading(false);
     setShowConfirm(null);
-    if (result.success) loadData();
   }
 
   const tabTools: Record<TabType, any[]> = {
@@ -176,14 +173,12 @@ export default function SecurityDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
           <div className="lg:col-span-8 space-y-8">
-            {/* Input & Dynamic Tools */}
             <div className="p-8 border border-white/10 bg-white/[0.02]">
               <div className="space-y-8">
                 <div className="space-y-4">
                   <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                    {activeTab === 'osint' ? 'Target Identifier (Username/Domain)' : 'Network Target (IP/Domain)'}
+                    {activeTab === 'osint' ? 'Target Identifier' : 'Network Target'}
                   </label>
                   <input 
                     value={target}
@@ -220,7 +215,6 @@ export default function SecurityDashboard() {
               </div>
             </div>
 
-            {/* Queue & History Table */}
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Security Queue & Artifacts</h3>
@@ -277,7 +271,7 @@ export default function SecurityDashboard() {
                           <div className="flex items-center justify-end gap-3">
                             {scan.status === 'completed' && scan.reportPath && (
                               <a 
-                                href={`${WORKER_URL}${scan.reportPath}`} 
+                                href={`https://31.76.34.252:4000${scan.reportPath}`} 
                                 target="_blank"
                                 className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
                               >
@@ -296,9 +290,6 @@ export default function SecurityDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {filteredHistory.length === 0 && (
-                      <tr><td colSpan={4} className="px-6 py-20 text-center text-white/10 uppercase tracking-widest">No audit history found</td></tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -306,7 +297,6 @@ export default function SecurityDashboard() {
           </div>
 
           <aside className="lg:col-span-4 space-y-8">
-            {/* Dynamic Infrastructure Health Score */}
             <div className="bg-[#0A0C14] border border-white/10 p-10">
               <div className="space-y-8">
                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
@@ -329,13 +319,12 @@ export default function SecurityDashboard() {
                 </div>
                 <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed">
                   {typeof healthScore === 'number' 
-                    ? `Dynamic score based on ${history.length} audit sequences. Failed tests deduct 15 points.` 
+                    ? `Dynamic score based on ${history.length} audit sequences.` 
                     : 'Awaiting primary audit telemetry...'}
                 </p>
               </div>
             </div>
             
-            {/* Contextual Logs & Result Viewer */}
             <div className="p-8 border border-white/10 bg-black flex flex-col h-[500px]">
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white mb-8">
                 {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
@@ -369,13 +358,9 @@ export default function SecurityDashboard() {
                     </div>
                   ))
                 )}
-                {history.length === 0 && !selectedScan && (
-                  <div className="text-white/10 uppercase tracking-widest text-center pt-20">Waiting for audit stream</div>
-                )}
               </div>
             </div>
           </aside>
-
         </div>
       </div>
     </div>

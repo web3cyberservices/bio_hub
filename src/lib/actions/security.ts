@@ -4,7 +4,7 @@
 import { db } from '@/db';
 import { securityScans } from '@/db/schema';
 import { auth } from '@/auth';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
@@ -17,7 +17,6 @@ export async function runSecurityAction(type: string, method: string, target: st
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Создаем запись в локальной БД фронтенда
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -27,18 +26,14 @@ export async function runSecurityAction(type: string, method: string, target: st
       timestamp: new Date().toISOString()
     }).returning();
 
-    // 2. Отправляем команду воркеру
+    // Отправляем команду воркеру
     try {
-      const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
+      await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target, scan_id: scan.id }),
         cache: 'no-store'
       });
-
-      if (!response.ok) {
-        throw new Error(`Engine rejected request: ${response.status}`);
-      }
     } catch (fetchErr) {
       console.error('Fetch to worker failed:', fetchErr);
       await db.update(securityScans)
@@ -55,7 +50,8 @@ export async function runSecurityAction(type: string, method: string, target: st
 }
 
 /**
- * Синхронизация статусов активных задач (Поллинг).
+ * Синхронизация статусов (Server-side опрос для обновления БД).
+ * Вызывается при загрузке страницы.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -65,38 +61,26 @@ export async function syncActiveScans() {
     const activeScans = await db.select()
       .from(securityScans)
       .where(eq(securityScans.status, 'in_progress'))
-      .limit(20);
-
-    if (activeScans.length === 0) return;
+      .limit(10);
 
     for (const scan of activeScans) {
       try {
-        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { 
-          cache: 'no-store',
-          signal: AbortSignal.timeout(3000)
-        });
-
+        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { cache: 'no-store' });
         if (response.ok) {
           const remoteData = await response.json();
-          // Если статус на воркере изменился, обновляем нашу БД
-          if (remoteData.status && remoteData.status !== 'in_progress') {
+          if (remoteData.status !== 'in_progress') {
             await db.update(securityScans)
               .set({ 
                 status: remoteData.status, 
-                resultSummary: remoteData.resultSummary || 'No summary provided', 
+                resultSummary: remoteData.resultSummary, 
                 reportPath: remoteData.reportPath 
               })
               .where(eq(securityScans.id, scan.id));
           }
         }
-      } catch (e) {
-        // Ошибка связи с воркером для конкретной задачи - пропускаем до следующего цикла
-      }
+      } catch (e) {}
     }
-    revalidatePath('/dashboard/security');
-  } catch (err) {
-    console.error('Sync Error:', err);
-  }
+  } catch (err) {}
 }
 
 export async function stopSecurityAction(scanId: string) {
@@ -104,22 +88,21 @@ export async function stopSecurityAction(scanId: string) {
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    const response = await fetch(`${ENGINE_API_URL}/api/stop`, {
+    await fetch(`${ENGINE_API_URL}/api/stop`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scan_id: scanId }),
-      cache: 'no-store'
     });
 
-    if (response.ok) {
-      await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'Terminated by operator.' })
-        .where(eq(securityScans.id, scanId));
-      revalidatePath('/dashboard/security');
-      return { success: true };
-    }
-  } catch (err) {}
-  return { error: 'Stop signal failed' };
+    await db.update(securityScans)
+      .set({ status: 'failed', resultSummary: 'Terminated by operator.' })
+      .where(eq(securityScans.id, scanId));
+    
+    revalidatePath('/dashboard/security');
+    return { success: true };
+  } catch (err) {
+    return { error: 'Stop failed' };
+  }
 }
 
 export async function deleteSecurityAction(scanId: string) {
@@ -139,7 +122,7 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Выполняем синхронизацию перед загрузкой истории
+  // Выполняем синхронизацию при каждом запросе истории
   await syncActiveScans();
 
   try {
@@ -147,26 +130,8 @@ export async function getScanHistory() {
       .from(securityScans)
       .where(eq(securityScans.userId, session.user.id))
       .orderBy(desc(securityScans.timestamp))
-      .limit(50);
+      .limit(30);
   } catch (err) {
     return [];
-  }
-}
-
-export async function getEngineStatus() {
-  try {
-    const start = Date.now();
-    // Делаем запрос через прокси или напрямую (Server-side fetch всегда разрешен)
-    const response = await fetch(`${ENGINE_API_URL}/health`, { 
-      cache: 'no-store',
-      signal: AbortSignal.timeout(2000)
-    });
-    
-    if (!response.ok) throw new Error();
-    
-    const latency = Date.now() - start;
-    return { online: true, latency: `${latency}ms` };
-  } catch (e) {
-    return { online: false, latency: 'N/A' };
   }
 }
