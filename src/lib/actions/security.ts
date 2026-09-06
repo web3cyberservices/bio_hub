@@ -58,6 +58,7 @@ export async function runSecurityAction(type: string, method: string, target: st
 
 /**
  * Синхронизация статусов (Server-side опрос).
+ * Обновляет локальную БД информацией от воркера.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -67,14 +68,19 @@ export async function syncActiveScans() {
     const activeScans = await db.select()
       .from(securityScans)
       .where(eq(securityScans.status, 'in_progress'))
-      .limit(10);
+      .limit(20);
 
     for (const scan of activeScans) {
       try {
-        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { cache: 'no-store' });
+        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { 
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-store' }
+        });
+        
         if (response.ok) {
           const remoteData = await response.json();
-          if (remoteData.status !== 'in_progress') {
+          // Если статус изменился, обновляем локальную запись
+          if (remoteData.status !== 'in_progress' && remoteData.status !== 'Scan started') {
             await db.update(securityScans)
               .set({ 
                 status: remoteData.status, 
@@ -84,9 +90,13 @@ export async function syncActiveScans() {
               .where(eq(securityScans.id, scan.id));
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error(`Status sync failed for task ${scan.id}:`, e);
+      }
     }
-  } catch (err) {}
+  } catch (err) {
+    console.error('Global status sync failed:', err);
+  }
 }
 
 export async function stopSecurityAction(scanId: string) {
@@ -128,6 +138,7 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  // Запускаем фоновую синхронизацию перед возвратом истории
   await syncActiveScans();
 
   try {
@@ -137,6 +148,7 @@ export async function getScanHistory() {
       .orderBy(desc(securityScans.timestamp))
       .limit(30);
   } catch (err) {
+    console.error('History fetch failed:', err);
     return [];
   }
 }

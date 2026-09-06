@@ -36,17 +36,18 @@ export async function GET(request: NextRequest) {
       const data = await response.json();
       return NextResponse.json(data);
     } else {
-      // Для скачивания отчетов (JSON/TXT файлы)
+      // Для скачивания отчетов (JSON/TXT файлы) через прокси
       const blob = await response.blob();
       return new NextResponse(blob, {
         headers: {
           'Content-Type': contentType || 'application/octet-stream',
+          'Content-Disposition': response.headers.get('content-disposition') || 'attachment',
         },
       });
     }
   } catch (error) {
     console.error(`Proxy GET Error:`, error);
-    return NextResponse.json({ error: 'Worker unreachable' }, { status: 502 });
+    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 502 });
   }
 }
 
@@ -69,10 +70,15 @@ export async function POST(request: NextRequest) {
       cache: 'no-store',
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json({ error: 'Worker POST error', details: errorText }, { status: response.status });
+    }
+
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error(`Proxy POST Error:`, error);
-    return NextResponse.json({ error: 'Worker unreachable' }, { status: 502 });
+    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 502 });
   }
 }

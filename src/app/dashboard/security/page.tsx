@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ShieldAlert, 
   Search, 
@@ -42,6 +42,8 @@ export default function SecurityDashboard() {
   const [statusFilter, setStatusFilter] = useState<ScanStatus>('all');
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
+  
+  const pollingIntervals = useRef<Record<string, NodeJS.Timeout>>({});
 
   // Опрос здоровья воркера через безопасный прокси /api/worker
   const checkHealth = useCallback(async () => {
@@ -63,48 +65,56 @@ export default function SecurityDashboard() {
     try {
       const h = await getScanHistory();
       setHistory(h || []);
+      
+      // Автоматический запуск поллинга для всех задач, которые сейчас IN_PROGRESS
+      h?.forEach((scan: any) => {
+        if (scan.status === 'in_progress' && !pollingIntervals.current[scan.id]) {
+          startPolling(scan.id);
+        }
+      });
     } catch (err) {
       console.error('Failed to load history');
     }
   }, []);
 
-  useEffect(() => {
-    checkHealth();
-    loadHistory();
-    const hInterval = setInterval(checkHealth, 10000);
-    const histInterval = setInterval(loadHistory, 15000);
-    return () => {
-      clearInterval(hInterval);
-      clearInterval(histInterval);
-    };
-  }, [checkHealth, loadHistory]);
-
-  // Функция поллинга статуса через прокси по числовому ID
-  const pollTaskStatus = (scanId: string) => {
-    const maxAttempts = 100;
-    let attempts = 0;
+  // Функция запуска поллинга для конкретной задачи
+  const startPolling = (scanId: string) => {
+    if (pollingIntervals.current[scanId]) return;
 
     const interval = setInterval(async () => {
-      attempts++;
       try {
         const res = await fetch(`/api/worker?endpoint=/api/status/${scanId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(interval);
-            loadHistory();
+            delete pollingIntervals.current[scanId];
+            loadHistory(); // Обновляем локальную историю после завершения
           }
         }
       } catch (e) {
-        console.error('Polling error', e);
+        console.error(`Polling error for ${scanId}:`, e);
       }
-
-      if (attempts >= maxAttempts) clearInterval(interval);
     }, 5000);
+
+    pollingIntervals.current[scanId] = interval;
   };
 
+  useEffect(() => {
+    checkHealth();
+    loadHistory();
+    const hInterval = setInterval(checkHealth, 10000);
+    return () => {
+      clearInterval(hInterval);
+      // Очистка всех интервалов при размонтировании
+      Object.values(pollingIntervals.current).forEach(clearInterval);
+    };
+  }, [checkHealth, loadHistory]);
+
   const calculateHealthScore = () => {
-    if (history.length === 0) return 'WAITING';
+    const completedScans = history.filter(s => s.status === 'completed' || s.status === 'failed');
+    if (completedScans.length === 0) return 'WAITING';
+    
     const failed = history.filter(s => s.status === 'failed').length;
     const score = Math.max(0, 100 - (failed * 15));
     return Math.min(100, score);
@@ -117,8 +127,8 @@ export default function SecurityDashboard() {
       // Вызов серверного экшена, который вернет числовой ID от воркера
       const result = await runSecurityAction(activeTab, method, target);
       if (result.success && result.scanId) {
-        await loadHistory();
-        pollTaskStatus(result.scanId); // Запускаем поллинг по ID
+        await loadHistory(); // Обновляем список, чтобы появилась новая строка
+        startPolling(result.scanId); // Запускаем поллинг по ID
       }
     } catch (e) {
       console.error('Action failed', e);
@@ -314,7 +324,7 @@ export default function SecurityDashboard() {
                                 target="_blank"
                                 className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
                               >
-                                <Download className="w-3 h-3" /> JSON
+                                <Download className="w-3 h-3" /> REPORT
                               </a>
                             )}
                             {scan.status === 'in_progress' && (
