@@ -1,4 +1,3 @@
-
 'use server';
 
 import { db } from '@/db';
@@ -75,10 +74,12 @@ export async function syncActiveScans() {
         
         if (response.ok) {
           const remoteData = await response.json();
-          if (remoteData.status !== 'in_progress' && remoteData.status !== 'Scan started') {
+          // РЕГИСТРОНЕЗАВИСИМАЯ СИНХРОНИЗАЦИЯ
+          const remoteStatus = remoteData.status?.toLowerCase();
+          if (remoteStatus !== 'in_progress' && remoteStatus !== 'running' && remoteStatus !== 'scan started') {
             await db.update(securityScans)
               .set({ 
-                status: remoteData.status, 
+                status: remoteStatus, 
                 resultSummary: remoteData.resultSummary, 
                 reportPath: remoteData.reportPath 
               })

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -45,7 +44,6 @@ export default function SecurityDashboard() {
   
   const pollingIntervals = useRef<Record<string, NodeJS.Timeout>>({});
 
-  // Опрос здоровья воркера через безопасный прокси /api/worker
   const checkHealth = useCallback(async () => {
     try {
       const start = Date.now();
@@ -60,16 +58,17 @@ export default function SecurityDashboard() {
     }
   }, []);
 
-  // Загрузка истории
   const loadHistory = useCallback(async () => {
     try {
       const h = await getScanHistory();
       setHistory(h || []);
       
-      // Автоматический запуск поллинга для всех задач, которые сейчас IN_PROGRESS
       h?.forEach((scan: any) => {
-        if (scan.status === 'in_progress' && !pollingIntervals.current[scan.id]) {
-          startPolling(scan.id);
+        const status = scan.status?.toLowerCase();
+        if (status === 'in_progress' || status === 'running' || status === 'scan started') {
+          if (!pollingIntervals.current[scan.id]) {
+            startPolling(scan.id);
+          }
         }
       });
     } catch (err) {
@@ -77,7 +76,6 @@ export default function SecurityDashboard() {
     }
   }, []);
 
-  // Функция запуска поллинга для конкретной задачи
   const startPolling = (scanId: string) => {
     if (pollingIntervals.current[scanId]) return;
 
@@ -86,10 +84,12 @@ export default function SecurityDashboard() {
         const res = await fetch(`/api/worker?endpoint=/api/status/${scanId}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.status === 'completed' || data.status === 'failed') {
+          // РЕГИСТРОНЕЗАВИСИМАЯ ПРОВЕРКА СТАТУСА
+          const currentStatus = data.status?.toLowerCase();
+          if (currentStatus === 'completed' || currentStatus === 'failed') {
             clearInterval(interval);
             delete pollingIntervals.current[scanId];
-            loadHistory(); // Обновляем локальную историю после завершения
+            loadHistory();
           }
         }
       } catch (e) {
@@ -106,16 +106,18 @@ export default function SecurityDashboard() {
     const hInterval = setInterval(checkHealth, 10000);
     return () => {
       clearInterval(hInterval);
-      // Очистка всех интервалов при размонтировании
       Object.values(pollingIntervals.current).forEach(clearInterval);
     };
   }, [checkHealth, loadHistory]);
 
   const calculateHealthScore = () => {
-    const completedScans = history.filter(s => s.status === 'completed' || s.status === 'failed');
+    const completedScans = history.filter(s => {
+      const st = s.status?.toLowerCase();
+      return st === 'completed' || st === 'failed';
+    });
     if (completedScans.length === 0) return 'WAITING';
     
-    const failed = history.filter(s => s.status === 'failed').length;
+    const failed = history.filter(s => s.status?.toLowerCase() === 'failed').length;
     const score = Math.max(0, 100 - (failed * 15));
     return Math.min(100, score);
   };
@@ -124,11 +126,10 @@ export default function SecurityDashboard() {
     if (!target) return;
     setLoading(true);
     try {
-      // Вызов серверного экшена, который вернет числовой ID от воркера
       const result = await runSecurityAction(activeTab, method, target);
       if (result.success && result.scanId) {
-        await loadHistory(); // Обновляем список, чтобы появилась новая строка
-        startPolling(result.scanId); // Запускаем поллинг по ID
+        await loadHistory();
+        startPolling(result.scanId);
       }
     } catch (e) {
       console.error('Action failed', e);
@@ -161,9 +162,12 @@ export default function SecurityDashboard() {
     ]
   };
 
-  const filteredHistory = history.filter(scan => 
-    statusFilter === 'all' ? true : scan.status === statusFilter
-  );
+  const filteredHistory = history.filter(scan => {
+    if (statusFilter === 'all') return true;
+    const st = scan.status?.toLowerCase();
+    if (statusFilter === 'in_progress') return st === 'in_progress' || st === 'running' || st === 'scan started';
+    return st === statusFilter;
+  });
 
   const healthScore = calculateHealthScore();
 
@@ -310,15 +314,15 @@ export default function SecurityDashboard() {
                         <td className="px-6 py-5">
                           <div className={clsx(
                             "flex items-center gap-1.5 font-black uppercase",
-                            scan.status === 'in_progress' ? "text-orange-500" : scan.status === 'completed' ? "text-green-500" : "text-red-500"
+                            (scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') ? "text-orange-500" : scan.status?.toLowerCase() === 'completed' ? "text-green-500" : "text-red-500"
                           )}>
-                            {scan.status === 'in_progress' && <Loader2 className="w-3 h-3 animate-spin" />}
+                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') && <Loader2 className="w-3 h-3 animate-spin" />}
                             {scan.status}
                           </div>
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-3">
-                            {scan.status === 'completed' && scan.reportPath && (
+                            {scan.status?.toLowerCase() === 'completed' && scan.reportPath && (
                               <a 
                                 href={`/api/worker?endpoint=${scan.reportPath}`} 
                                 target="_blank"
@@ -327,7 +331,7 @@ export default function SecurityDashboard() {
                                 <Download className="w-3 h-3" /> REPORT
                               </a>
                             )}
-                            {scan.status === 'in_progress' && (
+                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') && (
                               <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500 p-1">
                                 <Square className="w-3 h-3" />
                               </button>
@@ -400,7 +404,7 @@ export default function SecurityDashboard() {
                       <span className="text-white/80 uppercase font-black">{scan.method} initiated: {scan.target}</span>
                       <span className={clsx(
                         "text-[7px] uppercase",
-                        scan.status === 'completed' ? 'text-green-500' : scan.status === 'failed' ? 'text-red-500' : 'text-orange-500'
+                        scan.status?.toLowerCase() === 'completed' ? 'text-green-500' : scan.status?.toLowerCase() === 'failed' ? 'text-red-500' : 'text-orange-500'
                       )}>
                         {scan.status}
                       </span>

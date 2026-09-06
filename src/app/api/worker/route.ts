@@ -1,6 +1,5 @@
-
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * API Proxy Route.
@@ -10,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const endpoint = searchParams.get('endpoint');
 
@@ -50,11 +49,11 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error(`Proxy GET Error:`, error);
-    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 502 });
+    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 500 });
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
   const endpoint = searchParams.get('endpoint');
 
@@ -85,6 +84,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error(`Proxy POST Error:`, error);
-    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 502 });
+    return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 500 });
   }
 }
