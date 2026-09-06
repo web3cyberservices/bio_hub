@@ -417,7 +417,7 @@ export default function SecurityDashboard() {
                 <div className="flex items-end gap-4">
                   <span className={clsx(
                     "text-6xl font-black tracking-tighter",
-                    typeof healthScore === 'number' ? 'text-white' : 'text-blue-500/40 text-4xl'
+                    healthScore === 'WAITING' ? 'text-blue-500/40 text-4xl' : 'text-white'
                   )}>
                     {healthScore}
                   </span>
