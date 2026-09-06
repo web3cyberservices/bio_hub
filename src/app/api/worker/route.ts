@@ -1,10 +1,10 @@
-
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 /**
  * API Proxy Route.
  * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint.
+ * Улучшен для корректной передачи различных типов контента (JSON, Text, NDJSON).
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
 
@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       method: 'GET',
       headers: { 
         'Cache-Control': 'no-store',
-        'Pragma': 'no-cache'
+        'Pragma': 'no-cache',
+        'Accept': 'application/json, text/plain, */*'
       },
       cache: 'no-store',
     });
@@ -31,19 +32,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Worker error', status: response.status }, { status: response.status });
     }
 
-    const contentType = response.headers.get('content-type');
-    
-    // Если это JSON, пытаемся вернуть как JSON для удобства UI
-    if (contentType?.includes('application/json')) {
-      const data = await response.json();
-      return NextResponse.json(data);
-    } 
-    
-    // Для всех остальных типов (включая логи/текст) возвращаем как текст
+    const contentType = response.headers.get('content-type') || 'text/plain';
     const text = await response.text();
+    
+    // Возвращаем данные с сохранением исходного типа контента
     return new NextResponse(text, {
       headers: {
-        'Content-Type': contentType || 'text/plain',
+        'Content-Type': contentType,
         'Cache-Control': 'no-store'
       },
     });

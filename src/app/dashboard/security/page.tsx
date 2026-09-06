@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -22,7 +21,7 @@ import {
   Lock,
   FileText,
   Copy,
-  ChevronRight
+  Check
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -45,6 +44,7 @@ export default function SecurityDashboard() {
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [scanResultData, setScanResultData] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
   
   const pollingIntervals = useRef<Record<string, NodeJS.Timeout>>({});
 
@@ -87,14 +87,21 @@ export default function SecurityDashboard() {
     }
     
     try {
-      setScanResultData(null); // Clear previous
+      setScanResultData(null);
       const res = await fetch(`/api/worker?endpoint=${scan.reportPath}`);
       if (res.ok) {
         const text = await res.text();
-        // Если ответ — JSON, форматируем его для красоты
+        // Попытка форматирования (обрабатываем и обычный JSON, и NDJSON)
         try {
-          const json = JSON.parse(text);
-          setScanResultData(JSON.stringify(json, null, 2));
+          if (text.includes('\n')) {
+            // Вероятно NDJSON
+            const lines = text.trim().split('\n');
+            const objects = lines.map(line => JSON.parse(line));
+            setScanResultData(JSON.stringify(objects, null, 2));
+          } else {
+            const json = JSON.parse(text);
+            setScanResultData(JSON.stringify(json, null, 2));
+          }
         } catch (e) {
           setScanResultData(text);
         }
@@ -102,7 +109,7 @@ export default function SecurityDashboard() {
         setScanResultData('Report file is being generated or not available yet.');
       }
     } catch (e) {
-      setScanResultData('Error fetching remote report.');
+      setScanResultData('Error fetching remote report content.');
     }
   };
 
@@ -129,7 +136,6 @@ export default function SecurityDashboard() {
             clearInterval(interval);
             delete pollingIntervals.current[scanId];
             loadHistory();
-            // Если эта задача сейчас выбрана, обновляем её данные
             if (selectedScan?.id === scanId) {
               setSelectedScan((prev: any) => ({ ...prev, ...data }));
             }
@@ -218,6 +224,8 @@ export default function SecurityDashboard() {
     const textToCopy = scanResultData || selectedScan?.resultSummary || '';
     if (textToCopy) {
       navigator.clipboard.writeText(textToCopy);
+      setCopying(true);
+      setTimeout(() => setCopying(false), 2000);
     }
   };
 
@@ -228,8 +236,10 @@ export default function SecurityDashboard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedScan.method}_${selectedScan.target}.json`;
+      a.download = `report_${selectedScan.method}_${selectedScan.target.replace(/[^a-z0-9]/gi, '_')}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
   };
@@ -385,19 +395,6 @@ export default function SecurityDashboard() {
                         </td>
                         <td className="px-6 py-5 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-3">
-                            {scan.status?.toLowerCase() === 'completed' && scan.reportPath && (
-                              <button 
-                                onClick={() => setSelectedScan(scan)}
-                                className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
-                              >
-                                <Download className="w-3 h-3" /> REPORT
-                              </button>
-                            )}
-                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running' || scan.status?.toLowerCase() === 'scan started') && (
-                              <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500 p-1">
-                                <Square className="w-3 h-3" />
-                              </button>
-                            )}
                             <button onClick={() => deleteSecurityAction(scan.id)} className="text-white/10 hover:text-red-500 p-1">
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -449,14 +446,14 @@ export default function SecurityDashboard() {
                   <div className="flex gap-2">
                     <button 
                       onClick={copyToClipboard}
-                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all rounded-sm"
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all rounded-sm flex items-center justify-center"
                       title="Copy JSON"
                     >
-                      <Copy className="w-3 h-3 text-blue-500" />
+                      {copying ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3 text-blue-500" />}
                     </button>
                     <button 
                       onClick={downloadReport}
-                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-green-500/20 hover:border-green-500/40 transition-all rounded-sm"
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-green-500/20 hover:border-green-500/40 transition-all rounded-sm flex items-center justify-center"
                       title="Download Report"
                     >
                       <Download className="w-3 h-3 text-green-500" />
