@@ -2,9 +2,9 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 
 /**
- * API Proxy Route.
- * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint.
- * Улучшен для корректной передачи различных типов контента (JSON, Text, NDJSON).
+ * Универсальный API Proxy Route.
+ * Проксирует запросы от фронтенда к воркеру (http://31.76.34.252:4000).
+ * Решает проблемы Mixed Content, CORS и кэширования.
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       headers: { 
         'Cache-Control': 'no-store',
         'Pragma': 'no-cache',
-        'Accept': 'application/json, text/plain, */*'
+        'Accept': '*/*'
       },
       cache: 'no-store',
     });
@@ -35,7 +35,6 @@ export async function GET(request: Request) {
     const contentType = response.headers.get('content-type') || 'text/plain';
     const text = await response.text();
     
-    // Возвращаем данные с сохранением исходного типа контента
     return new NextResponse(text, {
       headers: {
         'Content-Type': contentType,

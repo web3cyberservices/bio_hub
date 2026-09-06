@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache';
 const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
 /**
- * Запуск задачи безопасности.
+ * Запуск задачи безопасности через воркер.
  */
 export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
@@ -53,7 +53,7 @@ export async function runSecurityAction(type: string, method: string, target: st
 }
 
 /**
- * Синхронизация статусов. Принудительно отключаем кэширование fetch.
+ * Синхронизация статусов активных задач между воркером и локальной БД.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -74,14 +74,16 @@ export async function syncActiveScans() {
         
         if (response.ok) {
           const remoteData = await response.json();
-          // РЕГИСТРОНЕЗАВИСИМАЯ СИНХРОНИЗАЦИЯ
           const remoteStatus = remoteData.status?.toLowerCase();
+          
+          // Проверяем, завершилась ли задача
           if (remoteStatus !== 'in_progress' && remoteStatus !== 'running' && remoteStatus !== 'scan started') {
             await db.update(securityScans)
               .set({ 
                 status: remoteStatus, 
-                resultSummary: remoteData.resultSummary, 
-                reportPath: remoteData.reportPath 
+                // Сопоставляем snake_case от воркера с camelCase в Drizzle
+                resultSummary: remoteData.result_summary || remoteData.resultSummary, 
+                reportPath: remoteData.report_path || remoteData.reportPath 
               })
               .where(eq(securityScans.id, scan.id));
           }
@@ -135,6 +137,7 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  // Выполняем синхронизацию перед возвратом истории
   await syncActiveScans();
 
   try {
