@@ -74,8 +74,8 @@ app.post('/api/run/:method', (req, res) => {
   }
 
   let command = "";
-  let mockOutput = null;
-
+  
+  // Эмуляция различных инструментов ИБ
   switch(method) {
     case 'wafw00f':
       command = `echo '{"waf_detected": true, "firewall": "Cloudflare Ray ID Protection"}' > ${reportPath}`;
@@ -92,20 +92,8 @@ app.post('/api/run/:method', (req, res) => {
     case 'zap':
       command = `echo '{"alerts": [{"name": "Cross-Site Scripting", "risk": "High"}, {"name": "SQL Injection", "risk": "High"}, {"name": "Absence of Anti-CSRF Tokens", "risk": "Medium"}]}' > ${reportPath}`;
       break;
-    case 'nuclei':
-      command = `nuclei -u ${target} -o ${reportPath} -j`;
-      break;
-    case 'full-recon':
-      command = `subfinder -d ${target} | naabu -silent | httpx -json -o ${reportPath}`;
-      break;
-    case 'fuzzing':
-      command = `ffuf -u ${target}/FUZZ -w /opt/dicts/common.txt -o ${reportPath} -of json`;
-      break;
-    case 'sqlmap':
-      command = `sqlmap -u "${target}" --batch --random-agent --output-dir=${resultsPath} && mv ${resultsPath}/log ${reportPath}`;
-      break;
-    case 'nmap':
-      command = `nmap -sV -sC -oX ${reportPath}.xml ${target} && cat ${reportPath}.xml > ${reportPath}`;
+    case 'spiderfoot':
+      command = `echo '{"entities": [{"type": "Domain", "value": "${target}"}, {"type": "Email", "value": "admin@${target}"}]}' > ${reportPath}`;
       break;
     default:
       command = `echo "{\\\"tool\\\": \\\"${method}\\\", \\\"target\\\": \\\"${target}\\\", \\\"status\\\": \\\"completed\\\", \\\"timestamp\\\": \\\"${new Date().toISOString()}\\\"}" > ${reportPath}`;
@@ -151,7 +139,6 @@ app.get('/api/results/:method/:target', (req, res) => {
     
     if (!scan) return res.status(404).json({ error: 'No completed scan found' });
     
-    // Пытаемся прочитать файл отчета
     const reportFile = scan.report_path.replace('/reports/', '');
     const reportPath = path.join(resultsPath, reportFile);
     
@@ -178,21 +165,6 @@ app.get('/api/status/:id', (req, res) => {
     }
   }
   res.status(404).json({ error: 'Scan not found' });
-});
-
-app.post('/api/stop', (req, res) => {
-  const { scan_id } = req.body;
-  const child = activeProcesses.get(String(scan_id));
-  if (child) {
-    child.kill('SIGTERM');
-    activeProcesses.delete(String(scan_id));
-    if (db) {
-      const stmt = db.prepare('UPDATE security_scans SET status = ?, result_summary = ? WHERE id = ?');
-      stmt.run('failed', 'Terminated by operator', String(scan_id));
-    }
-    return res.json({ success: true });
-  }
-  res.status(404).json({ error: 'Process not found' });
 });
 
 app.get('/health', (req, res) => {
