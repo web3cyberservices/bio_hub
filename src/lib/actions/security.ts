@@ -6,17 +6,17 @@ import { auth } from '@/auth';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
-const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
-
 /**
  * Запуск задачи безопасности через воркер.
+ * Использует прокси для обеспечения безопасности и обхода CORS/Mixed Content.
  */
 export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
+    // Вызов воркера через системный эндпоинт
+    const response = await fetch(`http://31.76.34.252:4000/api/run/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
       body: JSON.stringify({ target }),
@@ -34,6 +34,7 @@ export async function runSecurityAction(type: string, method: string, target: st
       throw new Error('Worker did not return an ID');
     }
 
+    // Сохраняем задачу в локальной БД фронтенда для истории
     await db.insert(securityScans).values({
       id: String(numericId),
       userId: session.user.id,
@@ -54,6 +55,7 @@ export async function runSecurityAction(type: string, method: string, target: st
 
 /**
  * Синхронизация статусов активных задач между воркером и локальной БД.
+ * Сопоставляет Snake Case от воркера с Camel Case в Drizzle.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -67,7 +69,7 @@ export async function syncActiveScans() {
 
     for (const scan of activeScans) {
       try {
-        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { 
+        const response = await fetch(`http://31.76.34.252:4000/api/status/${scan.id}`, { 
           cache: 'no-store',
           headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache' }
         });
@@ -76,12 +78,10 @@ export async function syncActiveScans() {
           const remoteData = await response.json();
           const remoteStatus = remoteData.status?.toLowerCase();
           
-          // Проверяем, завершилась ли задача
           if (remoteStatus !== 'in_progress' && remoteStatus !== 'running' && remoteStatus !== 'scan started') {
             await db.update(securityScans)
               .set({ 
                 status: remoteStatus, 
-                // Сопоставляем snake_case от воркера с camelCase в Drizzle
                 resultSummary: remoteData.result_summary || remoteData.resultSummary, 
                 reportPath: remoteData.report_path || remoteData.reportPath 
               })
@@ -102,7 +102,7 @@ export async function stopSecurityAction(scanId: string) {
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    await fetch(`${ENGINE_API_URL}/api/stop`, {
+    await fetch(`http://31.76.34.252:4000/api/stop`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
       body: JSON.stringify({ scan_id: scanId }),

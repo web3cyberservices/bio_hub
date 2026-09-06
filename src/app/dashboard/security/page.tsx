@@ -79,7 +79,6 @@ export default function SecurityDashboard() {
   }, []);
 
   const fetchReportContent = async (scan: any) => {
-    // Используем путь отчета из объекта сканирования
     const reportPath = scan.reportPath || scan.report_path;
     
     if (!reportPath) {
@@ -89,12 +88,10 @@ export default function SecurityDashboard() {
     
     try {
       setScanResultData(null);
-      // Запрашиваем содержимое файла через наш универсальный прокси
       const res = await fetch(`/api/worker?endpoint=${encodeURIComponent(reportPath)}`);
       if (res.ok) {
         const text = await res.text();
         try {
-          // Пытаемся распарсить NDJSON (Nuclei) или обычный JSON
           if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
             const lines = text.trim().split('\n');
             if (lines.length > 1) {
@@ -170,7 +167,7 @@ export default function SecurityDashboard() {
       const st = s.status?.toLowerCase();
       return st === 'completed' || st === 'failed';
     });
-    if (completedScans.length === 0) return 'WAITING';
+    if (completedScans.length === 0) return 'NO DATA';
     
     const failed = history.filter(s => s.status?.toLowerCase() === 'failed').length;
     const score = Math.max(0, 100 - (failed * 15));
@@ -422,7 +419,7 @@ export default function SecurityDashboard() {
                 <div className="flex items-end gap-4">
                   <span className={clsx(
                     "text-6xl font-black tracking-tighter",
-                    healthScore === 'WAITING' ? 'text-blue-500/40 text-4xl' : 'text-white'
+                    healthScore === 'NO DATA' ? 'text-blue-500/40 text-4xl' : 'text-white'
                   )}>
                     {healthScore}
                   </span>
