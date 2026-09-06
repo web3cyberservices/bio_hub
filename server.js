@@ -8,7 +8,7 @@ const fs = require('fs');
 const app = express();
 app.use(express.json());
 
-// Конфигурация CORS (разрешаем запросы от прокси-сервера фронтенда)
+// Конфигурация CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -19,6 +19,7 @@ app.use((req, res, next) => {
 // Путь к БД и статике отчетов
 const dbPath = path.resolve(__dirname, 'sqlite.db');
 const resultsPath = '/opt/cyber-engines/scanners/results';
+
 if (!fs.existsSync(resultsPath)) {
   fs.mkdirSync(resultsPath, { recursive: true });
 }
@@ -30,6 +31,17 @@ let db;
 try {
   db = new Database(dbPath);
   console.log(`[ENGINE] Connected to database at ${dbPath}`);
+  
+  // Создаем таблицу, если ее нет, для отслеживания локальных задач
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS security_scans (
+      id TEXT PRIMARY KEY,
+      status TEXT,
+      resultSummary TEXT,
+      reportPath TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 } catch (err) {
   console.error('[ENGINE] Database connection failed:', err.message);
 }
@@ -46,6 +58,16 @@ app.post('/api/run/:method', (req, res) => {
 
   if (!target || !scan_id) {
     return res.status(400).json({ error: 'Missing target or scan_id' });
+  }
+
+  // 1. Сначала создаем запись в локальной БД воркера
+  if (db) {
+    try {
+      const insert = db.prepare('INSERT OR REPLACE INTO security_scans (id, status) VALUES (?, ?)');
+      insert.run(scan_id, 'in_progress');
+    } catch (e) {
+      console.error('[ENGINE] Failed to init scan in local DB:', e.message);
+    }
   }
 
   // Генерация команды и пути отчета
@@ -87,6 +109,13 @@ app.post('/api/run/:method', (req, res) => {
       summary = stderr || error.message;
     }
 
+    // Проверяем наличие файла отчета
+    if (!fs.existsSync(reportPath) || fs.statSync(reportPath).size === 0) {
+      if (status === 'completed') {
+         summary = "Scan finished but no report file was generated.";
+      }
+    }
+
     // Обновляем статус в БД напрямую
     if (db) {
       try {
@@ -112,7 +141,9 @@ app.get('/api/status/:id', (req, res) => {
     try {
       const scan = db.prepare('SELECT status, resultSummary, reportPath FROM security_scans WHERE id = ?').get(id);
       if (scan) return res.json(scan);
-    } catch (e) {}
+    } catch (e) {
+      return res.status(500).json({ error: 'DB Error' });
+    }
   }
   res.status(404).json({ error: 'Scan not found' });
 });

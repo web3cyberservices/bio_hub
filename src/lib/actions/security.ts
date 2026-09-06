@@ -11,14 +11,13 @@ const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
 /**
  * Запуск задачи безопасности.
- * Выполняется на сервере, поэтому Mixed Content не является проблемой.
  */
 export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Создаем запись в локальной БД
+    // 1. Создаем запись в локальной БД фронтенда
     const [scan] = await db.insert(securityScans).values({
       userId: session.user.id,
       target,
@@ -37,10 +36,13 @@ export async function runSecurityAction(type: string, method: string, target: st
         cache: 'no-store'
       });
 
-      if (!response.ok) throw new Error('Engine rejected request');
+      if (!response.ok) {
+        throw new Error(`Engine rejected request: ${response.status}`);
+      }
     } catch (fetchErr) {
+      console.error('Fetch to worker failed:', fetchErr);
       await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'ENGINE_OFFLINE: Connection reset by peer.' })
+        .set({ status: 'failed', resultSummary: 'ENGINE_OFFLINE: Could not reach worker node.' })
         .where(eq(securityScans.id, scan.id));
     }
 
@@ -54,7 +56,6 @@ export async function runSecurityAction(type: string, method: string, target: st
 
 /**
  * Синхронизация статусов активных задач (Поллинг).
- * Опрашивает воркер о состоянии задач, помеченных как in_progress.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -64,29 +65,38 @@ export async function syncActiveScans() {
     const activeScans = await db.select()
       .from(securityScans)
       .where(eq(securityScans.status, 'in_progress'))
-      .limit(10);
+      .limit(20);
+
+    if (activeScans.length === 0) return;
 
     for (const scan of activeScans) {
       try {
-        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { cache: 'no-store' });
+        const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { 
+          cache: 'no-store',
+          signal: AbortSignal.timeout(3000)
+        });
+
         if (response.ok) {
           const remoteData = await response.json();
-          if (remoteData.status !== 'in_progress') {
+          // Если статус на воркере изменился, обновляем нашу БД
+          if (remoteData.status && remoteData.status !== 'in_progress') {
             await db.update(securityScans)
               .set({ 
                 status: remoteData.status, 
-                resultSummary: remoteData.resultSummary,
+                resultSummary: remoteData.resultSummary || 'No summary provided', 
                 reportPath: remoteData.reportPath 
               })
               .where(eq(securityScans.id, scan.id));
           }
         }
       } catch (e) {
-        // Если воркер недоступен долгое время, можно пометить как failed
+        // Ошибка связи с воркером для конкретной задачи - пропускаем до следующего цикла
       }
     }
     revalidatePath('/dashboard/security');
-  } catch (err) {}
+  } catch (err) {
+    console.error('Sync Error:', err);
+  }
 }
 
 export async function stopSecurityAction(scanId: string) {
@@ -129,7 +139,7 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Перед возвратом истории пытаемся синхронизировать статусы
+  // Выполняем синхронизацию перед загрузкой истории
   await syncActiveScans();
 
   try {
@@ -146,9 +156,10 @@ export async function getScanHistory() {
 export async function getEngineStatus() {
   try {
     const start = Date.now();
+    // Делаем запрос через прокси или напрямую (Server-side fetch всегда разрешен)
     const response = await fetch(`${ENGINE_API_URL}/health`, { 
       cache: 'no-store',
-      next: { revalidate: 0 }
+      signal: AbortSignal.timeout(2000)
     });
     
     if (!response.ok) throw new Error();
