@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
  * API Proxy Route.
  * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint,
  * предотвращая ошибки Mixed Content и CORS. 
- * Директива force-dynamic и cache: no-store предотвращают кэширование ответов Next.js.
+ * Поддерживает передачу JSON и бинарных данных (отчетов).
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
 
@@ -34,19 +34,22 @@ export async function GET(request: Request) {
     }
 
     const contentType = response.headers.get('content-type');
+    
+    // Если это JSON (статус), возвращаем как JSON
     if (contentType?.includes('application/json')) {
       const data = await response.json();
       return NextResponse.json(data);
-    } else {
-      const blob = await response.blob();
-      return new NextResponse(blob, {
-        headers: {
-          'Content-Type': contentType || 'application/octet-stream',
-          'Content-Disposition': response.headers.get('content-disposition') || 'attachment',
-          'Cache-Control': 'no-store'
-        },
-      });
-    }
+    } 
+    
+    // Если это файл отчета или другой контент, возвращаем как Blob
+    const blob = await response.blob();
+    return new NextResponse(blob, {
+      headers: {
+        'Content-Type': contentType || 'application/octet-stream',
+        'Content-Disposition': response.headers.get('content-disposition') || 'attachment',
+        'Cache-Control': 'no-store'
+      },
+    });
   } catch (error) {
     console.error(`Proxy GET Error:`, error);
     return NextResponse.json({ error: 'Worker unreachable', details: String(error) }, { status: 500 });

@@ -19,7 +19,9 @@ import {
   Eye,
   Network,
   Lock,
-  FileText
+  FileText,
+  Copy,
+  ChevronRight
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -40,6 +42,7 @@ export default function SecurityDashboard() {
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ScanStatus>('all');
   const [selectedScan, setSelectedScan] = useState<any>(null);
+  const [scanResultData, setScanResultData] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
   
   const pollingIntervals = useRef<Record<string, NodeJS.Timeout>>({});
@@ -76,6 +79,29 @@ export default function SecurityDashboard() {
     }
   }, []);
 
+  const fetchReportContent = async (scan: any) => {
+    if (!scan.reportPath) return;
+    try {
+      const res = await fetch(`/api/worker?endpoint=${scan.reportPath}`);
+      if (res.ok) {
+        const text = await res.text();
+        setScanResultData(text);
+      } else {
+        setScanResultData('Failed to load report content from worker.');
+      }
+    } catch (e) {
+      setScanResultData('Network error while fetching report.');
+    }
+  };
+
+  useEffect(() => {
+    if (selectedScan && selectedScan.status?.toLowerCase() === 'completed') {
+      fetchReportContent(selectedScan);
+    } else {
+      setScanResultData(null);
+    }
+  }, [selectedScan]);
+
   const startPolling = (scanId: string) => {
     if (pollingIntervals.current[scanId]) return;
 
@@ -84,7 +110,6 @@ export default function SecurityDashboard() {
         const res = await fetch(`/api/worker?endpoint=/api/status/${scanId}`);
         if (res.ok) {
           const data = await res.json();
-          // РЕГИСТРОНЕЗАВИСИМАЯ ПРОВЕРКА СТАТУСА
           const currentStatus = data.status?.toLowerCase();
           if (currentStatus === 'completed' || currentStatus === 'failed') {
             clearInterval(interval);
@@ -170,6 +195,24 @@ export default function SecurityDashboard() {
   });
 
   const healthScore = calculateHealthScore();
+
+  const copyToClipboard = () => {
+    if (scanResultData) {
+      navigator.clipboard.writeText(scanResultData);
+    }
+  };
+
+  const downloadReport = () => {
+    if (scanResultData && selectedScan) {
+      const blob = new Blob([scanResultData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedScan.method}_${selectedScan.target}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white font-mono">
@@ -270,7 +313,7 @@ export default function SecurityDashboard() {
 
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Security Queue & Artifacts</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Security Queue & History</h3>
                 <div className="flex gap-2">
                   {['all', 'in_progress', 'completed', 'failed'].map((s) => (
                     <button
@@ -314,9 +357,9 @@ export default function SecurityDashboard() {
                         <td className="px-6 py-5">
                           <div className={clsx(
                             "flex items-center gap-1.5 font-black uppercase",
-                            (scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') ? "text-orange-500" : scan.status?.toLowerCase() === 'completed' ? "text-green-500" : "text-red-500"
+                            (scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running' || scan.status?.toLowerCase() === 'scan started') ? "text-orange-500" : scan.status?.toLowerCase() === 'completed' ? "text-green-500" : "text-red-500"
                           )}>
-                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') && <Loader2 className="w-3 h-3 animate-spin" />}
+                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running' || scan.status?.toLowerCase() === 'scan started') && <Loader2 className="w-3 h-3 animate-spin" />}
                             {scan.status}
                           </div>
                         </td>
@@ -331,7 +374,7 @@ export default function SecurityDashboard() {
                                 <Download className="w-3 h-3" /> REPORT
                               </a>
                             )}
-                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running') && (
+                            {(scan.status?.toLowerCase() === 'in_progress' || scan.status?.toLowerCase() === 'running' || scan.status?.toLowerCase() === 'scan started') && (
                               <button onClick={() => stopSecurityAction(scan.id)} className="text-orange-500 hover:text-red-500 p-1">
                                 <Square className="w-3 h-3" />
                               </button>
@@ -378,10 +421,31 @@ export default function SecurityDashboard() {
               </div>
             </div>
             
-            <div className="p-8 border border-white/10 bg-black flex flex-col h-[500px]">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white mb-8">
-                {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
-              </h4>
+            <div className="p-8 border border-white/10 bg-black flex flex-col h-[600px]">
+              <div className="flex justify-between items-center mb-8">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
+                  {selectedScan ? 'ANALYSIS STREAM' : 'GLOBAL TELEMETRY'}
+                </h4>
+                {selectedScan && selectedScan.status?.toLowerCase() === 'completed' && scanResultData && (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={copyToClipboard}
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all rounded-sm"
+                      title="Copy JSON"
+                    >
+                      <Copy className="w-3 h-3 text-blue-500" />
+                    </button>
+                    <button 
+                      onClick={downloadReport}
+                      className="p-1.5 bg-white/5 border border-white/10 hover:bg-green-500/20 hover:border-green-500/40 transition-all rounded-sm"
+                      title="Download Report"
+                    >
+                      <Download className="w-3 h-3 text-green-500" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex-1 overflow-y-auto space-y-6 scrollbar-hide text-[10px]">
                 {selectedScan ? (
                   <div className="space-y-6 animate-in fade-in">
@@ -389,17 +453,19 @@ export default function SecurityDashboard() {
                       <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id}</span></div>
                       <div className="flex justify-between"><span className="text-white/40">Method:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
                       <div className="flex justify-between"><span className="text-white/40">Target:</span> <span>{selectedScan.target}</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Status:</span> <span className="uppercase font-black">{selectedScan.status}</span></div>
                     </div>
+
                     <div className="space-y-2">
                       <div className="text-blue-500 font-black uppercase tracking-widest">Findings Summary</div>
-                      <div className="bg-black border border-white/10 p-4 text-white/70 italic leading-relaxed whitespace-pre-wrap font-mono text-[9px]">
-                        {selectedScan.resultSummary || 'Awaiting stdout buffer from remote worker...'}
+                      <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
+                        {scanResultData || selectedScan.resultSummary || 'Awaiting stdout buffer from remote worker...'}
                       </div>
                     </div>
                   </div>
                 ) : (
                   history.slice(0, 15).map((scan, i) => (
-                    <div key={i} className="flex flex-col gap-1 border-l border-blue-500/30 pl-4 py-1">
+                    <div key={i} className="flex flex-col gap-1 border-l border-blue-500/30 pl-4 py-1 cursor-pointer hover:bg-white/5" onClick={() => setSelectedScan(scan)}>
                       <span className="text-[8px] text-blue-500">{new Date(scan.timestamp).toLocaleTimeString()}</span>
                       <span className="text-white/80 uppercase font-black">{scan.method} initiated: {scan.target}</span>
                       <span className={clsx(
