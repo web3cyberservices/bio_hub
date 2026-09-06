@@ -11,17 +11,15 @@ const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
 /**
  * Запуск задачи безопасности.
- * Вызывает воркер, получает числовой ID и сохраняет его в локальную БД.
  */
 export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Отправляем команду воркеру напрямую (Server-to-Server)
     const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
       body: JSON.stringify({ target }),
       cache: 'no-store'
     });
@@ -37,7 +35,6 @@ export async function runSecurityAction(type: string, method: string, target: st
       throw new Error('Worker did not return an ID');
     }
 
-    // 2. Создаем запись в локальной БД, используя ID от воркера
     await db.insert(securityScans).values({
       id: String(numericId),
       userId: session.user.id,
@@ -57,8 +54,7 @@ export async function runSecurityAction(type: string, method: string, target: st
 }
 
 /**
- * Синхронизация статусов (Server-side опрос).
- * Обновляет локальную БД информацией от воркера.
+ * Синхронизация статусов. Принудительно отключаем кэширование fetch.
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -74,12 +70,11 @@ export async function syncActiveScans() {
       try {
         const response = await fetch(`${ENGINE_API_URL}/api/status/${scan.id}`, { 
           cache: 'no-store',
-          headers: { 'Cache-Control': 'no-store' }
+          headers: { 'Cache-Control': 'no-store', 'Pragma': 'no-cache' }
         });
         
         if (response.ok) {
           const remoteData = await response.json();
-          // Если статус изменился, обновляем локальную запись
           if (remoteData.status !== 'in_progress' && remoteData.status !== 'Scan started') {
             await db.update(securityScans)
               .set({ 
@@ -106,8 +101,9 @@ export async function stopSecurityAction(scanId: string) {
   try {
     await fetch(`${ENGINE_API_URL}/api/stop`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
       body: JSON.stringify({ scan_id: scanId }),
+      cache: 'no-store'
     });
 
     await db.update(securityScans)
@@ -138,7 +134,6 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Запускаем фоновую синхронизацию перед возвратом истории
   await syncActiveScans();
 
   try {
