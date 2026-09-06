@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Proxy Route.
- * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP),
+ * Проксирует запросы от фронтенда (HTTPS) к воркеру (HTTP) через параметр endpoint,
  * предотвращая ошибки Mixed Content и CORS.
  */
 const WORKER_URL = 'http://31.76.34.252:4000';
@@ -31,8 +31,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Worker error' }, { status: response.status });
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      const data = await response.json();
+      return NextResponse.json(data);
+    } else {
+      // Для скачивания отчетов (JSON/TXT файлы)
+      const blob = await response.blob();
+      return new NextResponse(blob, {
+        headers: {
+          'Content-Type': contentType || 'application/octet-stream',
+        },
+      });
+    }
   } catch (error) {
     console.error(`Proxy GET Error:`, error);
     return NextResponse.json({ error: 'Worker unreachable' }, { status: 502 });

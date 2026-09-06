@@ -11,47 +11,53 @@ const ENGINE_API_URL = process.env.ENGINE_API_URL || 'http://31.76.34.252:4000';
 
 /**
  * Запуск задачи безопасности.
+ * Вызывает воркер, получает числовой ID и сохраняет его в локальную БД.
  */
 export async function runSecurityAction(type: string, method: string, target: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    const [scan] = await db.insert(securityScans).values({
+    // 1. Отправляем команду воркеру напрямую (Server-to-Server)
+    const response = await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target }),
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('Worker response was not OK');
+    }
+
+    const workerRes = await response.json();
+    const numericId = workerRes.id;
+
+    if (!numericId) {
+      throw new Error('Worker did not return an ID');
+    }
+
+    // 2. Создаем запись в локальной БД, используя ID от воркера
+    await db.insert(securityScans).values({
+      id: String(numericId),
       userId: session.user.id,
       target,
       type,
       method,
       status: 'in_progress',
       timestamp: new Date().toISOString()
-    }).returning();
-
-    // Отправляем команду воркеру
-    try {
-      await fetch(`${ENGINE_API_URL}/api/run/${method}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target, scan_id: scan.id }),
-        cache: 'no-store'
-      });
-    } catch (fetchErr) {
-      console.error('Fetch to worker failed:', fetchErr);
-      await db.update(securityScans)
-        .set({ status: 'failed', resultSummary: 'ENGINE_OFFLINE: Could not reach worker node.' })
-        .where(eq(securityScans.id, scan.id));
-    }
+    });
 
     revalidatePath('/dashboard/security');
-    return { success: true, scanId: scan.id };
+    return { success: true, scanId: String(numericId) };
   } catch (err) {
     console.error('Security Action Error:', err);
-    return { error: 'Internal System Error' };
+    return { error: 'Internal System Error: Could not start task on worker.' };
   }
 }
 
 /**
- * Синхронизация статусов (Server-side опрос для обновления БД).
- * Вызывается при загрузке страницы.
+ * Синхронизация статусов (Server-side опрос).
  */
 export async function syncActiveScans() {
   const session = await auth();
@@ -122,7 +128,6 @@ export async function getScanHistory() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Выполняем синхронизацию при каждом запросе истории
   await syncActiveScans();
 
   try {

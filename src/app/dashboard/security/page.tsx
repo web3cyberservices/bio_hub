@@ -43,7 +43,7 @@ export default function SecurityDashboard() {
   const [selectedScan, setSelectedScan] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState<string | null>(null);
 
-  // Опрос здоровья воркера через прокси
+  // Опрос здоровья воркера через безопасный прокси /api/worker
   const checkHealth = useCallback(async () => {
     try {
       const start = Date.now();
@@ -79,9 +79,9 @@ export default function SecurityDashboard() {
     };
   }, [checkHealth, loadHistory]);
 
-  // Функция поллинга конкретной задачи
-  const pollTaskStatus = async (scanId: string) => {
-    const maxAttempts = 60; // 5 минут при интервале 5с
+  // Функция поллинга статуса через прокси по числовому ID
+  const pollTaskStatus = (scanId: string) => {
+    const maxAttempts = 100;
     let attempts = 0;
 
     const interval = setInterval(async () => {
@@ -92,7 +92,7 @@ export default function SecurityDashboard() {
           const data = await res.json();
           if (data.status === 'completed' || data.status === 'failed') {
             clearInterval(interval);
-            loadHistory(); // Обновляем список
+            loadHistory();
           }
         }
       } catch (e) {
@@ -104,7 +104,6 @@ export default function SecurityDashboard() {
   };
 
   const calculateHealthScore = () => {
-    const completed = history.filter(s => s.status === 'completed');
     if (history.length === 0) return 'WAITING';
     const failed = history.filter(s => s.status === 'failed').length;
     const score = Math.max(0, 100 - (failed * 15));
@@ -115,10 +114,11 @@ export default function SecurityDashboard() {
     if (!target) return;
     setLoading(true);
     try {
+      // Вызов серверного экшена, который вернет числовой ID от воркера
       const result = await runSecurityAction(activeTab, method, target);
       if (result.success && result.scanId) {
         await loadHistory();
-        pollTaskStatus(result.scanId); // Запускаем поллинг после старта
+        pollTaskStatus(result.scanId); // Запускаем поллинг по ID
       }
     } catch (e) {
       console.error('Action failed', e);
@@ -310,7 +310,7 @@ export default function SecurityDashboard() {
                           <div className="flex items-center justify-end gap-3">
                             {scan.status === 'completed' && scan.reportPath && (
                               <a 
-                                href={`https://web3cyberservices.xyz/api/worker?endpoint=${scan.reportPath}`} 
+                                href={`/api/worker?endpoint=${scan.reportPath}`} 
                                 target="_blank"
                                 className="text-blue-500 hover:text-white transition-colors font-black flex items-center gap-1"
                               >
@@ -359,7 +359,7 @@ export default function SecurityDashboard() {
                 <p className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-relaxed">
                   {typeof healthScore === 'number' 
                     ? `Dynamic score based on ${history.length} audit sequences.` 
-                    : 'Awaiting primary audit telemetry...'}
+                    : 'NO DATA: Awaiting primary audit telemetry...'}
                 </p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function SecurityDashboard() {
                 {selectedScan ? (
                   <div className="space-y-6 animate-in fade-in">
                     <div className="bg-white/5 p-4 border border-white/5 space-y-2">
-                      <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id.slice(0, 12)}...</span></div>
+                      <div className="flex justify-between"><span className="text-white/40">Task ID:</span> <span>{selectedScan.id}</span></div>
                       <div className="flex justify-between"><span className="text-white/40">Method:</span> <span className="text-blue-500 font-black">{selectedScan.method.toUpperCase()}</span></div>
                       <div className="flex justify-between"><span className="text-white/40">Target:</span> <span>{selectedScan.target}</span></div>
                     </div>
