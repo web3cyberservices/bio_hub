@@ -1,3 +1,4 @@
+
 'use server';
 
 import { db } from '@/db';
@@ -15,7 +16,7 @@ export async function runSecurityAction(type: string, method: string, target: st
   if (!session?.user?.id) return { error: 'Unauthorized' };
 
   try {
-    // Вызов воркера через системный эндпоинт
+    // Вызов воркера через системный эндпоинт проксирования (внутренний серверный вызов)
     const response = await fetch(`http://31.76.34.252:4000/api/run/${method}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
@@ -55,7 +56,6 @@ export async function runSecurityAction(type: string, method: string, target: st
 
 /**
  * Синхронизация статусов активных задач между воркером и локальной БД.
- * Сопоставляет Snake Case от воркера с Camel Case в Drizzle.
  */
 export async function syncActiveScans() {
   const session = await auth();
