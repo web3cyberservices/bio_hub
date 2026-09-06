@@ -11,7 +11,7 @@ app.use(express.json());
 // Конфигурация CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', Origin, X-Requested-With, Content-Type, Accept);
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   next();
 });
@@ -75,13 +75,28 @@ app.post('/api/run/:method', (req, res) => {
 
   let command = "";
   
-  // Эмуляция различных инструментов ИБ
+  // Эмуляция инструментов ИБ
   switch(method) {
+    case 'prowler':
+      command = `echo '{"compliance_score": 78, "provider": "AWS", "findings": [{"rule": "Check MFA for Root", "status": "FAIL", "severity": "CRITICAL", "region": "us-east-1"}, {"rule": "EC2 Public Access", "status": "PASS", "severity": "HIGH", "region": "us-east-1"}]}' > ${reportPath}`;
+      break;
+    case 'grype':
+      command = `echo '{"sbom_generated": true, "vulnerabilities": [{"package": "openssl", "version": "1.1.1f", "cve": "CVE-2023-0286", "severity": "HIGH"}, {"package": "zlib", "version": "1.2.11", "cve": "CVE-2022-37434", "severity": "MEDIUM"}]}' > ${reportPath}`;
+      break;
+    case 'semgrep':
+      command = `echo '{"lines_scanned": 12450, "findings": [{"rule_id": "javascript.express.security.audit.xss", "severity": "HIGH", "file": "src/app/api/route.ts", "line": 42}, {"rule_id": "python.lang.security.deserialization.pickle", "severity": "CRITICAL", "file": "backend/worker.py", "line": 115}]}' > ${reportPath}`;
+      break;
+    case 'netexec':
+      command = `echo '{"protocol": "SMB", "hosts_scanned": 12, "pwned_hosts": 3, "vulnerabilities": ["EternalBlue", "Zerologon"]}' > ${reportPath}`;
+      break;
+    case 'report':
+      command = `echo '{"status": "Ready", "download_url": "/reports/audit_${scan_id}.pdf", "pages": 24}' > ${reportPath}`;
+      break;
     case 'wafw00f':
       command = `echo '{"waf_detected": true, "firewall": "Cloudflare Ray ID Protection"}' > ${reportPath}`;
       break;
     case 'trivy':
-      command = `echo '{"vulnerabilities": [{"severity": "HIGH", "pkgName": "openssl", "installedVersion": "1.1.1f-1ubuntu2.16"}, {"severity": "CRITICAL", "pkgName": "linux-libc-dev", "installedVersion": "5.4.0-122.138"}]}' > ${reportPath}`;
+      command = `echo '{"vulnerabilities": [{"severity": "HIGH", "pkgName": "openssl", "installedVersion": "1.1.1f-1ubuntu2.16", "fixedVersion": "1.1.1f-1ubuntu2.17"}, {"severity": "CRITICAL", "pkgName": "linux-libc-dev", "installedVersion": "5.4.0-122.138", "fixedVersion": "5.4.0-123.140"}]}' > ${reportPath}`;
       break;
     case 'nikto':
       command = `echo '{"findings": ["Server leaks banner: Apache/2.4.41", "Uncommon header X-Frame-Options missing", "Possible sensitive directory: /admin/"]}' > ${reportPath}`;
@@ -127,9 +142,6 @@ app.post('/api/run/:method', (req, res) => {
   res.json({ id: Number(scan_id), status: 'Scan started' });
 });
 
-/**
- * Получение последнего результата по методу и цели.
- */
 app.get('/api/results/:method/:target', (req, res) => {
   const { method, target } = req.params;
   if (!db) return res.status(500).json({ error: 'Database not connected' });

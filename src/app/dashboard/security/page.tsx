@@ -26,7 +26,13 @@ import {
   AlertCircle,
   Server,
   Box,
-  Fingerprint
+  Fingerprint,
+  Cloud,
+  Layers,
+  Code,
+  CheckCircle2,
+  AlertTriangle,
+  FileJson
 } from 'lucide-react';
 import { 
   runSecurityAction, 
@@ -35,7 +41,7 @@ import {
 } from '@/lib/actions/security';
 import { clsx } from 'clsx';
 
-type TabType = 'pentest' | 'osint' | 'siem' | 'config';
+type TabType = 'pentest' | 'osint' | 'siem' | 'enterprise' | 'config';
 type ScanStatus = 'all' | 'in_progress' | 'completed' | 'failed';
 
 export default function SecurityDashboard() {
@@ -100,7 +106,6 @@ export default function SecurityDashboard() {
       if (res.ok) {
         const text = await res.text();
         try {
-          // Пытаемся распарсить JSON для красивого отображения
           if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
             const json = JSON.parse(text);
             setScanResultData(JSON.stringify(json, null, 2));
@@ -108,7 +113,6 @@ export default function SecurityDashboard() {
             setScanResultData(text);
           }
         } catch (e) {
-          // Если это NDJSON (многострочный JSON, как у Nuclei)
           try {
             const lines = text.trim().split('\n');
             const objects = lines.map(line => JSON.parse(line));
@@ -181,10 +185,11 @@ export default function SecurityDashboard() {
   };
 
   async function handleAction(method: string) {
-    if (!target) return;
+    if (!target && method !== 'report') return;
     setLoading(true);
     try {
-      const result = await runSecurityAction(activeTab, method, target);
+      const actualTarget = method === 'report' ? 'all_assets' : target;
+      const result = await runSecurityAction(activeTab, method, actualTarget);
       if (result.success && result.scanId) {
         await loadHistory();
         startPolling(result.scanId);
@@ -215,6 +220,14 @@ export default function SecurityDashboard() {
       { id: 'defectdojo', label: 'DEFECTDOJO', icon: <FileText />, sub: 'Vuln Management', color: 'text-orange-500' },
       { id: 'netmon', label: 'NET MONITOR', icon: <Network />, sub: 'Traffic analysis', color: 'text-cyan-500' }
     ],
+    enterprise: [
+      { id: 'prowler', label: 'PROWLER AUDIT', icon: <Cloud />, sub: 'AWS/GCP Compliance', color: 'text-blue-500' },
+      { id: 'grype', label: 'GRYPE SBOM', icon: <Layers />, sub: 'Supply Chain Audit', color: 'text-purple-500' },
+      { id: 'semgrep', label: 'SEMGREP SAST', icon: <Code />, sub: 'Static Analysis', color: 'text-green-500' },
+      { id: 'netexec', label: 'NETEXEC AUDIT', icon: <Network />, sub: 'AD/Network Pentest', color: 'text-orange-500' },
+      { id: 'trivy', label: 'TRIVY SCAN', icon: <Box />, sub: 'Container Security', color: 'text-cyan-500' },
+      { id: 'report', label: 'GENERATE PDF', icon: <FileJson />, sub: 'Compliance Report', color: 'text-white', accent: true }
+    ],
     config: [
       { id: 'trivy', label: 'CONTAINER SCAN', icon: <Box />, sub: 'Trivy FS Audit', color: 'text-blue-400' },
       { id: 'api-keys', label: 'API KEYS', icon: <Fingerprint />, sub: 'Manage tokens', color: 'text-slate-400' },
@@ -230,6 +243,149 @@ export default function SecurityDashboard() {
       const method = selectedScan.method.toLowerCase();
 
       switch(method) {
+        case 'prowler':
+          return (
+            <div className="space-y-8">
+              <div className="flex items-center gap-10 p-6 border border-blue-500/20 bg-blue-500/5">
+                <div className="relative w-20 h-20">
+                  <svg className="w-full h-full" viewBox="0 0 36 36">
+                    <path className="text-white/10" strokeDasharray="100, 100" stroke="currentColor" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path className="text-blue-500" strokeDasharray={`${data.compliance_score}, 100`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-sm font-black">{data.compliance_score}%</div>
+                </div>
+                <div>
+                  <div className="technical-label">Cloud Provider</div>
+                  <div className="text-xl font-black text-white">{data.provider} Compliance</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="technical-label">Check Details</div>
+                {data.findings?.map((f: any, i: number) => (
+                  <div key={i} className="p-3 border border-white/5 bg-white/[0.02] flex justify-between items-center text-[9px]">
+                    <div className="flex items-center gap-3">
+                      {f.status === 'PASS' ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <AlertTriangle className="w-3 h-3 text-red-500" />}
+                      <span className="text-white font-bold">{f.rule}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-white/40 uppercase">{f.region}</span>
+                      <span className={clsx(
+                        "px-2 py-0.5 font-black uppercase",
+                        f.severity === 'CRITICAL' ? 'text-red-500' : 'text-orange-500'
+                      )}>{f.severity}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 'grype':
+          return (
+            <div className="space-y-4">
+              <div className="technical-label text-purple-500">SBOM Vulnerabilities</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[9px] border-collapse">
+                  <thead>
+                    <tr className="bg-white/5 text-white/40 font-black uppercase">
+                      <th className="px-4 py-2">Package</th>
+                      <th className="px-4 py-2">Version</th>
+                      <th className="px-4 py-2">CVE ID</th>
+                      <th className="px-4 py-2 text-right">Severity</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {data.vulnerabilities?.map((v: any, i: number) => (
+                      <tr key={i} className="hover:bg-white/[0.02]">
+                        <td className="px-4 py-3 text-white font-bold">{v.package}</td>
+                        <td className="px-4 py-3 text-white/60">{v.version}</td>
+                        <td className="px-4 py-3 text-blue-400 font-mono">{v.cve}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={clsx(
+                            "px-2 py-0.5 font-black uppercase",
+                            v.severity === 'HIGH' ? 'text-red-500' : 'text-orange-500'
+                          )}>{v.severity}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+
+        case 'semgrep':
+          return (
+            <div className="space-y-6">
+              <div className="p-4 bg-green-500/5 border border-green-500/20 flex justify-between items-center">
+                <div className="technical-label text-green-500">Lines Scanned</div>
+                <div className="text-xl font-black">{data.lines_scanned.toLocaleString()}</div>
+              </div>
+              <div className="space-y-3">
+                <div className="technical-label">Findings</div>
+                {data.findings?.map((f: any, i: number) => (
+                  <div key={i} className="p-4 border border-white/5 bg-white/[0.02] space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-black uppercase text-[10px]">{f.rule_id}</span>
+                      <span className="px-2 py-0.5 bg-red-500 text-white font-black text-[8px] uppercase">{f.severity}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white/40 font-mono text-[8px]">
+                      <FileText className="w-3 h-3" /> {f.file} : <span className="text-blue-500">Line {f.line}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 'netexec':
+          return (
+            <div className="space-y-8">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 border border-white/10 bg-white/[0.02]">
+                  <div className="technical-label mb-1">Protocol</div>
+                  <div className="text-lg font-black">{data.protocol}</div>
+                </div>
+                <div className="p-4 border border-white/10 bg-white/[0.02]">
+                  <div className="technical-label mb-1">Scanned</div>
+                  <div className="text-lg font-black">{data.hosts_scanned}</div>
+                </div>
+                <div className="p-4 border border-red-500/20 bg-red-500/5">
+                  <div className="technical-label text-red-500 mb-1">Pwned</div>
+                  <div className="text-lg font-black text-red-500">{data.pwned_hosts}</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="technical-label">Host Vulnerabilities</div>
+                {data.vulnerabilities?.map((v: string, i: number) => (
+                  <div key={i} className="p-3 border border-white/5 flex items-center gap-3 text-white/70">
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
+                    <span className="font-mono">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case 'report':
+          return (
+            <div className="flex flex-col items-center justify-center py-20 space-y-8 animate-in zoom-in-95">
+              <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-blue-500" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-black uppercase">Report Generation Complete</h3>
+                <p className="technical-label">{data.pages} Pages • Standard Compliance Audit</p>
+              </div>
+              <button 
+                onClick={() => window.open(`http://31.76.34.252:4000${data.download_url}`, '_blank')}
+                className="btn-enterprise bg-blue-600 hover:bg-blue-500 py-6 px-12 text-sm shadow-2xl shadow-blue-500/20"
+              >
+                <Download className="w-5 h-5 mr-3" /> DOWNLOAD PDF REPORT
+              </button>
+            </div>
+          );
+
         case 'wafw00f':
           return (
             <div className="space-y-4">
@@ -251,7 +407,7 @@ export default function SecurityDashboard() {
                 <div key={i} className="p-3 border border-white/5 bg-white/[0.02] flex justify-between items-center">
                   <div>
                     <div className="text-[10px] font-bold text-white uppercase">{v.pkgName}</div>
-                    <div className="text-[8px] text-white/40">Version: {v.installedVersion}</div>
+                    <div className="text-[8px] text-white/40">Version: {v.installedVersion} → <span className="text-green-500">{v.fixedVersion}</span></div>
                   </div>
                   <div className={clsx(
                     "px-2 py-0.5 text-[8px] font-black uppercase",
@@ -259,55 +415,6 @@ export default function SecurityDashboard() {
                   )}>{v.severity}</div>
                 </div>
               ))}
-            </div>
-          );
-
-        case 'nikto':
-          return (
-            <div className="space-y-2">
-              <div className="text-[10px] font-black uppercase text-orange-400 tracking-widest mb-4">Audit Findings</div>
-              {data.findings?.map((f: string, i: number) => (
-                <div key={i} className="flex gap-3 text-[9px] text-white/70 leading-relaxed border-b border-white/5 pb-2">
-                  <span className="text-orange-400 font-bold shrink-0">[{i+1}]</span>
-                  <span>{f}</span>
-                </div>
-              ))}
-            </div>
-          );
-
-        case 'zap':
-          return (
-            <div className="space-y-3">
-              <div className="text-[10px] font-black uppercase text-red-500 tracking-widest mb-4">Security Alerts</div>
-              {data.alerts?.map((a: any, i: number) => (
-                <div key={i} className="p-4 border border-red-500/10 bg-red-500/[0.02] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className={clsx("w-4 h-4", a.risk === 'High' ? 'text-red-500' : 'text-orange-400')} />
-                    <span className="text-[10px] font-black uppercase text-white">{a.name}</span>
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-tighter text-white/40">{a.risk} Risk</span>
-                </div>
-              ))}
-            </div>
-          );
-
-        case 'testssl':
-          return (
-            <div className="space-y-6">
-              <div className="flex items-end gap-2">
-                <span className="text-5xl font-black text-green-500 tracking-tighter">{data.grade}</span>
-                <span className="text-[10px] font-black text-white/40 uppercase mb-2">Security Grade</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 border border-white/10 bg-white/[0.02]">
-                  <div className="text-[8px] text-white/40 uppercase font-black mb-2">Protocols</div>
-                  <div className="text-[10px] font-bold text-white">{data.protocols?.join(', ')}</div>
-                </div>
-                <div className="p-4 border border-white/10 bg-white/[0.02]">
-                  <div className="text-[8px] text-white/40 uppercase font-black mb-2">Key Checks</div>
-                  <div className="text-[10px] font-bold text-green-500">Passed</div>
-                </div>
-              </div>
             </div>
           );
 
@@ -369,7 +476,7 @@ export default function SecurityDashboard() {
             <h1 className="text-2xl font-black tracking-tighter uppercase flex items-center gap-3 text-white">
               <ShieldAlert className="text-blue-500" /> Security Operations Center
             </h1>
-            <p className="technical-label">ENGINE API v2.5.1 • Proxy Secure Bridge</p>
+            <p className="technical-label">ENGINE API v2.8.0 • Enterprise Active</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -397,6 +504,7 @@ export default function SecurityDashboard() {
             { id: 'pentest', label: 'ПЕНТЕСТ & УЯЗВИМОСТИ', icon: <Terminal className="w-4 h-4" /> },
             { id: 'osint', label: 'OSINT & РАЗВЕДКА', icon: <Search className="w-4 h-4" /> },
             { id: 'siem', label: 'МОНИТОРИНГ & SIEM', icon: <Activity className="w-4 h-4" /> },
+            { id: 'enterprise', label: 'ENTERPRISE & CODE SECURITY', icon: <ShieldCheck className="w-4 h-4 text-blue-500" /> },
             { id: 'config', label: 'КОНФИГУРАЦИЯ ЯДРА', icon: <Settings className="w-4 h-4" /> }
           ].map(tab => (
             <button
@@ -434,12 +542,15 @@ export default function SecurityDashboard() {
                     <button 
                       key={tool.id}
                       onClick={() => setShowConfirm(tool.id)}
-                      disabled={loading || !target}
-                      className="p-6 border border-white/10 bg-black hover:bg-white/[0.03] transition-all text-left relative group disabled:opacity-30"
+                      disabled={loading || (!target && tool.id !== 'report')}
+                      className={clsx(
+                        "p-6 border transition-all text-left relative group disabled:opacity-30",
+                        tool.accent ? "bg-blue-600 border-blue-500 hover:bg-blue-500" : "border-white/10 bg-black hover:bg-white/[0.03]"
+                      )}
                     >
-                      <div className={clsx("w-6 h-6 mb-4", tool.color)}>{tool.icon}</div>
-                      <div className="text-[11px] font-black uppercase tracking-widest text-white">{tool.label}</div>
-                      <div className="text-[8px] text-muted-foreground mt-1 uppercase">{tool.sub}</div>
+                      <div className={clsx("w-6 h-6 mb-4", !tool.accent && tool.color, tool.accent && "text-white")}>{tool.icon}</div>
+                      <div className={clsx("text-[11px] font-black uppercase tracking-widest", tool.accent ? "text-white" : "text-white")}>{tool.label}</div>
+                      <div className={clsx("text-[8px] mt-1 uppercase", tool.accent ? "text-white/60" : "text-muted-foreground")}>{tool.sub}</div>
                       
                       {showConfirm === tool.id && (
                         <div className="absolute inset-0 bg-blue-600 flex flex-col items-center justify-center p-4 z-20 animate-in fade-in zoom-in-95">
@@ -456,6 +567,7 @@ export default function SecurityDashboard() {
               </div>
             </div>
 
+            {/* Task Queue Table */}
             <div className="border border-white/10 bg-black">
               <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Live Task Queue</h3>
@@ -583,7 +695,7 @@ export default function SecurityDashboard() {
                     </div>
 
                     <div className="space-y-2">
-                      <div className="text-blue-500 font-black uppercase tracking-widest text-[9px]">Raw Payload Data</div>
+                      <div className="text-blue-500 font-black uppercase tracking-widest text-[9px]">Result Visualization</div>
                       {renderDetailedResult()}
                     </div>
                   </div>
