@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -79,23 +80,27 @@ export default function SecurityDashboard() {
   }, []);
 
   const fetchReportContent = async (scan: any) => {
-    const reportPath = scan.reportPath || scan.report_path;
-    
-    if (!reportPath) {
+    if (scan.status?.toLowerCase() !== 'completed') {
       setScanResultData(null);
       return;
     }
+
+    const tool = scan.method.toLowerCase();
+    const target = scan.target;
+    const proxyUrl = `/api/worker?endpoint=/api/results/${tool}/${target}`;
     
     try {
       setScanResultData(null);
-      const res = await fetch(`/api/worker?endpoint=${encodeURIComponent(reportPath)}`);
+      const res = await fetch(proxyUrl);
       if (res.ok) {
         const text = await res.text();
         try {
           if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
             const lines = text.trim().split('\n');
             if (lines.length > 1) {
-              const objects = lines.map(line => JSON.parse(line));
+              const objects = lines.map(line => {
+                try { return JSON.parse(line); } catch(e) { return line; }
+              });
               setScanResultData(JSON.stringify(objects, null, 2));
             } else {
               const json = JSON.parse(text);
@@ -117,11 +122,7 @@ export default function SecurityDashboard() {
 
   useEffect(() => {
     if (selectedScan) {
-      if (selectedScan.status?.toLowerCase() === 'completed') {
-        fetchReportContent(selectedScan);
-      } else {
-        setScanResultData(null);
-      }
+      fetchReportContent(selectedScan);
     }
   }, [selectedScan]);
 
@@ -224,18 +225,16 @@ export default function SecurityDashboard() {
   const healthScore = calculateHealthScore();
 
   const copyToClipboard = () => {
-    const textToCopy = scanResultData || selectedScan?.resultSummary || selectedScan?.result_summary || '';
-    if (textToCopy) {
-      navigator.clipboard.writeText(textToCopy);
+    if (scanResultData) {
+      navigator.clipboard.writeText(scanResultData);
       setCopying(true);
       setTimeout(() => setCopying(false), 2000);
     }
   };
 
   const downloadReport = () => {
-    const textToSave = scanResultData || selectedScan?.resultSummary || selectedScan?.result_summary || '';
-    if (textToSave && selectedScan) {
-      const blob = new Blob([textToSave], { type: 'application/json' });
+    if (scanResultData && selectedScan) {
+      const blob = new Blob([scanResultData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -474,7 +473,7 @@ export default function SecurityDashboard() {
                     <div className="space-y-2">
                       <div className="text-blue-500 font-black uppercase tracking-widest text-[9px]">Raw Payload Data</div>
                       <div className="bg-black border border-white/10 p-4 text-white/70 leading-relaxed whitespace-pre-wrap font-mono text-[9px] min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-hide">
-                        {scanResultData || selectedScan.resultSummary || selectedScan.result_summary || 'Synchronizing with remote buffer...'}
+                        {scanResultData || 'Synchronizing with remote buffer...'}
                       </div>
                     </div>
                   </div>

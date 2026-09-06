@@ -38,6 +38,8 @@ try {
       status TEXT,
       result_summary TEXT,
       report_path TEXT,
+      method TEXT,
+      target TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -64,8 +66,8 @@ app.post('/api/run/:method', (req, res) => {
   
   if (db) {
     try {
-      const insert = db.prepare('INSERT OR REPLACE INTO security_scans (id, status) VALUES (?, ?)');
-      insert.run(scan_id, 'in_progress');
+      const insert = db.prepare('INSERT OR REPLACE INTO security_scans (id, status, method, target) VALUES (?, ?, ?, ?)');
+      insert.run(scan_id, 'in_progress', method, target);
     } catch (e) {
       console.error('[ENGINE] Failed to init scan in local DB:', e.message);
     }
@@ -73,7 +75,6 @@ app.post('/api/run/:method', (req, res) => {
 
   let command = "";
   switch(method) {
-    // PENTEST TOOLS
     case 'nuclei':
       command = `nuclei -u ${target} -o ${reportPath} -j`;
       break;
@@ -89,39 +90,8 @@ app.post('/api/run/:method', (req, res) => {
     case 'nmap':
       command = `nmap -sV -sC -oX ${reportPath}.xml ${target} && cat ${reportPath}.xml > ${reportPath}`;
       break;
-
-    // OSINT TOOLS
-    case 'spiderfoot':
-      command = `echo "{\\\"tool\\\": \\\"spiderfoot\\\", \\\"target\\\": \\\"${target}\\\", \\\"findings\\\": [\\\"Digital footprint mapping initiated\\\", \\\"External assets indexed\\\"]}" > ${reportPath}`;
-      break;
-    case 'sherlock':
-      command = `echo "{\\\"tool\\\": \\\"sherlock\\\", \\\"username\\\": \\\"${target}\\\", \\\"platforms\\\": [\\\"GitHub\\\", \\\"Twitter\\\", \\\"LinkedIn\\\"], \\\"status\\\": \\\"Found matches\\\"}" > ${reportPath}`;
-      break;
-    case 'harvester':
-      command = `echo "{\\\"tool\\\": \\\"theHarvester\\\", \\\"domain\\\": \\\"${target}\\\", \\\"emails\\\": [\\\"admin@${target}\\\", \\\"info@${target}\\\"]}" > ${reportPath}`;
-      break;
-
-    // SIEM TOOLS
-    case 'wazuh':
-      command = `echo "{\\\"agent\\\": \\\"${target}\\\", \\\"status\\\": \\\"active\\\", \\\"integrity_check\\\": \\\"passed\\\", \\\"last_event\\\": \\\"Syscheck scan completed\\\"}" > ${reportPath}`;
-      break;
-    case 'defectdojo':
-      command = `echo "{\\\"service\\\": \\\"DefectDojo\\\", \\\"import_status\\\": \\\"success\\\", \\\"vulnerabilities_synced\\\": 12}" > ${reportPath}`;
-      break;
-    case 'netmon':
-      command = `echo "{\\\"monitor\\\": \\\"Network Traffic\\\", \\\"target\\\": \\\"${target}\\\", \\\"throughput\\\": \\\"1.2Gbps\\\", \\\"anomalies\\\": 0}" > ${reportPath}`;
-      break;
-
-    // CONFIG TOOLS
-    case 'api-keys':
-      command = `echo "{\\\"action\\\": \\\"API Key Audit\\\", \\\"status\\\": \\\"all keys secure\\\", \\\"rotation_required\\\": false}" > ${reportPath}`;
-      break;
-    case 'engine-url':
-      command = `echo "{\\\"engine\\\": \\\"Core v2.5.1\\\", \\\"node\\\": \\\"Primary\\\", \\\"health\\\": \\\"100%\\\"}" > ${reportPath}`;
-      break;
-
     default:
-      command = `echo "Action ${method} completed for ${target}" > ${reportPath}`;
+      command = `echo "{\\\"tool\\\": \\\"${method}\\\", \\\"target\\\": \\\"${target}\\\", \\\"status\\\": \\\"completed\\\", \\\"timestamp\\\": \\\"${new Date().toISOString()}\\\"}" > ${reportPath}`;
   }
 
   console.log(`[ENGINE] Executing ${method} on ${target} [ID: ${scan_id}]`);
@@ -152,11 +122,38 @@ app.post('/api/run/:method', (req, res) => {
   res.json({ id: Number(scan_id), status: 'Scan started' });
 });
 
+/**
+ * Получение последнего результата по методу и цели.
+ */
+app.get('/api/results/:method/:target', (req, res) => {
+  const { method, target } = req.params;
+  if (!db) return res.status(500).json({ error: 'Database not connected' });
+
+  try {
+    const scan = db.prepare('SELECT id, method FROM security_scans WHERE method = ? AND target = ? AND status = ? ORDER BY timestamp DESC LIMIT 1').get(method, target, 'completed');
+    
+    if (!scan) return res.status(404).json({ error: 'No completed scan found' });
+    
+    const reportFile = `${scan.method}_${scan.id}.json`;
+    const reportPath = path.join(resultsPath, reportFile);
+    
+    if (fs.existsSync(reportPath)) {
+      const content = fs.readFileSync(reportPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/plain');
+      res.send(content);
+    } else {
+      res.status(404).json({ error: 'Report file missing' });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/status/:id', (req, res) => {
   const { id } = req.params;
   if (db) {
     try {
-      const scan = db.prepare('SELECT status, result_summary as result_summary, report_path as report_path FROM security_scans WHERE id = ?').get(String(id));
+      const scan = db.prepare('SELECT status, result_summary, report_path FROM security_scans WHERE id = ?').get(String(id));
       if (scan) return res.json(scan);
     } catch (e) {
       return res.status(500).json({ error: 'DB Error' });
